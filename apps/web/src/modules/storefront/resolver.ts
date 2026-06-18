@@ -1,8 +1,9 @@
 import { prisma } from "@dash/db";
 import { notFound } from "next/navigation";
+import { ensureDefaultSettingsForStore } from "../settings/settings.service";
 
 export async function getStorefrontBySlug(slug: string) {
-  return prisma.store.findFirst({
+  const store = await prisma.store.findFirst({
     where: {
       slug,
       status: {
@@ -19,7 +20,39 @@ export async function getStorefrontBySlug(slug: string) {
             createdAt: "asc"
           }
         ]
-      }
+      },
+      setting: true,
+      themeSetting: true
+    }
+  });
+
+  if (!store) {
+    return null;
+  }
+
+  if (store.setting && store.themeSetting) {
+    return store;
+  }
+
+  await ensureDefaultSettingsForStore(store.id);
+
+  return prisma.store.findFirst({
+    where: {
+      id: store.id
+    },
+    include: {
+      domains: {
+        orderBy: [
+          {
+            isPrimary: "desc"
+          },
+          {
+            createdAt: "asc"
+          }
+        ]
+      },
+      setting: true,
+      themeSetting: true
     }
   });
 }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { paymentMethodTypes } from "../payments/payment.schema";
 
 export const checkoutSchema = z.object({
   name: z.string().trim().min(2, "Name is required.").max(120),
@@ -44,7 +45,19 @@ export const checkoutSchema = z.object({
     .max(1000)
     .optional()
     .transform((value) => value || undefined),
-  paymentMethod: z.literal("COD")
+  paymentMethod: z.enum(paymentMethodTypes),
+  paymentReference: z
+    .string()
+    .trim()
+    .max(120)
+    .optional()
+    .transform((value) => value || undefined),
+  paymentNote: z
+    .string()
+    .trim()
+    .max(500)
+    .optional()
+    .transform((value) => value || undefined)
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;

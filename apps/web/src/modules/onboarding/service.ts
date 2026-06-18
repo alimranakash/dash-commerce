@@ -1,4 +1,10 @@
 import { prisma } from "@dash/db";
+import {
+  DEFAULT_FEATURED_TITLE,
+  DEFAULT_HERO_TITLE,
+  DEFAULT_PRIMARY_COLOR,
+  DEFAULT_THEME_NAME
+} from "../settings/settings.repository";
 import { onboardingSchema, type OnboardingInput } from "./schemas";
 
 export async function createOnboardingWorkspace(userId: string, input: OnboardingInput) {
@@ -55,6 +61,27 @@ export async function createOnboardingWorkspace(userId: string, input: Onboardin
                 domain: `${storeSlug}.dash.com`,
                 type: "DASH_SUBDOMAIN",
                 isPrimary: true
+              }
+            },
+            setting: {
+              create: {}
+            },
+            themeSetting: {
+              create: {
+                themeName: DEFAULT_THEME_NAME,
+                primaryColor: DEFAULT_PRIMARY_COLOR,
+                heroTitle: `${DEFAULT_HERO_TITLE} at ${data.storeName}`,
+                featuredSectionTitle: DEFAULT_FEATURED_TITLE
+              }
+            },
+            paymentMethods: {
+              create: {
+                type: "COD",
+                name: "Cash on delivery",
+                description: "Pay when your order is delivered.",
+                instructions: "Keep the exact amount ready for delivery.",
+                isEnabled: true,
+                sortOrder: 0
               }
             }
           }

@@ -13,7 +13,13 @@ export async function StorefrontHeader({ store }: StorefrontHeaderProps) {
   return (
     <header className="sf-header">
       <Link className="sf-brand" href={homeHref}>
-        <span>{store.name.slice(0, 1).toUpperCase()}</span>
+        <span>
+          {store.setting?.logoUrl ? (
+            <img alt={`${store.name} logo`} src={store.setting.logoUrl} />
+          ) : (
+            store.name.slice(0, 1).toUpperCase()
+          )}
+        </span>
         {store.name}
       </Link>
       <nav className="sf-nav" aria-label="Storefront navigation">

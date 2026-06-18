@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CartSummary } from "../../../../modules/cart/components/cart-summary";
 import { getCart } from "../../../../modules/cart/cart.service";
 import { CheckoutForm } from "../../../../modules/checkout/components/checkout-form";
+import { getEnabledPaymentMethods } from "../../../../modules/payments/payment.service";
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../modules/storefront/components/storefront-header";
 import { requireStorefrontBySlug } from "../../../../modules/storefront/resolver";
@@ -21,6 +22,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
   const store = await requireStorefrontBySlug(slug);
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
   const cart = await getCart(store.id);
+  const paymentMethods = await getEnabledPaymentMethods(store.id);
 
   return (
     <main className="sf-page">
@@ -42,7 +44,11 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
         </section>
       ) : (
         <section className="sf-checkout-layout" aria-label="Checkout form">
-          <CheckoutForm checkoutError={checkoutError} storeSlug={store.slug} />
+          <CheckoutForm
+            checkoutError={checkoutError}
+            paymentMethods={paymentMethods}
+            storeSlug={store.slug}
+          />
           <CartSummary
             cart={cart}
             currency={store.currency}

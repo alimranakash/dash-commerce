@@ -2,6 +2,7 @@ import { revalidatePath } from "next/cache";
 import { NextResponse, type NextRequest } from "next/server";
 import { ZodError } from "zod";
 import { createCheckoutOrder } from "../../../modules/checkout/checkout.service";
+import type { PaymentMethodTypeValue } from "../../../modules/payments/payment.schema";
 import { getStorefrontBySlug } from "../../../modules/storefront/resolver";
 
 export async function POST(request: NextRequest) {
@@ -26,7 +27,9 @@ export async function POST(request: NextRequest) {
       addressLine2: getValue(formData, "addressLine2"),
       postalCode: getValue(formData, "postalCode"),
       notes: getValue(formData, "notes"),
-      paymentMethod: "COD"
+      paymentMethod: getValue(formData, "paymentMethod") as PaymentMethodTypeValue,
+      paymentReference: getValue(formData, "paymentReference"),
+      paymentNote: getValue(formData, "paymentNote")
     });
 
     revalidatePath(`/s/${store.slug}`);

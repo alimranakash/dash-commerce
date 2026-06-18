@@ -1,9 +1,23 @@
+import type { PaymentMethodTypeValue } from "../../payments/payment.schema";
+
+type CheckoutPaymentMethod = {
+  type: PaymentMethodTypeValue;
+  name: string;
+  description: string | null;
+  instructions: string | null;
+  accountNumber: string | null;
+  accountType: string | null;
+};
+
 type CheckoutFormProps = {
   checkoutError: string | undefined;
+  paymentMethods: CheckoutPaymentMethod[];
   storeSlug: string;
 };
 
-export function CheckoutForm({ checkoutError, storeSlug }: CheckoutFormProps) {
+export function CheckoutForm({ checkoutError, paymentMethods, storeSlug }: CheckoutFormProps) {
+  const defaultMethod = paymentMethods.find((method) => method.type === "COD") ?? paymentMethods[0];
+
   return (
     <form action="/api/checkout" className="sf-checkout-form" method="post">
       <input name="storeSlug" type="hidden" value={storeSlug} />
@@ -56,16 +70,52 @@ export function CheckoutForm({ checkoutError, storeSlug }: CheckoutFormProps) {
       </fieldset>
       <fieldset>
         <legend>Payment</legend>
-        <label className="sf-radio-row">
-          <input defaultChecked name="paymentMethod" type="radio" value="COD" />
-          Cash on delivery
+        {paymentMethods.length === 0 ? (
+          <p className="sf-alert">This store has not enabled any payment methods yet.</p>
+        ) : (
+          paymentMethods.map((method) => (
+            <label className="sf-radio-row payment-option" key={method.type}>
+              <input
+                defaultChecked={method.type === defaultMethod?.type}
+                name="paymentMethod"
+                required
+                type="radio"
+                value={method.type}
+              />
+              <span>
+                <strong>{method.name}</strong>
+                {method.description ? <small>{method.description}</small> : null}
+                {method.accountNumber ? (
+                  <small>
+                    {method.accountType ? `${method.accountType}: ` : ""}
+                    {method.accountNumber}
+                  </small>
+                ) : null}
+                {method.instructions ? <small>{method.instructions}</small> : null}
+              </span>
+            </label>
+          ))
+        )}
+        <label>
+          Transaction ID / reference
+          <input
+            name="paymentReference"
+            placeholder="Required for bKash, Nagad, or Rocket"
+            type="text"
+          />
         </label>
         <label className="sf-form-wide">
-          Notes <span>Optional</span>
+          Payment note <span>Optional</span>
+          <textarea name="paymentNote" rows={3} />
+        </label>
+        <label className="sf-form-wide">
+          Order notes <span>Optional</span>
           <textarea name="notes" rows={3} />
         </label>
       </fieldset>
-      <button type="submit">Place order</button>
+      <button disabled={paymentMethods.length === 0} type="submit">
+        Place order
+      </button>
     </form>
   );
 }

@@ -90,6 +90,29 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
             </dl>
           </section>
         </div>
+        <section className="dashboard-shell order-detail-panel">
+          <p className="eyebrow">Payment</p>
+          <dl className="order-totals">
+            <dt>Method</dt>
+            <dd>{order.paymentMethodName}</dd>
+            <dt>Type</dt>
+            <dd>{order.paymentMethodType.toLowerCase()}</dd>
+            <dt>Status</dt>
+            <dd>{order.paymentStatus.toLowerCase()}</dd>
+            {order.paymentReference ? (
+              <>
+                <dt>Reference</dt>
+                <dd>{order.paymentReference}</dd>
+              </>
+            ) : null}
+            {order.paymentNote ? (
+              <>
+                <dt>Customer note</dt>
+                <dd>{order.paymentNote}</dd>
+              </>
+            ) : null}
+          </dl>
+        </section>
         <div className="table-card">
           <table className="resource-table">
             <thead>

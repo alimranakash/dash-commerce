@@ -51,6 +51,13 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum PaymentMethodType {
+  COD
+  BKASH_MANUAL
+  NAGAD_MANUAL
+  ROCKET_MANUAL
+}
+
 enum FulfillmentStatus {
   UNFULFILLED
   PARTIALLY_FULFILLED
@@ -151,6 +158,9 @@ model Store {
   orders         Order[]
   customers      Customer[]
   addresses      Address[]
+  setting        StoreSetting?
+  themeSetting   ThemeSetting?
+  paymentMethods PaymentMethod[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @default(now()) @updatedAt
 
@@ -168,6 +178,58 @@ model StoreDomain {
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @default(now()) @updatedAt
 
+  @@index([storeId])
+}
+
+model StoreSetting {
+  id              String   @id @default(cuid())
+  storeId         String   @unique
+  logoUrl         String?
+  faviconUrl      String?
+  contactEmail    String?
+  contactPhone    String?
+  supportPhone    String?
+  businessAddress String?
+  facebookUrl     String?
+  instagramUrl    String?
+  whatsappNumber  String?
+  store           Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+}
+
+model ThemeSetting {
+  id                   String   @id @default(cuid())
+  storeId              String   @unique
+  themeName            String   @default("Theme v1")
+  primaryColor         String   @default("#135d66")
+  secondaryColor       String?
+  heroTitle            String   @default("Discover what is new")
+  heroSubtitle         String?
+  heroImageUrl         String?
+  announcementText     String?
+  featuredSectionTitle String   @default("Products worth a closer look")
+  store                Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @default(now()) @updatedAt
+}
+
+model PaymentMethod {
+  id            String            @id @default(cuid())
+  storeId       String
+  type          PaymentMethodType
+  name          String
+  description   String?
+  instructions  String?
+  accountNumber String?
+  accountType   String?
+  isEnabled     Boolean           @default(false)
+  sortOrder     Int               @default(0)
+  store         Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @default(now()) @updatedAt
+
+  @@unique([storeId, type])
   @@index([storeId])
 }
 
@@ -279,6 +341,10 @@ model Order {
   orderNumber       String
   status            OrderStatus       @default(PENDING)
   paymentStatus     PaymentStatus     @default(PENDING)
+  paymentMethodType PaymentMethodType  @default(COD)
+  paymentMethodName String             @default("Cash on delivery")
+  paymentReference  String?
+  paymentNote       String?
   fulfillmentStatus FulfillmentStatus @default(UNFULFILLED)
   currency          String
   subtotalAmount    Decimal           @db.Decimal(12, 2)

@@ -3,16 +3,17 @@ import type { StorefrontProduct } from "../storefront.types";
 
 type FeaturedProductsProps = {
   currency: string;
+  heading?: string | undefined;
   products: StorefrontProduct[];
   storeSlug: string;
 };
 
-export function FeaturedProducts({ currency, products, storeSlug }: FeaturedProductsProps) {
+export function FeaturedProducts({ currency, heading, products, storeSlug }: FeaturedProductsProps) {
   return (
     <section className="sf-section" aria-labelledby="featured-products">
       <div className="sf-section-heading">
         <p>Featured</p>
-        <h2 id="featured-products">Products worth a closer look</h2>
+        <h2 id="featured-products">{heading || "Products worth a closer look"}</h2>
       </div>
       {products.length === 0 ? (
         <div className="sf-empty">

@@ -1,5 +1,9 @@
 import { prisma, type Prisma } from "@dash/db";
 import { clearCart, getCart } from "../cart/cart.service";
+import {
+  getEnabledPaymentMethodForCheckout,
+  isManualPaymentType
+} from "../payments/payment.service";
 import { checkoutSchema, type CheckoutInput } from "./checkout.schema";
 
 type CheckoutStore = {
@@ -14,6 +18,12 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
 
   if (cart.items.length === 0) {
     throw new Error("Your cart is empty.");
+  }
+
+  const paymentMethod = await getEnabledPaymentMethodForCheckout(store.id, data.paymentMethod);
+
+  if (isManualPaymentType(data.paymentMethod) && !data.paymentReference) {
+    throw new Error("Transaction ID or payment reference is required for this payment method.");
   }
 
   const order = await prisma.$transaction(async (tx) => {
@@ -116,6 +126,10 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
         orderNumber,
         status: "PENDING",
         paymentStatus: "PENDING",
+        paymentMethodType: paymentMethod.type,
+        paymentMethodName: paymentMethod.name,
+        paymentReference: data.paymentReference ?? null,
+        paymentNote: data.paymentNote ?? null,
         fulfillmentStatus: "UNFULFILLED",
         currency: store.currency,
         subtotalAmount,
