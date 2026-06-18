@@ -34,6 +34,10 @@ button {
   font: inherit;
 }
 
+input {
+  font: inherit;
+}
+
 .page {
   display: grid;
   min-height: 100vh;
@@ -88,6 +92,118 @@ button {
   padding: 0 18px;
 }
 
+.secondary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--foreground);
+  min-height: 44px;
+  padding: 0 18px;
+}
+
+.text-link {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.auth-page,
+.dashboard-page {
+  display: grid;
+  min-height: 100vh;
+  padding: 32px;
+  place-items: center;
+}
+
+.auth-panel,
+.dashboard-shell {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 24px 60px rgb(23 23 23 / 8%);
+  width: min(100%, 460px);
+}
+
+.auth-panel {
+  padding: 34px;
+}
+
+.dashboard-shell {
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  padding: 34px;
+  width: min(100%, 760px);
+}
+
+.auth-panel h1,
+.dashboard-shell h1 {
+  font-size: 2rem;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.auth-copy {
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 14px 0 0;
+}
+
+.auth-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.auth-form label {
+  color: var(--foreground);
+  display: grid;
+  font-size: 0.92rem;
+  font-weight: 700;
+  gap: 8px;
+}
+
+.auth-form input {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+}
+
+.auth-form input:focus {
+  border-color: var(--accent);
+  outline: 2px solid rgb(19 93 102 / 18%);
+}
+
+.action-button {
+  cursor: pointer;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.action-button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.form-error {
+  background: #fff0ed;
+  border: 1px solid #f3b8ad;
+  border-radius: 8px;
+  color: #9d2b1f;
+  margin: 0;
+  padding: 10px 12px;
+}
+
+.auth-switch {
+  color: var(--muted);
+  margin: 4px 0 0;
+}
+
+.auth-switch a {
+  color: var(--accent);
+  font-weight: 700;
+}
+
 @media (max-width: 640px) {
   .page {
     padding: 28px;
@@ -96,5 +212,19 @@ button {
 
   .hero h1 {
     font-size: 3rem;
+  }
+
+  .auth-page,
+  .dashboard-page {
+    padding: 20px;
+  }
+
+  .auth-panel,
+  .dashboard-shell {
+    padding: 24px;
+  }
+
+  .dashboard-shell {
+    display: grid;
   }
 }

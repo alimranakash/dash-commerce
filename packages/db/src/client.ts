@@ -1,16 +1,38 @@
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { config } from "dotenv";
 import { PrismaClient } from "./generated/prisma/client";
+
+const packageSrc = dirname(fileURLToPath(import.meta.url));
+const repoRoot = resolve(packageSrc, "../../..");
+
+config({ path: resolve(repoRoot, ".env"), quiet: true });
+config({ path: resolve(repoRoot, ".env.local"), override: true, quiet: true });
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };
 
 function createPrismaClient() {
-  const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL ?? ""
-  });
+  const connectionString = process.env.DATABASE_URL ?? "";
+  const schema = getDatabaseSchema(connectionString);
+  const adapter = new PrismaPg(
+    {
+      connectionString
+    },
+    schema ? { schema } : undefined
+  );
 
   return new PrismaClient({ adapter });
+}
+
+function getDatabaseSchema(connectionString: string) {
+  if (!connectionString) {
+    return undefined;
+  }
+
+  return new URL(connectionString).searchParams.get("schema") ?? undefined;
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();

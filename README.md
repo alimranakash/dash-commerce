@@ -54,7 +54,7 @@ cp .env.example .env
 Set `DATABASE_URL` in `.env`:
 
 ```bash
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/dash_commerce?schema=public"
+DATABASE_URL="postgresql://postgres:root123@localhost:5432/storeos?schema=dash_commerce"
 ```
 
 Generate the Prisma client:
@@ -81,4 +81,28 @@ Open Prisma Studio:
 npm run db:studio
 ```
 
-The current schema covers users, organizations, organization memberships, stores, and store domains only. Product, order, customer, payment, auth UI, and StoreOS integration models are intentionally not implemented yet.
+The current schema covers users, Auth.js accounts and sessions, organizations, organization memberships, stores, and store domains only. Product, order, customer, payment, and StoreOS integration models are intentionally not implemented yet.
+
+## Authentication Setup
+
+The web app uses NextAuth with a Prisma adapter and credentials login. Set these values in `.env`:
+
+```bash
+NEXTAUTH_SECRET="replace-with-a-long-random-secret"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+If you run the web app on another port, update `NEXTAUTH_URL` to match it. After schema changes, sync the database and generate the Prisma client:
+
+```bash
+npm run db:push
+npm run db:generate
+```
+
+Then start the app:
+
+```bash
+npm run dev
+```
+
+Visit `/register`, create an account, then use `/login`, `/dashboard`, and the dashboard sign-out button.
