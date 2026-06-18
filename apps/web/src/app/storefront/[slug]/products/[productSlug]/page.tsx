@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { AddToCartForm } from "../../../../../modules/cart/components/add-to-cart-form";
 import { ProductPrice, StockStatus } from "../../../../../modules/storefront/components/product-card";
 import { StorefrontFooter } from "../../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../../modules/storefront/components/storefront-header";
@@ -12,10 +13,17 @@ type StorefrontProductPageProps = {
     productSlug: string;
     slug: string;
   }>;
+  searchParams: Promise<{
+    cartError?: string;
+  }>;
 };
 
-export default async function StorefrontProductPage({ params }: StorefrontProductPageProps) {
+export default async function StorefrontProductPage({
+  params,
+  searchParams
+}: StorefrontProductPageProps) {
   const { productSlug, slug } = await params;
+  const { cartError } = await searchParams;
   const store = await requireStorefrontBySlug(slug);
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
   const product = await getStorefrontProductBySlug(store.id, productSlug);
@@ -59,13 +67,14 @@ export default async function StorefrontProductPage({ params }: StorefrontProduc
             price={product.price.toString()}
           />
           <StockStatus stockQuantity={product.stockQuantity} />
-          <div className="sf-purchase-box">
-            <label htmlFor="quantity">Quantity</label>
-            <input defaultValue="1" id="quantity" min="1" name="quantity" type="number" />
-            <button disabled type="button">
-              Add to Cart
-            </button>
-          </div>
+          {cartError ? <p className="sf-alert">{cartError}</p> : null}
+          <AddToCartForm
+            maxQuantity={product.stockQuantity}
+            productId={product.id}
+            productSlug={product.slug}
+            storeId={store.id}
+            storeSlug={store.slug}
+          />
           <dl className="sf-product-facts">
             {product.sku ? (
               <>
