@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum StoreStatus {
+  DRAFT
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum StoreDomainType {
+  DASH_SUBDOMAIN
+  CUSTOM
+}
+
+model User {
+  id          String               @id @default(cuid())
+  name        String?
+  email       String               @unique
+  image       String?
+  role        UserRole             @default(MEMBER)
+  memberships OrganizationMember[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+model Organization {
+  id        String               @id @default(cuid())
+  name      String
+  slug      String               @unique
+  members   OrganizationMember[]
+  stores    Store[]
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+}
+
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  role           UserRole     @default(MEMBER)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+}
+
+model Store {
+  id             String        @id @default(cuid())
+  organizationId String
+  name           String
+  slug           String        @unique
+  status         StoreStatus   @default(DRAFT)
+  currency       String        @default("USD")
+  country        String        @default("US")
+  timezone       String        @default("UTC")
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  domains        StoreDomain[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model StoreDomain {
+  id         String          @id @default(cuid())
+  storeId    String
+  domain     String          @unique
+  type       StoreDomainType
+  isPrimary  Boolean         @default(false)
+  verifiedAt DateTime?
+  store      Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@index([storeId])
+}

@@ -6,6 +6,7 @@ export default [
       "**/.next/**",
       "**/dist/**",
       "**/node_modules/**",
+      "**/src/generated/**",
       "package-lock.json"
     ]
   },

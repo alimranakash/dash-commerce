@@ -1,3 +1,2 @@
-export type DatabasePackageStatus = "placeholder";
-
-export const databasePackageStatus: DatabasePackageStatus = "placeholder";
+export { prisma } from "./client";
+export type { PrismaClient } from "./client";
