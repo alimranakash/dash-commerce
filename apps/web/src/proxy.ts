@@ -12,14 +12,14 @@ export function proxy(request: NextRequest) {
   }
 
   if (pathname.startsWith("/s/")) {
-    const slug = pathname.split("/")[2];
+    const [, , slug, ...segments] = pathname.split("/");
 
     if (!slug) {
       return NextResponse.next();
     }
 
     const url = request.nextUrl.clone();
-    url.pathname = `/storefront/${slug}`;
+    url.pathname = `/storefront/${slug}${segments.length ? `/${segments.join("/")}` : ""}`;
 
     return NextResponse.rewrite(url);
   }
@@ -35,7 +35,7 @@ export function proxy(request: NextRequest) {
   }
 
   const url = request.nextUrl.clone();
-  url.pathname = `/storefront/${hostRoute.slug}`;
+  url.pathname = `/storefront/${hostRoute.slug}${pathname === "/" ? "" : pathname}`;
 
   return NextResponse.rewrite(url);
 }

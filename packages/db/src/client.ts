@@ -42,3 +42,4 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export type { PrismaClient } from "./generated/prisma/client";
+export type { Prisma } from "./generated/prisma/client";
