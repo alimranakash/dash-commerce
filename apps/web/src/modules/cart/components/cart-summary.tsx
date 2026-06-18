@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Cart } from "../cart.types";
 
 type CartSummaryProps = {
@@ -21,9 +22,15 @@ export function CartSummary({ cart, currency, storeId, storeSlug }: CartSummaryP
         <span>Subtotal</span>
         <strong>{formatMoney(cart.totals.subtotal, currency)}</strong>
       </div>
-      <button disabled type="button">
-        Checkout
-      </button>
+      {isEmpty ? (
+        <button disabled type="button">
+          Checkout
+        </button>
+      ) : (
+        <Link className="sf-checkout-link" href={`/s/${storeSlug}/checkout`}>
+          Checkout
+        </Link>
+      )}
       <p>Checkout, shipping, taxes, and payments will be added in the next platform phase.</p>
       {!isEmpty ? (
         <form action="/api/cart" method="post">
