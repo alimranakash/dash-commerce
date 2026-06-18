@@ -14,6 +14,7 @@ import {
 } from "./category.schema";
 
 export { getCategoriesForStore };
+export { getCategoryByIdForStore };
 
 export async function createCategory(storeId: string, input: CreateCategoryInput) {
   const data = createCategorySchema.parse(input);

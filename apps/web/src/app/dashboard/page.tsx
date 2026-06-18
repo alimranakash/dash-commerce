@@ -1,3 +1,4 @@
+import { DashboardShell } from "../../components/dashboard/dashboard-shell";
 import { requireUser } from "../../lib/auth";
 import { LogoutButton } from "../../modules/auth/logout-button";
 import { OnboardingForm } from "../../modules/onboarding/onboarding-form";
@@ -30,7 +31,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <main className="dashboard-page">
+    <DashboardShell storeSlug={store.slug}>
       <section className="dashboard-shell dashboard-overview" aria-labelledby="dashboard-title">
         <div className="dashboard-header">
           <div>
@@ -38,7 +39,6 @@ export default async function DashboardPage() {
             <h1 id="dashboard-title">Welcome, {user.name ?? user.email}</h1>
             <p className="auth-copy">Your commerce workspace is ready for the next build phase.</p>
           </div>
-          <LogoutButton />
         </div>
         <div className="overview-grid">
           <div className="metric-card">
@@ -59,6 +59,6 @@ export default async function DashboardPage() {
           </div>
         </div>
       </section>
-    </main>
+    </DashboardShell>
   );
 }
