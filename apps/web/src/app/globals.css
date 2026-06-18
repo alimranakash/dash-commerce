@@ -270,6 +270,56 @@ select {
   overflow-wrap: anywhere;
 }
 
+.storefront-page {
+  background: #fbfbf8;
+  color: var(--foreground);
+  min-height: 100vh;
+}
+
+.storefront-hero {
+  display: grid;
+  min-height: 68vh;
+  padding: 72px 48px;
+  place-content: center;
+}
+
+.storefront-hero h1 {
+  font-size: clamp(3.5rem, 9vw, 7rem);
+  line-height: 0.95;
+  margin: 0;
+  max-width: 980px;
+}
+
+.storefront-section {
+  border-top: 1px solid var(--border);
+  display: grid;
+  min-height: 32vh;
+  padding: 48px;
+  place-items: center start;
+}
+
+.storefront-section > div {
+  max-width: 760px;
+}
+
+.storefront-section h2 {
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1;
+  margin: 0;
+}
+
+.storefront-section p {
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.6;
+  margin: 18px 0 0;
+  max-width: 660px;
+}
+
+.storefront-not-found {
+  gap: 24px;
+}
+
 @media (max-width: 640px) {
   .page {
     padding: 28px;
@@ -298,5 +348,14 @@ select {
   .form-grid,
   .overview-grid {
     grid-template-columns: 1fr;
+  }
+
+  .storefront-hero,
+  .storefront-section {
+    padding: 32px 24px;
+  }
+
+  .storefront-hero h1 {
+    font-size: 3rem;
   }
 }
