@@ -1,0 +1,30 @@
+{
+  "name": "dash-commerce-os",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "npm@11.6.1",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev --env-mode=loose --filter=@dash/web",
+    "build": "turbo build --env-mode=loose",
+    "lint": "turbo lint --env-mode=loose",
+    "typecheck": "turbo typecheck --env-mode=loose",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@dash/config": "0.0.0",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.9.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^10.5.0",
+    "prettier": "^3.8.4",
+    "tsx": "^4.22.4",
+    "turbo": "^2.9.18",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.1"
+  }
+}
