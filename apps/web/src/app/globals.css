@@ -38,6 +38,10 @@ input {
   font: inherit;
 }
 
+select {
+  font: inherit;
+}
+
 .page {
   display: grid;
   min-height: 100vh;
@@ -115,7 +119,8 @@ input {
 }
 
 .auth-panel,
-.dashboard-shell {
+.dashboard-shell,
+.onboarding-shell {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -128,11 +133,20 @@ input {
 }
 
 .dashboard-shell {
+  padding: 34px;
+  width: min(100%, 760px);
+}
+
+.onboarding-shell {
+  padding: 34px;
+  width: min(100%, 820px);
+}
+
+.dashboard-header {
+  align-items: flex-start;
   display: flex;
   gap: 24px;
   justify-content: space-between;
-  padding: 34px;
-  width: min(100%, 760px);
 }
 
 .auth-panel h1,
@@ -148,13 +162,15 @@ input {
   margin: 14px 0 0;
 }
 
-.auth-form {
+.auth-form,
+.onboarding-form {
   display: grid;
   gap: 16px;
   margin-top: 28px;
 }
 
-.auth-form label {
+.auth-form label,
+.onboarding-form label {
   color: var(--foreground);
   display: grid;
   font-size: 0.92rem;
@@ -162,16 +178,36 @@ input {
   gap: 8px;
 }
 
-.auth-form input {
+.auth-form input,
+.onboarding-form input,
+.onboarding-form select {
   border: 1px solid var(--border);
   border-radius: 8px;
   min-height: 44px;
   padding: 0 12px;
 }
 
-.auth-form input:focus {
+.auth-form input:focus,
+.onboarding-form input:focus,
+.onboarding-form select:focus {
   border-color: var(--accent);
   outline: 2px solid rgb(19 93 102 / 18%);
+}
+
+.form-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.domain-preview {
+  background: #eef7f7;
+  border: 1px solid #c9e2e4;
+  border-radius: 8px;
+  color: var(--accent);
+  font-weight: 700;
+  margin: -6px 0 4px;
+  padding: 10px 12px;
 }
 
 .action-button {
@@ -204,6 +240,36 @@ input {
   font-weight: 700;
 }
 
+.dashboard-overview {
+  display: grid;
+  gap: 28px;
+}
+
+.overview-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.metric-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  min-height: 96px;
+  padding: 16px;
+}
+
+.metric-card span {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.metric-card strong {
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 640px) {
   .page {
     padding: 28px;
@@ -220,11 +286,17 @@ input {
   }
 
   .auth-panel,
-  .dashboard-shell {
+  .dashboard-shell,
+  .onboarding-shell {
     padding: 24px;
   }
 
-  .dashboard-shell {
+  .dashboard-header {
     display: grid;
+  }
+
+  .form-grid,
+  .overview-grid {
+    grid-template-columns: 1fr;
   }
 }

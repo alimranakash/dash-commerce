@@ -106,6 +106,7 @@ model Store {
   organizationId String
   name           String
   slug           String        @unique
+  businessType   String        @default("general")
   status         StoreStatus   @default(DRAFT)
   currency       String        @default("USD")
   country        String        @default("US")
