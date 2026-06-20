@@ -1361,6 +1361,24 @@ textarea {
   width: auto;
 }
 
+.payment-option {
+  align-items: flex-start;
+}
+
+.payment-option > span {
+  color: #171717;
+  display: grid;
+  gap: 4px;
+}
+
+.payment-option small {
+  color: #626870;
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
 .sf-checkout-form > button {
   background: #171717;
   border: 1px solid #171717;
@@ -1421,6 +1439,70 @@ textarea {
   font-size: 0.85rem;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.sf-payment-instructions {
+  background: #ffffff;
+  border: 1px solid rgba(23, 23, 23, 0.08);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+  max-width: 760px;
+  padding: 22px;
+}
+
+.sf-payment-instructions h2,
+.sf-payment-instructions p {
+  margin: 0;
+}
+
+.sf-payment-instructions p {
+  color: #555f68;
+  line-height: 1.6;
+}
+
+.payment-settings-form {
+  gap: 18px;
+}
+
+.payment-method-panel {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+}
+
+.payment-method-heading {
+  align-items: start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.payment-method-heading h2 {
+  font-size: 1.1rem;
+  margin: 0 0 6px;
+}
+
+.payment-method-heading p {
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.toggle-row {
+  align-items: center;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.toggle-row input {
+  min-height: 0;
+  width: auto;
 }
 
 .order-detail-panel {
