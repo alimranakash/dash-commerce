@@ -4,12 +4,23 @@ import type { Cart } from "../cart.types";
 type CartSummaryProps = {
   cart: Cart;
   currency: string;
+  shippingAmount?: unknown;
+  shippingLabel?: string;
   storeId: string;
   storeSlug: string;
 };
 
-export function CartSummary({ cart, currency, storeId, storeSlug }: CartSummaryProps) {
+export function CartSummary({
+  cart,
+  currency,
+  shippingAmount,
+  shippingLabel,
+  storeId,
+  storeSlug
+}: CartSummaryProps) {
   const isEmpty = cart.items.length === 0;
+  const hasShippingEstimate = shippingAmount !== undefined;
+  const estimatedTotal = (Number(cart.totals.subtotal) + Number(shippingAmount ?? 0)).toFixed(2);
 
   return (
     <aside className="sf-cart-summary" aria-labelledby="cart-summary-title">
@@ -22,6 +33,18 @@ export function CartSummary({ cart, currency, storeId, storeSlug }: CartSummaryP
         <span>Subtotal</span>
         <strong>{formatMoney(cart.totals.subtotal, currency)}</strong>
       </div>
+      {hasShippingEstimate ? (
+        <>
+          <div>
+            <span>{shippingLabel ?? "Shipping"}</span>
+            <strong>{formatMoney(shippingAmount, currency)}</strong>
+          </div>
+          <div>
+            <span>Estimated total</span>
+            <strong>{formatMoney(estimatedTotal, currency)}</strong>
+          </div>
+        </>
+      ) : null}
       {isEmpty ? (
         <button disabled type="button">
           Checkout
@@ -31,7 +54,7 @@ export function CartSummary({ cart, currency, storeId, storeSlug }: CartSummaryP
           Checkout
         </Link>
       )}
-      <p>Checkout, shipping, taxes, and payments will be added in the next platform phase.</p>
+      <p>Shipping and payment are confirmed securely during checkout.</p>
       {!isEmpty ? (
         <form action="/api/cart" method="post">
           <input name="cartAction" type="hidden" value="clear" />
@@ -46,7 +69,7 @@ export function CartSummary({ cart, currency, storeId, storeSlug }: CartSummaryP
   );
 }
 
-function formatMoney(value: string, currency: string) {
+function formatMoney(value: unknown, currency: string) {
   return new Intl.NumberFormat("en", {
     currency,
     style: "currency"

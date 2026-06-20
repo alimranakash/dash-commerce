@@ -1505,6 +1505,53 @@ textarea {
   width: auto;
 }
 
+.shipping-settings-form {
+  gap: 20px;
+}
+
+.shipping-zone-panel {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+}
+
+.shipping-rate-list {
+  display: grid;
+  gap: 14px;
+}
+
+.shipping-rate-card {
+  background: #faf9f5;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.shipping-rate-heading {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.delete-row {
+  align-items: center;
+  color: #9d2b1f !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  gap: 8px;
+  width: fit-content;
+}
+
+.delete-row input {
+  min-height: 0;
+  width: auto;
+}
+
 .order-detail-panel {
   display: grid;
   gap: 14px;

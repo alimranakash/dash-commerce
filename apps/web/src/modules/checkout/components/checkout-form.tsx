@@ -9,14 +9,36 @@ type CheckoutPaymentMethod = {
   accountType: string | null;
 };
 
+type CheckoutShippingRate = {
+  id: string;
+  name: string;
+  district: string | null;
+  city: string | null;
+  area: string | null;
+  amount: unknown;
+  zone: {
+    name: string;
+  };
+};
+
 type CheckoutFormProps = {
   checkoutError: string | undefined;
+  currency: string;
   paymentMethods: CheckoutPaymentMethod[];
+  shippingRates: CheckoutShippingRate[];
   storeSlug: string;
 };
 
-export function CheckoutForm({ checkoutError, paymentMethods, storeSlug }: CheckoutFormProps) {
+export function CheckoutForm({
+  checkoutError,
+  currency,
+  paymentMethods,
+  shippingRates,
+  storeSlug
+}: CheckoutFormProps) {
   const defaultMethod = paymentMethods.find((method) => method.type === "COD") ?? paymentMethods[0];
+  const defaultShippingRate = shippingRates[0];
+  const canSubmit = paymentMethods.length > 0 && shippingRates.length > 0;
 
   return (
     <form action="/api/checkout" className="sf-checkout-form" method="post">
@@ -36,6 +58,32 @@ export function CheckoutForm({ checkoutError, paymentMethods, storeSlug }: Check
           Email <span>Optional</span>
           <input autoComplete="email" name="email" type="email" />
         </label>
+      </fieldset>
+      <fieldset>
+        <legend>Delivery method</legend>
+        {shippingRates.length === 0 ? (
+          <p className="sf-alert">This store has not enabled any delivery rates yet.</p>
+        ) : (
+          shippingRates.map((rate) => (
+            <label className="sf-radio-row payment-option" key={rate.id}>
+              <input
+                defaultChecked={rate.id === defaultShippingRate?.id}
+                name="shippingRateId"
+                required
+                type="radio"
+                value={rate.id}
+              />
+              <span>
+                <strong>{rate.name}</strong>
+                <small>
+                  {rate.zone.name}
+                  {formatLocation(rate) ? ` - ${formatLocation(rate)}` : ""}
+                </small>
+                <small>{formatMoney(rate.amount, currency)}</small>
+              </span>
+            </label>
+          ))
+        )}
       </fieldset>
       <fieldset>
         <legend>Delivery address</legend>
@@ -113,9 +161,20 @@ export function CheckoutForm({ checkoutError, paymentMethods, storeSlug }: Check
           <textarea name="notes" rows={3} />
         </label>
       </fieldset>
-      <button disabled={paymentMethods.length === 0} type="submit">
+      <button disabled={!canSubmit} type="submit">
         Place order
       </button>
     </form>
   );
+}
+
+function formatLocation(rate: CheckoutShippingRate) {
+  return [rate.area, rate.city, rate.district].filter(Boolean).join(", ");
+}
+
+function formatMoney(value: unknown, currency: string) {
+  return new Intl.NumberFormat("en-BD", {
+    currency,
+    style: "currency"
+  }).format(Number(value));
 }

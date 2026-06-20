@@ -39,7 +39,7 @@ npm run lint
 npm run typecheck
 ```
 
-Copy `.env.example` to `.env.local` when local environment values are needed. Auth, products, orders, payments, and StoreOS integration are intentionally not implemented yet.
+Copy `.env.example` to `.env.local` when local environment values are needed. StoreOS integration and live courier/payment gateway APIs are intentionally not implemented yet.
 
 ## Database Setup
 
@@ -81,7 +81,7 @@ Open Prisma Studio:
 npm run db:studio
 ```
 
-The current schema covers users, Auth.js accounts and sessions, organizations, organization memberships, stores, and store domains only. Product, order, customer, payment, and StoreOS integration models are intentionally not implemented yet.
+The current schema covers users, Auth.js accounts and sessions, organizations, stores, products, categories, carts, checkout orders, store settings, payment methods, and manual shipping zones/rates. Run `npm run db:push` after pulling schema changes so the local database has the newest columns and tables.
 
 ## Authentication Setup
 
@@ -106,3 +106,18 @@ npm run dev
 ```
 
 Visit `/register`, create an account, then use `/login`, `/dashboard`, and the dashboard sign-out button.
+
+## Shipping Setup
+
+New stores automatically receive two enabled shipping zones and rates:
+
+- Inside Dhaka: 70 BDT
+- Outside Dhaka: 130 BDT
+
+Existing stores are safely backfilled when the shipping settings page or checkout loads. Sellers can manage zones and flat rates at:
+
+```bash
+/dashboard/shipping
+```
+
+Checkout only shows enabled rates whose zone is also enabled. The selected rate is reloaded server-side during order creation, and the order stores a snapshot of the delivery method and shipping amount.

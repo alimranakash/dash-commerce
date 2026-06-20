@@ -113,6 +113,33 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
             ) : null}
           </dl>
         </section>
+        <section className="dashboard-shell order-detail-panel">
+          <p className="eyebrow">Shipping</p>
+          <dl className="order-totals">
+            <dt>Method</dt>
+            <dd>{order.shippingRateName ?? "Manual delivery"}</dd>
+            <dt>Amount</dt>
+            <dd>{formatMoney(order.shippingAmount, order.currency)}</dd>
+            {order.shippingDistrict ? (
+              <>
+                <dt>District</dt>
+                <dd>{order.shippingDistrict}</dd>
+              </>
+            ) : null}
+            {order.shippingCity ? (
+              <>
+                <dt>City</dt>
+                <dd>{order.shippingCity}</dd>
+              </>
+            ) : null}
+            {order.shippingArea ? (
+              <>
+                <dt>Area</dt>
+                <dd>{order.shippingArea}</dd>
+              </>
+            ) : null}
+          </dl>
+        </section>
         <div className="table-card">
           <table className="resource-table">
             <thead>

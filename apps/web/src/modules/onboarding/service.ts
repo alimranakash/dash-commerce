@@ -1,4 +1,5 @@
 import { prisma } from "@dash/db";
+import { createDefaultShippingRecords } from "../shipping/shipping.repository";
 import {
   DEFAULT_FEATURED_TITLE,
   DEFAULT_HERO_TITLE,
@@ -95,10 +96,17 @@ export async function createOnboardingWorkspace(userId: string, input: Onboardin
         }
       }
     });
+    const store = organization.stores[0];
+
+    if (!store) {
+      throw new Error("Store setup failed.");
+    }
+
+    await createDefaultShippingRecords(tx, store.id);
 
     return {
       organization,
-      store: organization.stores[0]
+      store
     };
   });
 }

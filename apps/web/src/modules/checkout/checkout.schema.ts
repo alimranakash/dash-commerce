@@ -45,6 +45,7 @@ export const checkoutSchema = z.object({
     .max(1000)
     .optional()
     .transform((value) => value || undefined),
+  shippingRateId: z.string().trim().min(1, "Choose a shipping method."),
   paymentMethod: z.enum(paymentMethodTypes),
   paymentReference: z
     .string()

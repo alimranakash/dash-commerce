@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
       addressLine2: getValue(formData, "addressLine2"),
       postalCode: getValue(formData, "postalCode"),
       notes: getValue(formData, "notes"),
+      shippingRateId: getValue(formData, "shippingRateId"),
       paymentMethod: getValue(formData, "paymentMethod") as PaymentMethodTypeValue,
       paymentReference: getValue(formData, "paymentReference"),
       paymentNote: getValue(formData, "paymentNote")

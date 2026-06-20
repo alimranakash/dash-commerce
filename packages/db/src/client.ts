@@ -12,7 +12,10 @@ config({ path: resolve(repoRoot, ".env.local"), override: true, quiet: true });
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
+  prismaSignature?: string;
 };
+
+const PRISMA_CLIENT_SIGNATURE = "dash-commerce-os-shipping-v1";
 
 function createPrismaClient() {
   const connectionString = process.env.DATABASE_URL ?? "";
@@ -35,10 +38,14 @@ function getDatabaseSchema(connectionString: string) {
   return new URL(connectionString).searchParams.get("schema") ?? undefined;
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+export const prisma =
+  globalForPrisma.prismaSignature === PRISMA_CLIENT_SIGNATURE && globalForPrisma.prisma
+    ? globalForPrisma.prisma
+    : createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
+  globalForPrisma.prismaSignature = PRISMA_CLIENT_SIGNATURE;
 }
 
 export type { PrismaClient } from "./generated/prisma/client";

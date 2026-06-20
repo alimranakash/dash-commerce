@@ -4,6 +4,7 @@ import {
   getEnabledPaymentMethodForCheckout,
   isManualPaymentType
 } from "../payments/payment.service";
+import { getEnabledShippingRateForCheckout } from "../shipping/shipping.service";
 import { checkoutSchema, type CheckoutInput } from "./checkout.schema";
 
 type CheckoutStore = {
@@ -21,6 +22,7 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
   }
 
   const paymentMethod = await getEnabledPaymentMethodForCheckout(store.id, data.paymentMethod);
+  const shippingRate = await getEnabledShippingRateForCheckout(store.id, data.shippingRateId);
 
   if (isManualPaymentType(data.paymentMethod) && !data.paymentReference) {
     throw new Error("Transaction ID or payment reference is required for this payment method.");
@@ -118,6 +120,8 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
 
     const orderNumber = await generateOrderNumber(tx, store.id);
     const subtotalAmount = cart.totals.subtotal;
+    const shippingAmount = Number(shippingRate.amount).toFixed(2);
+    const totalAmount = (Number(subtotalAmount) + Number(shippingAmount)).toFixed(2);
 
     return tx.order.create({
       data: {
@@ -133,10 +137,15 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
         fulfillmentStatus: "UNFULFILLED",
         currency: store.currency,
         subtotalAmount,
-        shippingAmount: "0.00",
+        shippingAmount,
+        shippingRateId: shippingRate.id,
+        shippingRateName: shippingRate.name,
+        shippingDistrict: shippingRate.district ?? data.district,
+        shippingCity: shippingRate.city ?? data.city ?? null,
+        shippingArea: shippingRate.area ?? data.area ?? null,
         discountAmount: "0.00",
         taxAmount: "0.00",
-        totalAmount: subtotalAmount,
+        totalAmount,
         customerName: data.name,
         customerEmail: data.email ?? null,
         customerPhone: data.phone,

@@ -3,6 +3,7 @@ import { CartSummary } from "../../../../modules/cart/components/cart-summary";
 import { getCart } from "../../../../modules/cart/cart.service";
 import { CheckoutForm } from "../../../../modules/checkout/components/checkout-form";
 import { getEnabledPaymentMethods } from "../../../../modules/payments/payment.service";
+import { getEnabledShippingRates } from "../../../../modules/shipping/shipping.service";
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../modules/storefront/components/storefront-header";
 import { requireStorefrontBySlug } from "../../../../modules/storefront/resolver";
@@ -23,6 +24,18 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
   const cart = await getCart(store.id);
   const paymentMethods = await getEnabledPaymentMethods(store.id);
+  const shippingRates = await getEnabledShippingRates(store.id);
+  const checkoutShippingRates = shippingRates.map((rate) => ({
+    id: rate.id,
+    name: rate.name,
+    district: rate.district,
+    city: rate.city,
+    area: rate.area,
+    amount: rate.amount.toString(),
+    zone: {
+      name: rate.zone.name
+    }
+  }));
 
   return (
     <main className="sf-page">
@@ -46,12 +59,20 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
         <section className="sf-checkout-layout" aria-label="Checkout form">
           <CheckoutForm
             checkoutError={checkoutError}
+            currency={store.currency}
             paymentMethods={paymentMethods}
+            shippingRates={checkoutShippingRates}
             storeSlug={store.slug}
           />
           <CartSummary
             cart={cart}
             currency={store.currency}
+            {...(checkoutShippingRates[0]
+              ? {
+                  shippingAmount: checkoutShippingRates[0].amount,
+                  shippingLabel: checkoutShippingRates[0].name
+                }
+              : {})}
             storeId={store.id}
             storeSlug={store.slug}
           />

@@ -14,6 +14,7 @@ const links = [
   { href: "/dashboard/products", label: "Products" },
   { href: "/dashboard/categories", label: "Categories" },
   { href: "/dashboard/payments", label: "Payments" },
+  { href: "/dashboard/shipping", label: "Shipping" },
   { href: "/dashboard/theme", label: "Theme" },
   { href: "/dashboard/settings", label: "Settings" }
 ];

@@ -43,6 +43,14 @@ export default async function ThankYouPage({ params }: ThankYouPageProps) {
             <strong>{formatMoney(order.totalAmount, order.currency)}</strong>
           </div>
           <div>
+            <span>Shipping</span>
+            <strong>{formatMoney(order.shippingAmount, order.currency)}</strong>
+          </div>
+          <div>
+            <span>Delivery method</span>
+            <strong>{order.shippingRateName ?? "Manual delivery"}</strong>
+          </div>
+          <div>
             <span>Payment status</span>
             <strong>{order.paymentStatus.toLowerCase()}</strong>
           </div>
