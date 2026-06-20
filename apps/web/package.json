@@ -12,6 +12,7 @@
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
     "@dash/db": "^0.0.0",
+    "@dash/storeos-sdk": "^0.0.0",
     "@dash/ui": "0.0.0",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",

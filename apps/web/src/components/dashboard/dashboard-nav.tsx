@@ -10,6 +10,7 @@ type DashboardNavProps = {
 
 const links = [
   { href: "/dashboard", label: "Overview" },
+  { href: "/dashboard/ai", label: "AI Assistant" },
   { href: "/dashboard/orders", label: "Orders" },
   { href: "/dashboard/products", label: "Products" },
   { href: "/dashboard/categories", label: "Categories" },

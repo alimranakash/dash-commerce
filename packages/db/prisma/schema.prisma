@@ -163,6 +163,7 @@ model Store {
   paymentMethods PaymentMethod[]
   shippingZones  ShippingZone[]
   shippingRates  ShippingRate[]
+  storeosConnection StoreOSConnection?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @default(now()) @updatedAt
 
@@ -268,6 +269,21 @@ model ShippingRate {
 
   @@index([storeId])
   @@index([zoneId])
+}
+
+model StoreOSConnection {
+  id                  String   @id @default(cuid())
+  storeId             String   @unique
+  storeosConnectionId String?  @unique
+  platformType        String   @default("dash")
+  status              String   @default("pending")
+  capabilities        Json
+  lastSyncedAt        DateTime?
+  store               Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @default(now()) @updatedAt
+
+  @@index([status])
 }
 
 model Product {

@@ -2,7 +2,11 @@ import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { StoreSettingsForm } from "../../../modules/settings/components/store-settings-form";
 import { updateStoreSettingsFormAction } from "../../../modules/settings/settings.actions";
 import { getStoreSettings } from "../../../modules/settings/settings.service";
+import { StoreOSConnectionPanel } from "../../../modules/storeos/components/storeos-connection-panel";
+import { reconnectStoreOSAction } from "../../../modules/storeos/storeos.actions";
+import { getStoreOSConnection } from "../../../modules/storeos/storeos.service";
 import { requireStore } from "../../../modules/stores/queries";
+import { isStoreOSConfigured } from "@dash/storeos-sdk";
 
 type SettingsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -11,6 +15,7 @@ type SettingsPageProps = {
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
   const store = await requireStore();
   const settings = await getStoreSettings(store.id);
+  const storeosConnection = await getStoreOSConnection(store.id);
   const message = (await searchParams).updated ? "Store settings updated." : null;
 
   return (
@@ -24,6 +29,21 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           </div>
         </div>
         {message ? <p className="success-message">{message}</p> : null}
+        <div className="dashboard-shell">
+          <StoreOSConnectionPanel
+            action={reconnectStoreOSAction}
+            connection={
+              storeosConnection
+                ? {
+                    lastSyncedAt: storeosConnection.lastSyncedAt?.toISOString() ?? null,
+                    status: storeosConnection.status,
+                    storeosConnectionId: storeosConnection.storeosConnectionId
+                  }
+                : null
+            }
+            isConfigured={isStoreOSConfigured()}
+          />
+        </div>
         <div className="dashboard-shell">
           <StoreSettingsForm action={updateStoreSettingsFormAction} settings={settings} />
         </div>

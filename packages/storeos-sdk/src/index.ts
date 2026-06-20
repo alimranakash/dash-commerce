@@ -1,8 +1,21 @@
-export interface StoreOSClientOptions {
-  apiUrl: string;
-  apiKey?: string;
-}
-
-export type StoreOSSDKStatus = "placeholder";
-
-export const storeosSdkStatus: StoreOSSDKStatus = "placeholder";
+export {
+  createStoreOSClientFromEnv,
+  isStoreOSConfigured,
+  StoreOSClient,
+  StoreOSConfigurationError,
+  StoreOSRequestError,
+  type StoreOSClientOptions,
+  type StoreOSEnv
+} from "./client";
+export type {
+  CreateNativeConnectionInput,
+  StoreOSActionInput,
+  StoreOSActionResponse,
+  StoreOSCapabilities,
+  StoreOSChatMessageInput,
+  StoreOSChatMessageResponse,
+  StoreOSConnection,
+  StoreOSConnectionStatus,
+  StoreOSJsonValue,
+  StoreOSPlatformType
+} from "./types";

@@ -10,7 +10,7 @@ Dash Commerce OS is a production-grade multi-tenant SaaS commerce platform. This
 - `packages/ui` - Shared React UI primitives.
 - `packages/config` - Shared TypeScript and ESLint configuration.
 - `packages/types` - Shared TypeScript domain types.
-- `packages/storeos-sdk` - Placeholder for the future StoreOS API SDK.
+- `packages/storeos-sdk` - Typed StoreOS native connector SDK used by the Dash web app.
 
 ## Local Setup
 
@@ -39,7 +39,7 @@ npm run lint
 npm run typecheck
 ```
 
-Copy `.env.example` to `.env.local` when local environment values are needed. StoreOS integration and live courier/payment gateway APIs are intentionally not implemented yet.
+Copy `.env.example` to `.env.local` when local environment values are needed. Live courier/payment gateway APIs are intentionally not implemented yet.
 
 ## Database Setup
 
@@ -81,7 +81,7 @@ Open Prisma Studio:
 npm run db:studio
 ```
 
-The current schema covers users, Auth.js accounts and sessions, organizations, stores, products, categories, carts, checkout orders, store settings, payment methods, and manual shipping zones/rates. Run `npm run db:push` after pulling schema changes so the local database has the newest columns and tables.
+The current schema covers users, Auth.js accounts and sessions, organizations, stores, products, categories, carts, checkout orders, store settings, payment methods, manual shipping zones/rates, and StoreOS native connections. Run `npm run db:push` after pulling schema changes so the local database has the newest columns and tables.
 
 ## Authentication Setup
 
@@ -121,3 +121,14 @@ Existing stores are safely backfilled when the shipping settings page or checkou
 ```
 
 Checkout only shows enabled rates whose zone is also enabled. The selected rate is reloaded server-side during order creation, and the order stores a snapshot of the delivery method and shipping amount.
+
+## StoreOS Setup
+
+Dash can create a native StoreOS connection per store and route AI Assistant messages through the Dash backend. Set these server-only values in `.env`:
+
+```bash
+STOREOS_API_URL="https://api.storeos.example"
+STOREOS_API_KEY="replace-with-storeos-api-key"
+```
+
+If these values are missing, onboarding still succeeds and the StoreOS connection stays pending. Sellers can retry from `/dashboard/settings`, and they can open the AI Assistant at `/dashboard/ai`.

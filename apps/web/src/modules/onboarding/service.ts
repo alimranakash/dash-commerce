@@ -6,6 +6,7 @@ import {
   DEFAULT_PRIMARY_COLOR,
   DEFAULT_THEME_NAME
 } from "../settings/settings.repository";
+import { connectStoreOSForStore } from "../storeos/storeos.service";
 import { onboardingSchema, type OnboardingInput } from "./schemas";
 
 export async function createOnboardingWorkspace(userId: string, input: OnboardingInput) {
@@ -38,7 +39,7 @@ export async function createOnboardingWorkspace(userId: string, input: Onboardin
     throw new Error("This store slug is already taken.");
   }
 
-  return prisma.$transaction(async (tx) => {
+  const workspace = await prisma.$transaction(async (tx) => {
     const organization = await tx.organization.create({
       data: {
         name: data.organizationName,
@@ -109,6 +110,14 @@ export async function createOnboardingWorkspace(userId: string, input: Onboardin
       store
     };
   });
+
+  try {
+    await connectStoreOSForStore(workspace.store.id);
+  } catch {
+    // StoreOS is an external service; store creation must remain reliable if it is unavailable.
+  }
+
+  return workspace;
 }
 
 async function createUniqueOrganizationSlug(name: string) {
