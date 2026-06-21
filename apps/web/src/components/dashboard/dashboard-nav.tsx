@@ -40,12 +40,22 @@ const productLinks = [
   { href: "/dashboard/categories", label: "Categories" }
 ];
 
+const reportLinks = [
+  { href: "/dashboard/reports", label: "Overview" },
+  { href: "/dashboard/reports/orders", label: "Orders" },
+  { href: "/dashboard/reports/revenues", label: "Revenues" },
+  { href: "/dashboard/reports/products", label: "Products" },
+  { href: "/dashboard/reports/customers", label: "Customers" }
+];
+
 const mainLinks: NavItem[] = [
   { href: "/dashboard/orders", icon: ReceiptText, label: "Orders" },
   { href: "/dashboard/transactions", icon: CircleDollarSign, label: "Transactions" },
   { href: "/dashboard/customers", icon: Users, label: "Customers" },
-  { href: "/dashboard/coupons", icon: Percent, label: "Coupons" },
-  { href: "/dashboard/reports", icon: FileText, label: "Reports" },
+  { href: "/dashboard/coupons", icon: Percent, label: "Coupons" }
+];
+
+const trailingLinks: NavItem[] = [
   { href: "/dashboard/abandoned-cart", icon: ShoppingCart, label: "Abandoned cart" },
   { href: "/dashboard/settings", icon: Settings, label: "Settings" }
 ];
@@ -65,11 +75,17 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
   const productRouteActive = ["/dashboard/products", "/dashboard/attributes", "/dashboard/tags", "/dashboard/brands", "/dashboard/categories"].some(
     (route) => pathname.startsWith(route)
   );
+  const reportRouteActive = pathname.startsWith("/dashboard/reports");
   const [productsOpen, setProductsOpen] = useState(productRouteActive);
+  const [reportsOpen, setReportsOpen] = useState(reportRouteActive);
 
   useEffect(() => {
     if (productRouteActive) setProductsOpen(true);
   }, [productRouteActive]);
+
+  useEffect(() => {
+    if (reportRouteActive) setReportsOpen(true);
+  }, [reportRouteActive]);
 
   return (
     <aside
@@ -126,6 +142,45 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
             />
           ))}
         </div>
+
+        <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${reportRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
+          <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/reports" onClick={onClose}>
+            <FileText className="h-4 w-4 text-pink-500" />
+            <span>Reports</span>
+          </Link>
+          <button aria-label="Toggle reports menu" className="p-2" onClick={() => setReportsOpen((current) => !current)} type="button">
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${reportsOpen ? "rotate-180" : ""}`} />
+          </button>
+        </div>
+        {reportsOpen ? (
+          <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
+            {reportLinks.map((link) => (
+              <Link
+                aria-current={isReportLinkActive(pathname, link.href) ? "page" : undefined}
+                className={`block rounded-md px-3 py-2 text-[12px] transition ${isReportLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                href={link.href}
+                key={link.href}
+                onClick={onClose}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="mt-1 space-y-1">
+          {trailingLinks.map((link) => (
+            <NavLink
+              href={link.href}
+              icon={link.icon}
+              {...(iconColors[link.label] ? { iconClassName: iconColors[link.label] } : {})}
+              key={link.href}
+              label={link.label}
+              onClick={onClose}
+              pathname={pathname}
+            />
+          ))}
+        </div>
       </nav>
 
       <div className="border-t border-[#f0f0f7] p-3">
@@ -149,6 +204,10 @@ function isProductLinkActive(pathname: string, href: string) {
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function isReportLinkActive(pathname: string, href: string) {
+  return href === "/dashboard/reports" ? pathname === href : pathname.startsWith(href);
 }
 
 function NavLink({ href, icon: Icon, iconClassName, label, onClick, pathname }: NavItem & { iconClassName?: string; onClick: () => void; pathname: string }) {
