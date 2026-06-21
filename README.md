@@ -81,7 +81,7 @@ Open Prisma Studio:
 npm run db:studio
 ```
 
-The current schema covers users, Auth.js accounts and sessions, organizations, stores, products, categories, carts, checkout orders, store settings, payment methods, manual shipping zones/rates, and StoreOS native connections. Run `npm run db:push` after pulling schema changes so the local database has the newest columns and tables.
+The current schema covers users, Auth.js accounts and sessions, organizations, stores, products, categories, carts, checkout orders, store settings, payment methods, manual shipping zones/rates, StoreOS native connections, and store-scoped media assets. Run `npm run db:push` after pulling schema changes so the local database has the newest columns and tables.
 
 ## Authentication Setup
 
@@ -132,3 +132,23 @@ STOREOS_API_KEY="replace-with-storeos-api-key"
 ```
 
 If these values are missing, onboarding still succeeds and the StoreOS connection stays pending. Sellers can retry from `/dashboard/settings`, and they can open the AI Assistant at `/dashboard/ai`.
+
+## Media Storage
+
+Local development uploads use the `local` storage driver and write files under `apps/web/public/uploads`. Uploaded asset records are stored per store in PostgreSQL.
+
+```bash
+STORAGE_DRIVER="local"
+STORAGE_PUBLIC_URL=
+```
+
+The S3/R2-compatible environment placeholders are present for the production driver foundation:
+
+```bash
+STORAGE_BUCKET=
+STORAGE_REGION=
+STORAGE_ACCESS_KEY_ID=
+STORAGE_SECRET_ACCESS_KEY=
+```
+
+Manage uploaded media at `/dashboard/media`, then use the uploaded URLs in product, store settings, and theme forms.

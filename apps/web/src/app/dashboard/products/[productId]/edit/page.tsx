@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { DashboardShell } from "../../../../../components/dashboard/dashboard-shell";
 import { getCategoriesForStore } from "../../../../../modules/categories/category.service";
+import { getMediaPickerAssets } from "../../../../../modules/media/media.service";
 import { ProductForm } from "../../../../../modules/products/components/product-form";
 import { updateProductFormAction } from "../../../../../modules/products/product.actions";
 import { getProductByIdForStore } from "../../../../../modules/products/product.service";
@@ -16,9 +17,10 @@ type EditProductPageProps = {
 export default async function EditProductPage({ params }: EditProductPageProps) {
   const store = await requireStore();
   const { productId } = await params;
-  const [product, categories] = await Promise.all([
+  const [product, categories, mediaAssets] = await Promise.all([
     getProductByIdForStore(store.id, productId),
-    getCategoriesForStore(store.id)
+    getCategoriesForStore(store.id),
+    getMediaPickerAssets(store.id)
   ]);
 
   if (!product) {
@@ -44,6 +46,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
             id: category.id,
             name: category.name
           }))}
+          mediaAssets={mediaAssets}
           product={{
             id: product.id,
             title: product.title,

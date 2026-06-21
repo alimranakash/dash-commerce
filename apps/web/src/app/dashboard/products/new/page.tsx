@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
 import { getCategoriesForStore } from "../../../../modules/categories/category.service";
+import { getMediaPickerAssets } from "../../../../modules/media/media.service";
 import { ProductForm } from "../../../../modules/products/components/product-form";
 import { createProductFormAction } from "../../../../modules/products/product.actions";
 import { requireStore } from "../../../../modules/stores/queries";
 
 export default async function NewProductPage() {
   const store = await requireStore();
-  const categories = await getCategoriesForStore(store.id);
+  const [categories, mediaAssets] = await Promise.all([
+    getCategoriesForStore(store.id),
+    getMediaPickerAssets(store.id)
+  ]);
 
   return (
     <DashboardShell storeSlug={store.slug}>
@@ -28,6 +32,7 @@ export default async function NewProductPage() {
             id: category.id,
             name: category.name
           }))}
+          mediaAssets={mediaAssets}
           submitLabel="Create product"
         />
       </section>

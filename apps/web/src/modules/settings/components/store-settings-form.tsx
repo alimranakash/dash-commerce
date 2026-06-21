@@ -1,7 +1,9 @@
 "use client";
 
 import { Button } from "@dash/ui";
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useState, type ReactNode } from "react";
+import { MediaUrlPicker } from "../../media/components/media-url-picker";
+import type { MediaPickerAsset } from "../../media/media.types";
 import type { SettingsActionState } from "../settings.actions";
 
 export type StoreSettingsFormValue = {
@@ -18,6 +20,7 @@ export type StoreSettingsFormValue = {
 
 type StoreSettingsFormProps = {
   action: (state: SettingsActionState, formData: FormData) => Promise<SettingsActionState>;
+  mediaAssets?: MediaPickerAsset[];
   settings: StoreSettingsFormValue;
 };
 
@@ -25,8 +28,10 @@ const initialState: SettingsActionState = {
   status: "idle"
 };
 
-export function StoreSettingsForm({ action, settings }: StoreSettingsFormProps) {
+export function StoreSettingsForm({ action, mediaAssets = [], settings }: StoreSettingsFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
+  const [logoUrl, setLogoUrl] = useState(settings.logoUrl ?? "");
+  const [faviconUrl, setFaviconUrl] = useState(settings.faviconUrl ?? "");
 
   return (
     <form action={formAction} className="resource-form">
@@ -39,14 +44,26 @@ export function StoreSettingsForm({ action, settings }: StoreSettingsFormProps) 
         <FieldError errors={state.fieldErrors} name="logoUrl">
           <label>
             Logo URL
-            <input defaultValue={settings.logoUrl ?? ""} name="logoUrl" type="url" />
+            <input
+              name="logoUrl"
+              onChange={(event) => setLogoUrl(event.target.value)}
+              type="url"
+              value={logoUrl}
+            />
           </label>
+          <MediaUrlPicker assets={mediaAssets} onSelect={setLogoUrl} />
         </FieldError>
         <FieldError errors={state.fieldErrors} name="faviconUrl">
           <label>
             Favicon URL
-            <input defaultValue={settings.faviconUrl ?? ""} name="faviconUrl" type="url" />
+            <input
+              name="faviconUrl"
+              onChange={(event) => setFaviconUrl(event.target.value)}
+              type="url"
+              value={faviconUrl}
+            />
           </label>
+          <MediaUrlPicker assets={mediaAssets} onSelect={setFaviconUrl} />
         </FieldError>
       </div>
       <div className="form-section-heading">

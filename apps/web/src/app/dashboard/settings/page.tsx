@@ -1,4 +1,5 @@
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
+import { getMediaPickerAssets } from "../../../modules/media/media.service";
 import { StoreSettingsForm } from "../../../modules/settings/components/store-settings-form";
 import { updateStoreSettingsFormAction } from "../../../modules/settings/settings.actions";
 import { getStoreSettings } from "../../../modules/settings/settings.service";
@@ -14,8 +15,11 @@ type SettingsPageProps = {
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
   const store = await requireStore();
-  const settings = await getStoreSettings(store.id);
-  const storeosConnection = await getStoreOSConnection(store.id);
+  const [settings, storeosConnection, mediaAssets] = await Promise.all([
+    getStoreSettings(store.id),
+    getStoreOSConnection(store.id),
+    getMediaPickerAssets(store.id)
+  ]);
   const message = (await searchParams).updated ? "Store settings updated." : null;
 
   return (
@@ -45,7 +49,11 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           />
         </div>
         <div className="dashboard-shell">
-          <StoreSettingsForm action={updateStoreSettingsFormAction} settings={settings} />
+          <StoreSettingsForm
+            action={updateStoreSettingsFormAction}
+            mediaAssets={mediaAssets}
+            settings={settings}
+          />
         </div>
       </section>
     </DashboardShell>

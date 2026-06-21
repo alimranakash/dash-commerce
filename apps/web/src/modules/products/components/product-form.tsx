@@ -3,6 +3,8 @@
 import { Button } from "@dash/ui";
 import { useActionState, useMemo, useState, type ReactNode } from "react";
 import { normalizeSlug } from "../../../lib/slug";
+import { MediaUrlPicker } from "../../media/components/media-url-picker";
+import type { MediaPickerAsset } from "../../media/media.types";
 import type { ProductActionState } from "../product.actions";
 
 export type ProductFormCategory = {
@@ -31,6 +33,7 @@ export type ProductFormValue = {
 type ProductFormProps = {
   action: (state: ProductActionState, formData: FormData) => Promise<ProductActionState>;
   categories: ProductFormCategory[];
+  mediaAssets?: MediaPickerAsset[];
   product?: ProductFormValue;
   submitLabel: string;
 };
@@ -39,10 +42,17 @@ const initialState: ProductActionState = {
   status: "idle"
 };
 
-export function ProductForm({ action, categories, product, submitLabel }: ProductFormProps) {
+export function ProductForm({
+  action,
+  categories,
+  mediaAssets = [],
+  product,
+  submitLabel
+}: ProductFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
   const [title, setTitle] = useState(product?.title ?? "");
   const [slug, setSlug] = useState(product?.slug ?? "");
+  const [imageUrls, setImageUrls] = useState(product?.imageUrls ?? "");
   const [slugTouched, setSlugTouched] = useState(Boolean(product?.slug));
   const domainPreview = useMemo(() => (slug ? `${slug}.dash.com/products/${slug}` : ""), [slug]);
 
@@ -189,12 +199,17 @@ export function ProductForm({ action, categories, product, submitLabel }: Produc
         <label>
           Image URLs
           <textarea
-            defaultValue={product?.imageUrls}
             name="imageUrls"
+            onChange={(event) => setImageUrls(event.target.value)}
             placeholder="https://example.com/product.jpg"
             rows={4}
+            value={imageUrls}
           />
         </label>
+        <MediaUrlPicker
+          assets={mediaAssets}
+          onSelect={(url) => setImageUrls((current) => (current ? `${current}\n${url}` : url))}
+        />
       </FieldError>
       <div className="form-actions">
         <Button className="primary action-button" disabled={isPending} type="submit">

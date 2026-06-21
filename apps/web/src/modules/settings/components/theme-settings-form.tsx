@@ -1,7 +1,9 @@
 "use client";
 
 import { Button } from "@dash/ui";
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useState, type ReactNode } from "react";
+import { MediaUrlPicker } from "../../media/components/media-url-picker";
+import type { MediaPickerAsset } from "../../media/media.types";
 import type { SettingsActionState } from "../settings.actions";
 
 export type ThemeSettingsFormValue = {
@@ -17,6 +19,7 @@ export type ThemeSettingsFormValue = {
 
 type ThemeSettingsFormProps = {
   action: (state: SettingsActionState, formData: FormData) => Promise<SettingsActionState>;
+  mediaAssets?: MediaPickerAsset[];
   settings: ThemeSettingsFormValue;
 };
 
@@ -24,8 +27,9 @@ const initialState: SettingsActionState = {
   status: "idle"
 };
 
-export function ThemeSettingsForm({ action, settings }: ThemeSettingsFormProps) {
+export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeSettingsFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
+  const [heroImageUrl, setHeroImageUrl] = useState(settings.heroImageUrl ?? "");
 
   return (
     <form action={formAction} className="resource-form">
@@ -112,8 +116,14 @@ export function ThemeSettingsForm({ action, settings }: ThemeSettingsFormProps) 
       <FieldError errors={state.fieldErrors} name="heroImageUrl">
         <label>
           Hero image URL
-          <input defaultValue={settings.heroImageUrl ?? ""} name="heroImageUrl" type="url" />
+          <input
+            name="heroImageUrl"
+            onChange={(event) => setHeroImageUrl(event.target.value)}
+            type="url"
+            value={heroImageUrl}
+          />
         </label>
+        <MediaUrlPicker assets={mediaAssets} onSelect={setHeroImageUrl} />
       </FieldError>
       <div className="form-actions">
         <Button className="primary action-button" disabled={isPending} type="submit">

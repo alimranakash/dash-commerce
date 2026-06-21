@@ -7,3 +7,4 @@ dist
 npm-debug.log*
 *.tsbuildinfo
 packages/db/src/generated
+apps/web/public/uploads

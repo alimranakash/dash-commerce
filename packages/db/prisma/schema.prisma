@@ -164,6 +164,7 @@ model Store {
   shippingZones  ShippingZone[]
   shippingRates  ShippingRate[]
   storeosConnection StoreOSConnection?
+  mediaAssets    MediaAsset[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @default(now()) @updatedAt
 
@@ -284,6 +285,27 @@ model StoreOSConnection {
   updatedAt           DateTime @default(now()) @updatedAt
 
   @@index([status])
+}
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  storeId   String
+  url       String
+  key       String
+  filename  String
+  mimeType  String
+  size      Int
+  width     Int?
+  height    Int?
+  alt       String?
+  usageType String?
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([storeId, key])
+  @@index([storeId])
+  @@index([usageType])
 }
 
 model Product {

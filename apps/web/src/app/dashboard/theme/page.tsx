@@ -1,4 +1,5 @@
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
+import { getMediaPickerAssets } from "../../../modules/media/media.service";
 import { ThemeSettingsForm } from "../../../modules/settings/components/theme-settings-form";
 import { updateThemeSettingsFormAction } from "../../../modules/settings/settings.actions";
 import { getThemeSettings } from "../../../modules/settings/settings.service";
@@ -10,7 +11,10 @@ type ThemePageProps = {
 
 export default async function ThemePage({ searchParams }: ThemePageProps) {
   const store = await requireStore();
-  const settings = await getThemeSettings(store.id);
+  const [settings, mediaAssets] = await Promise.all([
+    getThemeSettings(store.id),
+    getMediaPickerAssets(store.id)
+  ]);
   const message = (await searchParams).updated ? "Theme settings updated." : null;
 
   return (
@@ -25,7 +29,11 @@ export default async function ThemePage({ searchParams }: ThemePageProps) {
         </div>
         {message ? <p className="success-message">{message}</p> : null}
         <div className="dashboard-shell">
-          <ThemeSettingsForm action={updateThemeSettingsFormAction} settings={settings} />
+          <ThemeSettingsForm
+            action={updateThemeSettingsFormAction}
+            mediaAssets={mediaAssets}
+            settings={settings}
+          />
         </div>
       </section>
     </DashboardShell>

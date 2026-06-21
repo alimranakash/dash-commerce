@@ -257,6 +257,34 @@ textarea {
   gap: 28px;
 }
 
+.dashboard-overview-page {
+  gap: 22px;
+}
+
+.dashboard-overview-hero,
+.dashboard-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 18px 40px rgb(23 23 23 / 6%);
+}
+
+.dashboard-overview-hero {
+  padding: 28px;
+}
+
+.dashboard-overview-hero h1 {
+  font-size: clamp(2.1rem, 4vw, 3.6rem);
+  line-height: 1;
+  margin: 0;
+}
+
+.analytics-metric-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .overview-grid {
   display: grid;
   gap: 14px;
@@ -280,6 +308,125 @@ textarea {
 
 .metric-card strong {
   overflow-wrap: anywhere;
+}
+
+.analytics-metric-card strong {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1;
+}
+
+.analytics-metric-card small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.dashboard-empty-state {
+  box-shadow: none;
+}
+
+.analytics-content-grid {
+  align-items: start;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+}
+
+.analytics-side-stack {
+  display: grid;
+  gap: 20px;
+}
+
+.dashboard-panel {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+
+.panel-heading {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.panel-heading h2 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+.panel-heading a {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.compact-table-card {
+  box-shadow: none;
+}
+
+.analytics-table {
+  min-width: 680px;
+}
+
+.analytics-table a {
+  color: var(--foreground);
+}
+
+.analytics-list {
+  display: grid;
+}
+
+.analytics-list-row {
+  align-items: center;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 14px 0;
+}
+
+.analytics-list-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.analytics-list-row:last-child {
+  padding-bottom: 0;
+}
+
+.analytics-list-row div {
+  display: grid;
+  gap: 5px;
+}
+
+.analytics-list-row span {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.quick-actions-panel {
+  gap: 18px;
+}
+
+.quick-actions-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.quick-action-link {
+  background: #f7f5ef;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--foreground);
+  font-weight: 900;
+  padding: 14px;
+  text-align: center;
+}
+
+.quick-action-link:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .seller-app {
@@ -1655,6 +1802,106 @@ textarea {
   outline: 2px solid rgb(19 93 102 / 18%);
 }
 
+.media-upload-shell {
+  width: min(100%, 760px);
+}
+
+.media-upload-form {
+  box-shadow: none;
+}
+
+.media-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.media-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  overflow: hidden;
+}
+
+.media-preview {
+  aspect-ratio: 4 / 3;
+  background: #f7f5ef;
+  position: relative;
+}
+
+.media-preview img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.media-card-body {
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+}
+
+.media-card-body strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.media-card-body span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.media-actions {
+  border-top: 1px solid var(--border);
+  justify-content: space-between;
+  padding: 12px 14px;
+}
+
+.media-picker,
+.media-picker-empty {
+  margin-top: 8px;
+}
+
+.media-picker {
+  display: grid;
+  gap: 8px;
+}
+
+.media-picker > span,
+.media-picker-empty {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.media-picker > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.media-picker button {
+  background: #f7f5ef;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--foreground);
+  cursor: pointer;
+  font-weight: 800;
+  max-width: 220px;
+  overflow: hidden;
+  padding: 8px 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.media-picker button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .order-detail-panel {
   display: grid;
   gap: 14px;
@@ -1727,7 +1974,10 @@ textarea {
   }
 
   .form-grid,
-  .overview-grid {
+  .overview-grid,
+  .analytics-metric-grid,
+  .analytics-content-grid,
+  .quick-actions-grid {
     grid-template-columns: 1fr;
   }
 
