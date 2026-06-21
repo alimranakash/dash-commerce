@@ -14,12 +14,15 @@
     "@dash/db": "^0.0.0",
     "@dash/storeos-sdk": "^0.0.0",
     "@dash/ui": "0.0.0",
+    "@tailwindcss/postcss": "^4.3.1",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
+    "lucide-react": "^1.21.0",
     "next": "^16.2.9",
     "next-auth": "^4.24.14",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "tailwindcss": "^4.3.1",
     "zod": "^4.4.3"
   }
 }

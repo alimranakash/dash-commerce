@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   --background: #f7f5ef;
   --foreground: #171717;
@@ -44,6 +46,124 @@ select {
 
 textarea {
   font: inherit;
+}
+
+.dash-dashboard {
+  --background: #f5f6ff;
+  --foreground: #20212a;
+  --muted: #777985;
+  --surface: #ffffff;
+  --border: #e9e8f3;
+  --accent: #7c3aed;
+  --accent-foreground: #ffffff;
+  background: #f5f6ff;
+  font-size: 14px;
+}
+
+.dash-dashboard .resource-page {
+  gap: 16px;
+  max-width: 1480px;
+}
+
+.dash-dashboard .resource-header {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #ececf5;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgb(62 54 114 / 4%);
+  padding: 20px;
+}
+
+.dash-dashboard .resource-header h1 {
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+.dash-dashboard .resource-header .eyebrow {
+  color: #7c3aed;
+  font-size: 0.68rem;
+  margin-bottom: 8px;
+}
+
+.dash-dashboard .auth-copy {
+  font-size: 0.84rem;
+  margin-top: 8px;
+}
+
+.dash-dashboard .dashboard-shell,
+.dash-dashboard .panel-card,
+.dash-dashboard .table-card,
+.dash-dashboard .empty-state,
+.dash-dashboard .resource-form {
+  border-color: #ececf5;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgb(62 54 114 / 4%);
+}
+
+.dash-dashboard .resource-page > .dashboard-shell {
+  max-width: none;
+  padding: 22px;
+  width: 100%;
+}
+
+.dash-dashboard .resource-page > .dashboard-shell .resource-form {
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.dash-dashboard .resource-form {
+  padding: 22px;
+}
+
+.dash-dashboard .resource-form input,
+.dash-dashboard .resource-form select,
+.dash-dashboard .resource-form textarea {
+  border-color: #e4e3ee;
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+
+.dash-dashboard .resource-form input:focus,
+.dash-dashboard .resource-form select:focus,
+.dash-dashboard .resource-form textarea:focus {
+  border-color: #8b5cf6;
+  outline-color: rgb(124 58 237 / 14%);
+}
+
+.dash-dashboard .resource-table th {
+  background: #f7f7fa;
+  color: #565762;
+  font-size: 0.68rem;
+  padding-block: 11px;
+}
+
+.dash-dashboard .resource-table td {
+  border-color: #f0eff5;
+  font-size: 0.78rem;
+  padding-block: 12px;
+}
+
+.dash-dashboard .status-pill {
+  background: #f0ecff;
+  color: #6d3cf5 !important;
+}
+
+.dash-dashboard .primary,
+.dash-dashboard .action-button.primary {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #ffffff;
+}
+
+.dash-dashboard .secondary {
+  border-color: #ddd6fe;
+  color: #6d3cf5;
+}
+
+.dash-dashboard .seller-sidebar .secondary {
+  min-height: 36px;
+  width: 100%;
 }
 
 .page {

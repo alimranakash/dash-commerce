@@ -1,9 +1,12 @@
 import { DashboardShell } from "../../components/dashboard/dashboard-shell";
+import { DashboardCard } from "../../components/dashboard/dashboard-card";
 import { requireUser } from "../../lib/auth";
+import { AbandonedCarts } from "../../modules/analytics/components/abandoned-carts";
 import { LowStockProducts } from "../../modules/analytics/components/low-stock-products";
 import { MetricCard } from "../../modules/analytics/components/metric-card";
-import { QuickActions } from "../../modules/analytics/components/quick-actions";
 import { RecentOrders } from "../../modules/analytics/components/recent-orders";
+import { RecentSales } from "../../modules/analytics/components/recent-sales";
+import { SetupStatus } from "../../modules/analytics/components/setup-status";
 import { TopProducts } from "../../modules/analytics/components/top-products";
 import {
   getDashboardMetrics,
@@ -43,22 +46,19 @@ export default async function DashboardPage() {
   return (
     <DashboardShell storeSlug={store.slug}>
       <DashboardOverview
+        currency={store.currency}
         storeId={store.id}
-        storeSlug={store.slug}
-        userName={user.name ?? user.email ?? "seller"}
       />
     </DashboardShell>
   );
 }
 
 async function DashboardOverview({
-  storeId,
-  storeSlug,
-  userName
+  currency,
+  storeId
 }: {
+  currency: string;
   storeId: string;
-  storeSlug: string;
-  userName: string;
 }) {
   const [metrics, recentOrders, topProducts, lowStockProducts] = await Promise.all([
     getDashboardMetrics(storeId),
@@ -66,52 +66,31 @@ async function DashboardOverview({
     getTopProducts(storeId),
     getLowStockProducts(storeId)
   ]);
-  const currency = recentOrders[0]?.currency ?? "BDT";
-
   return (
-    <section className="resource-page dashboard-overview-page" aria-labelledby="dashboard-title">
-      <div className="dashboard-overview-hero">
-        <div>
-          <p className="eyebrow">Seller dashboard</p>
-          <h1 id="dashboard-title">Welcome, {userName}</h1>
-          <p className="auth-copy">
-            Monitor sales, orders, inventory signals, and fast next actions from one place.
-          </p>
-        </div>
+    <section className="mx-auto grid max-w-[1480px] gap-4" aria-label="Dashboard overview">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(290px,0.95fr)]">
+        <DashboardCard action={<span className="rounded-md border border-[#ececf5] px-3 py-1.5 text-[10px] text-[#555662]">Live overview</span>} title="Stats">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <MetricCard index={0} label="Today Revenue" value={formatMoney(metrics.todayRevenue, currency)} />
+            <MetricCard index={1} label="Month Revenue" value={formatMoney(metrics.thisMonthRevenue, currency)} />
+            <MetricCard index={2} label="Total Orders" value={formatNumber(metrics.totalOrders)} />
+            <MetricCard index={3} label="Pending Orders" value={formatNumber(metrics.pendingOrders)} />
+            <MetricCard index={4} label="Total Products" value={formatNumber(metrics.totalProducts)} />
+            <MetricCard index={5} label="Low Stock" value={formatNumber(metrics.lowStockProducts)} />
+          </div>
+        </DashboardCard>
+        <SetupStatus hasOrders={metrics.totalOrders > 0} hasProducts={metrics.totalProducts > 0} />
       </div>
-      <div className="analytics-metric-grid">
-        <MetricCard
-          helper="Non-cancelled orders"
-          label="Today revenue"
-          value={formatMoney(metrics.todayRevenue, currency)}
-        />
-        <MetricCard
-          helper="Current calendar month"
-          label="This month revenue"
-          value={formatMoney(metrics.thisMonthRevenue, currency)}
-        />
-        <MetricCard label="Total orders" value={formatNumber(metrics.totalOrders)} />
-        <MetricCard helper="Pending or confirmed" label="Pending orders" value={formatNumber(metrics.pendingOrders)} />
-        <MetricCard label="Total products" value={formatNumber(metrics.totalProducts)} />
-        <MetricCard
-          helper="At or below threshold"
-          label="Low stock products"
-          value={formatNumber(metrics.lowStockProducts)}
-        />
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)]">
+        <RecentSales orders={recentOrders} />
+        <AbandonedCarts />
       </div>
-      {metrics.totalOrders === 0 && metrics.totalProducts === 0 ? (
-        <div className="empty-state dashboard-empty-state">
-          <h2>Your command center is ready</h2>
-          <p>Add products and open your storefront to start collecting analytics from real orders.</p>
-        </div>
-      ) : null}
-      <QuickActions storeSlug={storeSlug} />
-      <div className="analytics-content-grid">
+
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.85fr)_minmax(260px,0.75fr)]">
         <RecentOrders currency={currency} orders={recentOrders} />
-        <div className="analytics-side-stack">
-          <TopProducts currency={currency} products={topProducts} />
-          <LowStockProducts products={lowStockProducts} />
-        </div>
+        <LowStockProducts products={lowStockProducts} />
+        <TopProducts currency={currency} products={topProducts} />
       </div>
     </section>
   );

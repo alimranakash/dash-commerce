@@ -1,50 +1,156 @@
 "use client";
 
+import {
+  BarChart3,
+  ChevronDown,
+  CircleDollarSign,
+  FileText,
+  LayoutDashboard,
+  Package,
+  Percent,
+  ReceiptText,
+  Settings,
+  ShoppingCart,
+  Users,
+  X
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState, type ComponentType } from "react";
 import { LogoutButton } from "../../modules/auth/logout-button";
 
 type DashboardNavProps = {
+  onClose: () => void;
+  open: boolean;
   storeSlug: string;
 };
 
-const links = [
-  { href: "/dashboard", label: "Overview" },
-  { href: "/dashboard/ai", label: "AI Assistant" },
-  { href: "/dashboard/orders", label: "Orders" },
-  { href: "/dashboard/products", label: "Products" },
+type NavItem = {
+  href: string;
+  icon: ComponentType<{ className?: string }>;
+  label: string;
+};
+
+const productLinks = [
+  { href: "/dashboard/products/new", label: "Add Product" },
+  { href: "/dashboard/products/attributes", label: "Attributes" },
   { href: "/dashboard/categories", label: "Categories" },
-  { href: "/dashboard/media", label: "Media" },
-  { href: "/dashboard/payments", label: "Payments" },
-  { href: "/dashboard/shipping", label: "Shipping" },
-  { href: "/dashboard/theme", label: "Theme" },
-  { href: "/dashboard/settings", label: "Settings" }
+  { href: "/dashboard/products/tags", label: "Tags" },
+  { href: "/dashboard/products/brands", label: "Brands" }
 ];
 
-export function DashboardNav({ storeSlug }: DashboardNavProps) {
+const mainLinks: NavItem[] = [
+  { href: "/dashboard/orders", icon: ReceiptText, label: "Orders" },
+  { href: "/dashboard/transactions", icon: CircleDollarSign, label: "Transactions" },
+  { href: "/dashboard/customers", icon: Users, label: "Customers" },
+  { href: "/dashboard/coupons", icon: Percent, label: "Coupons" },
+  { href: "/dashboard/reports", icon: FileText, label: "Reports" },
+  { href: "/dashboard/abandoned-cart", icon: ShoppingCart, label: "Abandoned cart" },
+  { href: "/dashboard/settings", icon: Settings, label: "Settings" }
+];
+
+const iconColors: Record<string, string> = {
+  "Abandoned cart": "text-fuchsia-500",
+  Coupons: "text-violet-600",
+  Customers: "text-sky-500",
+  Orders: "text-blue-600",
+  Reports: "text-pink-500",
+  Settings: "text-cyan-500",
+  Transactions: "text-emerald-500"
+};
+
+export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
   const pathname = usePathname();
+  const productRouteActive = pathname.startsWith("/dashboard/products") || pathname.startsWith("/dashboard/categories");
+  const [productsOpen, setProductsOpen] = useState(productRouteActive);
+
+  useEffect(() => {
+    if (productRouteActive) setProductsOpen(true);
+  }, [productRouteActive]);
 
   return (
-    <aside className="seller-sidebar">
-      <Link className="seller-brand" href="/dashboard">
-        Dash OS
-      </Link>
-      <nav className="seller-nav" aria-label="Dashboard navigation">
-        {links.map((link) => (
-          <Link
-            aria-current={pathname === link.href ? "page" : undefined}
-            className={pathname === link.href ? "active" : undefined}
-            href={link.href}
-            key={link.href}
-          >
-            {link.label}
-          </Link>
-        ))}
-        <Link href={`/s/${storeSlug}`} target="_blank">
-          Storefront
+    <aside
+      className={`fixed inset-y-0 left-0 z-50 flex w-[248px] flex-col border-r border-[#ececf7] bg-white transition-transform duration-200 lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
+    >
+      <div className="flex h-16 items-center justify-between border-b border-[#f0f0f7] px-5">
+        <Link className="flex items-center gap-2" href="/dashboard" onClick={onClose}>
+          <span className="bg-[#6941ff] px-2.5 py-1 text-[13px] font-semibold tracking-[0.28em] text-white">DASH</span>
+          <span className="text-[10px] font-semibold tracking-wide text-[#111827]">COMMERCE</span>
         </Link>
+        <button className="text-gray-500 lg:hidden" onClick={onClose} type="button">
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
+      <nav className="flex-1 overflow-y-auto px-3 py-4 text-[13px]" aria-label="Dashboard navigation">
+        <NavLink href="/dashboard" icon={LayoutDashboard} label="Dashboard" onClick={onClose} pathname={pathname} />
+
+        <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${productRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
+          <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/products" onClick={onClose}>
+            <Package className="h-4 w-4 text-orange-500" />
+            <span>Products</span>
+          </Link>
+          <button aria-label="Toggle products menu" className="p-2" onClick={() => setProductsOpen((current) => !current)} type="button">
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${productsOpen ? "rotate-180" : ""}`} />
+          </button>
+        </div>
+        {productsOpen ? (
+          <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
+            {productLinks.map((link) => (
+              <Link
+                className={`block rounded-md px-3 py-2 text-[12px] transition ${pathname === link.href ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                href={link.href}
+                key={link.href}
+                onClick={onClose}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="mt-1 space-y-1">
+          {mainLinks.map((link) => (
+            <NavLink
+              href={link.href}
+              icon={link.icon}
+              {...(iconColors[link.label] ? { iconClassName: iconColors[link.label] } : {})}
+              key={link.href}
+              label={link.label}
+              onClick={onClose}
+              pathname={pathname}
+            />
+          ))}
+        </div>
       </nav>
-      <LogoutButton />
+
+      <div className="border-t border-[#f0f0f7] p-3">
+        <Link
+          className="mb-2 flex items-center justify-center gap-2 rounded-lg bg-[#f3f0ff] px-3 py-2 text-xs font-semibold text-[#6d3cf5]"
+          href={`/s/${storeSlug}`}
+          onClick={onClose}
+          target="_blank"
+        >
+          <BarChart3 className="h-3.5 w-3.5" /> Open Storefront
+        </Link>
+        <LogoutButton />
+      </div>
     </aside>
+  );
+}
+
+function NavLink({ href, icon: Icon, iconClassName, label, onClick, pathname }: NavItem & { iconClassName?: string; onClick: () => void; pathname: string }) {
+  const active = href === "/dashboard" ? pathname === href : pathname.startsWith(href);
+
+  return (
+    <Link
+      aria-current={active ? "page" : undefined}
+      className={`flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium transition ${active ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}
+      href={href}
+      onClick={onClick}
+    >
+      <Icon className={`h-4 w-4 ${iconClassName ?? "text-[#7548f5]"}`} />
+      <span>{label}</span>
+    </Link>
   );
 }
