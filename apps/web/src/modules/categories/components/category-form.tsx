@@ -44,36 +44,36 @@ export function CategoryForm({ action, category, parentOptions, submitLabel }: C
   }
 
   return (
-    <form action={formAction} className="resource-form compact-form">
+    <form action={formAction} className="resource-form compact-form catalog-create-form">
       {state.status === "error" ? <p className="form-error">{state.message}</p> : null}
-      <div className="form-grid">
-        <FieldError errors={state.fieldErrors} name="name">
-          <label>
-            Name
-            <input
-              name="name"
-              onChange={(event) => handleNameChange(event.target.value)}
-              required
-              type="text"
-              value={name}
-            />
-          </label>
-        </FieldError>
-        <FieldError errors={state.fieldErrors} name="slug">
-          <label>
-            Slug
-            <input
-              name="slug"
-              onChange={(event) => {
-                setSlugTouched(true);
-                setSlug(normalizeSlug(event.target.value));
-              }}
-              type="text"
-              value={slug}
-            />
-          </label>
-        </FieldError>
-      </div>
+      <FieldError errors={state.fieldErrors} name="name">
+        <label>
+          Name
+          <input
+            name="name"
+            onChange={(event) => handleNameChange(event.target.value)}
+            placeholder="Enter name"
+            required
+            type="text"
+            value={name}
+          />
+        </label>
+      </FieldError>
+      <FieldError errors={state.fieldErrors} name="slug">
+        <label>
+          Slug
+          <input
+            name="slug"
+            onChange={(event) => {
+              setSlugTouched(true);
+              setSlug(normalizeSlug(event.target.value));
+            }}
+            placeholder="category-slug"
+            type="text"
+            value={slug}
+          />
+        </label>
+      </FieldError>
       <FieldError errors={state.fieldErrors} name="description">
         <label>
           Description
@@ -96,7 +96,7 @@ export function CategoryForm({ action, category, parentOptions, submitLabel }: C
         </label>
       </FieldError>
       <div className="form-actions">
-        <Button className="primary action-button" disabled={isPending} type="submit">
+        <Button className="catalog-submit-button" disabled={isPending} type="submit">
           {isPending ? "Saving..." : submitLabel}
         </Button>
       </div>

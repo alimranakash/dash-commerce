@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { normalizeSlug } from "../../lib/slug";
 
+export const productStatusSchema = z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]);
+
 const moneySchema = z
   .union([z.string(), z.number()])
   .transform((value) => String(value).trim())
@@ -38,7 +40,7 @@ const productBaseSchema = z.object({
   costPrice: optionalMoneySchema,
   stockQuantity: z.coerce.number().int().min(0).default(0),
   lowStockThreshold: z.coerce.number().int().min(0).default(0),
-  status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]).default("DRAFT"),
+  status: productStatusSchema.default("DRAFT"),
   visibility: z.enum(["PUBLIC", "HIDDEN"]).default("HIDDEN"),
   categoryId: z
     .string()

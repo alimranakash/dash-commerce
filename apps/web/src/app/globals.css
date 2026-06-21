@@ -342,6 +342,313 @@ textarea {
   padding: 10px 12px;
 }
 
+.dash-dashboard .catalog-management-page {
+  gap: 20px;
+  max-width: none;
+}
+
+.dash-dashboard .catalog-page-heading h1 {
+  font-size: 1.65rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.dash-dashboard .catalog-management-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1.55fr) minmax(360px, 1fr);
+}
+
+.dash-dashboard .catalog-card {
+  background: #ffffff;
+  border: 1px solid #ececf5;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgb(62 54 114 / 4%);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.dash-dashboard .catalog-card > header {
+  border-bottom: 1px solid #ececf5;
+  padding: 20px 24px;
+}
+
+.dash-dashboard .catalog-card > header h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.dash-dashboard .catalog-table-wrap {
+  overflow-x: auto;
+  padding: 20px 24px 28px;
+}
+
+.dash-dashboard .catalog-management-table {
+  border-collapse: collapse;
+  min-width: 620px;
+  width: 100%;
+}
+
+.dash-dashboard .catalog-management-table th,
+.dash-dashboard .catalog-management-table td {
+  border-bottom: 1px solid #eeedf5;
+  font-size: 0.82rem;
+  padding: 15px 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.dash-dashboard .catalog-management-table th {
+  background: #f7f7fa;
+  color: #24252e;
+  font-weight: 600;
+}
+
+.dash-dashboard .catalog-management-table th:first-child {
+  border-radius: 8px 0 0 8px;
+  width: 44px;
+}
+
+.dash-dashboard .catalog-management-table th:last-child {
+  border-radius: 0 8px 8px 0;
+  width: 105px;
+}
+
+.dash-dashboard .catalog-management-table input[type="checkbox"] {
+  accent-color: #7c3aed;
+  height: 18px;
+  margin: 0;
+  width: 18px;
+}
+
+.dash-dashboard .catalog-empty-row {
+  color: #7a7b87;
+  height: 82px;
+  text-align: center;
+}
+
+.dash-dashboard .catalog-row-actions {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+}
+
+.dash-dashboard .catalog-row-actions a,
+.dash-dashboard .catalog-row-actions button {
+  background: none;
+  border: 0;
+  color: #454651;
+  cursor: pointer;
+  display: inline-grid;
+  padding: 4px;
+  place-items: center;
+}
+
+.dash-dashboard .catalog-row-actions svg {
+  height: 16px;
+  width: 16px;
+}
+
+.dash-dashboard .catalog-row-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
+.dash-dashboard .catalog-placeholder-actions {
+  justify-content: flex-start;
+  visibility: hidden;
+}
+
+.dash-dashboard .catalog-form-body {
+  padding: 26px 24px 24px;
+}
+
+.dash-dashboard .catalog-create-form {
+  gap: 20px;
+}
+
+.dash-dashboard .catalog-create-form label {
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.dash-dashboard .catalog-create-form input,
+.dash-dashboard .catalog-create-form select,
+.dash-dashboard .catalog-create-form textarea {
+  background: #ffffff;
+  color: #24252e;
+  cursor: text;
+  min-height: 44px;
+  opacity: 1;
+}
+
+.dash-dashboard .catalog-create-form select {
+  cursor: pointer;
+}
+
+.dash-dashboard .catalog-submit-button {
+  background: #ffffff;
+  border: 1px solid #7c3aed;
+  border-radius: 7px;
+  color: #7c3aed;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 10px 17px;
+}
+
+.dash-dashboard .catalog-submit-button:hover {
+  background: #f7f3ff;
+}
+
+.dash-dashboard .catalog-submit-button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.dash-dashboard .catalog-cancel-button {
+  background: #ffffff;
+  border: 1px solid #d9d8e5;
+  border-radius: 7px;
+  color: #555765;
+  cursor: pointer;
+  font-weight: 600;
+  margin-right: 10px;
+  padding: 10px 17px;
+}
+
+.dashboard-modal-backdrop {
+  align-items: center;
+  background: rgb(20 18 32 / 48%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 20px;
+  position: fixed;
+  z-index: 100;
+}
+
+.dashboard-confirm-dialog {
+  background: #ffffff;
+  border: 1px solid #ececf5;
+  border-radius: 12px;
+  box-shadow: 0 24px 70px rgb(25 20 56 / 22%);
+  max-width: 420px;
+  padding: 24px;
+  text-align: left;
+  width: 100%;
+}
+
+.dashboard-confirm-dialog h2 {
+  color: #20212a;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.dashboard-confirm-dialog p {
+  color: #686a76;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  margin: 12px 0 22px;
+}
+
+.dashboard-confirm-actions {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.dashboard-confirm-actions .dashboard-modal-cancel,
+.dashboard-confirm-actions .dashboard-modal-delete {
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 700;
+  min-width: 82px;
+  padding: 9px 16px;
+}
+
+.dashboard-confirm-actions .dashboard-modal-cancel {
+  background: #ffffff;
+  border: 1px solid #7c3aed;
+  color: #7c3aed;
+}
+
+.dashboard-confirm-actions .dashboard-modal-delete {
+  background: #dc2626;
+  border: 1px solid #dc2626;
+  color: #ffffff;
+}
+
+.dashboard-confirm-actions .dashboard-modal-delete:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.dash-dashboard .coupon-field-control > input,
+.dash-dashboard .coupon-prefix-input {
+  background: #ffffff;
+  border: 1px solid #e5e3f1;
+  border-radius: 8px;
+  min-height: 40px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.dash-dashboard .coupon-field-control > input {
+  color: #292a34;
+  padding: 9px 12px;
+}
+
+.dash-dashboard .coupon-field-control > input:focus,
+.dash-dashboard .coupon-prefix-input:focus-within {
+  border-color: #8b5cf6;
+  outline: 2px solid rgb(124 58 237 / 10%);
+}
+
+.dash-dashboard .coupon-prefix-input {
+  align-items: stretch;
+  display: flex;
+}
+
+.dash-dashboard .coupon-prefix-input span {
+  align-items: center;
+  background: #fafaff;
+  border-right: 1px solid #e5e3f1;
+  color: #444651;
+  display: flex;
+  flex: 0 0 auto;
+  font-size: 0.82rem;
+  justify-content: center;
+  min-width: 44px;
+  padding: 0 10px;
+}
+
+.dash-dashboard .coupon-prefix-input input {
+  background: transparent;
+  border: 0;
+  color: #292a34;
+  flex: 1;
+  min-width: 0;
+  outline: 0;
+  padding: 9px 12px;
+}
+
+.dash-dashboard .catalog-placeholder-message {
+  background: #f5f2ff;
+  border-radius: 7px;
+  color: #6532d9;
+  font-size: 0.8rem;
+  margin: 0;
+  padding: 10px 12px;
+}
+
+@media (max-width: 1100px) {
+  .dash-dashboard .catalog-management-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .action-button {
   cursor: pointer;
   justify-content: center;

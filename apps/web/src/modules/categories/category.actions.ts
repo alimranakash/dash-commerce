@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import { requireStore } from "../stores/queries";
-import { createCategory, updateCategory } from "./category.service";
+import { createCategory, deleteCategory, updateCategory } from "./category.service";
 import type { CreateCategoryInput, UpdateCategoryInput } from "./category.schema";
 
 export type CategoryActionState = {
@@ -60,6 +60,14 @@ export async function updateCategoryFormAction(
 
   revalidatePath("/dashboard/categories");
   redirect("/dashboard/categories?updated=1");
+}
+
+export async function deleteCategoryFormAction(categoryId: string) {
+  const store = await requireStore();
+  await deleteCategory(store.id, categoryId);
+
+  revalidatePath("/dashboard/categories");
+  redirect("/dashboard/categories?deleted=1");
 }
 
 function categoryInputFromFormData(formData: FormData): CreateCategoryInput {

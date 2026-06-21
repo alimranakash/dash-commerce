@@ -32,11 +32,12 @@ type NavItem = {
 };
 
 const productLinks = [
+  { href: "/dashboard/products", label: "All Products" },
   { href: "/dashboard/products/new", label: "Add Product" },
-  { href: "/dashboard/products/attributes", label: "Attributes" },
-  { href: "/dashboard/categories", label: "Categories" },
-  { href: "/dashboard/products/tags", label: "Tags" },
-  { href: "/dashboard/products/brands", label: "Brands" }
+  { href: "/dashboard/attributes", label: "Attributes" },
+  { href: "/dashboard/tags", label: "Tags" },
+  { href: "/dashboard/brands", label: "Brands" },
+  { href: "/dashboard/categories", label: "Categories" }
 ];
 
 const mainLinks: NavItem[] = [
@@ -61,7 +62,9 @@ const iconColors: Record<string, string> = {
 
 export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
   const pathname = usePathname();
-  const productRouteActive = pathname.startsWith("/dashboard/products") || pathname.startsWith("/dashboard/categories");
+  const productRouteActive = ["/dashboard/products", "/dashboard/attributes", "/dashboard/tags", "/dashboard/brands", "/dashboard/categories"].some(
+    (route) => pathname.startsWith(route)
+  );
   const [productsOpen, setProductsOpen] = useState(productRouteActive);
 
   useEffect(() => {
@@ -98,7 +101,8 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
           <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
             {productLinks.map((link) => (
               <Link
-                className={`block rounded-md px-3 py-2 text-[12px] transition ${pathname === link.href ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                aria-current={isProductLinkActive(pathname, link.href) ? "page" : undefined}
+                className={`block rounded-md px-3 py-2 text-[12px] transition ${isProductLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
                 href={link.href}
                 key={link.href}
                 onClick={onClose}
@@ -137,6 +141,14 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
       </div>
     </aside>
   );
+}
+
+function isProductLinkActive(pathname: string, href: string) {
+  if (href === "/dashboard/products" || href === "/dashboard/products/new") {
+    return pathname === href;
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function NavLink({ href, icon: Icon, iconClassName, label, onClick, pathname }: NavItem & { iconClassName?: string; onClick: () => void; pathname: string }) {

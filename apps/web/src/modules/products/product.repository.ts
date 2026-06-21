@@ -198,6 +198,43 @@ export async function archiveProductRecord(storeId: string, productId: string) {
   });
 }
 
+export async function updateProductStatusRecord(
+  storeId: string,
+  productId: string,
+  status: ProductStatus
+) {
+  return prisma.product.updateMany({
+    where: {
+      id: productId,
+      storeId
+    },
+    data: statusData(status)
+  });
+}
+
+export async function bulkUpdateProductStatusRecord(
+  storeId: string,
+  productIds: string[],
+  status: ProductStatus
+) {
+  return prisma.product.updateMany({
+    where: {
+      id: {
+        in: productIds
+      },
+      storeId
+    },
+    data: statusData(status)
+  });
+}
+
+function statusData(status: ProductStatus) {
+  return {
+    status,
+    visibility: status === "ACTIVE" ? ("PUBLIC" as const) : ("HIDDEN" as const)
+  };
+}
+
 function buildProductCreateData(
   storeId: string,
   data: ProductWriteData,

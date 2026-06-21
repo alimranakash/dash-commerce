@@ -1,26 +1,32 @@
 import Link from "next/link";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
+import { OrderListControls, type OrderFilterKey } from "../../../modules/orders/components/order-list-controls";
 import { getOrdersForStore } from "../../../modules/orders/order.service";
 import { requireStore } from "../../../modules/stores/queries";
 
-export default async function OrdersPage() {
+type OrdersPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const store = await requireStore();
   const orders = await getOrdersForStore(store.id);
+  const params = await searchParams;
+  const activeFilter = parseOrderFilter(singleValue(params.status));
+  const search = singleValue(params.search).trim();
+  const dateRange = singleValue(params.dateRange).trim();
+  const counts = getOrderCounts(orders);
+  const visibleOrders = orders.filter((order) => matchesStatus(order, activeFilter) && matchesSearch(order, search));
 
   return (
     <DashboardShell storeSlug={store.slug}>
       <section className="resource-page">
-        <div className="resource-header">
-          <div>
-            <p className="eyebrow">Sales</p>
-            <h1>Orders</h1>
-            <p className="auth-copy">Review cash on delivery orders for {store.name}.</p>
-          </div>
-        </div>
-        {orders.length === 0 ? (
+        <div className="catalog-page-heading"><h1>Orders</h1></div>
+        <OrderListControls activeFilter={activeFilter} counts={counts} dateRange={dateRange} search={search} />
+        {visibleOrders.length === 0 ? (
           <div className="empty-state">
-            <h2>No orders yet</h2>
-            <p>Orders from the public storefront checkout will appear here.</p>
+            <h2>{orders.length ? "No matching orders" : "No orders yet"}</h2>
+            <p>{orders.length ? "Try another status or search term." : "Orders from the public storefront checkout will appear here."}</p>
           </div>
         ) : (
           <div className="table-card">
@@ -38,7 +44,7 @@ export default async function OrdersPage() {
                 </tr>
               </thead>
               <tbody>
-                {orders.map((order) => (
+                {visibleOrders.map((order) => (
                   <tr key={order.id}>
                     <td data-label="Order">
                       <strong>{order.orderNumber}</strong>
@@ -68,6 +74,47 @@ export default async function OrdersPage() {
       </section>
     </DashboardShell>
   );
+}
+
+type OrderListRecord = Awaited<ReturnType<typeof getOrdersForStore>>[number];
+
+function getOrderCounts(orders: OrderListRecord[]): Record<OrderFilterKey, number> {
+  return {
+    all: orders.length,
+    pending: orders.filter((order) => order.status === "PENDING").length,
+    processing: orders.filter((order) => order.status === "CONFIRMED" || order.status === "PROCESSING").length,
+    completed: orders.filter((order) => order.status === "COMPLETED").length,
+    cancelled: orders.filter((order) => order.status === "CANCELLED").length,
+    "on-hold": 0,
+    "partially-refunded": 0,
+    refunded: orders.filter((order) => order.paymentStatus === "REFUNDED").length
+  };
+}
+
+function matchesStatus(order: OrderListRecord, filter: OrderFilterKey) {
+  if (filter === "all") return true;
+  if (filter === "pending") return order.status === "PENDING";
+  if (filter === "processing") return order.status === "CONFIRMED" || order.status === "PROCESSING";
+  if (filter === "completed") return order.status === "COMPLETED";
+  if (filter === "cancelled") return order.status === "CANCELLED";
+  if (filter === "refunded") return order.paymentStatus === "REFUNDED";
+  return false;
+}
+
+function matchesSearch(order: OrderListRecord, search: string) {
+  if (!search) return true;
+  const query = search.toLowerCase();
+  return [order.orderNumber, order.customerName, order.customerEmail, order.customerPhone]
+    .some((value) => value?.toLowerCase().includes(query));
+}
+
+function parseOrderFilter(value: string): OrderFilterKey {
+  const filters: OrderFilterKey[] = ["pending", "processing", "completed", "cancelled", "on-hold", "partially-refunded", "refunded"];
+  return filters.includes(value as OrderFilterKey) ? value as OrderFilterKey : "all";
+}
+
+function singleValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
 }
 
 function formatMoney(value: unknown, currency: string) {

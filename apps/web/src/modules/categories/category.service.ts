@@ -1,6 +1,7 @@
 import { createUniqueSlug } from "../../lib/slug";
 import {
   createCategoryRecord,
+  deleteCategoryRecord,
   getCategoriesForStore,
   getCategoryByIdForStore,
   isCategorySlugAvailable,
@@ -59,6 +60,11 @@ export async function updateCategory(
   }
 
   return updateCategoryRecord(storeId, categoryId, optionalCategoryFields(data));
+}
+
+export async function deleteCategory(storeId: string, categoryId: string) {
+  const result = await deleteCategoryRecord(storeId, categoryId);
+  return result.count > 0;
 }
 
 async function assertCategorySlugAvailable(storeId: string, slug: string, ignoreCategoryId?: string) {

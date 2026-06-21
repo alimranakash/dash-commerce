@@ -109,3 +109,12 @@ export async function updateCategoryRecord(
     data: categoryData
   });
 }
+
+export async function deleteCategoryRecord(storeId: string, categoryId: string) {
+  return prisma.category.deleteMany({
+    where: {
+      id: categoryId,
+      storeId
+    }
+  });
+}

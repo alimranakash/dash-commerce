@@ -4,7 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import { requireStore } from "../stores/queries";
-import { archiveProduct, createProduct, updateProduct } from "./product.service";
+import {
+  archiveProduct,
+  bulkUpdateProductStatus,
+  createProduct,
+  updateProduct,
+  updateProductStatus
+} from "./product.service";
 import type { CreateProductInput, UpdateProductInput } from "./product.schema";
 
 export type ProductActionState = {
@@ -140,4 +146,36 @@ export async function archiveProductAction(productId: string) {
   revalidatePath("/dashboard");
 
   return product;
+}
+
+export async function updateProductStatusAction(productId: string, status: string) {
+  const store = await requireStore();
+
+  try {
+    await updateProductStatus(store.id, productId, status);
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/products");
+    return { ok: true as const };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Product status update failed.",
+      ok: false as const
+    };
+  }
+}
+
+export async function bulkUpdateProductStatusAction(productIds: string[], status: string) {
+  const store = await requireStore();
+
+  try {
+    await bulkUpdateProductStatus(store.id, productIds, status);
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/products");
+    return { ok: true as const };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Bulk status update failed.",
+      ok: false as const
+    };
+  }
 }

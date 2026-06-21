@@ -2,15 +2,18 @@ import { createUniqueSlug } from "../../lib/slug";
 import { getCategoryByIdForStore } from "../categories/category.repository";
 import {
   archiveProductRecord,
+  bulkUpdateProductStatusRecord,
   createProductRecord,
   getProductByIdForStore,
   getProductsForStore,
   isProductSkuAvailable,
   isProductSlugAvailable,
-  updateProductRecord
+  updateProductRecord,
+  updateProductStatusRecord
 } from "./product.repository";
 import {
   createProductSchema,
+  productStatusSchema,
   updateProductSchema,
   type CreateProductInput,
   type UpdateProductInput
@@ -82,6 +85,32 @@ export async function updateProduct(
 
 export async function archiveProduct(storeId: string, productId: string) {
   return archiveProductRecord(storeId, productId);
+}
+
+export async function updateProductStatus(storeId: string, productId: string, status: unknown) {
+  const parsedStatus = productStatusSchema.parse(status);
+  const result = await updateProductStatusRecord(storeId, productId, parsedStatus);
+
+  if (result.count !== 1) {
+    throw new Error("Product not found.");
+  }
+
+  return result;
+}
+
+export async function bulkUpdateProductStatus(
+  storeId: string,
+  productIds: string[],
+  status: unknown
+) {
+  const ids = Array.from(new Set(productIds.filter(Boolean)));
+
+  if (ids.length === 0) {
+    throw new Error("Select at least one product.");
+  }
+
+  const parsedStatus = productStatusSchema.parse(status);
+  return bulkUpdateProductStatusRecord(storeId, ids, parsedStatus);
 }
 
 async function assertProductSlugAvailable(storeId: string, slug: string, ignoreProductId?: string) {
