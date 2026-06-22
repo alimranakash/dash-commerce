@@ -1,6 +1,8 @@
+import { isStoreOSConfigured } from "@dash/storeos-sdk";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { AIChat } from "../../../modules/storeos/components/ai-chat";
-import { sendStoreOSChatMessageAction } from "../../../modules/storeos/storeos.actions";
+import { StoreOSConnectionPanel } from "../../../modules/storeos/components/storeos-connection-panel";
+import { reconnectStoreOSAction, sendStoreOSChatMessageAction } from "../../../modules/storeos/storeos.actions";
 import { getStoreOSConnection } from "../../../modules/storeos/storeos.service";
 import { requireStore } from "../../../modules/stores/queries";
 
@@ -30,6 +32,17 @@ export default async function AIAssistantPage() {
               Ask operational questions about orders, sales, inventory, and store health.
             </p>
           </div>
+        </div>
+        <div className="dashboard-shell">
+          <StoreOSConnectionPanel
+            action={reconnectStoreOSAction}
+            connection={connection ? {
+              lastSyncedAt: connection.lastSyncedAt?.toISOString() ?? null,
+              status: connection.status,
+              storeosConnectionId: connection.storeosConnectionId
+            } : null}
+            isConfigured={isStoreOSConfigured()}
+          />
         </div>
         <div className="dashboard-shell ai-shell">
           <AIChat

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import { requireStore } from "../stores/queries";
-import { updateStoreSettings, updateThemeSettings } from "./settings.service";
+import { getStoreSettings, updateStoreSettings, updateThemeSettings } from "./settings.service";
 import type { StoreSettingsInput, ThemeSettingsInput } from "./settings.schema";
 
 export type SettingsActionState = {
@@ -27,6 +27,18 @@ export async function updateStoreSettingsFormAction(
 
   revalidateSettingsPaths(store.slug);
   redirect("/dashboard/settings?updated=1");
+}
+
+export async function updateGeneralSettingsFormAction(_state: SettingsActionState, formData: FormData) {
+  return updateStoreSettingsSection(_state, formData, ["contactEmail", "contactPhone", "supportPhone", "businessAddress"], "/dashboard/settings?updated=1");
+}
+
+export async function updateBrandSettingsFormAction(_state: SettingsActionState, formData: FormData) {
+  return updateStoreSettingsSection(_state, formData, ["logoUrl", "faviconUrl"], "/dashboard/theme?brandingUpdated=1");
+}
+
+export async function updateSocialProfilesFormAction(_state: SettingsActionState, formData: FormData) {
+  return updateStoreSettingsSection(_state, formData, ["facebookUrl", "instagramUrl", "whatsappNumber"], "/dashboard/settings/social?updated=1");
 }
 
 export async function updateThemeSettingsFormAction(
@@ -74,6 +86,40 @@ function themeSettingsFromFormData(formData: FormData): ThemeSettingsInput {
 
 function getValue(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
+}
+
+async function updateStoreSettingsSection(
+  _state: SettingsActionState,
+  formData: FormData,
+  fields: Array<keyof StoreSettingsInput>,
+  redirectTo: string
+): Promise<SettingsActionState> {
+  const store = await requireStore();
+  const current = await getStoreSettings(store.id);
+  const next: StoreSettingsInput = {
+    logoUrl: current.logoUrl ?? undefined,
+    faviconUrl: current.faviconUrl ?? undefined,
+    contactEmail: current.contactEmail ?? undefined,
+    contactPhone: current.contactPhone ?? undefined,
+    supportPhone: current.supportPhone ?? undefined,
+    businessAddress: current.businessAddress ?? undefined,
+    facebookUrl: current.facebookUrl ?? undefined,
+    instagramUrl: current.instagramUrl ?? undefined,
+    whatsappNumber: current.whatsappNumber ?? undefined
+  };
+
+  for (const field of fields) {
+    next[field] = getValue(formData, field);
+  }
+
+  try {
+    await updateStoreSettings(store.id, next);
+  } catch (error) {
+    return settingsErrorState(error, "Please fix the highlighted settings.");
+  }
+
+  revalidateSettingsPaths(store.slug);
+  redirect(redirectTo);
 }
 
 function settingsErrorState(error: unknown, fallbackMessage: string): SettingsActionState {
