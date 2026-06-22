@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
-import { DashboardCard } from "../../../../components/dashboard/dashboard-card";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
+import { CustomersReportDashboard, OrdersReportDashboard, ProductsReportDashboard, RevenuesReportDashboard } from "../../../../modules/reports/components/report-section-dashboards";
+import { DateRangeFilter } from "../../../../modules/reports/components/report-section-components";
+import { getCustomersReport, getOrdersReport, getProductsReport, getRevenuesReport } from "../../../../modules/reports/report.service";
 import { requireStore } from "../../../../modules/stores/queries";
 
 const reportTitles: Record<string, string> = {
@@ -16,17 +18,22 @@ export default async function ReportSectionPage({ params }: { params: Promise<{ 
   const title = reportTitles[report];
 
   if (!title) notFound();
+  const dashboard = await loadReportDashboard(report, store.id, store.currency);
 
   return (
     <DashboardShell storeSlug={store.slug}>
       <section className="mx-auto grid max-w-[1480px] gap-4">
-        <h1 className="m-0 text-[1.65rem] font-semibold leading-tight">{title}</h1>
-        <DashboardCard title={`${title} Report`}>
-          <div className="grid min-h-80 place-items-center rounded-lg border border-dashed border-[#dedceb] bg-[#fafaff] px-6 text-center text-sm text-[#858691]">
-            Detailed {title.toLowerCase()} reporting will appear here as more commerce data becomes available.
-          </div>
-        </DashboardCard>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h1 className="m-0 text-[1.65rem] font-semibold leading-tight">{title} Report</h1><p className="mt-1.5 text-xs text-[#777985]">Store-scoped {title.toLowerCase()} performance and activity.</p></div><DateRangeFilter /></div>
+        {dashboard}
       </section>
     </DashboardShell>
   );
+}
+
+async function loadReportDashboard(report: string, storeId: string, currency: string) {
+  if (report === "orders") return <OrdersReportDashboard data={await getOrdersReport(storeId, currency)} />;
+  if (report === "revenues") return <RevenuesReportDashboard data={await getRevenuesReport(storeId, currency)} />;
+  if (report === "products") return <ProductsReportDashboard data={await getProductsReport(storeId, currency)} />;
+  if (report === "customers") return <CustomersReportDashboard data={await getCustomersReport(storeId, currency)} />;
+  notFound();
 }

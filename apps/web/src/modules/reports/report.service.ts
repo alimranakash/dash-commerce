@@ -1,5 +1,5 @@
-import { getReportOverviewRecords } from "./report.repository";
-import type { ReportOverviewData, ReportTopCustomer, ReportTopProduct } from "./report.types";
+import { getCustomersReportRecords, getOrdersReportRecords, getProductsReportRecords, getReportOverviewRecords, getRevenueReportRecords } from "./report.repository";
+import type { CustomersReportData, OrdersReportData, ProductsReportData, ReportOverviewData, ReportSeriesPoint, ReportTopCustomer, ReportTopProduct, RevenuesReportData } from "./report.types";
 
 const PERIOD_DAYS = 30;
 
@@ -34,6 +34,153 @@ export async function getReportOverview(storeId: string, fallbackCurrency: strin
     sales: metric(current.sales, previous.sales),
     topProducts: topProducts(currentOrders)
   };
+}
+
+export async function getOrdersReport(storeId: string, fallbackCurrency: string): Promise<OrdersReportData> {
+  const start = startOfMonthOffset(-11);
+  const orders = await getOrdersReportRecords(storeId, start);
+  const currency = orders[0]?.currency ?? fallbackCurrency;
+  const recentStart = startOfDay(daysAgo(29));
+  const recent = orders.filter((order) => order.createdAt >= recentStart);
+
+  return {
+    currency,
+    daily: timeSeries(30, "day", recentStart, recent, () => 1),
+    metrics: {
+      total: orders.length,
+      pending: orders.filter((order) => order.status === "PENDING").length,
+      processing: orders.filter((order) => order.status === "CONFIRMED" || order.status === "PROCESSING").length,
+      completed: orders.filter((order) => order.status === "COMPLETED").length,
+      cancelled: orders.filter((order) => order.status === "CANCELLED").length,
+      refunded: orders.filter((order) => order.paymentStatus === "REFUNDED").length
+    },
+    monthly: timeSeries(12, "month", start, orders, () => 1),
+    recentOrders: [...orders].reverse().slice(0, 8).map((order) => ({ createdAt: order.createdAt, customer: order.customerName, id: order.id, orderNumber: order.orderNumber, status: order.status, total: Number(order.totalAmount) })),
+    statuses: ["PENDING", "CONFIRMED", "PROCESSING", "COMPLETED", "CANCELLED"].map((status) => ({ label: titleCase(status), value: orders.filter((order) => order.status === status).length }))
+  };
+}
+
+export async function getRevenuesReport(storeId: string, fallbackCurrency: string): Promise<RevenuesReportData> {
+  const start = startOfMonthOffset(-11);
+  const orders = await getRevenueReportRecords(storeId, start);
+  const currency = orders[0]?.currency ?? fallbackCurrency;
+  const valid = orders.filter((order) => order.status !== "CANCELLED");
+  const gross = sum(valid.map((order) => Number(order.totalAmount)));
+  const refunds = sum(valid.filter((order) => order.paymentStatus === "REFUNDED").map((order) => Number(order.totalAmount)));
+  const recentStart = startOfDay(daysAgo(29));
+  const recent = valid.filter((order) => order.createdAt >= recentStart);
+  const daily = timeSeries(30, "day", recentStart, recent, (order) => Number(order.totalAmount), (order) => order.paymentStatus === "REFUNDED" ? Number(order.totalAmount) : 0);
+
+  return {
+    currency,
+    daily,
+    metrics: { aov: valid.length ? gross / valid.length : 0, gross, net: Math.max(0, gross - refunds), refunds },
+    monthly: timeSeries(12, "month", start, valid, (order) => Number(order.totalAmount), (order) => order.paymentStatus === "REFUNDED" ? Number(order.totalAmount) : 0),
+    topDays: daily.map((point) => ({ date: point.label, orders: recent.filter((order) => dayLabel(order.createdAt) === point.label).length, revenue: point.value })).sort((a, b) => b.revenue - a.revenue).slice(0, 7)
+  };
+}
+
+export async function getProductsReport(storeId: string, fallbackCurrency: string): Promise<ProductsReportData> {
+  const [products, items] = await getProductsReportRecords(storeId);
+  const byProduct = new Map<string, ReportTopProduct>();
+  const categories = new Map<string, { category: string; quantity: number; revenue: number }>();
+
+  for (const item of items) {
+    const key = item.productId ?? item.title;
+    const product = byProduct.get(key) ?? { quantity: 0, revenue: 0, title: item.title };
+    product.quantity += item.quantity;
+    product.revenue += Number(item.total);
+    byProduct.set(key, product);
+    const categoryName = item.product?.category?.name ?? "Uncategorized";
+    const category = categories.get(categoryName) ?? { category: categoryName, quantity: 0, revenue: 0 };
+    category.quantity += item.quantity;
+    category.revenue += Number(item.total);
+    categories.set(categoryName, category);
+  }
+
+  return {
+    categoryPerformance: [...categories.values()].sort((a, b) => b.revenue - a.revenue).slice(0, 8),
+    currency: fallbackCurrency,
+    inventory: [
+      { label: "In Stock", value: products.filter((product) => product.stockQuantity > product.lowStockThreshold).length },
+      { label: "Low Stock", value: products.filter((product) => product.stockQuantity > 0 && product.stockQuantity <= product.lowStockThreshold).length },
+      { label: "Out of Stock", value: products.filter((product) => product.stockQuantity === 0).length }
+    ],
+    lowStock: products.filter((product) => product.stockQuantity <= product.lowStockThreshold).map((product) => ({ id: product.id, stock: product.stockQuantity, threshold: product.lowStockThreshold, title: product.title })).slice(0, 10),
+    metrics: {
+      active: products.filter((product) => product.status === "ACTIVE").length,
+      lowStock: products.filter((product) => product.stockQuantity > 0 && product.stockQuantity <= product.lowStockThreshold).length,
+      outOfStock: products.filter((product) => product.stockQuantity === 0).length,
+      total: products.length
+    },
+    topProducts: [...byProduct.values()].sort((a, b) => b.quantity - a.quantity).slice(0, 8)
+  };
+}
+
+export async function getCustomersReport(storeId: string, fallbackCurrency: string): Promise<CustomersReportData> {
+  const customers = await getCustomersReportRecords(storeId);
+  const recentStart = startOfDay(daysAgo(29));
+  const customerSummaries = customers.map((customer) => ({ name: customer.name, orders: customer.orders.length, purchased: sum(customer.orders.map((order) => Number(order.totalAmount))) }));
+  const topCustomers = [...customerSummaries].sort((a, b) => b.purchased - a.purchased).slice(0, 10);
+  const totalRevenue = sum(customerSummaries.map((customer) => customer.purchased));
+
+  return {
+    currency: customers.flatMap((customer) => customer.orders)[0]?.currency ?? fallbackCurrency,
+    frequency: [
+      { label: "1 Order", value: customers.filter((customer) => customer.orders.length === 1).length },
+      { label: "2-3 Orders", value: customers.filter((customer) => customer.orders.length >= 2 && customer.orders.length <= 3).length },
+      { label: "4+ Orders", value: customers.filter((customer) => customer.orders.length >= 4).length }
+    ],
+    growth: timeSeries(30, "day", recentStart, customers.filter((customer) => customer.createdAt >= recentStart), () => 1),
+    metrics: {
+      averageValue: customers.length ? totalRevenue / customers.length : 0,
+      newCustomers: customers.filter((customer) => customer.createdAt >= recentStart).length,
+      returning: customers.filter((customer) => customer.orders.length > 1).length,
+      total: customers.length
+    },
+    topCustomers
+  };
+}
+
+function timeSeries<T extends { createdAt: Date }>(
+  length: number,
+  unit: "day" | "month",
+  start: Date,
+  records: T[],
+  value: (record: T) => number,
+  secondary: (record: T) => number = () => 0
+): ReportSeriesPoint[] {
+  const points = Array.from({ length }, (_, index) => {
+    const date = new Date(start);
+    if (unit === "day") date.setDate(date.getDate() + index);
+    else date.setMonth(date.getMonth() + index);
+    return { date, label: unit === "day" ? dayLabel(date) : monthLabel(date), secondary: 0, value: 0 };
+  });
+
+  for (const record of records) {
+    const index = unit === "day"
+      ? Math.floor((startOfDay(record.createdAt).getTime() - start.getTime()) / 86_400_000)
+      : (record.createdAt.getFullYear() - start.getFullYear()) * 12 + record.createdAt.getMonth() - start.getMonth();
+    const point = points[index];
+    if (!point) continue;
+    point.value += value(record);
+    point.secondary = (point.secondary ?? 0) + secondary(record);
+  }
+
+  return points.map(({ label, secondary: secondaryValue, value: primaryValue }) => ({ label, secondary: secondaryValue, value: primaryValue }));
+}
+
+function startOfMonthOffset(offset: number) {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth() + offset, 1);
+}
+
+function dayLabel(date: Date) {
+  return new Intl.DateTimeFormat("en", { day: "numeric", month: "short" }).format(date);
+}
+
+function monthLabel(date: Date) {
+  return new Intl.DateTimeFormat("en", { month: "short", year: "2-digit" }).format(date);
 }
 
 type ReportOrder = Awaited<ReturnType<typeof getReportOverviewRecords>>[0][number];

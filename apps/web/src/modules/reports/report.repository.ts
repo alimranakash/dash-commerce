@@ -43,3 +43,81 @@ export async function getReportOverviewRecords(storeId: string, periodStart: Dat
     })
   ]);
 }
+
+export async function getOrdersReportRecords(storeId: string, start: Date) {
+  return prisma.order.findMany({
+    where: { createdAt: { gte: start }, storeId },
+    orderBy: { createdAt: "asc" },
+    select: {
+      createdAt: true,
+      currency: true,
+      customerName: true,
+      id: true,
+      orderNumber: true,
+      paymentStatus: true,
+      status: true,
+      totalAmount: true
+    }
+  });
+}
+
+export async function getRevenueReportRecords(storeId: string, start: Date) {
+  return prisma.order.findMany({
+    where: { createdAt: { gte: start }, storeId },
+    orderBy: { createdAt: "asc" },
+    select: {
+      createdAt: true,
+      currency: true,
+      paymentStatus: true,
+      status: true,
+      totalAmount: true
+    }
+  });
+}
+
+export async function getProductsReportRecords(storeId: string) {
+  return Promise.all([
+    prisma.product.findMany({
+      where: { storeId },
+      orderBy: { title: "asc" },
+      select: {
+        category: { select: { name: true } },
+        id: true,
+        lowStockThreshold: true,
+        price: true,
+        status: true,
+        stockQuantity: true,
+        title: true
+      }
+    }),
+    prisma.orderItem.findMany({
+      where: { order: { status: { not: "CANCELLED" }, storeId } },
+      select: {
+        productId: true,
+        quantity: true,
+        title: true,
+        total: true,
+        product: { select: { category: { select: { name: true } } } }
+      }
+    })
+  ]);
+}
+
+export async function getCustomersReportRecords(storeId: string) {
+  return prisma.customer.findMany({
+    where: { storeId },
+    orderBy: { createdAt: "asc" },
+    select: {
+      createdAt: true,
+      id: true,
+      name: true,
+      orders: {
+        where: { status: { not: "CANCELLED" } },
+        select: {
+          currency: true,
+          totalAmount: true
+        }
+      }
+    }
+  });
+}
