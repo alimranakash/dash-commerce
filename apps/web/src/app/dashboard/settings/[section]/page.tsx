@@ -4,7 +4,6 @@ import { DashboardShell } from "../../../../components/dashboard/dashboard-shell
 import { requireStore } from "../../../../modules/stores/queries";
 
 const settingsSections: Record<string, string> = {
-  courier: "Courier",
   invoice: "Invoice",
   marketing: "Marketing"
 };
