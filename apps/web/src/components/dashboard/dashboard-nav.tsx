@@ -35,9 +35,10 @@ const productLinks = [
   { href: "/dashboard/products", label: "All Products" },
   { href: "/dashboard/products/new", label: "Add Product" },
   { href: "/dashboard/attributes", label: "Attributes" },
+  { href: "/dashboard/categories", label: "Categories" },
   { href: "/dashboard/tags", label: "Tags" },
   { href: "/dashboard/brands", label: "Brands" },
-  { href: "/dashboard/categories", label: "Categories" }
+  { href: "/dashboard/products/reviews", label: "Reviews" }
 ];
 
 const reportLinks = [
