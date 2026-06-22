@@ -1,8 +1,34 @@
-import { BadgeDollarSign, Ban, Box, CheckCircle2, CircleDollarSign, Clock3, PackageCheck, PackageOpen, ReceiptText, RefreshCcw, ShoppingBag, TrendingUp, UserPlus, Users } from "lucide-react";
-import type { CustomersReportData, OrdersReportData, ProductsReportData, RevenuesReportData } from "../report.types";
+import { BadgeDollarSign, Ban, Box, CheckCircle2, CircleDollarSign, Clock3, PackageCheck, PackageOpen, Percent, ReceiptText, RefreshCcw, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, UserPlus, Users } from "lucide-react";
+import type { AbandonedCartsReportData, CustomersReportData, OrdersReportData, ProductsReportData, RevenuesReportData } from "../report.types";
 import { ReportCard } from "./report-card";
 import { ReportLineChart } from "./report-line-chart";
-import { ReportBarList, ReportMetricCard, ReportTable, formatMoney, formatNumber } from "./report-section-components";
+import { ReportBarList, ReportEmptyState, ReportMetricCard, ReportTable, formatMoney, formatNumber } from "./report-section-components";
+
+export function AbandonedCartsReportDashboard({ data }: { data: AbandonedCartsReportData }) {
+  const hasCartActivity = data.metrics.total > 0;
+  const hasRecoveryActivity = data.metrics.recoveredRevenue > 0;
+
+  return <div className="grid gap-4">
+    <MetricGrid metrics={[
+      { icon: ShoppingCart, label: "Total Abandoned Carts", value: formatNumber(data.metrics.total) },
+      { icon: Percent, label: "Recovery Rate", value: `${data.metrics.recoveryRate.toFixed(1)}%` },
+      { icon: CircleDollarSign, label: "Recovered Revenue", value: formatMoney(data.metrics.recoveredRevenue, data.currency) },
+      { icon: TrendingDown, label: "Lost Revenue", value: formatMoney(data.metrics.lostRevenue, data.currency) }
+    ]} />
+    <ReportCard title="Recovery Analytics"><ReportChartOrEmpty data={data} mode="revenue" show={hasCartActivity} /></ReportCard>
+    <div className="grid gap-4 xl:grid-cols-2">
+      <ReportCard title="Abandoned Cart Trends"><ReportChartOrEmpty data={data} mode="carts" show={hasCartActivity} /></ReportCard>
+      <ReportCard title="Recovery Trends"><ReportChartOrEmpty data={data} mode="recovery" show={hasCartActivity} /></ReportCard>
+    </div>
+    <div className="grid gap-4 xl:grid-cols-2">
+      <ReportCard title="Recovered Revenue & Lost Revenue Trends"><ReportChartOrEmpty data={data} mode="revenue" show={hasCartActivity} /></ReportCard>
+      <ReportCard title="Recovery Performance"><ReportChartOrEmpty data={data} mode="performance" show={hasRecoveryActivity} /></ReportCard>
+    </div>
+    <ReportCard title="Top Recovery Channels">
+      {data.recoveryChannels.length ? <ReportBarList items={data.recoveryChannels} /> : <ReportEmptyState message="Recovery channel performance will appear when email, WhatsApp, or automated campaigns are connected." />}
+    </ReportCard>
+  </div>;
+}
 
 export function OrdersReportDashboard({ data }: { data: OrdersReportData }) {
   const metrics = [
@@ -50,6 +76,25 @@ export function CustomersReportDashboard({ data }: { data: CustomersReportData }
 }
 
 function MetricGrid({ metrics }: { metrics: Array<{ icon: typeof ReceiptText; label: string; value: string }> }) { return <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{metrics.map((metric) => <ReportMetricCard key={metric.label} {...metric} />)}</div>; }
+function ReportChartOrEmpty({ data, mode, show }: { data: AbandonedCartsReportData; mode: "carts" | "performance" | "recovery" | "revenue"; show: boolean }) {
+  if (!show) return <ReportEmptyState message="No abandoned cart activity is available for this reporting period." />;
+
+  const labels = data.daily.map((point) => point.label);
+  if (mode === "carts") return <ReportLineChart labels={labels} series={[
+    { color: "#7650e8", label: "Abandoned Carts", values: data.daily.map((point) => point.abandoned) },
+    { color: "#20a66a", label: "Recovered Carts", values: data.daily.map((point) => point.recovered) }
+  ]} />;
+  if (mode === "recovery") return <ReportLineChart labels={labels} series={[
+    { color: "#20a66a", label: "Recovered Carts", values: data.daily.map((point) => point.recovered) }
+  ]} />;
+  if (mode === "performance") return <ReportLineChart labels={labels} series={[
+    { color: "#2789e8", label: "Recovery Rate", values: data.daily.map((point) => point.recoveryRate) }
+  ]} />;
+  return <ReportLineChart labels={labels} series={[
+    { color: "#20a66a", label: "Recovered Revenue", values: data.daily.map((point) => point.recoveredRevenue) },
+    { color: "#ef6f61", label: "Lost Revenue", values: data.daily.map((point) => point.lostRevenue) }
+  ]} />;
+}
 function SingleSeriesChart({ color, data, label }: { color: string; data: Array<{ label: string; value: number }>; label: string }) { return <ReportLineChart labels={data.map((point) => point.label)} series={[{ color, label, values: data.map((point) => point.value) }]} />; }
 function DualSeriesChart({ data, first, second }: { data: Array<{ label: string; secondary?: number; value: number }>; first: string; second: string }) { return <ReportLineChart labels={data.map((point) => point.label)} series={[{ color: "#20a66a", label: first, values: data.map((point) => point.value) }, { color: "#ef6f61", label: second, values: data.map((point) => point.secondary ?? 0) }]} />; }
 function ProductTable({ data }: { data: ProductsReportData }) { return <ReportTable emptyMessage="No product sales data available." headers={["Product", "Sold", "Revenue"]} rows={data.topProducts.map((product) => [product.title, formatNumber(product.quantity), formatMoney(product.revenue, data.currency)])} />; }

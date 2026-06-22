@@ -46,7 +46,8 @@ const reportLinks = [
   { href: "/dashboard/reports/orders", label: "Orders" },
   { href: "/dashboard/reports/revenues", label: "Revenues" },
   { href: "/dashboard/reports/products", label: "Products" },
-  { href: "/dashboard/reports/customers", label: "Customers" }
+  { href: "/dashboard/reports/customers", label: "Customers" },
+  { href: "/dashboard/reports/abandoned-carts", label: "Abandoned Carts" }
 ];
 
 const settingsLinks = [

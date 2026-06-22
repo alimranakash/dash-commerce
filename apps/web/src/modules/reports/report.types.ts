@@ -85,3 +85,22 @@ export type CustomersReportData = {
   metrics: { averageValue: number; newCustomers: number; returning: number; total: number };
   topCustomers: ReportTopCustomer[];
 };
+
+export type AbandonedCartsReportData = {
+  currency: string;
+  daily: Array<{
+    abandoned: number;
+    label: string;
+    lostRevenue: number;
+    recovered: number;
+    recoveredRevenue: number;
+    recoveryRate: number;
+  }>;
+  metrics: {
+    lostRevenue: number;
+    recoveredRevenue: number;
+    recoveryRate: number;
+    total: number;
+  };
+  recoveryChannels: Array<{ label: string; value: number }>;
+};

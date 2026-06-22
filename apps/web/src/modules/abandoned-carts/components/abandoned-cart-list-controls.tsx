@@ -1,10 +1,11 @@
-import { FileX2, Search, ShoppingCart } from "lucide-react";
+import { Search } from "lucide-react";
 import Link from "next/link";
 
 export type AbandonedCartFilterKey = "all" | "not-contacted" | "contacted" | "recovered" | "clean";
 
 type AbandonedCartListControlsProps = {
   activeFilter: AbandonedCartFilterKey;
+  counts: Record<Exclude<AbandonedCartFilterKey, "clean">, number>;
   dateRange: string;
   search: string;
 };
@@ -17,9 +18,9 @@ const tabs: Array<{ badgeClass?: string; key: AbandonedCartFilterKey; label: str
   { key: "clean", label: "Clean" }
 ];
 
-export function AbandonedCartListControls({ activeFilter, dateRange, search }: AbandonedCartListControlsProps) {
+export function AbandonedCartListControls({ activeFilter, counts, dateRange, search }: AbandonedCartListControlsProps) {
   return (
-    <section className="flex min-h-[540px] flex-col rounded-xl border border-[#ececf5] bg-white px-6 py-6 shadow-[0_8px_24px_rgba(62,54,114,0.04)]">
+    <section className="rounded-xl border border-[#ececf5] bg-white px-6 py-5 shadow-[0_8px_24px_rgba(62,54,114,0.04)]">
       <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
         <nav aria-label="Abandoned cart filters" className="-mb-px flex min-w-0 gap-5 overflow-x-auto border-b border-[#eeeef5]">
           {tabs.map((tab) => {
@@ -37,7 +38,7 @@ export function AbandonedCartListControls({ activeFilter, dateRange, search }: A
                 key={tab.key}
               >
                 {tab.label}
-                {tab.badgeClass ? <span className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${tab.badgeClass}`}>0</span> : null}
+                {tab.badgeClass ? <span className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${tab.badgeClass}`}>{counts[tab.key as Exclude<AbandonedCartFilterKey, "clean">]}</span> : null}
               </Link>
             );
           })}
@@ -67,14 +68,6 @@ export function AbandonedCartListControls({ activeFilter, dateRange, search }: A
         </form>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center px-4 py-16 text-center">
-        <div className="relative mb-6 grid h-32 w-32 place-items-center rounded-2xl bg-[#f3efff] text-[#7950f2]">
-          <FileX2 aria-hidden="true" className="h-24 w-24" fill="#e9e3ff" strokeWidth={1.4} />
-          <ShoppingCart aria-hidden="true" className="absolute h-10 w-10" strokeWidth={2} />
-        </div>
-        <h2 className="m-0 text-xl font-semibold text-[#20212a]">No Abandoned Carts found</h2>
-        <p className="mt-4 max-w-sm text-sm leading-6 text-[#85869a]">All Abandoned Carts will appear here once they occur.</p>
-      </div>
     </section>
   );
 }

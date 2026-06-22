@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
-import { CustomersReportDashboard, OrdersReportDashboard, ProductsReportDashboard, RevenuesReportDashboard } from "../../../../modules/reports/components/report-section-dashboards";
+import { AbandonedCartsReportDashboard, CustomersReportDashboard, OrdersReportDashboard, ProductsReportDashboard, RevenuesReportDashboard } from "../../../../modules/reports/components/report-section-dashboards";
 import { DateRangeFilter } from "../../../../modules/reports/components/report-section-components";
-import { getCustomersReport, getOrdersReport, getProductsReport, getRevenuesReport } from "../../../../modules/reports/report.service";
+import { getAbandonedCartsReport, getCustomersReport, getOrdersReport, getProductsReport, getRevenuesReport } from "../../../../modules/reports/report.service";
 import { requireStore } from "../../../../modules/stores/queries";
 
 const reportTitles: Record<string, string> = {
+  "abandoned-carts": "Abandoned Carts",
   customers: "Customers",
   orders: "Orders",
   products: "Products",
@@ -31,6 +32,7 @@ export default async function ReportSectionPage({ params }: { params: Promise<{ 
 }
 
 async function loadReportDashboard(report: string, storeId: string, currency: string) {
+  if (report === "abandoned-carts") return <AbandonedCartsReportDashboard data={await getAbandonedCartsReport(storeId, currency)} />;
   if (report === "orders") return <OrdersReportDashboard data={await getOrdersReport(storeId, currency)} />;
   if (report === "revenues") return <RevenuesReportDashboard data={await getRevenuesReport(storeId, currency)} />;
   if (report === "products") return <ProductsReportDashboard data={await getProductsReport(storeId, currency)} />;

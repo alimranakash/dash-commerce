@@ -1,5 +1,5 @@
 import { getCustomersReportRecords, getOrdersReportRecords, getProductsReportRecords, getReportOverviewRecords, getRevenueReportRecords } from "./report.repository";
-import type { CustomersReportData, OrdersReportData, ProductsReportData, ReportOverviewData, ReportSeriesPoint, ReportTopCustomer, ReportTopProduct, RevenuesReportData } from "./report.types";
+import type { AbandonedCartsReportData, CustomersReportData, OrdersReportData, ProductsReportData, ReportOverviewData, ReportSeriesPoint, ReportTopCustomer, ReportTopProduct, RevenuesReportData } from "./report.types";
 
 const PERIOD_DAYS = 30;
 
@@ -139,6 +139,25 @@ export async function getCustomersReport(storeId: string, fallbackCurrency: stri
       total: customers.length
     },
     topCustomers
+  };
+}
+
+export async function getAbandonedCartsReport(storeId: string, fallbackCurrency: string): Promise<AbandonedCartsReportData> {
+  // Abandoned cart persistence is not available yet. Keep the report contract
+  // store-scoped so real repository data can replace this empty source later.
+  void storeId;
+  const start = startOfDay(daysAgo(29));
+  const daily = Array.from({ length: 30 }, (_, index) => {
+    const date = new Date(start);
+    date.setDate(date.getDate() + index);
+    return { abandoned: 0, label: dayLabel(date), lostRevenue: 0, recovered: 0, recoveredRevenue: 0, recoveryRate: 0 };
+  });
+
+  return {
+    currency: fallbackCurrency,
+    daily,
+    metrics: { lostRevenue: 0, recoveredRevenue: 0, recoveryRate: 0, total: 0 },
+    recoveryChannels: []
   };
 }
 
