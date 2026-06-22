@@ -16,6 +16,7 @@ import {
 } from "../../modules/analytics/analytics.service";
 import { LogoutButton } from "../../modules/auth/logout-button";
 import { OnboardingForm } from "../../modules/onboarding/onboarding-form";
+import onboardingStyles from "../../modules/onboarding/onboarding-experience.module.css";
 import { getCurrentStore } from "../../modules/stores/queries";
 
 export default async function DashboardPage() {
@@ -24,19 +25,10 @@ export default async function DashboardPage() {
 
   if (!store) {
     return (
-      <main className="dashboard-page">
-        <section className="onboarding-shell" aria-labelledby="onboarding-title">
-          <div className="dashboard-header">
-            <div>
-              <p className="eyebrow">Workspace setup</p>
-              <h1 id="onboarding-title">Create your organization and first store</h1>
-              <p className="auth-copy">
-                Welcome, {user.name ?? user.email}. This creates your owner organization, store,
-                and default Dash subdomain.
-              </p>
-            </div>
-            <LogoutButton />
-          </div>
+      <main className={onboardingStyles.onboardingPage}>
+        <header className={onboardingStyles.topbar}><span className={onboardingStyles.brand}><b>D</b> Dash Commerce <i>OS</i></span><div><span>{user.name ?? user.email}</span><div className={onboardingStyles.logout}><LogoutButton /></div></div></header>
+        <section className={onboardingStyles.onboardingShell} aria-labelledby="onboarding-title">
+          <div className={onboardingStyles.pageIntro}><span>Workspace setup</span><h1 id="onboarding-title">Let’s build your commerce workspace.</h1><p>Five simple steps. No technical setup. You’ll be ready to add products and start selling in minutes.</p></div>
           <OnboardingForm />
         </section>
       </main>

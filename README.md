@@ -90,9 +90,18 @@ The web app uses NextAuth with a Prisma adapter and credentials login. Set these
 ```bash
 NEXTAUTH_SECRET="replace-with-a-long-random-secret"
 NEXTAUTH_URL="http://localhost:3000"
+GOOGLE_CLIENT_ID="your-google-oauth-client-id"
+GOOGLE_CLIENT_SECRET="your-google-oauth-client-secret"
 ```
 
-If you run the web app on another port, update `NEXTAUTH_URL` to match it. After schema changes, sync the database and generate the Prisma client:
+Create a Google OAuth 2.0 Web application and add these authorized redirect URIs:
+
+```text
+http://localhost:3000/api/auth/callback/google
+https://app.dash.com/api/auth/callback/google
+```
+
+Production `NEXTAUTH_URL` must use the same canonical seller-app origin (`https://app.dash.com`). Google OAuth redirect URIs do not support wildcard hosts. If you run the web app on another port, update both `NEXTAUTH_URL` and the Google callback URI to match it. After schema changes, sync the database and generate the Prisma client:
 
 ```bash
 npm run db:push
@@ -105,7 +114,7 @@ Then start the app:
 npm run dev
 ```
 
-Visit `/register`, create an account, then use `/login`, `/dashboard`, and the dashboard sign-out button.
+Visit `/register`, create an account with Google or credentials, then use `/login`, `/dashboard`, and the dashboard sign-out button. Google users are created through the Prisma adapter; a verified Google email can also link to an existing credentials account with the same email.
 
 ## Shipping Setup
 
