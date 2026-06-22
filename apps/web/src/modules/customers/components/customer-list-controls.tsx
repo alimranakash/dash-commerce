@@ -1,10 +1,11 @@
-import { FileSearch, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import Link from "next/link";
 
 export type CustomerFilterKey = "all" | "recurring" | "one-time";
 
 type CustomerListControlsProps = {
   activeFilter: CustomerFilterKey;
+  counts: Record<CustomerFilterKey, number>;
   search: string;
 };
 
@@ -14,9 +15,9 @@ const tabs: Array<{ badgeClass: string; key: CustomerFilterKey; label: string }>
   { badgeClass: "bg-[#e5f8f2] text-[#119c73]", key: "one-time", label: "One-time" }
 ];
 
-export function CustomerListControls({ activeFilter, search }: CustomerListControlsProps) {
+export function CustomerListControls({ activeFilter, counts, search }: CustomerListControlsProps) {
   return (
-    <section className="flex min-h-[520px] flex-col rounded-xl border border-[#ececf5] bg-white px-6 py-6 shadow-[0_8px_24px_rgba(62,54,114,0.04)]">
+    <section className="rounded-xl border border-[#ececf5] bg-white px-6 py-6 shadow-[0_8px_24px_rgba(62,54,114,0.04)]">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <nav aria-label="Customer filters" className="-mb-px flex min-w-0 gap-5 overflow-x-auto border-b border-[#eeeef5]">
           {tabs.map((tab) => {
@@ -33,7 +34,7 @@ export function CustomerListControls({ activeFilter, search }: CustomerListContr
                 key={tab.key}
               >
                 {tab.label}
-                <span className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${tab.badgeClass}`}>0</span>
+                <span className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${tab.badgeClass}`}>{counts[tab.key]}</span>
               </Link>
             );
           })}
@@ -55,15 +56,6 @@ export function CustomerListControls({ activeFilter, search }: CustomerListContr
         </form>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center px-4 py-16 text-center">
-        <div className="mb-5 grid h-28 w-28 place-items-center rounded-xl bg-[#f5f3ff] text-[#8b5cf6]">
-          <FileSearch aria-hidden="true" className="h-20 w-20" strokeWidth={1.5} />
-        </div>
-        <h2 className="m-0 text-xl font-semibold text-[#20212a]">No Customers Found</h2>
-        <p className="mt-3 max-w-xl text-sm leading-6 text-[#85869a]">
-          You&apos;re yet to receive any customers in your store. Keep promoting your store to bring in your first customer.
-        </p>
-      </div>
     </section>
   );
 }
