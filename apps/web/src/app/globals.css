@@ -634,6 +634,60 @@ textarea {
   padding: 9px 12px;
 }
 
+.dash-dashboard .social-settings-control > input,
+.dash-dashboard .social-settings-icon-input {
+  background: #ffffff;
+  border: 1px solid #e5e3f1;
+  border-radius: 8px;
+  min-height: 46px;
+  width: 100%;
+}
+
+.dash-dashboard .social-settings-control > input {
+  color: #292a34;
+  font-size: 0.82rem;
+  font-weight: 400;
+  outline: none;
+  padding: 10px 12px;
+}
+
+.dash-dashboard .social-settings-control > input:read-only {
+  background: #f7f7fa;
+  color: #777985;
+}
+
+.dash-dashboard .social-settings-control > input:focus,
+.dash-dashboard .social-settings-icon-input:focus-within {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 2px rgb(124 58 237 / 10%);
+}
+
+.dash-dashboard .social-settings-icon-input {
+  align-items: stretch;
+  display: flex;
+  overflow: hidden;
+}
+
+.dash-dashboard .social-settings-icon-input > span {
+  align-items: center;
+  background: #fafaff;
+  border-right: 1px solid #e5e3f1;
+  color: #7650e8;
+  display: flex;
+  justify-content: center;
+  min-width: 44px;
+}
+
+.dash-dashboard .social-settings-icon-input > input {
+  border: 0;
+  flex: 1;
+  font-size: 0.82rem;
+  font-weight: 400;
+  min-width: 0;
+  outline: 0;
+  padding: 10px 12px;
+}
+
 .dash-dashboard .catalog-placeholder-message {
   background: #f5f2ff;
   border-radius: 7px;

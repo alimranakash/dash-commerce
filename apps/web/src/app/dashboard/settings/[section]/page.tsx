@@ -6,8 +6,7 @@ import { requireStore } from "../../../../modules/stores/queries";
 const settingsSections: Record<string, string> = {
   courier: "Courier",
   invoice: "Invoice",
-  marketing: "Marketing",
-  social: "Social"
+  marketing: "Marketing"
 };
 
 export default async function SettingsSectionPage({ params }: { params: Promise<{ section: string }> }) {
