@@ -49,6 +49,19 @@ const reportLinks = [
   { href: "/dashboard/reports/customers", label: "Customers" }
 ];
 
+const settingsLinks = [
+  { href: "/dashboard/settings/general", label: "General" },
+  { href: "/dashboard/settings/marketing", label: "Marketing" },
+  { href: "/dashboard/settings/courier", label: "Courier" },
+  { href: "/dashboard/settings/invoice", label: "Invoice" },
+  { href: "/dashboard/settings/social", label: "Social" },
+  { href: "/dashboard/payments", label: "Payments" },
+  { href: "/dashboard/shipping", label: "Shipping" },
+  { href: "/dashboard/theme", label: "Theme" },
+  { href: "/dashboard/media", label: "Media" },
+  { href: "/dashboard/ai", label: "StoreOS / AI" }
+];
+
 const mainLinks: NavItem[] = [
   { href: "/dashboard/orders", icon: ReceiptText, label: "Orders" },
   { href: "/dashboard/transactions", icon: CircleDollarSign, label: "Transactions" },
@@ -57,8 +70,7 @@ const mainLinks: NavItem[] = [
 ];
 
 const trailingLinks: NavItem[] = [
-  { href: "/dashboard/abandoned-cart", icon: ShoppingCart, label: "Abandoned cart" },
-  { href: "/dashboard/settings", icon: Settings, label: "Settings" }
+  { href: "/dashboard/abandoned-cart", icon: ShoppingCart, label: "Abandoned cart" }
 ];
 
 const iconColors: Record<string, string> = {
@@ -77,8 +89,12 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
     (route) => pathname.startsWith(route)
   );
   const reportRouteActive = pathname.startsWith("/dashboard/reports");
+  const settingsRouteActive = pathname.startsWith("/dashboard/settings") || ["/dashboard/payments", "/dashboard/shipping", "/dashboard/theme", "/dashboard/media", "/dashboard/ai"].some(
+    (route) => pathname.startsWith(route)
+  );
   const [productsOpen, setProductsOpen] = useState(productRouteActive);
   const [reportsOpen, setReportsOpen] = useState(reportRouteActive);
+  const [settingsOpen, setSettingsOpen] = useState(settingsRouteActive);
 
   useEffect(() => {
     if (productRouteActive) setProductsOpen(true);
@@ -87,6 +103,10 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
   useEffect(() => {
     if (reportRouteActive) setReportsOpen(true);
   }, [reportRouteActive]);
+
+  useEffect(() => {
+    if (settingsRouteActive) setSettingsOpen(true);
+  }, [settingsRouteActive]);
 
   return (
     <aside
@@ -182,6 +202,31 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
             />
           ))}
         </div>
+
+        <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${settingsRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
+          <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/settings" onClick={onClose}>
+            <Settings className="h-4 w-4 text-cyan-500" />
+            <span>Settings</span>
+          </Link>
+          <button aria-label="Toggle settings menu" className="p-2" onClick={() => setSettingsOpen((current) => !current)} type="button">
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${settingsOpen ? "rotate-180" : ""}`} />
+          </button>
+        </div>
+        {settingsOpen ? (
+          <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
+            {settingsLinks.map((link) => (
+              <Link
+                aria-current={isSettingsLinkActive(pathname, link.href) ? "page" : undefined}
+                className={`block rounded-md px-3 py-2 text-[12px] transition ${isSettingsLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                href={link.href}
+                key={link.href}
+                onClick={onClose}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </nav>
 
       <div className="border-t border-[#f0f0f7] p-3">
@@ -209,6 +254,14 @@ function isProductLinkActive(pathname: string, href: string) {
 
 function isReportLinkActive(pathname: string, href: string) {
   return href === "/dashboard/reports" ? pathname === href : pathname.startsWith(href);
+}
+
+function isSettingsLinkActive(pathname: string, href: string) {
+  if (href === "/dashboard/settings/general") {
+    return pathname === "/dashboard/settings" || pathname.startsWith(href);
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function NavLink({ href, icon: Icon, iconClassName, label, onClick, pathname }: NavItem & { iconClassName?: string; onClick: () => void; pathname: string }) {
