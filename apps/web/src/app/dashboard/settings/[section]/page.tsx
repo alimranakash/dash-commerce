@@ -3,9 +3,7 @@ import { DashboardCard } from "../../../../components/dashboard/dashboard-card";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
 import { requireStore } from "../../../../modules/stores/queries";
 
-const settingsSections: Record<string, string> = {
-  invoice: "Invoice"
-};
+const settingsSections: Record<string, string> = {};
 
 export default async function SettingsSectionPage({ params }: { params: Promise<{ section: string }> }) {
   const { section } = await params;
