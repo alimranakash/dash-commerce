@@ -4,8 +4,7 @@ import { DashboardShell } from "../../../../components/dashboard/dashboard-shell
 import { requireStore } from "../../../../modules/stores/queries";
 
 const settingsSections: Record<string, string> = {
-  invoice: "Invoice",
-  marketing: "Marketing"
+  invoice: "Invoice"
 };
 
 export default async function SettingsSectionPage({ params }: { params: Promise<{ section: string }> }) {
