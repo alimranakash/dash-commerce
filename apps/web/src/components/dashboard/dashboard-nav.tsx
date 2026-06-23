@@ -11,6 +11,7 @@ import {
   ReceiptText,
   Settings,
   ShoppingCart,
+  Truck,
   Users,
   X
 } from "lucide-react";
@@ -67,6 +68,7 @@ const mainLinks: NavItem[] = [
   { href: "/dashboard/orders", icon: ReceiptText, label: "Orders" },
   { href: "/dashboard/transactions", icon: CircleDollarSign, label: "Transactions" },
   { href: "/dashboard/customers", icon: Users, label: "Customers" },
+  { href: "/dashboard/suppliers", icon: Truck, label: "Suppliers" },
   { href: "/dashboard/coupons", icon: Percent, label: "Coupons" }
 ];
 
@@ -81,6 +83,7 @@ const iconColors: Record<string, string> = {
   Orders: "text-blue-600",
   Reports: "text-pink-500",
   Settings: "text-cyan-500",
+  Suppliers: "text-amber-500",
   Transactions: "text-emerald-500"
 };
 

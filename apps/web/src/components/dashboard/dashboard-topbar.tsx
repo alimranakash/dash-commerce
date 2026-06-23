@@ -18,6 +18,7 @@ const labels: Record<string, string> = {
   products: "Products",
   settings: "Settings",
   shipping: "Shipping",
+  suppliers: "Suppliers",
   theme: "Theme"
 };
 

@@ -65,6 +65,11 @@ enum FulfillmentStatus {
   RETURNED
 }
 
+enum SupplierStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model User {
   id          String               @id @default(cuid())
   name        String?
@@ -123,6 +128,7 @@ model Organization {
   slug      String               @unique
   members   OrganizationMember[]
   stores    Store[]
+  suppliers Supplier[]
   createdAt DateTime             @default(now())
   updatedAt DateTime             @default(now()) @updatedAt
 }
@@ -366,6 +372,25 @@ model Category {
   @@unique([storeId, slug])
   @@index([storeId])
   @@index([parentId])
+}
+
+model Supplier {
+  id             String         @id @default(cuid())
+  organizationId String         @map("organization_id")
+  name           String
+  companyName    String?        @map("company_name")
+  phone          String
+  email          String?
+  address        String?
+  notes          String?
+  status         SupplierStatus @default(ACTIVE)
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @default(now()) @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@index([status])
+  @@map("suppliers")
 }
 
 model Customer {
