@@ -25,6 +25,19 @@ enum StoreDomainType {
   CUSTOM
 }
 
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
 enum ProductStatus {
   DRAFT
   ACTIVE
@@ -219,6 +232,7 @@ model Organization {
   expenses  Expense[]
   sales     Sale[]
   stockMovements StockMovement[]
+  subscriptions Subscription[]
   createdAt DateTime             @default(now())
   updatedAt DateTime             @default(now()) @updatedAt
 }
@@ -265,6 +279,7 @@ model Store {
   expenses       Expense[]
   sales          Sale[]
   stockMovements StockMovement[]
+  subscription   Subscription?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @default(now()) @updatedAt
 
@@ -686,6 +701,7 @@ model Plan {
   isActive            Boolean  @default(true) @map("is_active")
   isFeatured          Boolean  @default(false) @map("is_featured")
   sortOrder           Int      @default(0) @map("sort_order")
+  subscriptions       Subscription[]
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @default(now()) @updatedAt @map("updated_at")
 
@@ -693,6 +709,32 @@ model Plan {
   @@index([isFeatured])
   @@index([sortOrder])
   @@map("plans")
+}
+
+model Subscription {
+  id                  String             @id @default(cuid())
+  organizationId      String             @map("organization_id")
+  storeId             String             @unique @map("store_id")
+  planId              String             @map("plan_id")
+  status              SubscriptionStatus @default(TRIALING)
+  billingCycle        BillingCycle       @default(MONTHLY) @map("billing_cycle")
+  trialStartsAt       DateTime?          @map("trial_starts_at")
+  trialEndsAt         DateTime?          @map("trial_ends_at")
+  currentPeriodStartsAt DateTime?        @map("current_period_starts_at")
+  currentPeriodEndsAt DateTime?          @map("current_period_ends_at")
+  cancelAtPeriodEnd   Boolean            @default(false) @map("cancel_at_period_end")
+  cancelledAt         DateTime?          @map("cancelled_at")
+  organization        Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  store               Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  plan                Plan               @relation(fields: [planId], references: [id])
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @default(now()) @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@index([planId])
+  @@index([status])
+  @@index([billingCycle])
+  @@map("subscriptions")
 }
 
 model Customer {

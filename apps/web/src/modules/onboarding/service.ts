@@ -1,4 +1,6 @@
 import { prisma } from "@dash/db";
+import { ensureDefaultPlans } from "../admin/admin-plans.repository";
+import { createDefaultSubscriptionRecord } from "../admin/admin-subscriptions.repository";
 import { createDefaultShippingRecords } from "../shipping/shipping.repository";
 import {
   DEFAULT_FEATURED_TITLE,
@@ -38,6 +40,8 @@ export async function createOnboardingWorkspace(userId: string, input: Onboardin
   if (existingStore) {
     throw new Error("This store slug is already taken.");
   }
+
+  await ensureDefaultPlans();
 
   const workspace = await prisma.$transaction(async (tx) => {
     const organization = await tx.organization.create({
@@ -104,6 +108,10 @@ export async function createOnboardingWorkspace(userId: string, input: Onboardin
     }
 
     await createDefaultShippingRecords(tx, store.id);
+    await createDefaultSubscriptionRecord(tx, {
+      organizationId: organization.id,
+      storeId: store.id
+    });
 
     return {
       organization,
