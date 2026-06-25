@@ -1,8 +1,9 @@
 "use client";
 
-import { Bot, ChevronRight, Menu, UserRound } from "lucide-react";
+import { Bot, ChevronRight, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { UserAvatarMenu } from "./user-avatar-menu";
 
 type DashboardTopbarProps = {
   onMenuClick: () => void;
@@ -18,6 +19,7 @@ const labels: Record<string, string> = {
   new: "Add Product",
   orders: "Orders",
   payments: "Payments",
+  profile: "Profile",
   products: "Products",
   purchases: "Purchases",
   returns: "Returns",
@@ -58,9 +60,7 @@ export function DashboardTopbar({ onMenuClick }: DashboardTopbarProps) {
           <Bot className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">AI Assistant</span>
         </Link>
-        <span className="grid h-8 w-8 place-items-center rounded-full border border-[#dedcf0] bg-[#f7f5ff] text-[#4c2bb7]">
-          <UserRound className="h-4 w-4" />
-        </span>
+        <UserAvatarMenu />
       </div>
     </header>
   );
