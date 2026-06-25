@@ -12,6 +12,7 @@ const labels: Record<string, string> = {
   ai: "AI Assistant",
   categories: "Categories",
   expenses: "Expenses",
+  fake: "Fake Orders",
   inventory: "Inventory",
   media: "Media",
   new: "Add Product",
@@ -24,7 +25,8 @@ const labels: Record<string, string> = {
   settings: "Settings",
   shipping: "Shipping",
   suppliers: "Suppliers",
-  theme: "Theme"
+  theme: "Theme",
+  verification: "Verification Queue"
 };
 
 export function DashboardTopbar({ onMenuClick }: DashboardTopbarProps) {

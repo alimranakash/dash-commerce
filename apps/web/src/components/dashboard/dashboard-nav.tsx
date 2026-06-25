@@ -46,6 +46,12 @@ const productLinks = [
   { href: "/dashboard/products/reviews", label: "Reviews" }
 ];
 
+const orderLinks = [
+  { href: "/dashboard/orders", label: "All Orders" },
+  { href: "/dashboard/orders/fake", label: "Fake Orders" },
+  { href: "/dashboard/orders/verification", label: "Verification Queue" }
+];
+
 const reportLinks = [
   { href: "/dashboard/reports", label: "Overview" },
   { href: "/dashboard/reports/orders", label: "Orders" },
@@ -69,7 +75,6 @@ const settingsLinks = [
 ];
 
 const mainLinks: NavItem[] = [
-  { href: "/dashboard/orders", icon: ReceiptText, label: "Orders" },
   { href: "/dashboard/sales", icon: ShoppingBag, label: "Sales" },
   { href: "/dashboard/transactions", icon: CircleDollarSign, label: "Transactions" },
   { href: "/dashboard/customers", icon: Users, label: "Customers" },
@@ -104,17 +109,23 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
   const productRouteActive = ["/dashboard/products", "/dashboard/attributes", "/dashboard/tags", "/dashboard/brands", "/dashboard/categories"].some(
     (route) => pathname.startsWith(route)
   );
+  const orderRouteActive = pathname.startsWith("/dashboard/orders");
   const reportRouteActive = pathname.startsWith("/dashboard/reports");
   const settingsRouteActive = pathname.startsWith("/dashboard/settings") || ["/dashboard/payments", "/dashboard/shipping", "/dashboard/theme", "/dashboard/media", "/dashboard/ai"].some(
     (route) => pathname.startsWith(route)
   );
   const [productsOpen, setProductsOpen] = useState(productRouteActive);
+  const [ordersOpen, setOrdersOpen] = useState(orderRouteActive);
   const [reportsOpen, setReportsOpen] = useState(reportRouteActive);
   const [settingsOpen, setSettingsOpen] = useState(settingsRouteActive);
 
   useEffect(() => {
     if (productRouteActive) setProductsOpen(true);
   }, [productRouteActive]);
+
+  useEffect(() => {
+    if (orderRouteActive) setOrdersOpen(true);
+  }, [orderRouteActive]);
 
   useEffect(() => {
     if (reportRouteActive) setReportsOpen(true);
@@ -156,6 +167,31 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
               <Link
                 aria-current={isProductLinkActive(pathname, link.href) ? "page" : undefined}
                 className={`block rounded-md px-3 py-2 text-[12px] transition ${isProductLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                href={link.href}
+                key={link.href}
+                onClick={onClose}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        ) : null}
+
+        <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${orderRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
+          <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/orders" onClick={onClose}>
+            <ReceiptText className="h-4 w-4 text-blue-600" />
+            <span>Orders</span>
+          </Link>
+          <button aria-label="Toggle orders menu" className="p-2" onClick={() => setOrdersOpen((current) => !current)} type="button">
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${ordersOpen ? "rotate-180" : ""}`} />
+          </button>
+        </div>
+        {ordersOpen ? (
+          <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
+            {orderLinks.map((link) => (
+              <Link
+                aria-current={isOrderLinkActive(pathname, link.href) ? "page" : undefined}
+                className={`block rounded-md px-3 py-2 text-[12px] transition ${isOrderLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
                 href={link.href}
                 key={link.href}
                 onClick={onClose}
@@ -270,6 +306,22 @@ function isProductLinkActive(pathname: string, href: string) {
 
 function isReportLinkActive(pathname: string, href: string) {
   return href === "/dashboard/reports" ? pathname === href : pathname.startsWith(href);
+}
+
+function isOrderLinkActive(pathname: string, href: string) {
+  if (href === "/dashboard/orders/fake") {
+    return matchesRoute(pathname, href) || matchesRoute(pathname, "/dashboard/orders/fake-orders");
+  }
+
+  if (href === "/dashboard/orders/verification") {
+    return matchesRoute(pathname, href) || matchesRoute(pathname, "/dashboard/orders/verification-queue");
+  }
+
+  return pathname === "/dashboard/orders";
+}
+
+function matchesRoute(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function isSettingsLinkActive(pathname: string, href: string) {

@@ -58,6 +58,19 @@ enum PaymentMethodType {
   ROCKET_MANUAL
 }
 
+enum OrderVerificationStatus {
+  NORMAL
+  QUEUED
+  VERIFIED
+  FAKE
+}
+
+enum CustomerFlagStatus {
+  NORMAL
+  WATCHLIST
+  BLOCKED
+}
+
 enum FulfillmentStatus {
   UNFULFILLED
   PARTIALLY_FULFILLED
@@ -655,6 +668,7 @@ model Customer {
   name      String
   email     String?
   phone     String
+  flagStatus CustomerFlagStatus @default(NORMAL)
   store     Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
   orders    Order[]
   sales     Sale[]
@@ -664,6 +678,7 @@ model Customer {
 
   @@unique([storeId, phone])
   @@index([storeId])
+  @@index([flagStatus])
 }
 
 model Address {
@@ -698,6 +713,7 @@ model Order {
   orderNumber       String
   status            OrderStatus       @default(PENDING)
   paymentStatus     PaymentStatus     @default(PENDING)
+  verificationStatus OrderVerificationStatus @default(NORMAL)
   paymentMethodType PaymentMethodType  @default(COD)
   paymentMethodName String             @default("Cash on delivery")
   paymentReference  String?
@@ -720,6 +736,8 @@ model Order {
   shippingAddressId String?
   billingAddressId  String?
   notes             String?
+  verifiedAt        DateTime?
+  markedFakeAt      DateTime?
   store             Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
   customer          Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
   shippingAddress   Address?          @relation("OrderShippingAddress", fields: [shippingAddressId], references: [id], onDelete: SetNull)
@@ -731,6 +749,7 @@ model Order {
   @@unique([storeId, orderNumber])
   @@index([storeId])
   @@index([customerId])
+  @@index([verificationStatus])
   @@index([shippingAddressId])
   @@index([billingAddressId])
 }
