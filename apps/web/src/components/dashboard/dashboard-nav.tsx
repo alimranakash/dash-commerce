@@ -4,6 +4,7 @@ import {
   BarChart3,
   ChevronDown,
   CircleDollarSign,
+  ClipboardList,
   FileText,
   LayoutDashboard,
   Package,
@@ -69,6 +70,7 @@ const mainLinks: NavItem[] = [
   { href: "/dashboard/transactions", icon: CircleDollarSign, label: "Transactions" },
   { href: "/dashboard/customers", icon: Users, label: "Customers" },
   { href: "/dashboard/suppliers", icon: Truck, label: "Suppliers" },
+  { href: "/dashboard/purchases", icon: ClipboardList, label: "Purchases" },
   { href: "/dashboard/coupons", icon: Percent, label: "Coupons" }
 ];
 
@@ -81,6 +83,7 @@ const iconColors: Record<string, string> = {
   Coupons: "text-violet-600",
   Customers: "text-sky-500",
   Orders: "text-blue-600",
+  Purchases: "text-indigo-500",
   Reports: "text-pink-500",
   Settings: "text-cyan-500",
   Suppliers: "text-amber-500",
