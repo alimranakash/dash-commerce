@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { resolveStoreFromHost } from "./lib/host-routing";
 
 const PUBLIC_FILE = /\.(.*)$/;
-const SELLER_APP_PATHS = ["/dashboard", "/login", "/register"];
+const SELLER_APP_PATHS = ["/admin", "/dashboard", "/login", "/register"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

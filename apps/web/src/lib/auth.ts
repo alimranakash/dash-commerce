@@ -13,6 +13,7 @@ import { loginSchema } from "../modules/auth/schemas";
 const nextAuthSecret = process.env.NEXTAUTH_SECRET ?? "dash-commerce-local-dev-secret-change-me";
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+const platformOwnerEmail = "alimranakash.bd@gmail.com";
 
 const providers: NextAuthOptions["providers"] = [
   CredentialsProvider({
@@ -81,18 +82,33 @@ export const authOptions: NextAuthOptions = {
   },
   providers,
   callbacks: {
-    signIn({ account, profile }) {
-      if (account?.provider !== "google") {
-        return true;
+    async signIn({ account, profile, user }) {
+      const email = account?.provider === "google"
+        ? (profile as GoogleProfile | undefined)?.email
+        : user.email;
+
+      if (account?.provider === "google") {
+        const googleProfile = profile as GoogleProfile | undefined;
+
+        if (!googleProfile?.email || !googleProfile.email_verified) {
+          return false;
+        }
       }
 
-      const googleProfile = profile as GoogleProfile | undefined;
-      return Boolean(googleProfile?.email && googleProfile.email_verified);
+      await ensurePlatformOwnerAdmin(email);
+      return true;
     },
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+      }
+
+      const owner = await ensurePlatformOwnerAdmin(user?.email ?? token.email);
+
+      if (owner) {
+        token.id = owner.id;
+        token.role = owner.role;
       }
 
       return token;
@@ -122,4 +138,40 @@ export async function requireUser() {
   }
 
   return user;
+}
+
+async function ensurePlatformOwnerAdmin(email: string | null | undefined) {
+  if (email?.trim().toLowerCase() !== platformOwnerEmail) {
+    return null;
+  }
+
+  const owner = await prisma.user.findUnique({
+    where: {
+      email: platformOwnerEmail
+    },
+    select: {
+      id: true,
+      role: true
+    }
+  });
+
+  if (!owner) {
+    return null;
+  }
+
+  if (owner.role !== "ADMIN") {
+    await prisma.user.update({
+      where: {
+        id: owner.id
+      },
+      data: {
+        role: "ADMIN"
+      }
+    });
+  }
+
+  return {
+    id: owner.id,
+    role: "ADMIN" as const
+  };
 }
