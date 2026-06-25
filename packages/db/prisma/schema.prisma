@@ -62,6 +62,15 @@ enum PaymentStatus {
   PAID
   FAILED
   REFUNDED
+  CANCELLED
+}
+
+enum PaymentGateway {
+  SSLCOMMERZ
+  STRIPE
+  PADDLE
+  MANUAL
+  OTHER
 }
 
 enum PaymentMethodType {
@@ -233,6 +242,7 @@ model Organization {
   sales     Sale[]
   stockMovements StockMovement[]
   subscriptions Subscription[]
+  payments  Payment[]
   createdAt DateTime             @default(now())
   updatedAt DateTime             @default(now()) @updatedAt
 }
@@ -280,6 +290,7 @@ model Store {
   sales          Sale[]
   stockMovements StockMovement[]
   subscription   Subscription?
+  payments       Payment[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @default(now()) @updatedAt
 
@@ -727,6 +738,7 @@ model Subscription {
   organization        Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   store               Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
   plan                Plan               @relation(fields: [planId], references: [id])
+  payments            Payment[]
   createdAt           DateTime           @default(now()) @map("created_at")
   updatedAt           DateTime           @default(now()) @updatedAt @map("updated_at")
 
@@ -735,6 +747,34 @@ model Subscription {
   @@index([status])
   @@index([billingCycle])
   @@map("subscriptions")
+}
+
+model Payment {
+  id               String         @id @default(cuid())
+  subscriptionId   String         @map("subscription_id")
+  organizationId   String         @map("organization_id")
+  storeId          String         @map("store_id")
+  invoiceNumber    String         @unique @map("invoice_number")
+  paymentReference String?        @map("payment_reference")
+  gateway          PaymentGateway @default(MANUAL)
+  currency         String         @default("BDT")
+  amount           Decimal        @db.Decimal(12, 2)
+  status           PaymentStatus  @default(PENDING)
+  paymentMethod    String         @default("Manual") @map("payment_method")
+  paidAt           DateTime?      @map("paid_at")
+  subscription     Subscription   @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  organization     Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  store            Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @default(now()) @updatedAt @map("updated_at")
+
+  @@index([subscriptionId])
+  @@index([organizationId])
+  @@index([storeId])
+  @@index([status])
+  @@index([gateway])
+  @@index([paidAt])
+  @@map("payments")
 }
 
 model Customer {
