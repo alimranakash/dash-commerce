@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { DashboardShell } from "../../../../../components/dashboard/dashboard-shell";
 import { getCategoriesForStore } from "../../../../../modules/categories/category.service";
+import { ProductStockHistory } from "../../../../../modules/inventory/components/product-stock-history";
+import { getStockMovementsForProduct } from "../../../../../modules/inventory/inventory.service";
 import { getMediaPickerAssets } from "../../../../../modules/media/media.service";
 import { ProductForm } from "../../../../../modules/products/components/product-form";
 import { updateProductFormAction } from "../../../../../modules/products/product.actions";
@@ -17,10 +19,11 @@ type EditProductPageProps = {
 export default async function EditProductPage({ params }: EditProductPageProps) {
   const store = await requireStore();
   const { productId } = await params;
-  const [product, categories, mediaAssets] = await Promise.all([
+  const [product, categories, mediaAssets, stockMovements] = await Promise.all([
     getProductByIdForStore(store.id, productId),
     getCategoriesForStore(store.id),
-    getMediaPickerAssets(store.id)
+    getMediaPickerAssets(store.id),
+    getStockMovementsForProduct(store.organizationId, store.id, productId, 8)
   ]);
 
   if (!product) {
@@ -66,6 +69,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
           }}
           submitLabel="Save product"
         />
+        <ProductStockHistory movements={stockMovements} productId={product.id} />
       </section>
     </DashboardShell>
   );

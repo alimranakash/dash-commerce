@@ -12,6 +12,7 @@ const labels: Record<string, string> = {
   ai: "AI Assistant",
   categories: "Categories",
   expenses: "Expenses",
+  inventory: "Inventory",
   media: "Media",
   new: "Add Product",
   orders: "Orders",

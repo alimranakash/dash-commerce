@@ -120,6 +120,23 @@ enum SalePaymentMethod {
   OTHER
 }
 
+enum StockMovementType {
+  STOCK_IN
+  STOCK_OUT
+  ADJUSTMENT
+  RETURN
+  DAMAGE
+  LOST
+}
+
+enum StockMovementSourceType {
+  PURCHASE
+  SALE
+  MANUAL
+  RETURN
+  SYSTEM
+}
+
 model User {
   id          String               @id @default(cuid())
   name        String?
@@ -183,6 +200,7 @@ model Organization {
   expenseCategories ExpenseCategory[]
   expenses  Expense[]
   sales     Sale[]
+  stockMovements StockMovement[]
   createdAt DateTime             @default(now())
   updatedAt DateTime             @default(now()) @updatedAt
 }
@@ -228,6 +246,7 @@ model Store {
   purchases      Purchase[]
   expenses       Expense[]
   sales          Sale[]
+  stockMovements StockMovement[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @default(now()) @updatedAt
 
@@ -393,6 +412,7 @@ model Product {
   orderItems        OrderItem[]
   purchaseItems     PurchaseItem[]
   saleItems         SaleItem[]
+  stockMovements    StockMovement[]
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @default(now()) @updatedAt
 
@@ -599,6 +619,34 @@ model SaleItem {
   @@index([saleId])
   @@index([productId])
   @@map("sale_items")
+}
+
+model StockMovement {
+  id               String                  @id @default(cuid())
+  organizationId   String                  @map("organization_id")
+  storeId          String                  @map("store_id")
+  productId        String                  @map("product_id")
+  type             StockMovementType
+  sourceType       StockMovementSourceType @map("source_type")
+  sourceId         String?                 @map("source_id")
+  quantityChange   Int                     @map("quantity_change")
+  previousQuantity Int                     @map("previous_quantity")
+  newQuantity      Int                     @map("new_quantity")
+  reason           String
+  notes            String?
+  createdBy        String?                 @map("created_by")
+  organization     Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  store            Store                   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product          Product                 @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt        DateTime                @default(now()) @map("created_at")
+
+  @@index([organizationId])
+  @@index([storeId])
+  @@index([productId])
+  @@index([type])
+  @@index([sourceType])
+  @@index([createdAt])
+  @@map("stock_movements")
 }
 
 model Customer {

@@ -5,6 +5,7 @@ import {
   ChevronDown,
   CircleDollarSign,
   ClipboardList,
+  Boxes,
   FileText,
   LayoutDashboard,
   Package,
@@ -74,6 +75,7 @@ const mainLinks: NavItem[] = [
   { href: "/dashboard/customers", icon: Users, label: "Customers" },
   { href: "/dashboard/suppliers", icon: Truck, label: "Suppliers" },
   { href: "/dashboard/purchases", icon: ClipboardList, label: "Purchases" },
+  { href: "/dashboard/inventory", icon: Boxes, label: "Inventory" },
   { href: "/dashboard/expenses", icon: Receipt, label: "Expenses" },
   { href: "/dashboard/coupons", icon: Percent, label: "Coupons" }
 ];
@@ -87,6 +89,7 @@ const iconColors: Record<string, string> = {
   Coupons: "text-violet-600",
   Customers: "text-sky-500",
   Expenses: "text-rose-500",
+  Inventory: "text-lime-600",
   Orders: "text-blue-600",
   Purchases: "text-indigo-500",
   Reports: "text-pink-500",

@@ -70,7 +70,7 @@ export async function createPurchase(context: PurchaseContext, input: CreatePurc
     });
 
     if (shouldReceive) {
-      await increaseProductStock(tx, context.storeId, items);
+      await increaseProductStock(tx, context.organizationId, context.storeId, purchase.id, items);
     }
 
     return purchase;
@@ -139,7 +139,7 @@ export async function updatePurchase(
     });
 
     if (shouldReceiveNow) {
-      await increaseProductStock(tx, context.storeId, items);
+      await increaseProductStock(tx, context.organizationId, context.storeId, purchase.id, items);
     }
 
     return purchase;
@@ -168,7 +168,7 @@ export async function markPurchaseReceived(context: PurchaseContext, purchaseId:
     }
 
     if (!purchase.receivedAt) {
-      await increaseProductStock(tx, context.storeId, purchase.items);
+      await increaseProductStock(tx, context.organizationId, context.storeId, purchase.id, purchase.items);
     }
 
     return tx.purchase.update({
@@ -320,21 +320,56 @@ function calculateTotals(
 
 async function increaseProductStock(
   tx: TransactionClient,
+  organizationId: string,
   storeId: string,
-  items: Array<{ productId?: string | null; quantity: number }>
+  purchaseId: string,
+  items: Array<{ productId?: string | null; productName?: string; quantity: number }>
 ) {
   for (const item of items) {
     if (!item.productId) continue;
 
-    await tx.product.updateMany({
+    const product = await tx.product.findFirst({
       where: {
         id: item.productId,
         storeId
       },
+      select: {
+        id: true,
+        stockQuantity: true,
+        title: true
+      }
+    });
+
+    if (!product) {
+      throw new Error(`${item.productName ?? "Selected product"} was not found for this store.`);
+    }
+
+    const previousQuantity = product.stockQuantity;
+    const newQuantity = previousQuantity + item.quantity;
+
+    await tx.product.update({
+      where: {
+        id: product.id
+      },
       data: {
-        stockQuantity: {
-          increment: item.quantity
-        }
+        stockQuantity: newQuantity
+      }
+    });
+
+    await tx.stockMovement.create({
+      data: {
+        createdBy: null,
+        newQuantity,
+        notes: null,
+        organizationId,
+        previousQuantity,
+        productId: product.id,
+        quantityChange: item.quantity,
+        reason: "Purchase received",
+        sourceId: purchaseId,
+        sourceType: "PURCHASE",
+        storeId,
+        type: "STOCK_IN"
       }
     });
   }

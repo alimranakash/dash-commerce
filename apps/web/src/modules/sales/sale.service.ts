@@ -47,11 +47,7 @@ export async function createSale(context: SaleContext, input: CreateSaleInput) {
     const saleNumber = await createSaleNumber(context.storeId);
     const shouldComplete = data.status === "COMPLETED";
 
-    if (shouldComplete) {
-      await decreaseProductStock(tx, context.storeId, items);
-    }
-
-    return tx.sale.create({
+    const sale = await tx.sale.create({
       data: {
         completedAt: shouldComplete ? new Date() : null,
         customerId: data.customerId ?? null,
@@ -80,6 +76,12 @@ export async function createSale(context: SaleContext, input: CreateSaleInput) {
         items: true
       }
     });
+
+    if (shouldComplete) {
+      await decreaseProductStock(tx, context.organizationId, context.storeId, sale.id, items);
+    }
+
+    return sale;
   });
 }
 
@@ -110,17 +112,13 @@ export async function updateSale(context: SaleContext, saleId: string, input: Up
     const totals = calculateTotals(items, data.discount, data.tax, data.shipping, data.paidAmount);
     const shouldCompleteNow = data.status === "COMPLETED" && !existing.completedAt;
 
-    if (shouldCompleteNow) {
-      await decreaseProductStock(tx, context.storeId, items);
-    }
-
     await tx.saleItem.deleteMany({
       where: {
         saleId
       }
     });
 
-    return tx.sale.update({
+    const sale = await tx.sale.update({
       where: {
         id: saleId
       },
@@ -149,6 +147,12 @@ export async function updateSale(context: SaleContext, saleId: string, input: Up
         items: true
       }
     });
+
+    if (shouldCompleteNow) {
+      await decreaseProductStock(tx, context.organizationId, context.storeId, sale.id, items);
+    }
+
+    return sale;
   });
 }
 
@@ -262,26 +266,58 @@ function calculateTotals(
   };
 }
 
-async function decreaseProductStock(tx: TransactionClient, storeId: string, items: PreparedSaleItem[]) {
+async function decreaseProductStock(
+  tx: TransactionClient,
+  organizationId: string,
+  storeId: string,
+  saleId: string,
+  items: PreparedSaleItem[]
+) {
   for (const item of items) {
-    const updated = await tx.product.updateMany({
+    const product = await tx.product.findFirst({
       where: {
         id: item.productId,
-        stockQuantity: {
-          gte: item.quantity
-        },
         storeId
       },
-      data: {
-        stockQuantity: {
-          decrement: item.quantity
-        }
+      select: {
+        id: true,
+        stockQuantity: true,
+        title: true
       }
     });
 
-    if (updated.count !== 1) {
+    if (!product || product.stockQuantity < item.quantity) {
       throw new Error(`${item.productName} does not have enough stock.`);
     }
+
+    const previousQuantity = product.stockQuantity;
+    const newQuantity = previousQuantity - item.quantity;
+
+    await tx.product.update({
+      where: {
+        id: product.id
+      },
+      data: {
+        stockQuantity: newQuantity
+      }
+    });
+
+    await tx.stockMovement.create({
+      data: {
+        createdBy: null,
+        newQuantity,
+        notes: null,
+        organizationId,
+        previousQuantity,
+        productId: product.id,
+        quantityChange: -item.quantity,
+        reason: "Sale completed",
+        sourceId: saleId,
+        sourceType: "SALE",
+        storeId,
+        type: "STOCK_OUT"
+      }
+    });
   }
 }
 
