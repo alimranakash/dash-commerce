@@ -11,6 +11,7 @@ type DashboardTopbarProps = {
 const labels: Record<string, string> = {
   ai: "AI Assistant",
   categories: "Categories",
+  expenses: "Expenses",
   media: "Media",
   new: "Add Product",
   orders: "Orders",

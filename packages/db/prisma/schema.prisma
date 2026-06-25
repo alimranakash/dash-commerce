@@ -77,6 +77,21 @@ enum PurchaseStatus {
   CANCELLED
 }
 
+enum ExpenseStatus {
+  PAID
+  PENDING
+  CANCELLED
+}
+
+enum ExpensePaymentMethod {
+  CASH
+  BANK
+  BKASH
+  NAGAD
+  CARD
+  OTHER
+}
+
 model User {
   id          String               @id @default(cuid())
   name        String?
@@ -137,6 +152,8 @@ model Organization {
   stores    Store[]
   suppliers Supplier[]
   purchases Purchase[]
+  expenseCategories ExpenseCategory[]
+  expenses  Expense[]
   createdAt DateTime             @default(now())
   updatedAt DateTime             @default(now()) @updatedAt
 }
@@ -180,6 +197,7 @@ model Store {
   storeosConnection StoreOSConnection?
   mediaAssets    MediaAsset[]
   purchases      Purchase[]
+  expenses       Expense[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @default(now()) @updatedAt
 
@@ -451,6 +469,50 @@ model PurchaseItem {
   @@index([purchaseId])
   @@index([productId])
   @@map("purchase_items")
+}
+
+model ExpenseCategory {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  name           String
+  color          String       @default("#7C3AED")
+  icon           String       @default("receipt")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  expenses       Expense[]
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("expense_categories")
+}
+
+model Expense {
+  id             String               @id @default(cuid())
+  organizationId String               @map("organization_id")
+  storeId        String               @map("store_id")
+  categoryId     String               @map("category_id")
+  expenseNumber  String               @map("expense_number")
+  title          String
+  amount         Decimal              @db.Decimal(12, 2)
+  paymentMethod  ExpensePaymentMethod @map("payment_method")
+  expenseDate    DateTime             @map("expense_date")
+  reference      String?
+  notes          String?
+  attachmentUrl  String?              @map("attachment_url")
+  status         ExpenseStatus        @default(PENDING)
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  store          Store                @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  category       ExpenseCategory      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  createdAt      DateTime             @default(now()) @map("created_at")
+  updatedAt      DateTime             @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([storeId, expenseNumber])
+  @@index([organizationId])
+  @@index([storeId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([expenseDate])
+  @@map("expenses")
 }
 
 model Customer {

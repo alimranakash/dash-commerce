@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Package,
   Percent,
+  Receipt,
   ReceiptText,
   Settings,
   ShoppingCart,
@@ -71,6 +72,7 @@ const mainLinks: NavItem[] = [
   { href: "/dashboard/customers", icon: Users, label: "Customers" },
   { href: "/dashboard/suppliers", icon: Truck, label: "Suppliers" },
   { href: "/dashboard/purchases", icon: ClipboardList, label: "Purchases" },
+  { href: "/dashboard/expenses", icon: Receipt, label: "Expenses" },
   { href: "/dashboard/coupons", icon: Percent, label: "Coupons" }
 ];
 
@@ -82,6 +84,7 @@ const iconColors: Record<string, string> = {
   "Abandoned cart": "text-fuchsia-500",
   Coupons: "text-violet-600",
   Customers: "text-sky-500",
+  Expenses: "text-rose-500",
   Orders: "text-blue-600",
   Purchases: "text-indigo-500",
   Reports: "text-pink-500",
