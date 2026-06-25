@@ -667,6 +667,34 @@ model StockMovement {
   @@map("stock_movements")
 }
 
+model Plan {
+  id                  String   @id @default(cuid())
+  name                String
+  slug                String   @unique
+  description         String?
+  priceMonthly        Decimal  @default(0) @db.Decimal(12, 2) @map("price_monthly")
+  priceYearly         Decimal  @default(0) @db.Decimal(12, 2) @map("price_yearly")
+  currency            String   @default("BDT")
+  trialDays           Int      @default(0) @map("trial_days")
+  productLimit        Int      @default(0) @map("product_limit")
+  orderLimit          Int      @default(0) @map("order_limit")
+  staffLimit          Int      @default(1) @map("staff_limit")
+  storeLimit          Int      @default(1) @map("store_limit")
+  customDomainEnabled Boolean  @default(false) @map("custom_domain_enabled")
+  aiEnabled           Boolean  @default(false) @map("ai_enabled")
+  posEnabled          Boolean  @default(false) @map("pos_enabled")
+  isActive            Boolean  @default(true) @map("is_active")
+  isFeatured          Boolean  @default(false) @map("is_featured")
+  sortOrder           Int      @default(0) @map("sort_order")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([isActive])
+  @@index([isFeatured])
+  @@index([sortOrder])
+  @@map("plans")
+}
+
 model Customer {
   id        String    @id @default(cuid())
   storeId   String
