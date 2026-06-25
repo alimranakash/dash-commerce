@@ -160,6 +160,7 @@ model User {
   language    String               @default("en")
   timezone    String               @default("Asia/Dhaka")
   dateFormat  String               @default("DD/MM/YYYY")
+  isSuspended Boolean              @default(false)
   passwordHash String?
   role        UserRole             @default(MEMBER)
   accounts    Account[]
