@@ -11,6 +11,7 @@ import {
   Percent,
   Receipt,
   ReceiptText,
+  ShoppingBag,
   Settings,
   ShoppingCart,
   Truck,
@@ -68,6 +69,7 @@ const settingsLinks = [
 
 const mainLinks: NavItem[] = [
   { href: "/dashboard/orders", icon: ReceiptText, label: "Orders" },
+  { href: "/dashboard/sales", icon: ShoppingBag, label: "Sales" },
   { href: "/dashboard/transactions", icon: CircleDollarSign, label: "Transactions" },
   { href: "/dashboard/customers", icon: Users, label: "Customers" },
   { href: "/dashboard/suppliers", icon: Truck, label: "Suppliers" },
@@ -88,6 +90,7 @@ const iconColors: Record<string, string> = {
   Orders: "text-blue-600",
   Purchases: "text-indigo-500",
   Reports: "text-pink-500",
+  Sales: "text-purple-500",
   Settings: "text-cyan-500",
   Suppliers: "text-amber-500",
   Transactions: "text-emerald-500"
