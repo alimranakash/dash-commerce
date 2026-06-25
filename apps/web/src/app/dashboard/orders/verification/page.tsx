@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DashboardQueryForm } from "../../../../components/dashboard/dashboard-query-form";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
 import { FakeOrderActionButtons } from "../../../../modules/fake-orders/components/fake-order-action-buttons";
 import { FakeOrderEmpty } from "../../../../modules/fake-orders/components/fake-order-empty";
@@ -34,10 +35,10 @@ export default async function VerificationQueuePage({ searchParams }: Verificati
         {params.updated ? <p className="success-message">Verification status updated.</p> : null}
 
         <div className="panel-card p-4 sm:p-5">
-          <form className="mb-5 flex w-full gap-2 sm:max-w-md sm:ml-auto" method="get">
+          <DashboardQueryForm actionPath="/dashboard/orders/verification" className="mb-5 flex w-full gap-2 sm:max-w-md sm:ml-auto">
             <input className="h-11 min-w-0 flex-1 rounded-lg border border-[#e4e3ee] px-3 text-sm outline-none focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10" defaultValue={search} name="search" placeholder="Search order, customer, or phone" />
             <button className="h-11 rounded-lg bg-[#7c3aed] px-5 text-sm font-semibold text-white" type="submit">Search</button>
-          </form>
+          </DashboardQueryForm>
 
           {orders.length ? (
             <div className="overflow-hidden rounded-xl border border-[#efeff5] bg-white">

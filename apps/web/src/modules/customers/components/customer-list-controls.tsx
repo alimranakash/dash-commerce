@@ -1,5 +1,6 @@
 import { Search } from "lucide-react";
 import Link from "next/link";
+import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 
 export type CustomerFilterKey = "all" | "recurring" | "one-time";
 
@@ -40,7 +41,7 @@ export function CustomerListControls({ activeFilter, counts, search }: CustomerL
           })}
         </nav>
 
-        <form className="flex w-full gap-3 sm:w-auto" method="get">
+        <DashboardQueryForm actionPath="/dashboard/customers" className="flex w-full gap-3 sm:w-auto">
           {activeFilter !== "all" ? <input name="type" type="hidden" value={activeFilter} /> : null}
           <input
             aria-label="Search customers"
@@ -53,7 +54,7 @@ export function CustomerListControls({ activeFilter, counts, search }: CustomerL
           <button aria-label="Search customers" className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-[#7548f5] text-white transition hover:bg-[#6436e8]" type="submit">
             <Search aria-hidden="true" className="h-4 w-4" />
           </button>
-        </form>
+        </DashboardQueryForm>
       </div>
 
     </section>

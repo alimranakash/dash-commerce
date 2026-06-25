@@ -1,5 +1,6 @@
 import { Search } from "lucide-react";
 import Link from "next/link";
+import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 
 export type AbandonedCartFilterKey = "all" | "not-contacted" | "contacted" | "recovered" | "clean";
 
@@ -44,7 +45,7 @@ export function AbandonedCartListControls({ activeFilter, counts, dateRange, sea
           })}
         </nav>
 
-        <form className="flex w-full flex-col gap-3 sm:flex-row xl:w-auto" method="get">
+        <DashboardQueryForm actionPath="/dashboard/abandoned-cart" className="flex w-full flex-col gap-3 sm:flex-row xl:w-auto">
           {activeFilter !== "all" ? <input name="status" type="hidden" value={activeFilter} /> : null}
           <input
             aria-label="Search abandoned carts"
@@ -65,7 +66,7 @@ export function AbandonedCartListControls({ activeFilter, counts, dateRange, sea
           <button aria-label="Search abandoned carts" className="grid h-11 w-full shrink-0 place-items-center rounded-lg bg-[#7548f5] text-white transition hover:bg-[#6436e8] sm:w-11" type="submit">
             <Search aria-hidden="true" className="h-4 w-4" />
           </button>
-        </form>
+        </DashboardQueryForm>
       </div>
 
     </section>

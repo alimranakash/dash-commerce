@@ -1,5 +1,6 @@
 import { FileText, Plus, Search } from "lucide-react";
 import Link from "next/link";
+import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 
 export type CouponFilterKey = "all" | "active" | "inactive";
 
@@ -41,7 +42,7 @@ export function CouponListControls({ activeFilter, dateRange, search }: CouponLi
           })}
         </nav>
 
-        <form className="flex w-full flex-col gap-3 sm:flex-row xl:w-auto" method="get">
+        <DashboardQueryForm actionPath="/dashboard/coupons" className="flex w-full flex-col gap-3 sm:flex-row xl:w-auto">
           {activeFilter !== "all" ? <input name="status" type="hidden" value={activeFilter} /> : null}
           <input
             aria-label="Search coupons"
@@ -62,7 +63,7 @@ export function CouponListControls({ activeFilter, dateRange, search }: CouponLi
           <button aria-label="Search coupons" className="grid h-11 w-full shrink-0 place-items-center rounded-lg bg-[#7548f5] text-white transition hover:bg-[#6436e8] sm:w-11" type="submit">
             <Search aria-hidden="true" className="h-4 w-4" />
           </button>
-        </form>
+        </DashboardQueryForm>
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center px-4 py-16 text-center">

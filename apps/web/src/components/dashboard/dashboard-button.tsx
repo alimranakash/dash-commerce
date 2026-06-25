@@ -13,10 +13,10 @@ const variants = {
   secondary: "border-[#7c3aed] bg-white text-[#6d3cf5] hover:bg-[#f7f5ff]"
 };
 
-export function DashboardButton({ children, className = "", href, variant = "primary", ...props }: DashboardButtonProps) {
+export function DashboardButton({ children, className = "", href, type = "button", variant = "primary", ...props }: DashboardButtonProps) {
   const styles = `inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border px-3.5 text-xs font-semibold transition ${variants[variant]} ${className}`;
 
   if (href) return <Link className={styles} href={href}>{children}</Link>;
 
-  return <button className={styles} {...props}>{children}</button>;
+  return <button className={styles} type={type} {...props}>{children}</button>;
 }

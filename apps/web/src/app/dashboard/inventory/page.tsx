@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PackageCheck, PackageMinus, PackageSearch, WalletCards } from "lucide-react";
 import type { ReactNode } from "react";
+import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { StockMovementBadge, movementTypeLabel } from "../../../modules/inventory/components/stock-movement-badge";
 import {
@@ -75,7 +76,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
             </div>
           </div>
 
-          <form className="mb-5 grid gap-3 rounded-xl border border-[#efedf8] bg-[#fbfaff] p-3 lg:grid-cols-[minmax(240px,1fr)_230px_190px_112px]" method="get">
+          <DashboardQueryForm actionPath="/dashboard/inventory" className="mb-5 grid gap-3 rounded-xl border border-[#efedf8] bg-[#fbfaff] p-3 lg:grid-cols-[minmax(240px,1fr)_230px_190px_112px]">
             <input className={controlClass} defaultValue={search} name="search" placeholder="Search product, SKU, or reason" type="search" />
             <select className={controlClass} defaultValue={productId} name="productId">
               <option value="">All products</option>
@@ -95,7 +96,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
             <button className="h-11 rounded-lg bg-[#7c3aed] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#6d28d9] focus:outline-none focus:ring-4 focus:ring-[#7c3aed]/20" type="submit">
               Filter
             </button>
-          </form>
+          </DashboardQueryForm>
 
           {movements.length ? (
             <div className="overflow-hidden rounded-xl border border-[#efeff5] bg-white">

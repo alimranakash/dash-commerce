@@ -2,6 +2,7 @@
 
 import { Button } from "@dash/ui";
 import { Plus, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useMemo, useState, type ReactNode } from "react";
 import type { SaleActionState } from "../sale.actions";
 import type { SalePaymentMethod, SaleStatus, SaleType } from "../sale.schema";
@@ -219,7 +220,7 @@ export function SaleForm({ action, cancelHref, currency, customers, products, sa
       </div>
 
       <div className="form-actions">
-        <a className="catalog-cancel-button" href={cancelHref}>Cancel</a>
+        <Link className="catalog-cancel-button" href={cancelHref}>Cancel</Link>
         <Button className="catalog-submit-button" disabled={isPending} type="submit">{isPending ? "Saving..." : "Save Sale"}</Button>
       </div>
     </form>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@dash/ui";
+import Link from "next/link";
 import { useActionState, type ReactNode } from "react";
 import type { ExpenseActionState } from "../expense.actions";
 import type { ExpensePaymentMethod, ExpenseStatus } from "../expense.schema";
@@ -116,9 +117,9 @@ export function ExpenseForm({ action, cancelHref, categories, expense }: Expense
       </FieldError>
       <p className="catalog-placeholder-message">Attachment upload can be connected to the existing media system later; URL storage is available now.</p>
       <div className="form-actions">
-        <a className="catalog-cancel-button" href={cancelHref}>
+        <Link className="catalog-cancel-button" href={cancelHref}>
           Cancel
-        </a>
+        </Link>
         <Button className="catalog-submit-button" disabled={isPending} type="submit">
           {isPending ? "Saving..." : "Save Expense"}
         </Button>

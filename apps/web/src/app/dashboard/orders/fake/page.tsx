@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Ban, CheckCircle2, ShieldAlert, ShieldQuestion } from "lucide-react";
+import { DashboardQueryForm } from "../../../../components/dashboard/dashboard-query-form";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
 import { FakeOrderEmpty } from "../../../../modules/fake-orders/components/fake-order-empty";
 import { FakeOrderSummaryCard } from "../../../../modules/fake-orders/components/fake-order-summary-card";
@@ -69,11 +70,11 @@ export default async function FakeOrdersPage({ searchParams }: FakeOrdersPagePro
                 </Link>
               ))}
             </div>
-            <form className="flex w-full gap-2 sm:max-w-md" method="get">
+            <DashboardQueryForm actionPath="/dashboard/orders/fake" className="flex w-full gap-2 sm:max-w-md">
               <input name="risk" type="hidden" value={activeFilter === "all" ? "" : activeFilter} />
               <input className="h-11 min-w-0 flex-1 rounded-lg border border-[#e4e3ee] px-3 text-sm outline-none focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10" defaultValue={search} name="search" placeholder="Search order, customer, or phone" />
               <button className="h-11 rounded-lg bg-[#7c3aed] px-5 text-sm font-semibold text-white" type="submit">Search</button>
-            </form>
+            </DashboardQueryForm>
           </div>
 
           {data.orders.length ? (

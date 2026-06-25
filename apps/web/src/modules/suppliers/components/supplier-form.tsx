@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@dash/ui";
+import Link from "next/link";
 import { useActionState, type ReactNode } from "react";
 import type { SupplierActionState } from "../supplier.actions";
 import type { SupplierStatus } from "../supplier.schema";
@@ -84,9 +85,9 @@ export function SupplierForm({ action, cancelHref, supplier, submitLabel }: Supp
 
       <div className="form-actions">
         {cancelHref ? (
-          <a className="catalog-cancel-button" href={cancelHref}>
+          <Link className="catalog-cancel-button" href={cancelHref}>
             Cancel
-          </a>
+          </Link>
         ) : null}
         <Button className="catalog-submit-button" disabled={isPending} type="submit">
           {isPending ? "Saving..." : submitLabel}

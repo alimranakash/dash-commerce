@@ -1,4 +1,5 @@
 import { MessageSquareWarning, Search, Star } from "lucide-react";
+import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 
 export type ProductReviewListItem = {
   actions?: string;
@@ -14,7 +15,7 @@ export type ProductReviewListItem = {
 export function ProductReviewsPanel({ reviews = [], search = "" }: { reviews?: ProductReviewListItem[]; search?: string }) {
   return (
     <section className="flex min-h-[540px] flex-col rounded-xl border border-[#ececf5] bg-white px-6 py-6 shadow-[0_8px_24px_rgba(62,54,114,0.04)]">
-      <form className="ml-auto flex w-full gap-3 sm:w-auto" method="get">
+      <DashboardQueryForm actionPath="/dashboard/products/reviews" className="ml-auto flex w-full gap-3 sm:w-auto">
         <input
           aria-label="Search product reviews"
           className="h-11 min-w-0 flex-1 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none placeholder:text-[#a2a3b0] focus:border-[#8b5cf6] sm:w-80"
@@ -26,7 +27,7 @@ export function ProductReviewsPanel({ reviews = [], search = "" }: { reviews?: P
         <button aria-label="Search reviews" className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-[#7548f5] text-white transition hover:bg-[#6436e8]" type="submit">
           <Search aria-hidden="true" className="h-4 w-4" />
         </button>
-      </form>
+      </DashboardQueryForm>
 
       {reviews.length ? (
         <div className="mt-6 overflow-x-auto">

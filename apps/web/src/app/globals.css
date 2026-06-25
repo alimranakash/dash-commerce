@@ -36,6 +36,27 @@ button {
   font: inherit;
 }
 
+.dash-dashboard a[href],
+.dash-dashboard button:not(:disabled),
+.dash-dashboard input[type="button"]:not(:disabled),
+.dash-dashboard input[type="checkbox"]:not(:disabled),
+.dash-dashboard input[type="radio"]:not(:disabled),
+.dash-dashboard input[type="submit"]:not(:disabled),
+.dash-dashboard select:not(:disabled),
+.dash-dashboard summary,
+.dash-dashboard [role="button"],
+.dash-dashboard [data-clickable="true"] {
+  cursor: pointer;
+}
+
+.dash-dashboard button:disabled,
+.dash-dashboard input:disabled,
+.dash-dashboard select:disabled,
+.dash-dashboard textarea:disabled,
+.dash-dashboard [aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 input {
   font: inherit;
 }

@@ -1,6 +1,7 @@
 import { Edit3, Eye, Plus, RotateCcw, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { DeleteConfirmationButton } from "../../../components/dashboard/delete-confirmation-button";
+import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { voidSaleAction } from "../sale.actions";
 import type { SalePaymentMethod, SalePaymentStatus, SaleStatus, SaleType } from "../sale.schema";
@@ -69,7 +70,7 @@ export function SaleList({ currency, dateFrom, dateTo, filters, message, metrics
         </div>
 
         <section className="rounded-xl border border-[#ececf5] bg-white p-5 shadow-[0_8px_24px_rgba(62,54,114,0.04)]">
-          <form className="mb-5 grid gap-3 lg:grid-cols-[minmax(180px,1fr)_150px_150px_150px_150px_auto]" action="/dashboard/sales">
+          <DashboardQueryForm actionPath="/dashboard/sales" className="mb-5 grid gap-3 lg:grid-cols-[minmax(180px,1fr)_150px_150px_150px_150px_auto]">
             <input className="h-10 rounded-lg border border-[#e5e3f1] bg-white px-3 text-sm outline-none focus:border-[#8b5cf6] focus:ring-2 focus:ring-[#7c3aed]/10" defaultValue={search} name="search" placeholder="Search sales or customers" type="search" />
             <input className="h-10 rounded-lg border border-[#e5e3f1] bg-white px-3 text-sm outline-none" defaultValue={dateFrom} name="dateFrom" title="Date from" type="date" />
             <input className="h-10 rounded-lg border border-[#e5e3f1] bg-white px-3 text-sm outline-none" defaultValue={dateTo} name="dateTo" title="Date to" type="date" />
@@ -86,7 +87,7 @@ export function SaleList({ currency, dateFrom, dateTo, filters, message, metrics
               <option value="offline">Offline</option>
             </select>
             <button className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#7c3aed] px-4 text-xs font-semibold text-white" type="submit"><Search className="h-3.5 w-3.5" /> Search</button>
-          </form>
+          </DashboardQueryForm>
 
           {sales.length ? (
             <div className="overflow-x-auto">
