@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 type StorefrontCategory = {
   id: string;
   name: string;
@@ -7,13 +9,18 @@ type StorefrontCategory = {
 
 type CategorySectionProps = {
   categories: StorefrontCategory[];
+  storeSlug?: string;
 };
 
-export function CategorySection({ categories }: CategorySectionProps) {
+export function CategorySection({ categories, storeSlug }: CategorySectionProps) {
   return (
-    <section className="sf-section sf-category-section" aria-labelledby="storefront-categories">
+    <section
+      className="sf-section sf-category-section"
+      aria-labelledby="storefront-categories"
+      id="featured-categories"
+    >
       <div className="sf-section-heading">
-        <p>Categories</p>
+        <p>Featured Categories</p>
         <h2 id="storefront-categories">Shop by collection</h2>
       </div>
       {categories.length === 0 ? (
@@ -28,6 +35,9 @@ export function CategorySection({ categories }: CategorySectionProps) {
               <span>{category.slug}</span>
               <h3>{category.name}</h3>
               <p>{category.description ?? "Explore products in this collection."}</p>
+              {storeSlug ? (
+                <Link href={`/s/${storeSlug}/${category.slug}`}>Explore category</Link>
+              ) : null}
             </article>
           ))}
         </div>

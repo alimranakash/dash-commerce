@@ -8,26 +8,28 @@ type HeroSectionProps = {
 
 export function HeroSection({ primaryDomain, store }: HeroSectionProps) {
   const theme = store.themeSetting;
-  const heroTitle = theme?.heroTitle || `Discover what is new at ${store.name}`;
+  const heroTitle = theme?.heroTitle || "Discover products you'll love";
   const heroSubtitle =
     theme?.heroSubtitle ||
-    "Browse selected products, categories, and new arrivals from this store.";
+    `Shop quality products from ${store.name} with fast delivery and secure checkout.`;
 
   return (
     <section
       className={theme?.heroImageUrl ? "sf-hero with-media" : "sf-hero"}
       aria-labelledby="storefront-title"
     >
-      {theme?.announcementText ? (
-        <div className="sf-announcement">{theme.announcementText}</div>
-      ) : null}
       <div>
         <p>{primaryDomain ?? `${store.slug}.dash.com`}</p>
         <h1 id="storefront-title">{heroTitle}</h1>
         <span>{heroSubtitle}</span>
-        <Link className="sf-button" href={`/s/${store.slug}/products`}>
-          Shop products
-        </Link>
+        <div className="sf-hero-actions">
+          <Link className="sf-button" href={`/s/${store.slug}/products`}>
+            Shop Now
+          </Link>
+          <a className="sf-button sf-button-secondary" href="#featured-categories">
+            View Categories
+          </a>
+        </div>
       </div>
       {theme?.heroImageUrl ? (
         <div className="sf-hero-media">

@@ -8,7 +8,12 @@ type FeaturedProductsProps = {
   storeSlug: string;
 };
 
-export function FeaturedProducts({ currency, heading, products, storeSlug }: FeaturedProductsProps) {
+export function FeaturedProducts({
+  currency,
+  heading,
+  products,
+  storeSlug
+}: FeaturedProductsProps) {
   return (
     <section className="sf-section" aria-labelledby="featured-products">
       <div className="sf-section-heading">

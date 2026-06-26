@@ -26,6 +26,7 @@ export function ProductCard({ currency, product, storeSlug }: ProductCardProps) 
           price={product.price.toString()}
         />
         <StockStatus stockQuantity={product.stockQuantity} />
+        <span className="sf-product-link">View Product</span>
       </div>
     </Link>
   );

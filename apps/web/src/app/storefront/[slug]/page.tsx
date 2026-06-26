@@ -1,10 +1,14 @@
 import { CategorySection } from "../../../modules/storefront/components/category-section";
 import { FeaturedProducts } from "../../../modules/storefront/components/featured-products";
 import { HeroSection } from "../../../modules/storefront/components/hero-section";
+import { NewsletterCta } from "../../../modules/storefront/components/newsletter-cta";
 import { StorefrontFooter } from "../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../modules/storefront/components/storefront-header";
 import { TrustBadges } from "../../../modules/storefront/components/trust-badges";
-import { getStorefrontHomeData, requireStorefrontBySlug } from "../../../modules/storefront/resolver";
+import {
+  getStorefrontHomeData,
+  requireStorefrontBySlug
+} from "../../../modules/storefront/resolver";
 
 type StorefrontPageProps = {
   params: Promise<{
@@ -22,14 +26,15 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
     <main className="sf-page">
       <StorefrontHeader store={store} />
       <HeroSection primaryDomain={primaryDomain?.domain} store={store} />
+      <CategorySection categories={homeData.categories} storeSlug={store.slug} />
       <FeaturedProducts
         currency={store.currency}
         heading={store.themeSetting?.featuredSectionTitle}
         products={homeData.featuredProducts}
         storeSlug={store.slug}
       />
-      <CategorySection categories={homeData.categories} />
       <TrustBadges />
+      <NewsletterCta />
       <StorefrontFooter primaryDomain={primaryDomain?.domain} store={store} />
     </main>
   );

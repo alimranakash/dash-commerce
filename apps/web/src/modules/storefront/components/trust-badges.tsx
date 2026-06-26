@@ -1,9 +1,4 @@
-const badges = [
-  "Secure checkout ready",
-  "Local inventory",
-  "Responsive storefront",
-  "Seller managed catalog"
-];
+const badges = ["Fast Delivery", "Secure Checkout", "Easy Returns", "Customer Support"];
 
 export function TrustBadges() {
   return (
