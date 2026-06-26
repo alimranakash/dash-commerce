@@ -36,7 +36,7 @@ export function CategorySection({ categories, storeSlug }: CategorySectionProps)
               <h3>{category.name}</h3>
               <p>{category.description ?? "Explore products in this collection."}</p>
               {storeSlug ? (
-                <Link href={`/s/${storeSlug}/${category.slug}`}>Explore category</Link>
+                <Link href={`/s/${storeSlug}/categories/${category.slug}`}>Explore category</Link>
               ) : null}
             </article>
           ))}

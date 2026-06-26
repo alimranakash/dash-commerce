@@ -19,7 +19,10 @@ type StorefrontCartPageProps = {
   }>;
 };
 
-export default async function StorefrontCartPage({ params, searchParams }: StorefrontCartPageProps) {
+export default async function StorefrontCartPage({
+  params,
+  searchParams
+}: StorefrontCartPageProps) {
   const { slug } = await params;
   const feedback = await searchParams;
   const store = await requireStorefrontBySlug(slug);
@@ -32,7 +35,7 @@ export default async function StorefrontCartPage({ params, searchParams }: Store
       <section className="sf-shop-hero" aria-labelledby="cart-title">
         <p>{primaryDomain?.domain ?? `${store.slug}.dash.com`}</p>
         <h1 id="cart-title">Your cart</h1>
-        <span>Review selected products before checkout becomes available.</span>
+        <span>Review selected products before checkout.</span>
       </section>
       <section className="sf-cart-layout" aria-label="Shopping cart">
         <div className="sf-cart-items">
@@ -61,7 +64,12 @@ export default async function StorefrontCartPage({ params, searchParams }: Store
             ))
           )}
         </div>
-        <CartSummary cart={cart} currency={store.currency} storeId={store.id} storeSlug={store.slug} />
+        <CartSummary
+          cart={cart}
+          currency={store.currency}
+          storeId={store.id}
+          storeSlug={store.slug}
+        />
       </section>
       <StorefrontFooter primaryDomain={primaryDomain?.domain} store={store} />
     </main>

@@ -1,21 +1,84 @@
-import { StorefrontPlaceholderPage } from "../../../../modules/storefront/themes/default/components/storefront-placeholder-page";
-import { requireStorefrontBySlug } from "../../../../modules/storefront/resolver";
+import { ProductCard } from "../../../../modules/storefront/components/product-card";
+import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
+import { StorefrontHeader } from "../../../../modules/storefront/components/storefront-header";
+import {
+  getStorefrontProducts,
+  requireStorefrontBySlug
+} from "../../../../modules/storefront/resolver";
 
 type StorefrontSearchPageProps = {
   params: Promise<{
     slug: string;
   }>;
+  searchParams: Promise<{
+    q?: string;
+  }>;
 };
 
-export default async function StorefrontSearchPage({ params }: StorefrontSearchPageProps) {
+export default async function StorefrontSearchPage({
+  params,
+  searchParams
+}: StorefrontSearchPageProps) {
   const { slug } = await params;
+  const { q = "" } = await searchParams;
   const store = await requireStorefrontBySlug(slug);
+  const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
+  const query = q.trim();
+  const products = query
+    ? await getStorefrontProducts(store.id, {
+        search: query
+      })
+    : [];
 
   return (
-    <StorefrontPlaceholderPage
-      description="Search routing is ready. Product search UI and indexing will be connected in a later storefront phase."
-      store={store}
-      title="Search"
-    />
+    <main className="sf-page">
+      <StorefrontHeader store={store} />
+      <section className="sf-shop-hero" aria-labelledby="search-title">
+        <p>{primaryDomain?.domain ?? `${store.slug}.dash.com`}</p>
+        <h1 id="search-title">Search products</h1>
+        <span>Find products by title or SKU.</span>
+      </section>
+      <section className="sf-section" aria-labelledby="search-results">
+        <form className="sf-search-form" action={`/s/${store.slug}/search`} method="get">
+          <label>
+            Search
+            <input
+              defaultValue={query}
+              name="q"
+              placeholder="Search products or SKU"
+              type="search"
+            />
+          </label>
+          <button type="submit">Search</button>
+        </form>
+        <div className="sf-section-heading">
+          <p>Results</p>
+          <h2 id="search-results">{query ? `Results for "${query}"` : "Start a search"}</h2>
+        </div>
+        {!query ? (
+          <div className="sf-empty">
+            <h3>Search the catalog</h3>
+            <p>Enter a product title or SKU to find matching public products.</p>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="sf-empty">
+            <h3>No products found</h3>
+            <p>Try another keyword or browse the full shop.</p>
+          </div>
+        ) : (
+          <div className="sf-product-grid">
+            {products.map((product) => (
+              <ProductCard
+                currency={store.currency}
+                key={product.id}
+                product={product}
+                storeSlug={store.slug}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+      <StorefrontFooter primaryDomain={primaryDomain?.domain} store={store} />
+    </main>
   );
 }

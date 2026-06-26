@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublicOrderByNumber } from "../../../../../modules/orders/order.service";
-import { getPaymentMethods, isManualPaymentType } from "../../../../../modules/payments/payment.service";
+import {
+  getPaymentMethods,
+  isManualPaymentType
+} from "../../../../../modules/payments/payment.service";
 import { StorefrontFooter } from "../../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../../modules/storefront/components/storefront-header";
 import { requireStorefrontBySlug } from "../../../../../modules/storefront/resolver";
@@ -79,6 +82,17 @@ export default async function ThankYouPage({ params }: ThankYouPageProps) {
             ) : null}
           </div>
         ) : null}
+        <div className="sf-thank-you-items">
+          <h2>Order summary</h2>
+          {order.items.map((item) => (
+            <div key={item.id}>
+              <span>
+                {item.title} x {item.quantity}
+              </span>
+              <strong>{formatMoney(item.total, order.currency)}</strong>
+            </div>
+          ))}
+        </div>
         <Link className="sf-button" href={`/s/${store.slug}/products`}>
           Continue shopping
         </Link>

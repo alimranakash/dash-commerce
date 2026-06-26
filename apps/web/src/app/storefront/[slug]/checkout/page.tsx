@@ -43,7 +43,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
       <section className="sf-shop-hero" aria-labelledby="checkout-title">
         <p>{primaryDomain?.domain ?? `${store.slug}.dash.com`}</p>
         <h1 id="checkout-title">Checkout</h1>
-        <span>Cash on delivery is available for this first checkout foundation.</span>
+        <span>Enter delivery details, choose shipping, and select a payment method.</span>
       </section>
       {cart.items.length === 0 ? (
         <section className="sf-section">
