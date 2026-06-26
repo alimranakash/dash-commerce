@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { StorefrontStore } from "../../../storefront.types";
 import { StorefrontContainer } from "../../../primitives/container";
+import { StorefrontHeader } from "../../../components/storefront-header";
 import {
   createStorefrontThemeContext,
   getStorefrontThemeSettings
@@ -17,12 +18,7 @@ export async function DefaultStorefrontLayout({ children, store }: { children: R
   return (
     <StorefrontThemeProvider value={themeContext}>
       <div className="sf-page sf-foundation-layout" data-theme="default">
-        <header className="sf-foundation-header">
-          <StorefrontContainer>
-            <span>{store.name}</span>
-            <small>{themeContext.theme.name}</small>
-          </StorefrontContainer>
-        </header>
+        <StorefrontHeader store={store} />
         <main>{children}</main>
         <footer className="sf-foundation-footer">
           <StorefrontContainer>
