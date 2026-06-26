@@ -1,4 +1,5 @@
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
+import { getMediaPickerAssets } from "../../../modules/media/media.service";
 import { StoreSettingsForm } from "../../../modules/settings/components/store-settings-form";
 import { updateGeneralSettingsFormAction } from "../../../modules/settings/settings.actions";
 import { getStoreSettings } from "../../../modules/settings/settings.service";
@@ -10,7 +11,10 @@ type SettingsPageProps = {
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
   const store = await requireStore();
-  const settings = await getStoreSettings(store.id);
+  const [settings, mediaAssets] = await Promise.all([
+    getStoreSettings(store.id),
+    getMediaPickerAssets(store.id)
+  ]);
   const message = (await searchParams).updated ? "Store settings updated." : null;
 
   return (
@@ -27,6 +31,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         <div className="dashboard-shell">
           <StoreSettingsForm
             action={updateGeneralSettingsFormAction}
+            mediaAssets={mediaAssets}
             settings={settings}
             store={{ currency: store.currency, name: store.name, slug: store.slug, timezone: store.timezone }}
           />

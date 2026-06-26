@@ -26,7 +26,8 @@ export async function generateMetadata({ params }: StorefrontLayoutProps): Promi
 
   const primaryDomain = getPrimaryStorefrontDomain(store);
   const title = `${store.name} | Dash Commerce OS`;
-  const description = store.themeSetting?.heroSubtitle ?? `Shop ${store.name} online.`;
+  const description =
+    store.themeSetting?.heroSubtitle ?? store.setting?.tagline ?? `Shop ${store.name} online.`;
   const canonical = primaryDomain ? `https://${primaryDomain.domain}` : `/s/${store.slug}`;
 
   return {
@@ -34,6 +35,14 @@ export async function generateMetadata({ params }: StorefrontLayoutProps): Promi
       canonical
     },
     description,
+    ...(store.setting?.faviconUrl
+      ? {
+          icons: {
+            icon: store.setting.faviconUrl,
+            shortcut: store.setting.faviconUrl
+          }
+        }
+      : {}),
     openGraph: {
       description,
       siteName: store.name,

@@ -368,6 +368,7 @@ model StoreSetting {
   storeId         String   @unique
   logoUrl         String?
   faviconUrl      String?
+  tagline         String?
   contactEmail    String?
   contactPhone    String?
   supportPhone    String?

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
+import { uploadMediaAsset } from "../media/media.service";
 import { requireStore } from "../stores/queries";
 import { getStoreSettings, updateStoreSettings, updateThemeSettings } from "./settings.service";
 import type { StoreSettingsInput, ThemeSettingsInput } from "./settings.schema";
@@ -30,7 +31,42 @@ export async function updateStoreSettingsFormAction(
 }
 
 export async function updateGeneralSettingsFormAction(_state: SettingsActionState, formData: FormData) {
-  return updateStoreSettingsSection(_state, formData, ["contactEmail", "contactPhone", "supportPhone", "businessAddress"], "/dashboard/settings?updated=1");
+  const store = await requireStore();
+  const current = await getStoreSettings(store.id);
+  const next: StoreSettingsInput = {
+    logoUrl: current.logoUrl ?? undefined,
+    faviconUrl: current.faviconUrl ?? undefined,
+    tagline: current.tagline ?? undefined,
+    contactEmail: current.contactEmail ?? undefined,
+    contactPhone: current.contactPhone ?? undefined,
+    supportPhone: current.supportPhone ?? undefined,
+    businessAddress: current.businessAddress ?? undefined,
+    facebookUrl: current.facebookUrl ?? undefined,
+    instagramUrl: current.instagramUrl ?? undefined,
+    whatsappNumber: current.whatsappNumber ?? undefined
+  };
+
+  try {
+    const [logoUrl, faviconUrl] = await Promise.all([
+      resolveSettingsImageUpload(store.id, formData, "logoFile", "LOGO", getValue(formData, "logoUrl")),
+      resolveSettingsImageUpload(store.id, formData, "faviconFile", "FAVICON", getValue(formData, "faviconUrl"))
+    ]);
+
+    next.logoUrl = logoUrl;
+    next.faviconUrl = faviconUrl;
+    next.tagline = getValue(formData, "tagline");
+    next.contactEmail = getValue(formData, "contactEmail");
+    next.contactPhone = getValue(formData, "contactPhone");
+    next.supportPhone = getValue(formData, "supportPhone");
+    next.businessAddress = getValue(formData, "businessAddress");
+
+    await updateStoreSettings(store.id, next);
+  } catch (error) {
+    return settingsErrorState(error, "Please fix the highlighted general settings.");
+  }
+
+  revalidateSettingsPaths(store.slug);
+  redirect("/dashboard/settings?updated=1");
 }
 
 export async function updateBrandSettingsFormAction(_state: SettingsActionState, formData: FormData) {
@@ -61,6 +97,7 @@ function storeSettingsFromFormData(formData: FormData): StoreSettingsInput {
   return {
     logoUrl: getValue(formData, "logoUrl"),
     faviconUrl: getValue(formData, "faviconUrl"),
+    tagline: getValue(formData, "tagline"),
     contactEmail: getValue(formData, "contactEmail"),
     contactPhone: getValue(formData, "contactPhone"),
     supportPhone: getValue(formData, "supportPhone"),
@@ -88,6 +125,29 @@ function getValue(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
 
+async function resolveSettingsImageUpload(
+  storeId: string,
+  formData: FormData,
+  fileField: string,
+  usageType: "FAVICON" | "LOGO",
+  fallbackUrl: string
+) {
+  const file = formData.get(fileField);
+
+  if (file instanceof File && file.size > 0) {
+    const asset = await uploadMediaAsset({
+      alt: usageType === "LOGO" ? "Store logo" : "Store favicon",
+      file,
+      storeId,
+      usageType
+    });
+
+    return asset.url;
+  }
+
+  return fallbackUrl;
+}
+
 async function updateStoreSettingsSection(
   _state: SettingsActionState,
   formData: FormData,
@@ -99,6 +159,7 @@ async function updateStoreSettingsSection(
   const next: StoreSettingsInput = {
     logoUrl: current.logoUrl ?? undefined,
     faviconUrl: current.faviconUrl ?? undefined,
+    tagline: current.tagline ?? undefined,
     contactEmail: current.contactEmail ?? undefined,
     contactPhone: current.contactPhone ?? undefined,
     supportPhone: current.supportPhone ?? undefined,
@@ -143,5 +204,9 @@ function revalidateSettingsPaths(storeSlug: string) {
   revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard/theme");
   revalidatePath(`/s/${storeSlug}`);
+  revalidatePath(`/s/${storeSlug}/cart`);
+  revalidatePath(`/s/${storeSlug}/checkout`);
+  revalidatePath(`/s/${storeSlug}/categories`);
   revalidatePath(`/s/${storeSlug}/products`);
+  revalidatePath(`/s/${storeSlug}/search`);
 }

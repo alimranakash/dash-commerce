@@ -11,6 +11,7 @@ export function HeroSection({ primaryDomain, store }: HeroSectionProps) {
   const heroTitle = theme?.heroTitle || "Discover products you'll love";
   const heroSubtitle =
     theme?.heroSubtitle ||
+    store.setting?.tagline ||
     `Shop quality products from ${store.name} with fast delivery and secure checkout.`;
 
   return (

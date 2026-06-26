@@ -3263,6 +3263,26 @@ textarea {
   color: var(--accent);
 }
 
+.settings-image-preview,
+.settings-favicon-preview {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: block;
+  margin-top: 10px;
+  object-fit: cover;
+}
+
+.settings-image-preview {
+  height: 72px;
+  width: 144px;
+}
+
+.settings-favicon-preview {
+  height: 48px;
+  width: 48px;
+}
+
 .order-detail-panel {
   display: grid;
   gap: 14px;

@@ -88,6 +88,7 @@ function nullableSettingsData(data: StoreSettingsInput) {
   return {
     logoUrl: data.logoUrl ?? null,
     faviconUrl: data.faviconUrl ?? null,
+    tagline: data.tagline ?? null,
     contactEmail: data.contactEmail ?? null,
     contactPhone: data.contactPhone ?? null,
     supportPhone: data.supportPhone ?? null,

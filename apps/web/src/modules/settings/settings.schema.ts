@@ -25,6 +25,7 @@ const optionalColorSchema = z
 export const storeSettingsSchema = z.object({
   logoUrl: optionalUrlSchema,
   faviconUrl: optionalUrlSchema,
+  tagline: optionalTextSchema(180),
   contactEmail: optionalEmailSchema,
   contactPhone: optionalTextSchema(40),
   supportPhone: optionalTextSchema(40),
