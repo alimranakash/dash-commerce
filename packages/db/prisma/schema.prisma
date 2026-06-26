@@ -809,6 +809,9 @@ model Payment {
   storeId          String         @map("store_id")
   invoiceNumber    String         @unique @map("invoice_number")
   paymentReference String?        @map("payment_reference")
+  senderNumber     String?        @map("sender_number")
+  paymentNote      String?        @map("payment_note")
+  rejectionReason  String?        @map("rejection_reason")
   gateway          PaymentGateway @default(MANUAL)
   currency         String         @default("BDT")
   amount           Decimal        @db.Decimal(12, 2)
@@ -828,6 +831,22 @@ model Payment {
   @@index([gateway])
   @@index([paidAt])
   @@map("payments")
+}
+
+model BillingSetting {
+  id                  String   @id @default(cuid())
+  bkashNumber          String?  @map("bkash_number")
+  bkashAccountType     String?  @map("bkash_account_type")
+  nagadNumber          String?  @map("nagad_number")
+  nagadAccountType     String?  @map("nagad_account_type")
+  rocketNumber         String?  @map("rocket_number")
+  rocketAccountType    String?  @map("rocket_account_type")
+  bankAccountDetails   String?  @map("bank_account_details")
+  paymentInstructions  String?  @map("payment_instructions")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("billing_settings")
 }
 
 model SupportTicket {

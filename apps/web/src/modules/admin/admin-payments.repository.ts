@@ -227,15 +227,93 @@ export async function getAdminPaymentChartData() {
 }
 
 export async function updateAdminPaymentStatus(paymentId: string, status: "FAILED" | "PAID") {
-  return prisma.payment.update({
-    data: {
-      paidAt: status === "PAID" ? new Date() : null,
-      status
-    },
-    where: {
-      id: paymentId
+  return prisma.$transaction(async (tx) => {
+    const payment = await tx.payment.findUnique({
+      include: {
+        subscription: true
+      },
+      where: {
+        id: paymentId
+      }
+    });
+
+    if (!payment) {
+      throw new Error("Payment could not be found.");
     }
+
+    if (status === "PAID") {
+      if (payment.status === "PAID") {
+        return payment;
+      }
+
+      if (payment.status !== "PENDING") {
+        throw new Error("Only pending payments can be approved.");
+      }
+
+      const now = new Date();
+      const currentPeriodEndsAt = addMonths(now, payment.subscription.billingCycle === "YEARLY" ? 12 : 1);
+
+      await tx.subscription.update({
+        data: {
+          cancelAtPeriodEnd: false,
+          cancelledAt: null,
+          currentPeriodEndsAt,
+          currentPeriodStartsAt: now,
+          status: "ACTIVE"
+        },
+        where: {
+          id: payment.subscriptionId
+        }
+      });
+
+      return tx.payment.update({
+        data: {
+          paidAt: now,
+          rejectionReason: null,
+          status: "PAID"
+        },
+        where: {
+          id: paymentId
+        }
+      });
+    }
+
+    if (payment.status === "PAID") {
+      throw new Error("Paid payments cannot be rejected.");
+    }
+
+    if (payment.status === "FAILED") {
+      return payment;
+    }
+
+    if (payment.subscription.status !== "ACTIVE") {
+      await tx.subscription.update({
+        data: {
+          status: "PAST_DUE"
+        },
+        where: {
+          id: payment.subscriptionId
+        }
+      });
+    }
+
+    return tx.payment.update({
+      data: {
+        paidAt: null,
+        rejectionReason: "Rejected by admin.",
+        status: "FAILED"
+      },
+      where: {
+        id: paymentId
+      }
+    });
   });
+}
+
+function addMonths(date: Date, months: number) {
+  const next = new Date(date);
+  next.setMonth(next.getMonth() + months);
+  return next;
 }
 
 function statusFilter(status: AdminPaymentStatusFilter | undefined) {

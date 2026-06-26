@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
+import { canCreateProduct } from "../billing/subscription-limits";
 import { requireStore } from "../stores/queries";
 import {
   archiveProduct,
@@ -21,6 +22,7 @@ export type ProductActionState = {
 
 export async function createProductAction(input: CreateProductInput) {
   const store = await requireStore();
+  await assertCanCreateProduct(store.id);
   const product = await createProduct(store.id, input);
 
   revalidatePath("/dashboard");
@@ -35,6 +37,7 @@ export async function createProductFormAction(
   const store = await requireStore();
 
   try {
+    await assertCanCreateProduct(store.id);
     await createProduct(store.id, productInputFromFormData(formData));
   } catch (error) {
     return productErrorState(error);
@@ -42,6 +45,12 @@ export async function createProductFormAction(
 
   revalidatePath("/dashboard/products");
   redirect("/dashboard/products?created=1");
+}
+
+async function assertCanCreateProduct(storeId: string) {
+  if (!(await canCreateProduct(storeId))) {
+    throw new Error("Product limit reached for your current plan.");
+  }
 }
 
 export async function updateProductFormAction(

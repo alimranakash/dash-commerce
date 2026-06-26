@@ -2,6 +2,7 @@
 
 import { Button } from "@dash/ui";
 import { CheckCircle2, Download, Eye, FileText, RefreshCcw, Search, X, XCircle } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 import { markPaymentFailedAction, markPaymentPaidAction } from "../admin-payments.actions";
@@ -17,8 +18,11 @@ export type AdminPaymentListItem = {
   ownerName: string;
   paidAt: string;
   paymentMethod: string;
+  paymentNote: string;
   paymentReference: string;
   planName: string;
+  rejectionReason: string;
+  senderNumber: string;
   status: "CANCELLED" | "FAILED" | "PAID" | "PENDING" | "REFUNDED";
   storeDomain: string;
   storeName: string;
@@ -127,7 +131,11 @@ export function AdminPaymentManagement({
             <p className="m-0 mt-1 text-sm text-[#74758a]">Showing {filterLabel.toLowerCase()} platform payments.</p>
           </div>
 
-          <DashboardQueryForm actionPath="/admin/payments" className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_150px_150px_minmax(170px,1fr)_44px] 2xl:w-[900px]">
+          <div className="grid gap-3 2xl:grid-cols-[auto_1fr] 2xl:items-center">
+            <Link className="inline-flex h-11 cursor-pointer items-center justify-center rounded-lg border border-[#dcd7f5] bg-white px-4 text-xs font-semibold text-[#6d3cf5] hover:bg-[#f7f4ff]" href="/admin/payments/settings">
+              Manual Payment Settings
+            </Link>
+            <DashboardQueryForm actionPath="/admin/payments" className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_150px_150px_minmax(170px,1fr)_44px] 2xl:w-[900px]">
             <input
               className="h-11 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none placeholder:text-[#a2a3b0] focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10"
               defaultValue={search}
@@ -151,7 +159,8 @@ export function AdminPaymentManagement({
             <button aria-label="Search payments" className="grid h-11 cursor-pointer place-items-center rounded-lg bg-[#7c3aed] text-white hover:bg-[#6d28d9]" type="submit">
               <Search className="h-4 w-4" />
             </button>
-          </DashboardQueryForm>
+            </DashboardQueryForm>
+          </div>
         </div>
 
         {hasPayments ? (
@@ -196,10 +205,10 @@ export function AdminPaymentManagement({
                           <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]" onClick={() => setSelectedPayment(payment)} title="View payment" type="button">
                             <Eye className="h-4 w-4" />
                           </button>
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50" disabled={pending} onClick={() => setStatusTarget({ action: paymentStatusActions.paid, payment })} title="Mark paid" type="button">
+                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={pending || payment.status !== "PENDING"} onClick={() => setStatusTarget({ action: paymentStatusActions.paid, payment })} title="Approve payment" type="button">
                             <CheckCircle2 className="h-4 w-4" />
                           </button>
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-amber-700 hover:bg-amber-50" disabled={pending} onClick={() => setStatusTarget({ action: paymentStatusActions.failed, payment })} title="Mark failed" type="button">
+                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-amber-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={pending || payment.status !== "PENDING"} onClick={() => setStatusTarget({ action: paymentStatusActions.failed, payment })} title="Reject payment" type="button">
                             <XCircle className="h-4 w-4" />
                           </button>
                           <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#7c3aed] hover:bg-[#f3f0ff]" onClick={() => setPlaceholder({ message: "Refund processing will be connected when gateway integrations are added.", title: "Refund Placeholder" })} title="Refund" type="button">
@@ -239,15 +248,15 @@ export function AdminPaymentManagement({
 const paymentStatusActions = {
   failed: {
     action: markPaymentFailedAction,
-    label: "Mark Failed",
-    message: "This will mark the payment as failed and clear the paid timestamp.",
-    title: "Mark Payment Failed"
+    label: "Reject Payment",
+    message: "This will reject the pending manual payment and keep the subscription inactive.",
+    title: "Reject Manual Payment"
   },
   paid: {
     action: markPaymentPaidAction,
-    label: "Mark Paid",
-    message: "This will mark the payment as paid using a manual admin update.",
-    title: "Mark Payment Paid"
+    label: "Approve Payment",
+    message: "This will approve the manual payment, activate the subscription, and update the billing period.",
+    title: "Approve Manual Payment"
   }
 } satisfies Record<string, PaymentStatusAction>;
 
@@ -272,6 +281,9 @@ function PaymentDetailsDrawer({ onClose, payment }: { onClose: () => void; payme
             <DetailRow label="Amount" value={`${payment.currency} ${formatMoney(payment.amount)}`} />
             <DetailRow label="Payment Method" value={payment.paymentMethod} />
             <DetailRow label="Payment Reference" value={payment.paymentReference} />
+            <DetailRow label="Sender Number" value={payment.senderNumber} />
+            <DetailRow label="Payment Note" value={payment.paymentNote} />
+            {payment.rejectionReason !== "Not set" ? <DetailRow label="Rejection Reason" value={payment.rejectionReason} /> : null}
             <div className="mt-3"><PaymentStatusBadge status={payment.status} /></div>
           </DetailSection>
           <DetailSection title="Store Information">

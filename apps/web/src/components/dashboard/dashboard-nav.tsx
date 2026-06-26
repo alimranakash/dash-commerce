@@ -16,6 +16,7 @@ import {
   Settings,
   ShoppingCart,
   Truck,
+  WalletCards,
   Users,
   X
 } from "lucide-react";
@@ -82,7 +83,8 @@ const mainLinks: NavItem[] = [
   { href: "/dashboard/purchases", icon: ClipboardList, label: "Purchases" },
   { href: "/dashboard/inventory", icon: Boxes, label: "Inventory" },
   { href: "/dashboard/expenses", icon: Receipt, label: "Expenses" },
-  { href: "/dashboard/coupons", icon: Percent, label: "Coupons" }
+  { href: "/dashboard/coupons", icon: Percent, label: "Coupons" },
+  { href: "/dashboard/billing", icon: WalletCards, label: "Billing" }
 ];
 
 const trailingLinks: NavItem[] = [
@@ -91,6 +93,7 @@ const trailingLinks: NavItem[] = [
 
 const iconColors: Record<string, string> = {
   "Abandoned cart": "text-fuchsia-500",
+  Billing: "text-violet-600",
   Coupons: "text-violet-600",
   Customers: "text-sky-500",
   Expenses: "text-rose-500",
