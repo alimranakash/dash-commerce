@@ -178,6 +178,38 @@ export async function getStorefrontProductBySlug(storeId: string, productSlug: s
   });
 }
 
+export async function getRelatedStorefrontProducts(input: {
+  categoryId: string | null;
+  productId: string;
+  storeId: string;
+}) {
+  if (!input.categoryId) {
+    return [];
+  }
+
+  return prisma.product.findMany({
+    where: {
+      ...publicProductWhere(input.storeId),
+      categoryId: input.categoryId,
+      id: {
+        not: input.productId
+      }
+    },
+    include: {
+      category: true,
+      images: {
+        orderBy: {
+          position: "asc"
+        }
+      }
+    },
+    orderBy: {
+      updatedAt: "desc"
+    },
+    take: 4
+  });
+}
+
 export async function requireStorefrontBySlug(slug: string) {
   const store = await getStorefrontBySlug(slug);
 
@@ -198,7 +230,9 @@ export async function requireStorefrontByDomain(domain: string) {
   return store;
 }
 
-export function getPrimaryStorefrontDomain(store: NonNullable<Awaited<ReturnType<typeof getStorefrontBySlug>>>) {
+export function getPrimaryStorefrontDomain(
+  store: NonNullable<Awaited<ReturnType<typeof getStorefrontBySlug>>>
+) {
   return store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
 }
 
