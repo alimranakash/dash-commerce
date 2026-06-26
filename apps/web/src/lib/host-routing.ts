@@ -13,6 +13,10 @@ export type HostRoute =
   | {
       type: "storefront";
       slug: string;
+    }
+  | {
+      domain: string;
+      type: "custom-domain";
     };
 
 export function resolveStoreFromHost(hostname: string): HostRoute {
@@ -48,6 +52,13 @@ export function resolveStoreFromHost(hostname: string): HostRoute {
     };
   }
 
+  if (isCustomDomainCandidate(normalizedHostname)) {
+    return {
+      domain: normalizedHostname,
+      type: "custom-domain"
+    };
+  }
+
   return {
     type: "marketing"
   };
@@ -69,4 +80,8 @@ function getSubdomainSlug(hostname: string, rootDomain: string) {
   }
 
   return slug;
+}
+
+function isCustomDomainCandidate(hostname: string) {
+  return hostname.includes(".") && !LOCAL_HOSTS.has(hostname);
 }

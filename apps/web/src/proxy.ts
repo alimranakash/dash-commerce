@@ -26,7 +26,7 @@ export function proxy(request: NextRequest) {
 
   const hostRoute = resolveStoreFromHost(request.headers.get("host") ?? request.nextUrl.hostname);
 
-  if (hostRoute.type !== "storefront") {
+  if (hostRoute.type !== "storefront" && hostRoute.type !== "custom-domain") {
     return NextResponse.next();
   }
 
@@ -35,7 +35,10 @@ export function proxy(request: NextRequest) {
   }
 
   const url = request.nextUrl.clone();
-  url.pathname = `/storefront/${hostRoute.slug}${pathname === "/" ? "" : pathname}`;
+  url.pathname =
+    hostRoute.type === "storefront"
+      ? `/storefront/${hostRoute.slug}${pathname === "/" ? "" : pathname}`
+      : `/storefront-domain/${encodeURIComponent(hostRoute.domain)}${pathname === "/" ? "" : pathname}`;
 
   return NextResponse.rewrite(url);
 }
