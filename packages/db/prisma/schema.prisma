@@ -38,6 +38,30 @@ enum BillingCycle {
   YEARLY
 }
 
+enum SupportTicketStatus {
+  OPEN
+  PENDING
+  RESOLVED
+  CLOSED
+}
+
+enum SupportTicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum SupportTicketCategory {
+  BILLING
+  TECHNICAL
+  STOREFRONT
+  PAYMENTS
+  COURIER
+  ACCOUNT
+  OTHER
+}
+
 enum ProductStatus {
   DRAFT
   ACTIVE
@@ -188,6 +212,9 @@ model User {
   accounts    Account[]
   sessions    Session[]
   memberships OrganizationMember[]
+  supportTickets SupportTicket[]    @relation("SupportTicketUser")
+  assignedSupportTickets SupportTicket[] @relation("SupportTicketAssignee")
+  supportTicketReplies SupportTicketReply[]
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @default(now()) @updatedAt
 }
@@ -243,6 +270,7 @@ model Organization {
   stockMovements StockMovement[]
   subscriptions Subscription[]
   payments  Payment[]
+  supportTickets SupportTicket[]
   createdAt DateTime             @default(now())
   updatedAt DateTime             @default(now()) @updatedAt
 }
@@ -291,6 +319,7 @@ model Store {
   stockMovements StockMovement[]
   subscription   Subscription?
   payments       Payment[]
+  supportTickets SupportTicket[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @default(now()) @updatedAt
 
@@ -775,6 +804,51 @@ model Payment {
   @@index([gateway])
   @@index([paidAt])
   @@map("payments")
+}
+
+model SupportTicket {
+  id             String                @id @default(cuid())
+  userId         String                @map("user_id")
+  organizationId String?               @map("organization_id")
+  storeId        String?               @map("store_id")
+  subject        String
+  message        String
+  status         SupportTicketStatus   @default(OPEN)
+  priority       SupportTicketPriority @default(MEDIUM)
+  category       SupportTicketCategory @default(OTHER)
+  assignedTo     String?               @map("assigned_to")
+  user           User                  @relation("SupportTicketUser", fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization?         @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  store          Store?                @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  assignee       User?                 @relation("SupportTicketAssignee", fields: [assignedTo], references: [id], onDelete: SetNull)
+  replies        SupportTicketReply[]
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @default(now()) @updatedAt @map("updated_at")
+  closedAt       DateTime?             @map("closed_at")
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([storeId])
+  @@index([assignedTo])
+  @@index([status])
+  @@index([priority])
+  @@index([category])
+  @@map("support_tickets")
+}
+
+model SupportTicketReply {
+  id           String        @id @default(cuid())
+  ticketId     String        @map("ticket_id")
+  userId       String        @map("user_id")
+  message      String
+  isAdminReply Boolean       @default(false) @map("is_admin_reply")
+  ticket       SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  @@index([ticketId])
+  @@index([userId])
+  @@map("support_ticket_replies")
 }
 
 model Customer {
