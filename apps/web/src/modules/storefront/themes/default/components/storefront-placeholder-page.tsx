@@ -2,7 +2,7 @@ import type { StorefrontStore } from "../../../storefront.types";
 import { StorefrontBadge, StorefrontButton, StorefrontContainer, StorefrontEmptyState, StorefrontSection } from "../../../primitives";
 import { DefaultStorefrontLayout } from "../layouts/default-storefront-layout";
 
-export function StorefrontPlaceholderPage({
+export async function StorefrontPlaceholderPage({
   description,
   store,
   title

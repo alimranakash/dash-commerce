@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import { CategorySection } from "../../../modules/storefront/components/category-section";
 import { FeaturedProducts } from "../../../modules/storefront/components/featured-products";
 import { HeroSection } from "../../../modules/storefront/components/hero-section";
@@ -18,10 +17,9 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
   const store = await requireStorefrontBySlug(slug);
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
   const homeData = await getStorefrontHomeData(store.id);
-  const themeStyle = storefrontThemeStyle(store.themeSetting?.primaryColor);
 
   return (
-    <main className="sf-page" style={themeStyle}>
+    <main className="sf-page">
       <StorefrontHeader store={store} />
       <HeroSection primaryDomain={primaryDomain?.domain} store={store} />
       <FeaturedProducts
@@ -35,14 +33,4 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
       <StorefrontFooter primaryDomain={primaryDomain?.domain} store={store} />
     </main>
   );
-}
-
-function storefrontThemeStyle(primaryColor: string | null | undefined): CSSProperties | undefined {
-  if (!primaryColor || !/^#[0-9a-fA-F]{6}$/.test(primaryColor)) {
-    return undefined;
-  }
-
-  return {
-    "--sf-primary": primaryColor
-  } as CSSProperties;
 }

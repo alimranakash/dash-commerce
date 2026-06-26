@@ -1205,10 +1205,20 @@ textarea {
 }
 
 .sf-page {
-  background: #fbfaf7;
-  color: #171717;
+  background: var(--store-bg, #fbfaf7);
+  color: var(--store-text, #171717);
   min-height: 100vh;
-  --sf-primary: #135d66;
+  --sf-primary: var(--store-primary, #135d66);
+}
+
+.sf-theme-scope {
+  --store-bg: #fbfaf7;
+  --store-primary: #135d66;
+  --store-secondary: #f5f1e8;
+  --store-text: #171717;
+  background: var(--store-bg);
+  color: var(--store-text);
+  min-height: 100vh;
 }
 
 .sf-header {
@@ -1624,10 +1634,10 @@ textarea {
 }
 
 .sf-foundation-badge {
-  background: color-mix(in srgb, var(--sf-primary, #135d66) 10%, #ffffff);
-  border: 1px solid color-mix(in srgb, var(--sf-primary, #135d66) 18%, #ffffff);
+  background: color-mix(in srgb, var(--store-primary, #135d66) 10%, #ffffff);
+  border: 1px solid color-mix(in srgb, var(--store-primary, #135d66) 18%, #ffffff);
   border-radius: 999px;
-  color: var(--sf-primary, #135d66);
+  color: var(--store-primary, #135d66);
   display: inline-flex;
   font-size: 0.75rem;
   font-weight: 850;
@@ -1649,8 +1659,8 @@ textarea {
 }
 
 .sf-foundation-button-primary {
-  background: var(--sf-primary, #135d66);
-  border: 1px solid var(--sf-primary, #135d66);
+  background: var(--store-primary, #135d66);
+  border: 1px solid var(--store-primary, #135d66);
   color: #ffffff;
 }
 

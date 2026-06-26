@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { getActiveStorefrontTheme } from "../../../modules/storefront/themes/registry";
+import { StorefrontThemeProvider } from "../../../modules/storefront/themes/storefront-theme-provider";
+import {
+  createStorefrontThemeContext,
+  getStorefrontThemeSettings
+} from "../../../modules/storefront/themes/theme.service";
 import { getPrimaryStorefrontDomain, getStorefrontBySlug } from "../../../modules/storefront/resolver";
 
 type StorefrontLayoutProps = {
@@ -44,11 +48,20 @@ export async function generateMetadata({ params }: StorefrontLayoutProps): Promi
 export default async function StorefrontLayout({ children, params }: StorefrontLayoutProps) {
   const { slug } = await params;
   const store = await getStorefrontBySlug(slug);
-  const theme = store ? getActiveStorefrontTheme(store) : null;
+
+  if (!store) {
+    return <div data-storefront-layout="true">{children}</div>;
+  }
+
+  const settings = await getStorefrontThemeSettings(store.id);
+  const themeContext = createStorefrontThemeContext({
+    settings,
+    store
+  });
 
   return (
-    <div data-storefront-layout="true" data-storefront-theme={theme?.id ?? "default"}>
+    <StorefrontThemeProvider value={themeContext}>
       {children}
-    </div>
+    </StorefrontThemeProvider>
   );
 }
