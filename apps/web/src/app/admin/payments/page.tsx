@@ -107,6 +107,10 @@ function toPaymentListItem(payment: AdminPaymentRecord): AdminPaymentListItem {
 }
 
 function parseStatusFilter(value: string): AdminPaymentStatusFilter {
+  if (value === "rejected") {
+    return "failed";
+  }
+
   const filters: AdminPaymentStatusFilter[] = ["all", "cancelled", "failed", "paid", "pending", "refunded"];
   return filters.includes(value as AdminPaymentStatusFilter) ? value as AdminPaymentStatusFilter : "all";
 }

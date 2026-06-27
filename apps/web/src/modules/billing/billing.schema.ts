@@ -4,7 +4,6 @@ export const billingCycles = ["MONTHLY", "YEARLY"] as const;
 export const manualPaymentMethods = ["BKASH", "NAGAD", "ROCKET", "BANK"] as const;
 
 export const submitManualPaymentSchema = z.object({
-  amount: z.coerce.number().positive("Amount is required."),
   billingCycle: z.enum(billingCycles),
   paymentMethod: z.enum(manualPaymentMethods),
   paymentNote: z

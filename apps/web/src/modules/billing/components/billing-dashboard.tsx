@@ -2,7 +2,8 @@
 
 import { Button } from "@dash/ui";
 import { CheckCircle2, CreditCard, FileText, ReceiptText, RotateCcw, WalletCards } from "lucide-react";
-import { useActionState, useMemo, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { BillingActionState } from "../billing.actions";
 
 type BillingPlan = {
@@ -82,16 +83,30 @@ export function BillingDashboard({
   subscription,
   usage
 }: BillingDashboardProps) {
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, isPending] = useActionState(action, initialState);
   const [billingCycle, setBillingCycle] = useState<"MONTHLY" | "YEARLY">(subscription.billingCycle);
   const [planId, setPlanId] = useState(subscription.planId || plans[0]?.id || "");
   const selectedPlan = useMemo(() => plans.find((plan) => plan.id === planId) ?? plans[0], [planId, plans]);
   const selectedAmount = selectedPlan ? (billingCycle === "YEARLY" ? selectedPlan.priceYearly : selectedPlan.priceMonthly) : "0.00";
 
+  useEffect(() => {
+    if (state.status === "success") {
+      formRef.current?.reset();
+      router.refresh();
+    }
+  }, [router, state.status]);
+
   return (
     <div className="grid gap-5">
       {state.status === "error" && state.message ? (
         <p className="m-0 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{state.message}</p>
+      ) : null}
+      {state.status === "success" && state.message ? (
+        <p className="m-0 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          {state.message}
+        </p>
       ) : null}
       <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <BillingCard icon={<WalletCards className="h-5 w-5" />} title="Current Plan">
@@ -156,7 +171,7 @@ export function BillingDashboard({
             {billingSettings.bankAccountDetails ? <p className="m-0 whitespace-pre-wrap"><b>Bank:</b> {billingSettings.bankAccountDetails}</p> : null}
             <p className="m-0 leading-5">{billingSettings.paymentInstructions ?? "Send the exact plan amount, then submit your transaction ID for manual verification."}</p>
           </div>
-          <form action={formAction} className="mt-5 grid gap-4">
+          <form action={formAction} className="mt-5 grid gap-4" ref={formRef}>
             <input name="billingCycle" type="hidden" value={billingCycle} />
             <input name="planId" type="hidden" value={selectedPlan?.id ?? ""} />
             <label className="grid gap-2 text-sm font-medium text-[#30313d]">
@@ -166,9 +181,10 @@ export function BillingDashboard({
               </select>
             </label>
             <label className="grid gap-2 text-sm font-medium text-[#30313d]">
-              Amount
-              <input className={inputClass} name="amount" readOnly value={Number(selectedAmount).toFixed(2)} />
-              <FieldError fieldErrors={state.fieldErrors} name="amount" />
+              Payable Amount
+              <span className="flex h-11 items-center rounded-lg border border-[#dedcea] bg-[#fbfaff] px-3.5 text-sm font-semibold text-[#20212c]">
+                ৳{formatMoney(selectedAmount)}
+              </span>
             </label>
             <label className="grid gap-2 text-sm font-medium text-[#30313d]">
               Transaction ID
@@ -185,7 +201,7 @@ export function BillingDashboard({
               <textarea className={`${inputClass} min-h-24 py-3`} name="paymentNote" placeholder="Optional note for admin verification" />
             </label>
             <Button className="h-11 cursor-pointer rounded-lg bg-[#7c3aed] font-semibold text-white hover:bg-[#6d28d9] disabled:opacity-60" disabled={isPending} type="submit">
-              {isPending ? "Submitting..." : "Submit Payment for Verification"}
+              {isPending ? "Submitting..." : state.status === "success" ? "Submitted" : "Submit Payment for Verification"}
             </Button>
           </form>
         </BillingCard>

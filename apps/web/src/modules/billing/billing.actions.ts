@@ -14,7 +14,7 @@ import type { BillingSettingsInput, SubmitManualPaymentInput } from "./billing.s
 export type BillingActionState = {
   fieldErrors?: Record<string, string>;
   message?: string;
-  status: "idle" | "error";
+  status: "idle" | "error" | "success";
 };
 
 export async function submitManualPaymentAction(
@@ -26,13 +26,21 @@ export async function submitManualPaymentAction(
   try {
     await submitManualSubscriptionPayment(store, manualPaymentFromFormData(formData));
   } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Manual payment submission failed:", error);
+    }
+
     return billingErrorState(error, "Please fix the highlighted payment fields.");
   }
 
   revalidatePath("/dashboard/billing");
   revalidatePath("/admin/payments");
   revalidatePath("/admin/subscriptions");
-  redirect("/dashboard/billing?payment=pending");
+
+  return {
+    message: "Payment submitted successfully. Waiting for admin verification.",
+    status: "success"
+  };
 }
 
 export async function updateBillingSettingsAction(
@@ -54,7 +62,6 @@ export async function updateBillingSettingsAction(
 
 function manualPaymentFromFormData(formData: FormData): SubmitManualPaymentInput {
   return {
-    amount: Number(getValue(formData, "amount") || 0),
     billingCycle: getValue(formData, "billingCycle") as SubmitManualPaymentInput["billingCycle"],
     paymentMethod: getValue(formData, "paymentMethod") as SubmitManualPaymentInput["paymentMethod"],
     paymentNote: optionalValue(formData, "paymentNote"),

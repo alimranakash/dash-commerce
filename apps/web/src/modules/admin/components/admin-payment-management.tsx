@@ -3,6 +3,7 @@
 import { Button } from "@dash/ui";
 import { CheckCircle2, Download, Eye, FileText, RefreshCcw, Search, X, XCircle } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 import { markPaymentFailedAction, markPaymentPaidAction } from "../admin-payments.actions";
@@ -58,27 +59,32 @@ type AdminPaymentManagementProps = {
 };
 
 type PaymentStatusAction = {
-  action: (paymentId: string) => Promise<void>;
+  action: (paymentId: string) => Promise<AdminPaymentActionResult>;
   label: string;
   message: string;
   title: string;
+};
+
+type AdminPaymentActionResult = {
+  message: string;
+  ok: boolean;
 };
 
 const statusOptions = [
   { label: "All statuses", value: "all" },
   { label: "Pending", value: "pending" },
   { label: "Paid", value: "paid" },
-  { label: "Failed", value: "failed" },
+  { label: "Failed / Rejected", value: "failed" },
   { label: "Refunded", value: "refunded" },
   { label: "Cancelled", value: "cancelled" }
 ];
 
 const gatewayOptions = [
   { label: "All gateways", value: "all" },
+  { label: "Manual", value: "manual" },
   { label: "SSLCommerz", value: "sslcommerz" },
   { label: "Stripe", value: "stripe" },
   { label: "Paddle", value: "paddle" },
-  { label: "Manual", value: "manual" },
   { label: "Other", value: "other" }
 ];
 
@@ -91,6 +97,8 @@ export function AdminPaymentManagement({
   revenueSummary,
   search
 }: AdminPaymentManagementProps) {
+  const router = useRouter();
+  const [actionNotice, setActionNotice] = useState<AdminPaymentActionResult | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<AdminPaymentListItem | null>(null);
   const [statusTarget, setStatusTarget] = useState<{ action: PaymentStatusAction; payment: AdminPaymentListItem } | null>(null);
   const [placeholder, setPlaceholder] = useState<{ message: string; title: string } | null>(null);
@@ -102,10 +110,22 @@ export function AdminPaymentManagement({
     return `${status} / ${gateway}`;
   }, [activeGateway, activeStatus]);
 
-  function runAction(action: (paymentId: string) => Promise<void>, paymentId: string, onDone?: () => void) {
+  function runAction(action: (paymentId: string) => Promise<AdminPaymentActionResult>, paymentId: string, onDone?: () => void) {
     startTransition(async () => {
-      await action(paymentId);
-      onDone?.();
+      try {
+        const result = await action(paymentId);
+        setActionNotice(result);
+
+        if (result.ok) {
+          router.refresh();
+          onDone?.();
+        }
+      } catch (error) {
+        setActionNotice({
+          message: error instanceof Error ? error.message : "Payment action failed.",
+          ok: false
+        });
+      }
     });
   }
 
@@ -125,6 +145,11 @@ export function AdminPaymentManagement({
       </section>
 
       <section className="rounded-xl border border-[#ececf5] bg-white p-5 shadow-sm">
+        {actionNotice ? (
+          <p className={`mb-4 rounded-xl border px-4 py-3 text-sm font-semibold ${actionNotice.ok ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-red-200 bg-red-50 text-red-700"}`}>
+            {actionNotice.message}
+          </p>
+        ) : null}
         <div className="mb-5 flex flex-col gap-4 2xl:flex-row 2xl:items-center 2xl:justify-between">
           <div>
             <h2 className="m-0 text-base font-semibold text-[#20212c]">Payments</h2>
@@ -166,17 +191,18 @@ export function AdminPaymentManagement({
         {hasPayments ? (
           <div className="overflow-hidden rounded-xl border border-[#efeff5] bg-white">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[1120px] border-collapse text-left text-xs">
+              <table className="w-full min-w-[1180px] border-collapse text-left text-xs">
                 <thead className="bg-[#f7f7fa] text-[#565762]">
                   <tr>
-                    <th className="px-4 py-3 font-semibold">Invoice</th>
                     <th className="px-4 py-3 font-semibold">Store</th>
                     <th className="px-4 py-3 font-semibold">Owner</th>
-                    <th className="px-4 py-3 font-semibold">Gateway</th>
+                    <th className="px-4 py-3 font-semibold">Plan</th>
+                    <th className="px-4 py-3 font-semibold">Payment Method</th>
+                    <th className="px-4 py-3 font-semibold">Transaction ID</th>
+                    <th className="px-4 py-3 font-semibold">Sender Number</th>
                     <th className="px-4 py-3 font-semibold">Amount</th>
-                    <th className="px-4 py-3 font-semibold">Currency</th>
                     <th className="px-4 py-3 font-semibold">Status</th>
-                    <th className="px-4 py-3 font-semibold">Paid At</th>
+                    <th className="px-4 py-3 font-semibold">Created At</th>
                     <th className="px-4 py-3 text-right font-semibold">Actions</th>
                   </tr>
                 </thead>
@@ -184,22 +210,23 @@ export function AdminPaymentManagement({
                   {payments.map((payment) => (
                     <tr className="transition hover:bg-[#fbfaff]" key={payment.id}>
                       <td className="px-4 py-4">
-                        <div className="font-semibold text-[#20212c]">{payment.invoiceNumber}</div>
-                        <div className="mt-1 text-[11px] text-[#74758a]">{payment.paymentReference}</div>
-                      </td>
-                      <td className="px-4 py-4">
                         <div className="font-semibold text-[#20212c]">{payment.storeName}</div>
-                        <div className="mt-1 text-[11px] text-[#74758a]">{payment.storeDomain}</div>
+                        <div className="mt-1 text-[11px] text-[#74758a]">{payment.invoiceNumber}</div>
                       </td>
                       <td className="px-4 py-4">
                         <div className="font-semibold text-[#30313d]">{payment.ownerName}</div>
                         <div className="mt-1 text-[11px] text-[#74758a]">{payment.ownerEmail}</div>
                       </td>
-                      <td className="px-4 py-4"><GatewayBadge gateway={payment.gateway} /></td>
-                      <td className="px-4 py-4 font-semibold text-[#20212c]">{formatMoney(payment.amount)}</td>
-                      <td className="px-4 py-4">{payment.currency}</td>
+                      <td className="px-4 py-4 font-semibold text-[#20212c]">{payment.planName}</td>
+                      <td className="px-4 py-4">
+                        <div className="font-semibold text-[#20212c]">{paymentMethodLabel(payment.paymentMethod)}</div>
+                        <div className="mt-1"><GatewayBadge gateway={payment.gateway} /></div>
+                      </td>
+                      <td className="px-4 py-4 font-mono text-[11px] text-[#30313d]">{payment.paymentReference}</td>
+                      <td className="px-4 py-4 text-[#565762]">{payment.senderNumber}</td>
+                      <td className="px-4 py-4 font-semibold text-[#20212c]">{payment.currency} {formatMoney(payment.amount)}</td>
                       <td className="px-4 py-4"><PaymentStatusBadge status={payment.status} /></td>
-                      <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{payment.paidAt}</td>
+                      <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{payment.createdAt}</td>
                       <td className="px-4 py-4">
                         <div className="flex justify-end gap-1.5">
                           <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]" onClick={() => setSelectedPayment(payment)} title="View payment" type="button">
@@ -470,6 +497,17 @@ function formatMoney(value: string) {
 function gatewayLabel(gateway: string) {
   if (gateway === "SSLCOMMERZ") return "SSLCommerz";
   return titleCase(gateway);
+}
+
+function paymentMethodLabel(paymentMethod: string) {
+  const labels: Record<string, string> = {
+    BANK: "Bank Transfer",
+    BKASH: "bKash",
+    NAGAD: "Nagad",
+    ROCKET: "Rocket"
+  };
+
+  return labels[paymentMethod] ?? titleCase(paymentMethod);
 }
 
 function titleCase(value: string) {

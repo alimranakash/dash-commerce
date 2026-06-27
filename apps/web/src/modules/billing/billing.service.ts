@@ -52,8 +52,8 @@ export async function submitManualSubscriptionPayment(
 
   const expectedAmount = getPlanPrice(selectedPlan, data.billingCycle);
 
-  if (Number(data.amount).toFixed(2) !== expectedAmount) {
-    throw new Error(`Payment amount must be ${selectedPlan.currency} ${expectedAmount}.`);
+  if (!Number.isFinite(Number(expectedAmount)) || Number(expectedAmount) <= 0) {
+    throw new Error("Payment amount could not be verified. Please refresh and try again.");
   }
 
   const duplicate = await findDuplicateManualPayment(store.id, data.paymentReference);
