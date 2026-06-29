@@ -2036,6 +2036,307 @@ textarea {
   border-top-color: var(--fashion-border);
 }
 
+[data-storefront-template="electronics-default"],
+.sf-header-shell[data-storefront-header-template="electronics-default"],
+.sf-footer[data-storefront-footer-template="electronics-default"] {
+  --electronics-ink: #0f172a;
+  --electronics-muted: #64748b;
+  --electronics-blue: #2563eb;
+  --electronics-purple: #7c3aed;
+  --electronics-border: rgba(37, 99, 235, 0.16);
+}
+
+.sf-header-shell[data-storefront-header-template="electronics-default"] {
+  border-bottom-color: var(--electronics-border);
+}
+
+.sf-header-shell[data-storefront-header-template="electronics-default"] .sf-header {
+  background: rgba(248, 251, 255, 0.94);
+}
+
+.sf-header-shell[data-storefront-header-template="electronics-default"] .sf-brand-mark {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  border-radius: 12px;
+  color: var(--electronics-blue);
+}
+
+.sf-header-shell[data-storefront-header-template="electronics-default"] .sf-nav a:hover {
+  background: #eff6ff;
+  color: var(--electronics-blue);
+}
+
+[data-storefront-template="electronics-default"] .sf-hero {
+  background:
+    radial-gradient(circle at 75% 18%, rgba(124, 58, 237, 0.18), transparent 28%),
+    radial-gradient(circle at 18% 72%, rgba(37, 99, 235, 0.2), transparent 30%),
+    linear-gradient(135deg, #f8fbff 0%, #eff6ff 55%, #f5f3ff 100%);
+}
+
+[data-storefront-template="electronics-default"] .sf-hero h1,
+[data-storefront-template="electronics-default"] .sf-shop-hero h1 {
+  letter-spacing: -0.06em;
+}
+
+[data-storefront-template="electronics-default"] .sf-shop-filters {
+  grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr) minmax(160px, 1fr) auto;
+}
+
+.electronics-section .sf-section-heading {
+  align-items: flex-start;
+}
+
+.electronics-product-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.electronics-product-card {
+  background: #ffffff;
+  border: 1px solid var(--electronics-border);
+  border-radius: 18px;
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.08);
+  display: grid;
+  overflow: hidden;
+}
+
+.electronics-product-card-media {
+  aspect-ratio: 1 / 1;
+  background:
+    linear-gradient(135deg, #f8fafc, #eff6ff);
+  color: var(--electronics-muted);
+  display: grid;
+  place-items: center;
+  position: relative;
+  text-decoration: none;
+}
+
+.electronics-product-card-media img {
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+  width: 100%;
+}
+
+.electronics-product-card:hover .electronics-product-card-media img {
+  transform: scale(1.035);
+}
+
+.electronics-product-card-media strong {
+  background: linear-gradient(135deg, var(--electronics-blue), var(--electronics-purple));
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 900;
+  left: 14px;
+  padding: 7px 10px;
+  position: absolute;
+  text-transform: uppercase;
+  top: 14px;
+}
+
+.electronics-product-card-body {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.electronics-product-card-body p {
+  color: var(--electronics-blue);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+.electronics-product-card-body h3 {
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.electronics-product-card-body h3 a {
+  color: var(--electronics-ink);
+  text-decoration: none;
+}
+
+.electronics-spec-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.electronics-spec-list div {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 10px;
+}
+
+.electronics-spec-list dt {
+  color: var(--electronics-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.electronics-spec-list dd {
+  color: var(--electronics-ink);
+  font-size: 0.78rem;
+  font-weight: 900;
+  margin: 0;
+}
+
+.electronics-product-card form button {
+  background: linear-gradient(135deg, var(--electronics-blue), var(--electronics-purple));
+  border: 0;
+  border-radius: 12px;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 900;
+  min-height: 42px;
+  width: 100%;
+}
+
+.electronics-product-card form button:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.electronics-deals,
+.electronics-brand-strip {
+  background:
+    radial-gradient(circle at 82% 18%, rgba(124, 58, 237, 0.22), transparent 30%),
+    linear-gradient(135deg, #0f172a, #1d4ed8);
+  border-radius: 24px;
+  color: #ffffff;
+  display: grid;
+  gap: 22px;
+}
+
+.electronics-deals p,
+.electronics-brand-strip p {
+  color: #bfdbfe;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+}
+
+.electronics-deals h2,
+.electronics-brand-strip h2 {
+  font-size: clamp(2rem, 4.5vw, 4.4rem);
+  letter-spacing: -0.05em;
+  line-height: 0.98;
+  margin: 0;
+  max-width: 760px;
+}
+
+.electronics-deals span {
+  color: rgba(255, 255, 255, 0.76);
+  display: block;
+  line-height: 1.7;
+  margin-top: 16px;
+  max-width: 560px;
+}
+
+.electronics-deals .sf-button {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: var(--electronics-blue);
+}
+
+.electronics-brand-strip {
+  background: #ffffff;
+  border: 1px solid var(--electronics-border);
+  color: var(--electronics-ink);
+}
+
+.electronics-brand-strip p {
+  color: var(--electronics-blue);
+}
+
+.electronics-brand-strip > div:last-child {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.electronics-brand-strip span {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  color: var(--electronics-ink);
+  font-weight: 900;
+  padding: 18px;
+  text-align: center;
+}
+
+.electronics-trust article {
+  border-color: var(--electronics-border);
+}
+
+.electronics-product-detail-extras {
+  border-bottom: 1px solid var(--electronics-border);
+  border-top: 1px solid var(--electronics-border);
+  display: grid;
+  gap: 18px;
+  padding: 18px 0;
+}
+
+.electronics-product-detail-extras dl {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+}
+
+.electronics-product-detail-extras dl div {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.electronics-product-detail-extras dt {
+  color: var(--electronics-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.electronics-product-detail-extras dd {
+  color: var(--electronics-ink);
+  font-weight: 900;
+  margin: 6px 0 0;
+}
+
+.electronics-product-detail-extras h2 {
+  font-size: 1rem;
+  margin: 0 0 10px;
+}
+
+.electronics-product-detail-extras ul {
+  color: var(--electronics-muted);
+  display: grid;
+  gap: 8px;
+  line-height: 1.55;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.sf-footer[data-storefront-footer-template="electronics-default"] {
+  background: #f8fbff;
+  border-top-color: var(--electronics-border);
+}
+
 .sf-product-card {
   background: #ffffff;
   border: 1px solid rgba(23, 23, 23, 0.08);
@@ -3887,13 +4188,20 @@ textarea {
   }
 
   [data-storefront-template="fashion-default"] .sf-shop-filters,
+  [data-storefront-template="electronics-default"] .sf-shop-filters,
   .fashion-lookbook {
     grid-template-columns: 1fr;
   }
 
   .fashion-promo,
-  .fashion-lookbook {
+  .fashion-lookbook,
+  .electronics-deals,
+  .electronics-brand-strip {
     border-radius: 22px;
+  }
+
+  .electronics-product-detail-extras dl {
+    grid-template-columns: 1fr;
   }
 
   .sf-hero {

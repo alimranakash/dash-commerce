@@ -1,6 +1,6 @@
-import { TemplateProductCardBase } from "../shared-template-components";
 import type { StorefrontTemplateProductCardProps } from "../types";
+import { ElectronicsProductCard as ElectronicsProductCardBase } from "./components";
 
 export function ElectronicsProductCard(props: StorefrontTemplateProductCardProps) {
-  return <TemplateProductCardBase {...props} variant="electronics-spec-card" />;
+  return <ElectronicsProductCardBase {...props} />;
 }

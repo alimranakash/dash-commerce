@@ -79,7 +79,7 @@ export default async function StorefrontProductsPage({
               ))}
             </select>
           </label>
-          {template.id === "fashion-default" ? (
+          {["electronics-default", "fashion-default"].includes(template.id) ? (
             <label>
               Brand
               <select defaultValue={filters.brand ?? ""} name="brand">

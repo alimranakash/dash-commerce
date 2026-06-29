@@ -2,6 +2,7 @@ import type { StorefrontTemplateConfig } from "../types";
 import { ElectronicsCategoryLayoutPlaceholder } from "./category-layout";
 import { ElectronicsHomepageSections } from "./homepage-sections";
 import { ElectronicsProductCard } from "./product-card";
+import { ElectronicsProductDetailExtras } from "./product-detail-extras";
 import { ElectronicsProductPageLayoutPlaceholder } from "./product-page-layout";
 
 export const electronicsDefaultTemplate: StorefrontTemplateConfig = {
@@ -11,6 +12,7 @@ export const electronicsDefaultTemplate: StorefrontTemplateConfig = {
     CategoryLayoutPlaceholder: ElectronicsCategoryLayoutPlaceholder,
     HomepageSections: ElectronicsHomepageSections,
     ProductCard: ElectronicsProductCard,
+    ProductDetailExtras: ElectronicsProductDetailExtras,
     ProductPageLayoutPlaceholder: ElectronicsProductPageLayoutPlaceholder
   },
   defaultColors: {
@@ -21,7 +23,16 @@ export const electronicsDefaultTemplate: StorefrontTemplateConfig = {
     text: "#111827"
   },
   description: "A crisp storefront foundation for electronics, accessories, and tech catalogs.",
-  homepageSections: ["hero", "featured-categories", "featured-products", "trust-badges", "newsletter"],
+  homepageSections: [
+    "hero",
+    "featured-products",
+    "featured-categories",
+    "new-arrivals",
+    "best-sellers",
+    "promotional-banner",
+    "trust-badges",
+    "newsletter"
+  ],
   id: "electronics-default",
   name: "Electronics Default",
   previewImage: "/template-previews/electronics-default.png",
