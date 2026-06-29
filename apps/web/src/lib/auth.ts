@@ -6,14 +6,17 @@ import { redirect } from "next/navigation";
 import type { NextAuthOptions } from "next-auth";
 import type { Adapter } from "next-auth/adapters";
 import { getServerSession } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import GoogleProvider, { type GoogleProfile } from "next-auth/providers/google";
+import * as CredentialsProviderModule from "next-auth/providers/credentials";
+import * as GoogleProviderModule from "next-auth/providers/google";
+import type { GoogleProfile } from "next-auth/providers/google";
 import { loginSchema } from "../modules/auth/schemas";
 
 const nextAuthSecret = process.env.NEXTAUTH_SECRET ?? "dash-commerce-local-dev-secret-change-me";
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 const platformOwnerEmail = "alimranakash.bd@gmail.com";
+const CredentialsProvider = resolveDefaultExport(CredentialsProviderModule);
+const GoogleProvider = resolveDefaultExport(GoogleProviderModule);
 
 const providers: NextAuthOptions["providers"] = [
   CredentialsProvider({
@@ -174,4 +177,19 @@ async function ensurePlatformOwnerAdmin(email: string | null | undefined) {
     id: owner.id,
     role: "ADMIN" as const
   };
+}
+
+function resolveDefaultExport<T>(module: T): T extends { default: infer U } ? U : T {
+  let current = module as unknown;
+
+  while (
+    current &&
+    typeof current === "object" &&
+    "default" in current &&
+    Object.keys(current).every((key) => key === "default" || key === "__esModule")
+  ) {
+    current = (current as { default: unknown }).default;
+  }
+
+  return current as T extends { default: infer U } ? U : T;
 }

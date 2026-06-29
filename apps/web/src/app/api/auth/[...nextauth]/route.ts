@@ -1,6 +1,22 @@
-import NextAuth from "next-auth";
-import { authOptions } from "../../../../lib/auth";
+import type { NextRequest } from "next/server";
+import { authRoute } from "../_nextauth";
 
-const handler = NextAuth(authOptions);
+type AuthRouteContext = {
+  params: Promise<{
+    nextauth: string[];
+  }> | {
+    nextauth: string[];
+  };
+};
 
-export { handler as GET, handler as POST };
+export async function GET(request: NextRequest, context: AuthRouteContext) {
+  const { nextauth } = await context.params;
+
+  return authRoute(request, nextauth);
+}
+
+export async function POST(request: NextRequest, context: AuthRouteContext) {
+  const { nextauth } = await context.params;
+
+  return authRoute(request, nextauth);
+}

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import styles from "./onboarding-experience.module.css";
 
-const businessTypes = ["Fashion", "Beauty", "Electronics", "Food", "Home", "General"];
+const businessTypes = ["General Store", "Fashion", "Electronics", "Cosmetics & Beauty"] as const;
 const countryOptions = {
   Bangladesh: { code: "BD", currency: "BDT", flag: "BD", timezone: "Asia/Dhaka" },
   Canada: { code: "CA", currency: "CAD", flag: "CA", timezone: "America/Toronto" },
@@ -15,8 +15,9 @@ const countryOptions = {
 } as const;
 
 type CountryName = keyof typeof countryOptions;
-type Draft = { businessType: string; country: CountryName; storeName: string; storeSlug: string };
-const initialDraft: Draft = { businessType: "General", country: "Bangladesh", storeName: "", storeSlug: "" };
+type BusinessType = (typeof businessTypes)[number];
+type Draft = { businessType: BusinessType; country: CountryName; storeName: string; storeSlug: string };
+const initialDraft: Draft = { businessType: "General Store", country: "Bangladesh", storeName: "", storeSlug: "" };
 
 export function OnboardingForm() {
   const router = useRouter();
@@ -102,7 +103,7 @@ export function OnboardingForm() {
 
 function StoreNameStep({ onChange, value }: { onChange: (value: string) => void; value: string }) { return <StepIntro icon={Store} eyebrow="Your store identity" title="What should we call your store?" text="Choose the customer-facing name for your new commerce brand."><label className={styles.fieldLabel}>Store Name<div className={styles.inputShell}><Store /><input autoFocus maxLength={100} onChange={(event) => onChange(event.target.value)} placeholder="Akash Atelier" value={value} /></div><small>You can update this later from store settings.</small></label></StepIntro>; }
 function StoreUrlStep({ domain, onChange, value }: { domain: string; onChange: (value: string) => void; value: string }) { return <StepIntro icon={Globe2} eyebrow="Your home on Dash" title="Claim your store URL." text="Keep it short, memorable, and easy to share with customers."><label className={styles.fieldLabel}>Store URL<div className={styles.slugInput}><span>https://</span><input autoFocus maxLength={40} onChange={(event) => onChange(event.target.value)} placeholder="yourstore" value={value} /><b>.dash.com</b></div><small>Preview: {domain}</small></label></StepIntro>; }
-function BusinessStep({ onChange, value }: { onChange: (value: string) => void; value: string }) { return <StepIntro icon={BriefcaseBusiness} eyebrow="Tailor your workspace" title="What kind of business are you building?" text="This helps Dash prepare a more relevant starting experience."><div className={styles.optionGrid}>{businessTypes.map((type) => <button className={value === type ? styles.optionActive : ""} onClick={() => onChange(type)} type="button" key={type}><span>{type.charAt(0)}</span><b>{type}</b>{value === type ? <Check /> : null}</button>)}</div></StepIntro>; }
+function BusinessStep({ onChange, value }: { onChange: (value: BusinessType) => void; value: BusinessType }) { return <StepIntro icon={BriefcaseBusiness} eyebrow="Tailor your workspace" title="What kind of business are you building?" text="This helps Dash prepare a more relevant starting experience."><div className={styles.optionGrid}>{businessTypes.map((type) => <button className={value === type ? styles.optionActive : ""} onClick={() => onChange(type)} type="button" key={type}><span>{type.charAt(0)}</span><b>{type}</b>{value === type ? <Check /> : null}</button>)}</div></StepIntro>; }
 function CountryStep({ country, onChange }: { country: CountryName; onChange: (value: CountryName) => void }) { const config = countryOptions[country]; return <StepIntro icon={MapPin} eyebrow="Localize your store" title="Where is your business based?" text="We’ll automatically configure the right currency and timezone."><label className={styles.fieldLabel}>Country<select autoFocus onChange={(event) => onChange(event.target.value as CountryName)} value={country}>{Object.keys(countryOptions).map((name) => <option key={name}>{name}</option>)}</select></label><div className={styles.autoConfig}><div><WalletCards /><span><small>Currency</small><b>{config.currency}</b></span></div><div><Globe2 /><span><small>Timezone</small><b>{config.timezone}</b></span></div></div></StepIntro>; }
 function FinishStep({ country, domain, draft }: { country: (typeof countryOptions)[CountryName]; domain: string; draft: Draft }) { return <StepIntro icon={Sparkles} eyebrow="Ready to launch" title="Your workspace is ready to be created." text="Review the essentials. Dash will prepare the rest automatically."><div className={styles.reviewList}><Review label="Store" value={draft.storeName} /><Review label="Domain" value={domain} /><Review label="Business" value={draft.businessType} /><Review label="Location" value={`${draft.country} · ${country.currency}`} /></div><p className={styles.creationNote}><Check /> Default payments, shipping zones, theme settings, and StoreOS connection will be prepared.</p></StepIntro>; }
 function StepIntro({ children, eyebrow, icon: Icon, text, title }: { children: ReactNode; eyebrow: string; icon: typeof Store; text: string; title: string }) { return <div className={styles.stepContent}><span className={styles.stepIcon}><Icon /></span><div className={styles.stepCopy}><small>{eyebrow}</small><h2>{title}</h2><p>{text}</p></div>{children}</div>; }

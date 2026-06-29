@@ -45,7 +45,7 @@ export function LandingPage() {
           <span>Dash Commerce <b>OS</b></span>
         </Link>
         <nav className={styles.nav} aria-label="Primary navigation">
-          <a href="#story">Platform</a><a href="#journey">Journey</a><a href="#ai">AI</a><a href="#pricing">Pricing</a>
+          <a href="#story">Platform</a><a href="#journey">Journey</a><a href="#ai">AI</a><a href="#pricing">Pricing</a><Link href="/docs">Docs</Link>
         </nav>
         <div className={styles.headerActions}>
           <Link className={styles.loginLink} href="/login">Login</Link>
