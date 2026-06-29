@@ -16,6 +16,7 @@ export async function StorefrontHeader({ store }: StorefrontHeaderProps) {
       logoUrl={settings.logoUrl}
       storeName={store.name}
       storeSlug={store.slug}
+      templateId={store.activeTemplate}
     />
   );
 }

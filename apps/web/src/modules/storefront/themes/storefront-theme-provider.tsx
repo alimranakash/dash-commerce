@@ -12,6 +12,7 @@ export function StorefrontThemeProvider({ children, value }: StorefrontThemeProv
   return (
     <div
       className="sf-theme-scope"
+      data-storefront-template={value.store.activeTemplate ?? "general-default"}
       data-storefront-theme={value.theme.slug}
       data-storefront-theme-version={value.theme.version}
       style={style}

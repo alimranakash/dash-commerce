@@ -3,7 +3,6 @@ import {
   ProductPrice,
   StockStatus
 } from "../../../../../modules/storefront/components/product-card";
-import { ProductCard } from "../../../../../modules/storefront/components/product-card";
 import { ProductPurchasePanel } from "../../../../../modules/storefront/components/product-purchase-panel";
 import { ProductTabs } from "../../../../../modules/storefront/components/product-tabs";
 import { StorefrontFooter } from "../../../../../modules/storefront/components/storefront-footer";
@@ -13,6 +12,7 @@ import {
   getStorefrontProductBySlug,
   requireStorefrontBySlug
 } from "../../../../../modules/storefront/resolver";
+import { getStorefrontTemplateForStore } from "../../../../../modules/storefront/templates/registry";
 
 type StorefrontProductPageProps = {
   params: Promise<{
@@ -32,11 +32,14 @@ export default async function StorefrontProductPage({
   const { cartError } = await searchParams;
   const store = await requireStorefrontBySlug(slug);
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
+  const template = getStorefrontTemplateForStore(store);
+  const TemplateProductCard = template.components.ProductCard;
+  const ProductDetailExtras = template.components.ProductDetailExtras;
   const product = await getStorefrontProductBySlug(store.id, productSlug);
 
   if (!product) {
     return (
-      <main className="sf-page">
+      <main className="sf-page" data-storefront-template={template.id}>
         <StorefrontHeader store={store} />
         <section className="sf-missing" aria-labelledby="product-404">
           <p>Product unavailable</p>
@@ -67,7 +70,7 @@ export default async function StorefrontProductPage({
   });
 
   return (
-    <main className="sf-page">
+    <main className="sf-page" data-storefront-template={template.id}>
       <StorefrontHeader store={store} />
       <nav className="sf-breadcrumb" aria-label="Breadcrumb">
         <Link href={`/s/${store.slug}`}>Home</Link>
@@ -133,6 +136,7 @@ export default async function StorefrontProductPage({
             price={product.price.toString()}
           />
           <StockStatus stockQuantity={product.stockQuantity} />
+          {ProductDetailExtras ? <ProductDetailExtras product={product} store={store} /> : null}
           {cartError ? <p className="sf-alert">{cartError}</p> : null}
           <ProductPurchasePanel
             maxQuantity={product.stockQuantity}
@@ -159,7 +163,7 @@ export default async function StorefrontProductPage({
           </div>
           <div className="sf-product-grid">
             {relatedProducts.map((relatedProduct) => (
-              <ProductCard
+              <TemplateProductCard
                 currency={store.currency}
                 key={relatedProduct.id}
                 product={relatedProduct}

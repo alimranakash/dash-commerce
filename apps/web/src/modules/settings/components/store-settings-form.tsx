@@ -46,7 +46,7 @@ export function StoreSettingsForm({
   const [faviconUrl, setFaviconUrl] = useState(settings.faviconUrl ?? "");
 
   return (
-    <form action={formAction} className="resource-form" encType="multipart/form-data">
+    <form action={formAction} className="resource-form">
       {state.status === "error" ? <p className="form-error">{state.message}</p> : null}
       <div className="form-section-heading">
         <h2>Store information</h2>

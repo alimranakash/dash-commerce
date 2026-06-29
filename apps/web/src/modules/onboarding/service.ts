@@ -9,11 +9,15 @@ import {
   DEFAULT_THEME_NAME
 } from "../settings/settings.repository";
 import { connectStoreOSForStore } from "../storeos/storeos.service";
+import { getStorefrontTemplateById } from "../storefront/templates/registry";
+import { getTemplateIdForBusinessType } from "../storefront/templates/template-mapping";
 import { onboardingSchema, type OnboardingInput } from "./schemas";
 
 export async function createOnboardingWorkspace(userId: string, input: OnboardingInput) {
   const data = onboardingSchema.parse(input);
   const storeSlug = data.storeSlug;
+  const activeTemplate = getTemplateIdForBusinessType(data.businessType);
+  const storefrontTemplate = getStorefrontTemplateById(activeTemplate);
   const organizationSlug = await createUniqueOrganizationSlug(data.organizationName);
   const existingMembership = await prisma.organizationMember.findFirst({
     where: {
@@ -75,7 +79,8 @@ export async function createOnboardingWorkspace(userId: string, input: Onboardin
             themeSetting: {
               create: {
                 themeName: DEFAULT_THEME_NAME,
-                primaryColor: DEFAULT_PRIMARY_COLOR,
+                primaryColor: storefrontTemplate.defaultColors.primary || DEFAULT_PRIMARY_COLOR,
+                secondaryColor: storefrontTemplate.defaultColors.secondary,
                 heroTitle: `${DEFAULT_HERO_TITLE} at ${data.storeName}`,
                 featuredSectionTitle: DEFAULT_FEATURED_TITLE
               }
@@ -107,6 +112,11 @@ export async function createOnboardingWorkspace(userId: string, input: Onboardin
       throw new Error("Store setup failed.");
     }
 
+    await tx.$executeRawUnsafe(
+      `UPDATE "${getDatabaseSchemaName()}"."Store" SET "activeTemplate" = $1 WHERE "id" = $2`,
+      activeTemplate,
+      store.id
+    );
     await createDefaultShippingRecords(tx, store.id);
     await createDefaultSubscriptionRecord(tx, {
       organizationId: organization.id,
@@ -157,4 +167,21 @@ function slugify(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 40);
+}
+
+function getDatabaseSchemaName() {
+  const fallbackSchema = "public";
+  const connectionString = process.env.DATABASE_URL;
+
+  if (!connectionString) {
+    return fallbackSchema;
+  }
+
+  try {
+    const schema = new URL(connectionString).searchParams.get("schema") ?? fallbackSchema;
+
+    return /^[A-Za-z_][A-Za-z0-9_]*$/.test(schema) ? schema : fallbackSchema;
+  } catch {
+    return fallbackSchema;
+  }
 }

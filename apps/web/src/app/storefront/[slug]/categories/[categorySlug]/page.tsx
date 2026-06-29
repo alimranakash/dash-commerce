@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { ProductCard } from "../../../../../modules/storefront/components/product-card";
 import { StorefrontFooter } from "../../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../../modules/storefront/components/storefront-header";
 import {
@@ -7,6 +6,7 @@ import {
   getStorefrontProducts,
   requireStorefrontBySlug
 } from "../../../../../modules/storefront/resolver";
+import { getStorefrontTemplateForStore } from "../../../../../modules/storefront/templates/registry";
 
 type StorefrontCategoryProductsPageProps = {
   params: Promise<{
@@ -21,6 +21,8 @@ export default async function StorefrontCategoryProductsPage({
   const { categorySlug, slug } = await params;
   const store = await requireStorefrontBySlug(slug);
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
+  const template = getStorefrontTemplateForStore(store);
+  const TemplateProductCard = template.components.ProductCard;
   const category = await getStorefrontCategoryBySlug(store.id, categorySlug);
 
   if (!category) {
@@ -32,7 +34,7 @@ export default async function StorefrontCategoryProductsPage({
   });
 
   return (
-    <main className="sf-page">
+    <main className="sf-page" data-storefront-template={template.id}>
       <StorefrontHeader store={store} />
       <section className="sf-shop-hero" aria-labelledby="category-title">
         <p>{primaryDomain?.domain ?? `${store.slug}.dash.com`}</p>
@@ -52,7 +54,7 @@ export default async function StorefrontCategoryProductsPage({
         ) : (
           <div className="sf-product-grid">
             {products.map((product) => (
-              <ProductCard
+              <TemplateProductCard
                 currency={store.currency}
                 key={product.id}
                 product={product}

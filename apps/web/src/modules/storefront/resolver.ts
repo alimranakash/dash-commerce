@@ -1,12 +1,14 @@
 import { prisma } from "@dash/db";
 import { notFound } from "next/navigation";
 import { ensureDefaultSettingsForStore } from "../settings/settings.service";
+import { withStoreActiveTemplate } from "./templates/template-store";
 
 export type StorefrontProductSort = "newest" | "price-asc" | "price-desc";
 
 type StorefrontProductQuery = {
   categorySlug?: string | undefined;
   search?: string | undefined;
+  skip?: number | undefined;
   sort?: StorefrontProductSort | undefined;
   take?: number | undefined;
 };
@@ -40,12 +42,12 @@ export async function getStorefrontBySlug(slug: string) {
   }
 
   if (store.setting && store.themeSetting) {
-    return store;
+    return withStoreActiveTemplate(store);
   }
 
   await ensureDefaultSettingsForStore(store.id);
 
-  return prisma.store.findFirst({
+  const refreshedStore = await prisma.store.findFirst({
     where: {
       id: store.id
     },
@@ -64,6 +66,8 @@ export async function getStorefrontBySlug(slug: string) {
       themeSetting: true
     }
   });
+
+  return refreshedStore ? withStoreActiveTemplate(refreshedStore) : null;
 }
 
 export async function getStorefrontByDomain(domain: string) {
@@ -100,12 +104,12 @@ export async function getStorefrontByDomain(domain: string) {
   }
 
   if (store.setting && store.themeSetting) {
-    return store;
+    return withStoreActiveTemplate(store);
   }
 
   await ensureDefaultSettingsForStore(store.id);
 
-  return prisma.store.findFirst({
+  const refreshedStore = await prisma.store.findFirst({
     where: {
       id: store.id
     },
@@ -124,10 +128,12 @@ export async function getStorefrontByDomain(domain: string) {
       themeSetting: true
     }
   });
+
+  return refreshedStore ? withStoreActiveTemplate(refreshedStore) : null;
 }
 
 export async function getStorefrontHomeData(storeId: string) {
-  const [products, categories] = await Promise.all([
+  const [products, categories, newArrivals, bestSellers] = await Promise.all([
     getStorefrontProducts(storeId, 8),
     prisma.category.findMany({
       where: {
@@ -143,12 +149,19 @@ export async function getStorefrontHomeData(storeId: string) {
         name: "asc"
       },
       take: 6
-    })
+    }),
+    getStorefrontProducts(storeId, {
+      sort: "newest",
+      take: 8
+    }),
+    getBestSellingStorefrontProducts(storeId, 8)
   ]);
 
   return {
     featuredProducts: products,
-    categories
+    categories,
+    newArrivals,
+    bestSellers
   };
 }
 
@@ -197,7 +210,43 @@ export async function getStorefrontProducts(
       }
     },
     orderBy: storefrontProductOrderBy(input.sort),
+    ...(input.skip ? { skip: input.skip } : {}),
     ...(input.take ? { take: input.take } : {})
+  });
+}
+
+export async function getStorefrontProductCount(storeId: string, input?: StorefrontProductQuery) {
+  const search = input?.search?.trim();
+
+  return prisma.product.count({
+    where: {
+      ...publicProductWhere(storeId),
+      ...(input?.categorySlug
+        ? {
+            category: {
+              slug: input.categorySlug
+            }
+          }
+        : {}),
+      ...(search
+        ? {
+            OR: [
+              {
+                title: {
+                  contains: search,
+                  mode: "insensitive" as const
+                }
+              },
+              {
+                sku: {
+                  contains: search,
+                  mode: "insensitive" as const
+                }
+              }
+            ]
+          }
+        : {})
+    }
   });
 }
 
@@ -270,6 +319,61 @@ export async function getRelatedStorefrontProducts(input: {
       updatedAt: "desc"
     },
     take: 4
+  });
+}
+
+async function getBestSellingStorefrontProducts(storeId: string, take: number) {
+  const bestSellingGroups = await prisma.orderItem.groupBy({
+    by: ["productId"],
+    _sum: {
+      quantity: true
+    },
+    orderBy: {
+      _sum: {
+        quantity: "desc"
+      }
+    },
+    take,
+    where: {
+      productId: {
+        not: null
+      },
+      order: {
+        storeId,
+        status: {
+          not: "CANCELLED"
+        }
+      }
+    }
+  });
+  const productIds = bestSellingGroups
+    .map((group) => group.productId)
+    .filter((productId): productId is string => Boolean(productId));
+
+  if (productIds.length === 0) {
+    return [];
+  }
+
+  const products = await prisma.product.findMany({
+    where: {
+      ...publicProductWhere(storeId),
+      id: {
+        in: productIds
+      }
+    },
+    include: {
+      category: true,
+      images: {
+        orderBy: {
+          position: "asc"
+        }
+      }
+    }
+  });
+  const productOrder = new Map(productIds.map((productId, index) => [productId, index]));
+
+  return products.sort((left, right) => {
+    return (productOrder.get(left.id) ?? 0) - (productOrder.get(right.id) ?? 0);
   });
 }
 

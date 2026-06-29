@@ -108,7 +108,7 @@ const iconColors: Record<string, string> = {
 };
 
 export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const productRouteActive = ["/dashboard/products", "/dashboard/attributes", "/dashboard/tags", "/dashboard/brands", "/dashboard/categories"].some(
     (route) => pathname.startsWith(route)
   );
@@ -210,7 +210,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
             <NavLink
               href={link.href}
               icon={link.icon}
-              {...(iconColors[link.label] ? { iconClassName: iconColors[link.label] } : {})}
+              {...(iconColors[normalizeLabel(link.label)] ? { iconClassName: iconColors[normalizeLabel(link.label)] } : {})}
               key={link.href}
               label={link.label}
               onClick={onClose}
@@ -249,7 +249,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
             <NavLink
               href={link.href}
               icon={link.icon}
-              {...(iconColors[link.label] ? { iconClassName: iconColors[link.label] } : {})}
+              {...(iconColors[normalizeLabel(link.label)] ? { iconClassName: iconColors[normalizeLabel(link.label)] } : {})}
               key={link.href}
               label={link.label}
               onClick={onClose}
@@ -337,6 +337,7 @@ function isSettingsLinkActive(pathname: string, href: string) {
 
 function NavLink({ href, icon: Icon, iconClassName, label, onClick, pathname }: NavItem & { iconClassName?: string; onClick: () => void; pathname: string }) {
   const active = href === "/dashboard" ? pathname === href : pathname.startsWith(href);
+  const navLabel = normalizeLabel(label);
 
   return (
     <Link
@@ -346,7 +347,11 @@ function NavLink({ href, icon: Icon, iconClassName, label, onClick, pathname }: 
       onClick={onClick}
     >
       <Icon className={`h-4 w-4 ${iconClassName ?? "text-[#7548f5]"}`} />
-      <span>{label}</span>
+      <span suppressHydrationWarning>{navLabel}</span>
     </Link>
   );
+}
+
+function normalizeLabel(label: string) {
+  return label.trim();
 }

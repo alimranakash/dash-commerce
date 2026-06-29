@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { DEFAULT_STOREFRONT_TEMPLATE_ID } from "../templates/template-mapping";
 import type { StorefrontStore } from "../storefront.types";
 
 type StorefrontFooterProps = {
@@ -11,6 +12,7 @@ export function StorefrontFooter({ primaryDomain, store }: StorefrontFooterProps
   const settings = store.setting;
   const homeHref = `/s/${store.slug}`;
   const currentYear = new Date().getFullYear();
+  const templateId = store.activeTemplate || DEFAULT_STOREFRONT_TEMPLATE_ID;
   const whatsappHref = getWhatsAppHref(settings?.whatsappNumber);
   const socialLinks = [
     settings?.facebookUrl ? { href: settings.facebookUrl, label: "Facebook" } : null,
@@ -19,7 +21,7 @@ export function StorefrontFooter({ primaryDomain, store }: StorefrontFooterProps
   ].filter((link): link is { href: string; label: string } => Boolean(link));
 
   return (
-    <footer className="sf-footer">
+    <footer className="sf-footer" data-storefront-footer-template={templateId}>
       <div className="sf-footer-grid">
         <section className="sf-footer-brand" aria-label="Store information">
           <Link className="sf-footer-logo" href={homeHref}>
@@ -83,6 +85,11 @@ export function StorefrontFooter({ primaryDomain, store }: StorefrontFooterProps
               </a>
             ))}
           </nav>
+        ) : null}
+        {process.env.NODE_ENV === "development" ? (
+          <span className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-500">
+            Template: {templateId}
+          </span>
         ) : null}
       </div>
     </footer>

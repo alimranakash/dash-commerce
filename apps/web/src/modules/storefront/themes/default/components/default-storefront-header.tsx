@@ -10,6 +10,7 @@ export type DefaultStorefrontHeaderProps = {
   logoUrl: string | null;
   storeName: string;
   storeSlug: string;
+  templateId?: string | null;
 };
 
 const navigationItems = [
@@ -24,20 +25,24 @@ export function DefaultStorefrontHeader({
   cartCount = 0,
   logoUrl,
   storeName,
-  storeSlug
+  storeSlug,
+  templateId
 }: DefaultStorefrontHeaderProps) {
   const [open, setOpen] = useState(false);
   const homeHref = `/s/${storeSlug}`;
+  const displayName = storeName.trim() || "Store";
+  const brandInitial = displayName.charAt(0).toUpperCase();
+  const cartCountLabel = String(cartCount);
 
   return (
-    <div className="sf-header-shell">
+    <div className="sf-header-shell" data-storefront-header-template={templateId ?? "general-default"}>
       {announcementText ? <div className="sf-announcement-bar">{announcementText}</div> : null}
       <header className="sf-header">
         <Link className="sf-brand" href={homeHref} onClick={() => setOpen(false)}>
-          <span className="sf-brand-mark">
-            {logoUrl ? <img alt={`${storeName} logo`} src={logoUrl} /> : storeName.slice(0, 1).toUpperCase()}
+          <span className="sf-brand-mark" suppressHydrationWarning>
+            {logoUrl ? <img alt={`${displayName} logo`} src={logoUrl} /> : brandInitial}
           </span>
-          <span className="sf-brand-name">{storeName}</span>
+          <span className="sf-brand-name">{displayName}</span>
         </Link>
 
         <nav className="sf-nav sf-desktop-nav" aria-label="Storefront navigation">
@@ -57,7 +62,7 @@ export function DefaultStorefrontHeader({
           </Link>
           <Link aria-label="Cart" className="sf-icon-action sf-cart-icon-action" href={`${homeHref}/cart`}>
             <ShoppingBag className="h-4 w-4" />
-            <span>{cartCount}</span>
+            <span suppressHydrationWarning>{cartCountLabel}</span>
           </Link>
           <button
             aria-expanded={open}
