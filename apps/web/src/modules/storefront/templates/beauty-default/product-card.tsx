@@ -1,6 +1,6 @@
-import { TemplateProductCardBase } from "../shared-template-components";
 import type { StorefrontTemplateProductCardProps } from "../types";
+import { BeautyProductCard as BeautyProductCardBase } from "./components";
 
 export function BeautyProductCard(props: StorefrontTemplateProductCardProps) {
-  return <TemplateProductCardBase {...props} variant="beauty-soft-card" />;
+  return <BeautyProductCardBase {...props} />;
 }

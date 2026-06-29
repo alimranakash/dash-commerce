@@ -2,6 +2,7 @@ import type { StorefrontTemplateConfig } from "../types";
 import { BeautyCategoryLayoutPlaceholder } from "./category-layout";
 import { BeautyHomepageSections } from "./homepage-sections";
 import { BeautyProductCard } from "./product-card";
+import { BeautyProductDetailExtras } from "./product-detail-extras";
 import { BeautyProductPageLayoutPlaceholder } from "./product-page-layout";
 
 export const beautyDefaultTemplate: StorefrontTemplateConfig = {
@@ -11,6 +12,7 @@ export const beautyDefaultTemplate: StorefrontTemplateConfig = {
     CategoryLayoutPlaceholder: BeautyCategoryLayoutPlaceholder,
     HomepageSections: BeautyHomepageSections,
     ProductCard: BeautyProductCard,
+    ProductDetailExtras: BeautyProductDetailExtras,
     ProductPageLayoutPlaceholder: BeautyProductPageLayoutPlaceholder
   },
   defaultColors: {
@@ -21,7 +23,14 @@ export const beautyDefaultTemplate: StorefrontTemplateConfig = {
     text: "#2d1721"
   },
   description: "A soft storefront foundation for cosmetics, skincare, and beauty brands.",
-  homepageSections: ["hero", "featured-categories", "featured-products", "trust-badges", "newsletter"],
+  homepageSections: [
+    "hero",
+    "best-sellers",
+    "featured-categories",
+    "new-arrivals",
+    "featured-products",
+    "newsletter"
+  ],
   id: "beauty-default",
   name: "Beauty Default",
   previewImage: "/template-previews/beauty-default.png",
