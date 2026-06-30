@@ -26,10 +26,12 @@ export const fashionDefaultTemplate: StorefrontTemplateConfig = {
   homepageSections: [
     "hero",
     "new-arrivals",
+    "collections",
     "featured-categories",
     "featured-products",
-    "best-sellers",
     "promotional-banner",
+    "lookbook",
+    "community-gallery",
     "newsletter"
   ],
   id: "fashion-default",

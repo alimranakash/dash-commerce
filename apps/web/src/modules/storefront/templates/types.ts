@@ -19,7 +19,9 @@ export type StorefrontTemplateSection =
   | "promotional-banner"
   | "trust-badges"
   | "newsletter"
-  | "footer-cta";
+  | "footer-cta"
+  | "lookbook"
+  | "community-gallery";
 
 export type StorefrontTemplateColors = {
   background: string;
