@@ -25,12 +25,11 @@ export const generalDefaultTemplate: StorefrontTemplateConfig = {
     "hero",
     "featured-categories",
     "featured-products",
-    "new-arrivals",
+    "collections",
     "promotional-banner",
     "best-sellers",
-    "trust-badges",
-    "newsletter",
-    "footer-cta"
+    "recently-added",
+    "newsletter"
   ],
   id: "general-default",
   name: "General Default",
