@@ -22,11 +22,14 @@ export type DemoPackProduct = {
 
 export type DemoPackHomepage = {
   ctaText?: string;
+  editorialBannerText?: string;
   featuredSectionTitle?: string;
   heroSubtitle?: string;
   heroTitle?: string;
+  newCollectionTitle?: string;
   newsletterText?: string;
   promoBannerText?: string;
+  trendingProductsTitle?: string;
 };
 
 export type DemoPackNavigationItem = {

@@ -12,8 +12,8 @@ export async function seedDemoPack(tx: Prisma.TransactionClient, context: DemoPa
     context.organizationId
   );
 
-  if (demoPack.id === "general-demo-v1") {
-    await seedGeneralDemoPack(tx, context, demoPack);
+  if (demoPack.content.categories.length > 0 || demoPack.content.products.length > 0) {
+    await seedCatalogDemoPack(tx, context, demoPack);
   }
 
   return {
@@ -29,7 +29,7 @@ export async function seedDemoPack(tx: Prisma.TransactionClient, context: DemoPa
   };
 }
 
-async function seedGeneralDemoPack(
+async function seedCatalogDemoPack(
   tx: Prisma.TransactionClient,
   context: DemoPackSeedContext,
   demoPack: DemoPack
