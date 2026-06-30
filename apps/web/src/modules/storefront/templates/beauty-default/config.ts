@@ -25,10 +25,14 @@ export const beautyDefaultTemplate: StorefrontTemplateConfig = {
   description: "A soft storefront foundation for cosmetics, skincare, and beauty brands.",
   homepageSections: [
     "hero",
-    "best-sellers",
     "featured-categories",
+    "best-sellers",
+    "collections",
+    "shop-by-concern",
     "new-arrivals",
-    "featured-products",
+    "beauty-tips",
+    "customer-reviews",
+    "brand-story",
     "newsletter"
   ],
   id: "beauty-default",

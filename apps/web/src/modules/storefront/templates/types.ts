@@ -19,11 +19,15 @@ export type StorefrontTemplateSection =
   | "best-sellers"
   | "flash-deals"
   | "promotional-banner"
+  | "shop-by-concern"
   | "trust-badges"
   | "newsletter"
   | "footer-cta"
   | "lookbook"
-  | "community-gallery";
+  | "community-gallery"
+  | "beauty-tips"
+  | "customer-reviews"
+  | "brand-story";
 
 export type StorefrontTemplateColors = {
   background: string;
