@@ -22,7 +22,7 @@ export const beautyDemoPack: DemoPack = {
     settings: beautyDemoSettings
   },
   description: "Starter demo architecture for cosmetics, skincare, and beauty brands.",
-  id: "beauty",
-  name: "Cosmetics & Beauty Demo Pack",
-  version: "0.1.0"
+  id: "beauty-demo-v1",
+  name: "Cosmetics & Beauty Demo Pack v1",
+  version: "1.0.0"
 };

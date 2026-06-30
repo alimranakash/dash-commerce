@@ -22,6 +22,8 @@ export type DemoPackProduct = {
 
 export type DemoPackHomepage = {
   ctaText?: string;
+  beautyTipsTitle?: string;
+  bestSellersTitle?: string;
   editorialBannerText?: string;
   featuredBrandsTitle?: string;
   featuredGadgetsTitle?: string;
@@ -32,6 +34,7 @@ export type DemoPackHomepage = {
   newCollectionTitle?: string;
   newsletterText?: string;
   promoBannerText?: string;
+  shopByConcernTitle?: string;
   trendingProductsTitle?: string;
 };
 
