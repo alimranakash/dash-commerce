@@ -22,7 +22,7 @@ export const electronicsDemoPack: DemoPack = {
     settings: electronicsDemoSettings
   },
   description: "Starter demo architecture for gadgets, devices, and electronics stores.",
-  id: "electronics",
-  name: "Electronics Demo Pack",
-  version: "0.1.0"
+  id: "electronics-demo-v1",
+  name: "Electronics Demo Pack v1",
+  version: "1.0.0"
 };

@@ -23,7 +23,10 @@ export type DemoPackProduct = {
 export type DemoPackHomepage = {
   ctaText?: string;
   editorialBannerText?: string;
+  featuredBrandsTitle?: string;
+  featuredGadgetsTitle?: string;
   featuredSectionTitle?: string;
+  flashDealsTitle?: string;
   heroSubtitle?: string;
   heroTitle?: string;
   newCollectionTitle?: string;
