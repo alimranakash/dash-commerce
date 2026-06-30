@@ -1,4 +1,7 @@
+"use client";
+
 import type { PaymentMethodTypeValue } from "../../payments/payment.schema";
+import { defaultCheckoutSettings } from "../checkout-settings";
 
 type CheckoutPaymentMethod = {
   type: PaymentMethodTypeValue;
@@ -25,151 +28,130 @@ type CheckoutFormProps = {
   checkoutError: string | undefined;
   currency: string;
   paymentMethods: CheckoutPaymentMethod[];
+  selectedShippingId: string;
   shippingRates: CheckoutShippingRate[];
   storeSlug: string;
+  onShippingChange: (shippingRateId: string) => void;
 };
 
 export function CheckoutForm({
   checkoutError,
   currency,
   paymentMethods,
+  selectedShippingId,
   shippingRates,
-  storeSlug
+  storeSlug,
+  onShippingChange
 }: CheckoutFormProps) {
-  const defaultMethod = paymentMethods.find((method) => method.type === "COD") ?? paymentMethods[0];
-  const defaultShippingRate = shippingRates[0];
+  const selectedShippingRate = shippingRates.find((rate) => rate.id === selectedShippingId) ?? shippingRates[0];
+  const defaultPaymentMethod = paymentMethods[0];
   const canSubmit = paymentMethods.length > 0 && shippingRates.length > 0;
+  const settings = defaultCheckoutSettings;
 
   return (
     <form action="/api/checkout" className="sf-checkout-form" method="post">
       <input name="storeSlug" type="hidden" value={storeSlug} />
+      <input name="country" type="hidden" value="Bangladesh" />
+      <input name="city" type="hidden" value={selectedShippingRate?.city ?? ""} />
+      <input name="addressLine2" type="hidden" value="" />
+      <input name="postalCode" type="hidden" value="" />
+      <input name="email" type="hidden" value="" />
+      <input name="notes" type="hidden" value="" />
+      <input name="paymentReference" type="hidden" value="" />
+      <input name="paymentNote" type="hidden" value="" />
+      <input name="district" type="hidden" value={selectedShippingRate?.district ?? selectedShippingRate?.name ?? ""} />
+      <input name="area" type="hidden" value={selectedShippingRate?.area ?? ""} />
       {checkoutError ? <p className="sf-alert">{checkoutError}</p> : null}
+      <div className="sf-checkout-form-heading">
+        <p>Secure checkout</p>
+        <h1>{settings.title}</h1>
+        <span>{settings.description}</span>
+      </div>
       <fieldset>
-        <legend>Contact</legend>
-        <label>
-          Name
-          <input autoComplete="name" name="name" required type="text" />
-        </label>
-        <label>
-          Phone
-          <input autoComplete="tel" name="phone" required type="tel" />
-        </label>
-        <label>
-          Email <span>Optional</span>
-          <input autoComplete="email" name="email" type="email" />
+        <legend>Delivery details</legend>
+        <CheckoutField
+          autoComplete="name"
+          name="name"
+          setting={settings.fields.fullName}
+          type="text"
+        />
+        <CheckoutField
+          autoComplete="tel"
+          name="phone"
+          setting={settings.fields.mobileNumber}
+          type="tel"
+        />
+        <label className="sf-form-wide">
+          {settings.fields.fullAddress.label}
+          <textarea
+            autoComplete="street-address"
+            name="addressLine1"
+            placeholder={settings.fields.fullAddress.placeholder}
+            required={settings.fields.fullAddress.required}
+            rows={4}
+          />
         </label>
       </fieldset>
       <fieldset>
-        <legend>Delivery method</legend>
+        <legend>{settings.fields.deliveryArea.label}</legend>
         {shippingRates.length === 0 ? (
-          <p className="sf-alert">This store has not enabled any delivery rates yet.</p>
+          <p className="sf-alert">This store has not enabled any delivery areas yet.</p>
         ) : (
-          shippingRates.map((rate) => (
-            <label className="sf-radio-row payment-option" key={rate.id}>
-              <input
-                defaultChecked={rate.id === defaultShippingRate?.id}
-                name="shippingRateId"
-                required
-                type="radio"
-                value={rate.id}
-              />
-              <span>
-                <strong>{rate.name}</strong>
-                <small>
-                  {rate.zone.name}
-                  {formatLocation(rate) ? ` - ${formatLocation(rate)}` : ""}
-                </small>
-                <small>{formatMoney(rate.amount, currency)}</small>
-              </span>
-            </label>
-          ))
+          <div className="sf-checkout-options">
+            {shippingRates.map((rate) => (
+              <label className="sf-checkout-option" key={rate.id}>
+                <input
+                  checked={rate.id === selectedShippingRate?.id}
+                  name="shippingRateId"
+                  required
+                  type="radio"
+                  value={rate.id}
+                  onChange={() => onShippingChange(rate.id)}
+                />
+                <span>
+                  <strong>{rate.name}</strong>
+                  <small>{formatDeliveryArea(rate)}</small>
+                </span>
+                <b>{formatMoney(rate.amount, currency)}</b>
+              </label>
+            ))}
+          </div>
         )}
-      </fieldset>
-      <fieldset>
-        <legend>Delivery address</legend>
-        <label>
-          Country
-          <input autoComplete="country-name" defaultValue="Bangladesh" name="country" required />
-        </label>
-        <label>
-          District
-          <input autoComplete="address-level1" name="district" required type="text" />
-        </label>
-        <label>
-          City <span>Optional</span>
-          <input autoComplete="address-level2" name="city" type="text" />
-        </label>
-        <label>
-          Area <span>Optional</span>
-          <input name="area" type="text" />
-        </label>
-        <label className="sf-form-wide">
-          Full address
-          <textarea autoComplete="street-address" name="addressLine1" required rows={4} />
-        </label>
-        <label className="sf-form-wide">
-          Address line 2 <span>Optional</span>
-          <input name="addressLine2" type="text" />
-        </label>
-        <label>
-          Postal code <span>Optional</span>
-          <input autoComplete="postal-code" name="postalCode" type="text" />
-        </label>
       </fieldset>
       <fieldset>
         <legend>Payment</legend>
         {paymentMethods.length === 0 ? (
           <p className="sf-alert">This store has not enabled any payment methods yet.</p>
         ) : (
-          paymentMethods.map((method) => (
-            <label className="sf-radio-row payment-option" key={method.type}>
-              <input
-                defaultChecked={method.type === defaultMethod?.type}
-                name="paymentMethod"
-                required
-                type="radio"
-                value={method.type}
-              />
-              <span>
-                <strong>{method.name}</strong>
-                {method.description ? <small>{method.description}</small> : null}
-                {method.accountNumber ? (
-                  <small>
-                    {method.accountType ? `${method.accountType}: ` : ""}
-                    {method.accountNumber}
-                  </small>
-                ) : null}
-                {method.instructions ? <small>{method.instructions}</small> : null}
-              </span>
-            </label>
-          ))
+          <div className="sf-checkout-options">
+            {paymentMethods.map((method) => (
+              <label className="sf-checkout-option" key={method.type}>
+                <input
+                  defaultChecked={method.type === defaultPaymentMethod?.type}
+                  name="paymentMethod"
+                  required
+                  type="radio"
+                  value={method.type}
+                />
+                <span>
+                  <strong>{method.name}</strong>
+                  {method.description ? <small>{method.description}</small> : null}
+                  {method.instructions ? <small>{method.instructions}</small> : null}
+                </span>
+              </label>
+            ))}
+          </div>
         )}
-        <label>
-          Transaction ID / reference
-          <input
-            name="paymentReference"
-            placeholder="Required for bKash, Nagad, or Rocket"
-            type="text"
-          />
-        </label>
-        <label className="sf-form-wide">
-          Payment note <span>Optional</span>
-          <textarea name="paymentNote" rows={3} />
-        </label>
-        <label className="sf-form-wide">
-          Order notes <span>Optional</span>
-          <textarea name="notes" rows={3} />
-        </label>
       </fieldset>
       <button disabled={!canSubmit} type="submit">
-        Place order
+        {settings.confirmButtonText}
       </button>
     </form>
   );
 }
 
-function formatLocation(rate: CheckoutShippingRate) {
-  return [rate.area, rate.city, rate.district].filter(Boolean).join(", ");
+function formatDeliveryArea(rate: CheckoutShippingRate) {
+  return [rate.zone.name, rate.area, rate.city, rate.district].filter(Boolean).join(" - ");
 }
 
 function formatMoney(value: unknown, currency: string) {
@@ -177,4 +159,38 @@ function formatMoney(value: unknown, currency: string) {
     currency,
     style: "currency"
   }).format(Number(value));
+}
+
+function CheckoutField({
+  autoComplete,
+  name,
+  setting,
+  type
+}: {
+  autoComplete: string;
+  name: string;
+  setting: {
+    label: string;
+    placeholder: string;
+    required: boolean;
+    visible: boolean;
+  };
+  type: string;
+}) {
+  if (!setting.visible) {
+    return null;
+  }
+
+  return (
+    <label>
+      {setting.label}
+      <input
+        autoComplete={autoComplete}
+        name={name}
+        placeholder={setting.placeholder}
+        required={setting.required}
+        type={type}
+      />
+    </label>
+  );
 }
