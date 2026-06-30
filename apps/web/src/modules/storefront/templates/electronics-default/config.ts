@@ -25,10 +25,11 @@ export const electronicsDefaultTemplate: StorefrontTemplateConfig = {
   description: "A crisp storefront foundation for electronics, accessories, and tech catalogs.",
   homepageSections: [
     "hero",
-    "featured-products",
     "featured-categories",
+    "featured-brands",
+    "featured-products",
+    "flash-deals",
     "new-arrivals",
-    "best-sellers",
     "promotional-banner",
     "trust-badges",
     "newsletter"
