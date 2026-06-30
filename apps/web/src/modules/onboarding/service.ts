@@ -1,5 +1,7 @@
 import { prisma } from "@dash/db";
 import { ensureDefaultPlans } from "../admin/admin-plans.repository";
+import { getDemoPackIdForBusinessType } from "../demo-packs/registry";
+import { seedDemoPack } from "../demo-packs/seeder";
 import { createDefaultSubscriptionRecord } from "../admin/admin-subscriptions.repository";
 import { createDefaultShippingRecords } from "../shipping/shipping.repository";
 import {
@@ -17,6 +19,7 @@ export async function createOnboardingWorkspace(userId: string, input: Onboardin
   const data = onboardingSchema.parse(input);
   const storeSlug = data.storeSlug;
   const activeTemplate = getTemplateIdForBusinessType(data.businessType);
+  const activeDemoPack = getDemoPackIdForBusinessType(data.businessType);
   const storefrontTemplate = getStorefrontTemplateById(activeTemplate);
   const organizationSlug = await createUniqueOrganizationSlug(data.organizationName);
   const existingMembership = await prisma.organizationMember.findFirst({
@@ -117,6 +120,11 @@ export async function createOnboardingWorkspace(userId: string, input: Onboardin
       activeTemplate,
       store.id
     );
+    await seedDemoPack(tx, {
+      demoPackId: activeDemoPack,
+      organizationId: organization.id,
+      storeId: store.id
+    });
     await createDefaultShippingRecords(tx, store.id);
     await createDefaultSubscriptionRecord(tx, {
       organizationId: organization.id,

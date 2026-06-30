@@ -318,6 +318,7 @@ model Store {
   slug           String        @unique
   businessType   String        @default("General Store")
   activeTemplate String        @default("general-default")
+  activeDemoPack String        @default("general-demo-v1")
   status         StoreStatus   @default(DRAFT)
   currency       String        @default("USD")
   country        String        @default("US")
