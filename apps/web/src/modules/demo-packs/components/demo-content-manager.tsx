@@ -31,7 +31,7 @@ export function DemoContentManager({
     {
       action: reinstallAction,
       buttonClassName: "bg-[#7548f5] text-white hover:bg-[#6436e8]",
-      description: "Remove the current demo rows, then import the same demo pack again.",
+      description: `Remove current demo rows, then import ${overview.targetDemoPackName}.`,
       icon: <RefreshCcw className="h-4 w-4" />,
       label: "Reinstall Demo Pack",
       title: "Reinstall Demo Pack"
@@ -39,7 +39,7 @@ export function DemoContentManager({
     {
       action: resetAction,
       buttonClassName: "bg-[#111827] text-white hover:bg-[#0f172a]",
-      description: "Restore tracked demo products and categories to the original pack state.",
+      description: `Restore tracked demo content to ${overview.targetDemoPackName}.`,
       icon: <RotateCcw className="h-4 w-4" />,
       label: "Reset Demo Content",
       title: "Reset Demo Content"
@@ -71,8 +71,9 @@ export function DemoContentManager({
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <InfoTile label="Business Type" value={overview.businessType} />
-            <InfoTile label="Website Template" value={overview.activeTemplate} />
-            <InfoTile label="Demo Pack ID" value={overview.demoPackId} />
+            <InfoTile label="Current Active Template" value={overview.activeTemplate} />
+            <InfoTile label="Installed Demo Pack" value={overview.demoPackId} />
+            <InfoTile label="Will Install / Reset" value={overview.targetDemoPackId} />
             <InfoTile label="Installed Date" value={formatDate(overview.installedAt)} />
           </div>
         </section>
@@ -127,6 +128,15 @@ export function DemoContentManager({
                 <p className="mt-2 text-sm leading-6 text-[#626472]">
                   This action only affects demo content. Your own products and business data will not be deleted.
                 </p>
+                {selectedAction.label === "Remove Demo Content" ? null : (
+                  <div className="mt-4 rounded-xl border border-[#e6e3f4] bg-[#fbfaff] p-3">
+                    <p className="m-0 text-xs font-medium text-[#858691]">Demo pack to install/reset</p>
+                    <p className="m-0 mt-1 text-sm font-semibold text-[#171821]">
+                      {overview.targetDemoPackName} <span className="text-xs text-[#737582]">v{overview.targetDemoPackVersion}</span>
+                    </p>
+                    <p className="m-0 mt-1 text-xs leading-5 text-[#737582]">{overview.targetDemoPackDescription}</p>
+                  </div>
+                )}
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-3">

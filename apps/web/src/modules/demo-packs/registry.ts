@@ -13,6 +13,13 @@ export const businessTypeDemoPackMap = {
   "General Store": generalDemoPack.id
 } as const satisfies Record<DemoPackBusinessType, string>;
 
+export const templateDemoPackMap = {
+  "beauty-default": beautyDemoPack.id,
+  "electronics-default": electronicsDemoPack.id,
+  "fashion-default": fashionDemoPack.id,
+  "general-default": generalDemoPack.id
+} as const satisfies Record<string, string>;
+
 export const demoPackRegistry = {
   [beautyDemoPack.id]: beautyDemoPack,
   [electronicsDemoPack.id]: electronicsDemoPack,
@@ -32,6 +39,12 @@ export function getDemoPackIdForBusinessType(businessType: string | null | undef
   return businessType && businessType in businessTypeDemoPackMap
     ? businessTypeDemoPackMap[businessType as DemoPackBusinessType]
     : DEFAULT_DEMO_PACK_ID;
+}
+
+export function getDemoPackIdForTemplate(activeTemplate: string | null | undefined) {
+  return activeTemplate && activeTemplate in templateDemoPackMap
+    ? templateDemoPackMap[activeTemplate as keyof typeof templateDemoPackMap]
+    : null;
 }
 
 export function getDemoPackForBusinessType(businessType: string | null | undefined) {

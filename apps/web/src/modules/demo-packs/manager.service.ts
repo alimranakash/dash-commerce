@@ -1,7 +1,8 @@
 import { prisma, type Prisma } from "@dash/db";
 import { ensureDemoContentSchema, getDatabaseSchemaName } from "./demo-schema";
-import { getDemoPackById, getDemoPackIdForBusinessType } from "./registry";
+import { getDemoPackById, getDemoPackIdForBusinessType, getDemoPackIdForTemplate } from "./registry";
 import { seedDemoPack } from "./seeder";
+import { getTemplateIdForBusinessType } from "../storefront/templates/template-mapping";
 
 type StoreDemoRow = {
   activeDemoPack: string | null;
@@ -51,6 +52,10 @@ export type DemoContentOverview = {
   demoPackName: string;
   demoPackVersion: string;
   installedAt: string | null;
+  targetDemoPackDescription: string;
+  targetDemoPackId: string;
+  targetDemoPackName: string;
+  targetDemoPackVersion: string;
   totals: {
     categories: number;
     collections: number;
@@ -62,21 +67,27 @@ export type DemoContentOverview = {
 export async function getDemoContentOverview(storeId: string): Promise<DemoContentOverview> {
   await ensureDemoContentSchema(prisma);
   const storeDemo = await getStoreDemoState(storeId);
-  const demoPackId = resolveDemoPackId(storeDemo);
-  const demoPack = getDemoPackById(demoPackId);
+  const installedDemoPackId = resolveInstalledDemoPackId(storeDemo);
+  const targetDemoPackId = resolveDemoPackIdForActiveTemplate(storeDemo);
+  const demoPack = getDemoPackById(installedDemoPackId);
+  const targetDemoPack = getDemoPackById(targetDemoPackId);
   const [products, categories] = await Promise.all([
     countDemoProducts(storeId, demoPack.id),
     countDemoCategories(storeId, demoPack.id)
   ]);
 
   return {
-    activeTemplate: storeDemo.activeTemplate ?? demoPack.compatibleTemplate,
+    activeTemplate: resolveActiveTemplate(storeDemo),
     businessType: storeDemo.businessType ?? demoPack.businessType,
     demoPackDescription: demoPack.description,
     demoPackId: demoPack.id,
     demoPackName: demoPack.name,
     demoPackVersion: demoPack.version,
     installedAt: storeDemo.demoPackInstalledAt?.toISOString() ?? null,
+    targetDemoPackDescription: targetDemoPack.description,
+    targetDemoPackId: targetDemoPack.id,
+    targetDemoPackName: targetDemoPack.name,
+    targetDemoPackVersion: targetDemoPack.version,
     totals: {
       categories,
       collections: demoPack.content.collections.length,
@@ -89,11 +100,14 @@ export async function getDemoContentOverview(storeId: string): Promise<DemoConte
 export async function reinstallDemoPackForStore(storeId: string, organizationId: string) {
   await prisma.$transaction(async (tx) => {
     await ensureDemoContentSchema(tx);
-    const demoPackId = resolveDemoPackId(await getStoreDemoState(storeId, tx));
+    const storeDemo = await getStoreDemoState(storeId, tx);
+    const targetDemoPackId = resolveDemoPackIdForActiveTemplate(storeDemo);
+    assertDemoPackCompatibleWithTemplate(targetDemoPackId, resolveActiveTemplate(storeDemo));
     const settingsSnapshot = await getSettingsSnapshot(tx, storeId);
-    await removeDemoContent(tx, storeId, demoPackId);
+    await removeAllDemoContent(tx, storeId);
+
     await seedDemoPack(tx, {
-      demoPackId,
+      demoPackId: targetDemoPackId,
       organizationId,
       storeId
     });
@@ -108,8 +122,8 @@ export async function resetDemoContentForStore(storeId: string, organizationId: 
 export async function removeDemoContentForStore(storeId: string) {
   await prisma.$transaction(async (tx) => {
     await ensureDemoContentSchema(tx);
-    const demoPackId = resolveDemoPackId(await getStoreDemoState(storeId, tx));
-    await removeDemoContent(tx, storeId, demoPackId);
+    await getStoreDemoState(storeId, tx);
+    await removeAllDemoContent(tx, storeId);
     await tx.$executeRawUnsafe(
       `UPDATE "${getDatabaseSchemaName()}"."Store" SET "demoPackInstalledAt" = NULL WHERE "id" = $1`,
       storeId
@@ -117,11 +131,10 @@ export async function removeDemoContentForStore(storeId: string) {
   });
 }
 
-async function removeDemoContent(tx: Prisma.TransactionClient, storeId: string, demoPackId: string) {
+async function removeAllDemoContent(tx: Prisma.TransactionClient, storeId: string) {
   const demoProducts = await tx.$queryRawUnsafe<IdRow[]>(
-    `SELECT "id" FROM "${getDatabaseSchemaName()}"."Product" WHERE "storeId" = $1 AND "isDemoContent" = TRUE AND "demoPackId" = $2`,
-    storeId,
-    demoPackId
+    `SELECT "id" FROM "${getDatabaseSchemaName()}"."Product" WHERE "storeId" = $1 AND "isDemoContent" = TRUE`,
+    storeId
   );
   const productIds = demoProducts.map((product) => product.id);
 
@@ -144,9 +157,8 @@ async function removeDemoContent(tx: Prisma.TransactionClient, storeId: string, 
   }
 
   const demoCategories = await tx.$queryRawUnsafe<IdRow[]>(
-    `SELECT "id" FROM "${getDatabaseSchemaName()}"."Category" WHERE "storeId" = $1 AND "isDemoContent" = TRUE AND "demoPackId" = $2`,
-    storeId,
-    demoPackId
+    `SELECT "id" FROM "${getDatabaseSchemaName()}"."Category" WHERE "storeId" = $1 AND "isDemoContent" = TRUE`,
+    storeId
   );
   const categoryIds = demoCategories.map((category) => category.id);
 
@@ -265,8 +277,26 @@ async function countDemoCategories(storeId: string, demoPackId: string) {
   return normalizeCount(rows[0]?.count);
 }
 
-function resolveDemoPackId(storeDemo: StoreDemoRow) {
-  return storeDemo.activeDemoPack ?? getDemoPackIdForBusinessType(storeDemo.businessType);
+function resolveInstalledDemoPackId(storeDemo: StoreDemoRow) {
+  return storeDemo.activeDemoPack ?? resolveDemoPackIdForActiveTemplate(storeDemo);
+}
+
+function resolveDemoPackIdForActiveTemplate(storeDemo: StoreDemoRow) {
+  return getDemoPackIdForTemplate(storeDemo.activeTemplate) ?? getDemoPackIdForBusinessType(storeDemo.businessType);
+}
+
+function resolveActiveTemplate(storeDemo: StoreDemoRow) {
+  return getDemoPackIdForTemplate(storeDemo.activeTemplate)
+    ? storeDemo.activeTemplate!
+    : getTemplateIdForBusinessType(storeDemo.businessType);
+}
+
+function assertDemoPackCompatibleWithTemplate(demoPackId: string, activeTemplate: string) {
+  const demoPack = getDemoPackById(demoPackId);
+
+  if (demoPack.compatibleTemplate !== activeTemplate) {
+    throw new Error(`Demo pack ${demoPack.name} is not compatible with the active template ${activeTemplate}.`);
+  }
 }
 
 function normalizeCount(value: CountRow["count"] | undefined) {
