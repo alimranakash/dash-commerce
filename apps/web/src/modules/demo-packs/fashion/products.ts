@@ -13,8 +13,23 @@ export const fashionDemoProducts = [
   product("Accessories", "Lightweight Silk Scarf", "lightweight-silk-scarf", "accessories", "FAS-ACC-003", "1490.00", "1890.00", 38)
 ] satisfies DemoPackProduct[];
 
+const productImages = [
+  "/demo-assets/fashion/products/product-01.webp",
+  "/demo-assets/fashion/products/product-02.webp",
+  "/demo-assets/fashion/products/product-03.webp",
+  "/demo-assets/fashion/products/product-04.webp",
+  "/demo-assets/fashion/products/product-05.webp",
+  "/demo-assets/fashion/products/product-06.webp",
+  "/demo-assets/fashion/products/product-07.webp",
+  "/demo-assets/fashion/products/product-08.webp",
+  "/demo-assets/fashion/products/product-09.webp",
+  "/demo-assets/fashion/products/product-10.webp"
+];
+
+let productImageIndex = 0;
+
 function product(
-  imageLabel: string,
+  _imageLabel: string,
   title: string,
   slug: string,
   categorySlug: string,
@@ -27,8 +42,8 @@ function product(
     categorySlug,
     compareAtPrice,
     description: `${title} is a fictional fashion demo product. Replace this copy with real fabric, fit, size, care, and styling information before launch.`,
-    imageAlt: `${title} fashion placeholder image`,
-    imageUrl: createPlaceholderImage(imageLabel, title),
+    imageAlt: `${title} fashion demo product image`,
+    imageUrl: productImages[productImageIndex++] ?? "/demo-assets/fashion/products/product-01.webp",
     price,
     shortDescription: `A refined ${categorySlug} piece for a modern fashion storefront.`,
     sku,
@@ -36,14 +51,4 @@ function product(
     stockQuantity,
     title
   } satisfies DemoPackProduct;
-}
-
-function createPlaceholderImage(label: string, title: string) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#f7f2ec"/><stop offset="100%" stop-color="#d9cec2"/></linearGradient></defs><rect width="900" height="1200" fill="url(#g)"/><circle cx="705" cy="180" r="150" fill="#ffffff" opacity=".38"/><path d="M450 210c120 0 216 98 216 220v470H234V430c0-122 96-220 216-220Z" fill="#ffffff" opacity=".52"/><path d="M330 430h240v430H330z" fill="#111111" opacity=".08"/><text x="450" y="535" text-anchor="middle" font-family="Arial, sans-serif" font-size="58" font-weight="700" fill="#191613">${escapeSvg(label)}</text><text x="450" y="625" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="#5f554b">${escapeSvg(title)}</text></svg>`;
-
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-}
-
-function escapeSvg(value: string) {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }

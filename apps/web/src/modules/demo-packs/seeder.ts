@@ -132,6 +132,7 @@ async function seedCatalogDemoPack(
     create: {
       announcementText: demoPack.content.settings.announcementText ?? null,
       featuredSectionTitle: demoPack.content.homepage.featuredSectionTitle ?? "Featured products",
+      heroImageUrl: demoPack.content.homepage.heroImageUrl ?? null,
       heroSubtitle: demoPack.content.homepage.heroSubtitle ?? null,
       heroTitle: demoPack.content.homepage.heroTitle ?? "Discover quality products for everyday life",
       primaryColor: demoPack.content.settings.primaryColor ?? "#135d66",
@@ -142,6 +143,7 @@ async function seedCatalogDemoPack(
     update: {
       announcementText: demoPack.content.settings.announcementText ?? null,
       featuredSectionTitle: demoPack.content.homepage.featuredSectionTitle ?? "Featured products",
+      heroImageUrl: demoPack.content.homepage.heroImageUrl ?? null,
       heroSubtitle: demoPack.content.homepage.heroSubtitle ?? null,
       heroTitle: demoPack.content.homepage.heroTitle ?? "Discover quality products for everyday life",
       primaryColor: demoPack.content.settings.primaryColor ?? "#135d66",

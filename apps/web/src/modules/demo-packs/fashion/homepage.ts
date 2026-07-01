@@ -1,9 +1,11 @@
 import type { DemoPackHomepage } from "../types";
 
 export const fashionDemoHomepage = {
+  bannerImageUrl: "/demo-assets/fashion/banners/banner-01.webp",
   ctaText: "Explore the collection",
   editorialBannerText: "A refined seasonal edit for effortless everyday dressing.",
   featuredSectionTitle: "Curated fashion picks",
+  heroImageUrl: "/demo-assets/fashion/hero/hero-01.webp",
   heroSubtitle: "Discover elevated essentials, modern silhouettes, and versatile pieces for every wardrobe.",
   heroTitle: "New season styles for a refined wardrobe",
   newCollectionTitle: "New Collection",

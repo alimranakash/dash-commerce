@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ProductPrice } from "../../components/product-card";
+import { StorefrontImage } from "../../components/storefront-image";
 import type { StorefrontProduct } from "../../storefront.types";
 
 type BeautySectionProps = {
@@ -181,7 +182,7 @@ export function BeautyProductCard({
   return (
     <article className="beauty-product-card">
       <Link className="beauty-product-card-media" href={`/s/${storeSlug}/products/${product.slug}`}>
-        {image ? <img alt={image.alt ?? product.title} src={image.url} /> : <span>{product.category?.name?.slice(0, 6) ?? "Glow"}</span>}
+        <StorefrontImage alt={image?.alt ?? product.title} fallback={product.category?.name?.slice(0, 6) ?? "Glow"} src={image?.url} />
         {isSale ? <strong>Sale</strong> : null}
       </Link>
       <div className="beauty-product-card-body">

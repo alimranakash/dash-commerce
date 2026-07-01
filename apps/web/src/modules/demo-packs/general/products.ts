@@ -13,8 +13,23 @@ export const generalDemoProducts = [
   product("Carry", "City Travel Backpack", "city-travel-backpack", "accessories", "GEN-ACC-001", "2990.00", "3590.00", 27)
 ] satisfies DemoPackProduct[];
 
+const productImages = [
+  "/demo-assets/general/products/product-01.webp",
+  "/demo-assets/general/products/product-02.webp",
+  "/demo-assets/general/products/product-03.webp",
+  "/demo-assets/general/products/product-04.webp",
+  "/demo-assets/general/products/product-05.webp",
+  "/demo-assets/general/products/product-06.webp",
+  "/demo-assets/general/products/product-07.webp",
+  "/demo-assets/general/products/product-08.webp",
+  "/demo-assets/general/products/product-09.webp",
+  "/demo-assets/general/products/product-10.webp"
+];
+
+let productImageIndex = 0;
+
 function product(
-  imageLabel: string,
+  _imageLabel: string,
   title: string,
   slug: string,
   categorySlug: string,
@@ -27,8 +42,8 @@ function product(
     categorySlug,
     compareAtPrice,
     description: `${title} is a fictional demo product prepared for a General Store demo catalog. Use it as starter content, then replace it with your real product details.`,
-    imageAlt: `${title} placeholder image`,
-    imageUrl: createPlaceholderImage(imageLabel, title),
+    imageAlt: `${title} demo product image`,
+    imageUrl: productImages[productImageIndex++] ?? "/demo-assets/general/products/product-01.webp",
     price,
     shortDescription: `A practical ${categorySlug.replace("-", " ")} item for everyday customers.`,
     sku,
@@ -36,14 +51,4 @@ function product(
     stockQuantity,
     title
   } satisfies DemoPackProduct;
-}
-
-function createPlaceholderImage(label: string, title: string) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1100" viewBox="0 0 900 1100"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#f2efe7"/><stop offset="100%" stop-color="#d6ebe7"/></linearGradient></defs><rect width="900" height="1100" fill="url(#g)"/><circle cx="682" cy="220" r="150" fill="#ffffff" opacity=".45"/><rect x="180" y="310" width="540" height="430" rx="54" fill="#ffffff" opacity=".62"/><text x="450" y="502" text-anchor="middle" font-family="Arial, sans-serif" font-size="58" font-weight="700" fill="#135d66">${escapeSvg(label)}</text><text x="450" y="590" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="#4b635f">${escapeSvg(title)}</text></svg>`;
-
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-}
-
-function escapeSvg(value: string) {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }

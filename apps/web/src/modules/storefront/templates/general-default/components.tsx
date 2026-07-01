@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { StorefrontImage } from "../../components/storefront-image";
 import type { StorefrontProduct } from "../../storefront.types";
 
 type GeneralSectionWrapperProps = {
@@ -251,10 +252,10 @@ export function GeneralNewsletter() {
   );
 }
 
-function ProductMedia({ imageUrl, label }: { imageUrl?: string | null; label: string }) {
+function ProductMedia({ imageUrl, label }: { imageUrl?: string | null | undefined; label: string }) {
   return (
     <div className="general-product-media">
-      {imageUrl ? <img alt="" src={imageUrl} /> : <span>{label}</span>}
+      <StorefrontImage alt={label} fallback={label} src={imageUrl} />
     </div>
   );
 }

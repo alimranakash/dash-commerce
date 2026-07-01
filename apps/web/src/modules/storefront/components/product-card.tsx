@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { StorefrontProduct } from "../storefront.types";
+import { StorefrontImage } from "./storefront-image";
 
 type ProductCardProps = {
   currency: string;
@@ -13,7 +14,7 @@ export function ProductCard({ currency, product, storeSlug }: ProductCardProps) 
   return (
     <Link className="sf-product-card" href={`/s/${storeSlug}/products/${product.slug}`}>
       <div className="sf-product-image">
-        {image ? <img alt={image.alt ?? product.title} src={image.url} /> : <span>No image</span>}
+        <StorefrontImage alt={image?.alt ?? product.title} fallback="No image" src={image?.url} />
       </div>
       <div className="sf-product-meta">
         <div>

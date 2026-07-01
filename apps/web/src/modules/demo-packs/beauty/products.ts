@@ -13,8 +13,23 @@ export const beautyDemoProducts = [
   product("Tools", "Soft Blend Brush Kit", "soft-blend-brush-kit", "beauty-tools", "BEA-TOO-002", "2290.00", undefined, 27)
 ] satisfies DemoPackProduct[];
 
+const productImages = [
+  "/demo-assets/beauty/products/product-01.webp",
+  "/demo-assets/beauty/products/product-02.webp",
+  "/demo-assets/beauty/products/product-03.webp",
+  "/demo-assets/beauty/products/product-04.webp",
+  "/demo-assets/beauty/products/product-05.webp",
+  "/demo-assets/beauty/products/product-06.webp",
+  "/demo-assets/beauty/products/product-07.webp",
+  "/demo-assets/beauty/products/product-08.webp",
+  "/demo-assets/beauty/products/product-09.webp",
+  "/demo-assets/beauty/products/product-10.webp"
+];
+
+let productImageIndex = 0;
+
 function product(
-  imageLabel: string,
+  _imageLabel: string,
   title: string,
   slug: string,
   categorySlug: string,
@@ -27,8 +42,8 @@ function product(
     categorySlug,
     compareAtPrice,
     description: `${title} is a fictional cosmetics and beauty demo product. Replace this copy with real ingredients, skin type notes, usage instructions, and safety details before launch.`,
-    imageAlt: `${title} beauty placeholder image`,
-    imageUrl: createPlaceholderImage(imageLabel, title),
+    imageAlt: `${title} beauty demo product image`,
+    imageUrl: productImages[productImageIndex++] ?? "/demo-assets/beauty/products/product-01.webp",
     price,
     shortDescription: `A soft fictional ${categorySlug.replace("-", " ")} product for a beauty storefront.`,
     sku,
@@ -36,14 +51,4 @@ function product(
     stockQuantity,
     title
   } satisfies DemoPackProduct;
-}
-
-function createPlaceholderImage(label: string, title: string) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1100" viewBox="0 0 900 1100"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#fff8f2"/><stop offset="100%" stop-color="#fce7f3"/></linearGradient></defs><rect width="900" height="1100" fill="url(#g)"/><circle cx="710" cy="210" r="150" fill="#ffffff" opacity=".5"/><rect x="330" y="250" width="240" height="540" rx="72" fill="#ffffff" opacity=".72"/><rect x="372" y="190" width="156" height="90" rx="36" fill="#be185d" opacity=".32"/><circle cx="260" cy="720" r="88" fill="#be185d" opacity=".12"/><text x="450" y="506" text-anchor="middle" font-family="Arial, sans-serif" font-size="56" font-weight="700" fill="#be185d">${escapeSvg(label)}</text><text x="450" y="592" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="#7d5363">${escapeSvg(title)}</text></svg>`;
-
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-}
-
-function escapeSvg(value: string) {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ProductPrice } from "../../components/product-card";
+import { StorefrontImage } from "../../components/storefront-image";
 import type { StorefrontProduct } from "../../storefront.types";
 
 type ElectronicsSectionProps = {
@@ -194,7 +195,7 @@ export function ElectronicsProductCard({
   return (
     <article className="electronics-product-card">
       <Link className="electronics-product-card-media" href={`/s/${storeSlug}/products/${product.slug}`}>
-        {image ? <img alt={image.alt ?? product.title} src={image.url} /> : <span>{product.category?.name?.slice(0, 2).toUpperCase() ?? "TX"}</span>}
+        <StorefrontImage alt={image?.alt ?? product.title} fallback={product.category?.name?.slice(0, 2).toUpperCase() ?? "TX"} src={image?.url} />
         {isSale || variant === "deal" ? <strong>{variant === "deal" ? "Flash Deal" : "Deal"}</strong> : null}
       </Link>
       <div className="electronics-product-card-body">
@@ -269,12 +270,12 @@ export function ElectronicsTechnologyBanner({ storeSlug }: { storeSlug: string }
 export function ElectronicsWhyChooseUs() {
   return (
     <section className="electronics-trust" aria-label="Why choose us">
-      {[
+      {([
         ["Official Warranty", "Clear warranty support for compatible products."],
         ["Fast Delivery", "Delivery rates and zones configured by the seller."],
         ["Secure Payment", "Checkout methods are managed per store."],
         ["Easy Returns", "Prepare return policy messaging for customers."]
-      ].map(([title, text]) => (
+      ] satisfies Array<[string, string]>).map(([title, text]) => (
         <article key={title}>
           <span>{title.slice(0, 2).toUpperCase()}</span>
           <h3>{title}</h3>

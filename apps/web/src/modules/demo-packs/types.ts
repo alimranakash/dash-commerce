@@ -2,6 +2,8 @@ export type DemoPackBusinessType = "Cosmetics & Beauty" | "Electronics" | "Fashi
 
 export type DemoPackCategory = {
   description?: string;
+  imageAlt?: string;
+  imageUrl?: string;
   name: string;
   slug: string;
 };
@@ -31,6 +33,8 @@ export type DemoPackHomepage = {
   flashDealsTitle?: string;
   heroSubtitle?: string;
   heroTitle?: string;
+  heroImageUrl?: string;
+  bannerImageUrl?: string;
   newCollectionTitle?: string;
   newsletterText?: string;
   promoBannerText?: string;

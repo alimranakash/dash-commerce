@@ -13,8 +13,23 @@ export const electronicsDemoProducts = [
   product("Audio", "StudioBeat Headphones", "studiobeat-headphones", "audio", "ELE-AUD-003", "8990.00", "9990.00", 18)
 ] satisfies DemoPackProduct[];
 
+const productImages = [
+  "/demo-assets/electronics/products/product-01.webp",
+  "/demo-assets/electronics/products/product-02.webp",
+  "/demo-assets/electronics/products/product-03.webp",
+  "/demo-assets/electronics/products/product-04.webp",
+  "/demo-assets/electronics/products/product-05.webp",
+  "/demo-assets/electronics/products/product-06.webp",
+  "/demo-assets/electronics/products/product-07.webp",
+  "/demo-assets/electronics/products/product-08.webp",
+  "/demo-assets/electronics/products/product-09.webp",
+  "/demo-assets/electronics/products/product-10.webp"
+];
+
+let productImageIndex = 0;
+
 function product(
-  imageLabel: string,
+  _imageLabel: string,
   title: string,
   slug: string,
   categorySlug: string,
@@ -27,8 +42,8 @@ function product(
     categorySlug,
     compareAtPrice,
     description: `${title} is a fictional electronics demo product. Replace this copy with real specifications, warranty details, compatibility notes, and package contents before launch.`,
-    imageAlt: `${title} electronics placeholder image`,
-    imageUrl: createPlaceholderImage(imageLabel, title),
+    imageAlt: `${title} electronics demo product image`,
+    imageUrl: productImages[productImageIndex++] ?? "/demo-assets/electronics/products/product-01.webp",
     price,
     shortDescription: `A fictional ${categorySlug.replace("-", " ")} product for a modern electronics storefront.`,
     sku,
@@ -36,14 +51,4 @@ function product(
     stockQuantity,
     title
   } satisfies DemoPackProduct;
-}
-
-function createPlaceholderImage(label: string, title: string) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#eef6ff"/><stop offset="100%" stop-color="#c7d2fe"/></linearGradient></defs><rect width="1000" height="1000" fill="url(#g)"/><circle cx="760" cy="210" r="150" fill="#ffffff" opacity=".45"/><rect x="250" y="230" width="500" height="420" rx="48" fill="#0f172a" opacity=".12"/><rect x="310" y="290" width="380" height="270" rx="26" fill="#ffffff" opacity=".8"/><rect x="390" y="680" width="220" height="38" rx="19" fill="#2563eb" opacity=".32"/><text x="500" y="438" text-anchor="middle" font-family="Arial, sans-serif" font-size="64" font-weight="700" fill="#1d4ed8">${escapeSvg(label)}</text><text x="500" y="520" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="#334155">${escapeSvg(title)}</text></svg>`;
-
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-}
-
-function escapeSvg(value: string) {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
