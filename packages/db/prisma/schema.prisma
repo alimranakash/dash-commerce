@@ -319,6 +319,7 @@ model Store {
   businessType   String        @default("General Store")
   activeTemplate String        @default("general-default")
   activeDemoPack String        @default("general-demo-v1")
+  demoPackInstalledAt DateTime?
   status         StoreStatus   @default(DRAFT)
   currency       String        @default("USD")
   country        String        @default("US")
@@ -505,6 +506,8 @@ model Product {
   lowStockThreshold Int               @default(0)
   status            ProductStatus     @default(DRAFT)
   visibility        ProductVisibility @default(HIDDEN)
+  isDemoContent     Boolean           @default(false)
+  demoPackId        String?
   store             Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
   category          Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   images            ProductImage[]
@@ -518,6 +521,8 @@ model Product {
   @@unique([storeId, slug])
   @@unique([storeId, sku])
   @@index([storeId])
+  @@index([storeId, isDemoContent])
+  @@index([storeId, demoPackId])
   @@index([categoryId])
 }
 
@@ -540,6 +545,8 @@ model Category {
   name        String
   slug        String
   description String?
+  isDemoContent Boolean   @default(false)
+  demoPackId    String?
   store       Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
   parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
   children    Category[] @relation("CategoryHierarchy")
@@ -549,6 +556,8 @@ model Category {
 
   @@unique([storeId, slug])
   @@index([storeId])
+  @@index([storeId, isDemoContent])
+  @@index([storeId, demoPackId])
   @@index([parentId])
 }
 

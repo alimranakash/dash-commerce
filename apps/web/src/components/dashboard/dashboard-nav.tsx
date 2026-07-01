@@ -72,6 +72,7 @@ const settingsLinks = [
   { href: "/dashboard/shipping", label: "Shipping" },
   { href: "/dashboard/theme", label: "Theme" },
   { href: "/dashboard/media", label: "Media" },
+  { href: "/dashboard/settings/demo-content", label: "Demo Content" },
   { href: "/dashboard/ai", label: "StoreOS / AI" }
 ];
 
