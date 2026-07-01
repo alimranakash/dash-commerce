@@ -67,6 +67,10 @@ export type DemoPack = {
   content: DemoPackContent;
   description: string;
   id: string;
+  metadata: {
+    demoProductCount: number;
+    size: "mvp";
+  };
   name: string;
   version: string;
 };

@@ -23,6 +23,10 @@ export const fashionDemoPack: DemoPack = {
   },
   description: "Starter demo architecture for apparel, accessories, and fashion brands.",
   id: "fashion-demo-v1",
+  metadata: {
+    demoProductCount: fashionDemoProducts.length,
+    size: "mvp"
+  },
   name: "Fashion Demo Pack v1",
   version: "1.0.0"
 };

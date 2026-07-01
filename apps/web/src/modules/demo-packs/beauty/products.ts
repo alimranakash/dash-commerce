@@ -3,28 +3,14 @@ import type { DemoPackProduct } from "../types";
 export const beautyDemoProducts = [
   product("Skincare", "Glow Serum", "glow-serum", "skincare", "BEA-SKI-001", "2490.00", "2990.00", 36),
   product("Skincare", "Daily Face Cleanser", "daily-face-cleanser", "skincare", "BEA-SKI-002", "1490.00", undefined, 54),
-  product("Skincare", "Cloud Cream Moisturizer", "cloud-cream-moisturizer", "skincare", "BEA-SKI-003", "2190.00", "2590.00", 42),
-  product("Skincare", "Calm Skin Toner", "calm-skin-toner", "skincare", "BEA-SKI-004", "1290.00", undefined, 48),
   product("Makeup", "Soft Matte Lip Color", "soft-matte-lip-color", "makeup", "BEA-MAK-001", "1190.00", "1490.00", 68),
   product("Makeup", "Velvet Skin Tint", "velvet-skin-tint", "makeup", "BEA-MAK-002", "2290.00", undefined, 32),
-  product("Makeup", "Lush Brow Gel", "lush-brow-gel", "makeup", "BEA-MAK-003", "990.00", "1190.00", 58),
-  product("Makeup", "Rose Glow Blush", "rose-glow-blush", "makeup", "BEA-MAK-004", "1590.00", undefined, 45),
   product("Hair", "Silk Hair Mask", "silk-hair-mask", "hair-care", "BEA-HAI-001", "1890.00", "2290.00", 34),
-  product("Hair", "Soft Shine Shampoo", "soft-shine-shampoo", "hair-care", "BEA-HAI-002", "1390.00", undefined, 50),
-  product("Hair", "Nourish Hair Oil", "nourish-hair-oil", "hair-care", "BEA-HAI-003", "1690.00", "1990.00", 39),
-  product("Hair", "Volume Mist Spray", "volume-mist-spray", "hair-care", "BEA-HAI-004", "1290.00", undefined, 46),
   product("Scent", "Fresh Bloom Perfume", "fresh-bloom-perfume", "fragrance", "BEA-FRA-001", "3490.00", "3990.00", 24),
   product("Scent", "Amber Petal Mist", "amber-petal-mist", "fragrance", "BEA-FRA-002", "2190.00", undefined, 30),
-  product("Scent", "Soft Musk Roll-On", "soft-musk-roll-on", "fragrance", "BEA-FRA-003", "890.00", "1090.00", 62),
-  product("Scent", "Citrus Garden Spray", "citrus-garden-spray", "fragrance", "BEA-FRA-004", "2490.00", undefined, 28),
   product("Body", "Velvet Body Lotion", "velvet-body-lotion", "body-care", "BEA-BOD-001", "1590.00", "1890.00", 52),
-  product("Body", "Sugar Polish Scrub", "sugar-polish-scrub", "body-care", "BEA-BOD-002", "1390.00", undefined, 44),
-  product("Body", "Soft Foam Body Wash", "soft-foam-body-wash", "body-care", "BEA-BOD-003", "1090.00", "1290.00", 70),
-  product("Body", "Hand Cream Duo", "hand-cream-duo", "body-care", "BEA-BOD-004", "990.00", undefined, 66),
   product("Tools", "Beauty Sponge Set", "beauty-sponge-set", "beauty-tools", "BEA-TOO-001", "790.00", "990.00", 80),
-  product("Tools", "Soft Blend Brush Kit", "soft-blend-brush-kit", "beauty-tools", "BEA-TOO-002", "2290.00", undefined, 27),
-  product("Tools", "Cooling Facial Roller", "cooling-facial-roller", "beauty-tools", "BEA-TOO-003", "1490.00", "1790.00", 36),
-  product("Tools", "Clean Travel Pouch", "clean-travel-pouch", "beauty-tools", "BEA-TOO-004", "1190.00", undefined, 55)
+  product("Tools", "Soft Blend Brush Kit", "soft-blend-brush-kit", "beauty-tools", "BEA-TOO-002", "2290.00", undefined, 27)
 ] satisfies DemoPackProduct[];
 
 function product(

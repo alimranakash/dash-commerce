@@ -23,6 +23,10 @@ export const generalDemoPack: DemoPack = {
   },
   description: "Starter demo architecture for a broad ecommerce store.",
   id: "general-demo-v1",
+  metadata: {
+    demoProductCount: generalDemoProducts.length,
+    size: "mvp"
+  },
   name: "General Demo Pack v1",
   version: "1.0.0"
 };

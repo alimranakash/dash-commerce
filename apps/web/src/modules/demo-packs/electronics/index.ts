@@ -23,6 +23,10 @@ export const electronicsDemoPack: DemoPack = {
   },
   description: "Starter demo architecture for gadgets, devices, and electronics stores.",
   id: "electronics-demo-v1",
+  metadata: {
+    demoProductCount: electronicsDemoProducts.length,
+    size: "mvp"
+  },
   name: "Electronics Demo Pack v1",
   version: "1.0.0"
 };
