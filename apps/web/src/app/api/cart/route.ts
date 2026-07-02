@@ -14,11 +14,16 @@ export async function POST(request: NextRequest) {
   const storeSlug = getValue(formData, "storeSlug");
   const productId = getValue(formData, "productId");
   const productSlug = getValue(formData, "productSlug");
+  const wantsJson = isAjaxCartRequest(request);
 
   try {
     if (cartAction === "add") {
       await addToCart(storeId, productId, Number(getValue(formData, "quantity") || 1));
       revalidateStorefrontCart(storeSlug);
+
+      if (wantsJson) {
+        return NextResponse.json({ ok: true });
+      }
 
       return redirectTo(request, `/s/${storeSlug}/cart?added=1`);
     }
@@ -27,6 +32,10 @@ export async function POST(request: NextRequest) {
       await updateCartItemQuantity(storeId, productId, Number(getValue(formData, "quantity") || 1));
       revalidateStorefrontCart(storeSlug);
 
+      if (wantsJson) {
+        return NextResponse.json({ ok: true });
+      }
+
       return redirectTo(request, `/s/${storeSlug}/cart?updated=1`);
     }
 
@@ -34,12 +43,20 @@ export async function POST(request: NextRequest) {
       await removeCartItem(storeId, productId);
       revalidateStorefrontCart(storeSlug);
 
+      if (wantsJson) {
+        return NextResponse.json({ ok: true });
+      }
+
       return redirectTo(request, `/s/${storeSlug}/cart?removed=1`);
     }
 
     if (cartAction === "clear") {
       await clearCart(storeId);
       revalidateStorefrontCart(storeSlug);
+
+      if (wantsJson) {
+        return NextResponse.json({ ok: true });
+      }
 
       return redirectTo(request, `/s/${storeSlug}/cart?cleared=1`);
     }
@@ -49,6 +66,11 @@ export async function POST(request: NextRequest) {
     const message = encodeURIComponent(
       error instanceof Error ? error.message : "Cart operation failed."
     );
+    const readableMessage = error instanceof Error ? error.message : "Cart operation failed.";
+
+    if (wantsJson) {
+      return NextResponse.json({ message: readableMessage, ok: false }, { status: 400 });
+    }
 
     if (cartAction === "add" && productSlug) {
       return redirectTo(request, `/s/${storeSlug}/products/${productSlug}?cartError=${message}`);
@@ -56,6 +78,11 @@ export async function POST(request: NextRequest) {
 
     return redirectTo(request, `/s/${storeSlug}/cart?cartError=${message}`);
   }
+}
+
+function isAjaxCartRequest(request: NextRequest) {
+  return request.headers.get("x-cart-request") === "ajax" ||
+    request.headers.get("accept")?.includes("application/json") === true;
 }
 
 function getValue(formData: FormData, key: string) {

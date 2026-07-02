@@ -44,6 +44,7 @@ export default async function StorefrontSearchPage({
     subtitle: query ? `Products matching "${query}".` : searchDefaults.subtitle,
     title: query ? `Results for "${query}"` : searchDefaults.title
   };
+  const gridId = "storefront-search-product-grid";
 
   return (
     <main className="sf-page" data-storefront-template={template.id}>
@@ -53,7 +54,7 @@ export default async function StorefrontSearchPage({
         <h1 id="search-title">Search products</h1>
         <span>Find products by title or SKU.</span>
       </section>
-      <section className="sf-section general-product-section" aria-labelledby="search-results">
+      <section className="sf-section general-product-section sf-search-products" aria-labelledby="search-results">
         <form className="sf-search-form" action={`/s/${store.slug}/search`} method="get">
           <label>
             Search
@@ -67,10 +68,10 @@ export default async function StorefrontSearchPage({
           <button type="submit">Search</button>
         </form>
         <SectionHeader
-          count={query ? `${products.length} results` : undefined}
           ctaHref={`/s/${store.slug}/products`}
           ctaText="Shop all"
           id="search-results"
+          sliderTargetId={query ? gridId : undefined}
           subtitle={searchSection.subtitle}
           title={searchSection.title}
         />
@@ -87,6 +88,7 @@ export default async function StorefrontSearchPage({
         ) : (
           <ProductGrid
             currency={store.currency}
+            gridId={gridId}
             products={products}
             section={searchSection}
             storeSlug={store.slug}

@@ -1,8 +1,10 @@
 "use client";
 
-import { Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
+import { Menu, Search, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { useState, type CSSProperties } from "react";
+import { MiniCartDrawer } from "../../../../cart/components/mini-cart-drawer";
+import type { Cart } from "../../../../cart/cart.types";
 import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
   normalizeAdvancedSettings,
@@ -12,8 +14,10 @@ import {
 export type DefaultStorefrontHeaderProps = {
   advancedSettings?: StorefrontAdvancedSettings;
   announcementText: string | null;
-  cartCount?: number;
+  cart: Cart;
+  currency: string;
   logoUrl: string | null;
+  storeId: string;
   storeName: string;
   storeSlug: string;
   templateId?: string | null;
@@ -22,8 +26,10 @@ export type DefaultStorefrontHeaderProps = {
 export function DefaultStorefrontHeader({
   advancedSettings,
   announcementText,
-  cartCount = 0,
+  cart,
+  currency,
   logoUrl,
+  storeId,
   storeName,
   storeSlug,
   templateId
@@ -34,7 +40,6 @@ export function DefaultStorefrontHeader({
   const displayName = storeName.trim() || "Store";
   const logoText = settings.header.logoText || displayName;
   const brandInitial = displayName.charAt(0).toUpperCase();
-  const cartCountLabel = String(cartCount);
   const navItems = settings.header.menuItems.length > 0
     ? settings.header.menuItems
     : DEFAULT_STOREFRONT_ADVANCED_SETTINGS.header.menuItems;
@@ -59,6 +64,7 @@ export function DefaultStorefrontHeader({
     >
       {settings.announcement.enabled ? (
         <AnnouncementBar
+          homeHref={homeHref}
           messages={announcementMessages}
           scrollSpeed={settings.announcement.scrollSpeed}
           fallbackText={announcementText}
@@ -89,10 +95,19 @@ export function DefaultStorefrontHeader({
           {settings.header.showAccount ? <Link aria-label="Account" className="sf-icon-action" href={`${homeHref}/account`}>
             <UserRound className="h-4 w-4" />
           </Link> : null}
-          {settings.header.showCart ? <Link aria-label="Cart" className="sf-icon-action sf-cart-icon-action" href={`${homeHref}/cart`}>
-            <ShoppingBag className="h-4 w-4" />
-            <span suppressHydrationWarning>{cartCountLabel}</span>
-          </Link> : null}
+          {settings.header.showCart ? (
+            <MiniCartDrawer
+              cart={cart}
+              currency={currency}
+              homeHref={homeHref}
+              settings={settings.miniCart}
+              store={{
+                id: storeId,
+                name: displayName,
+                slug: storeSlug
+              }}
+            />
+          ) : null}
           <button
             aria-expanded={open}
             aria-label={open ? "Close storefront menu" : "Open storefront menu"}
@@ -130,10 +145,12 @@ export function DefaultStorefrontHeader({
 
 function AnnouncementBar({
   fallbackText,
+  homeHref,
   messages,
   scrollSpeed
 }: {
   fallbackText: string | null;
+  homeHref: string;
   messages: Array<{ link?: string; text: string }>;
   scrollSpeed: "slow" | "normal" | "fast";
 }) {
@@ -148,7 +165,7 @@ function AnnouncementBar({
       <div className="sf-announcement-track">
         {[...visibleMessages, ...visibleMessages, ...visibleMessages].map((message, index) =>
           message.link ? (
-            <Link href={message.link} key={`${message.text}-${index}`}>
+            <Link href={resolveStorefrontHref(homeHref, message.link)} key={`${message.text}-${index}`}>
               {message.text}
             </Link>
           ) : (
@@ -161,7 +178,11 @@ function AnnouncementBar({
 }
 
 function resolveStorefrontHref(homeHref: string, url: string) {
-  if (url.startsWith("http")) {
+  if (url.startsWith("http") || url.startsWith("mailto:") || url.startsWith("tel:") || url.startsWith("#")) {
+    return url;
+  }
+
+  if (url === homeHref || url.startsWith(`${homeHref}/`)) {
     return url;
   }
 

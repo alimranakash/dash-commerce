@@ -268,6 +268,296 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
       </SettingsCard>
 
       <SettingsCard
+        title="Tabbed Product Showcase"
+        description="Create a premium product rail with category-style tabs, slider controls, and reusable product sources."
+      >
+        <div className="theme-settings-grid three">
+          <ToggleField label="Enable section" name="tabbedShowcaseEnabled" value={advanced.tabbedProductShowcase.enabled} />
+          <ToggleField label="Full width" name="tabbedShowcaseFullWidth" value={advanced.tabbedProductShowcase.fullWidth} />
+          <ToggleField label="Enable slider" name="tabbedShowcaseSliderEnabled" value={advanced.tabbedProductShowcase.sliderEnabled} />
+          <ToggleField label="Show arrows" name="tabbedShowcaseArrowsVisible" value={advanced.tabbedProductShowcase.arrowsVisible} />
+          <ToggleField label="Autoplay" name="tabbedShowcaseAutoplay" value={advanced.tabbedProductShowcase.autoplay} />
+          <ToggleField label="Infinite loop" name="tabbedShowcaseInfiniteLoop" value={advanced.tabbedProductShowcase.infiniteLoop} />
+        </div>
+        <div className="theme-settings-grid three">
+          <label>
+            Section title
+            <input defaultValue={advanced.tabbedProductShowcase.title} name="tabbedShowcaseTitle" placeholder="Optional" type="text" />
+          </label>
+          <label>
+            Section description
+            <input defaultValue={advanced.tabbedProductShowcase.description} name="tabbedShowcaseDescription" type="text" />
+          </label>
+          <ColorPickerField label="Background color" name="tabbedShowcaseBackgroundColor" value={advanced.tabbedProductShowcase.backgroundColor} />
+          <label>
+            Products per tab
+            <input defaultValue={advanced.tabbedProductShowcase.productsPerTab} max={20} min={1} name="tabbedShowcaseProductsPerTab" type="number" />
+          </label>
+          <label>
+            Products per view
+            <select defaultValue={advanced.tabbedProductShowcase.productsPerView} name="tabbedShowcaseProductsPerView">
+              <option value={2}>2 products</option>
+              <option value={3}>3 products</option>
+              <option value={4}>4 products</option>
+              <option value={5}>5 products</option>
+            </select>
+          </label>
+          <label>
+            Default active tab
+            <input defaultValue={advanced.tabbedProductShowcase.defaultActiveTab} max={7} min={0} name="tabbedShowcaseDefaultActiveTab" type="number" />
+          </label>
+          <label>
+            Section spacing
+            <input defaultValue={advanced.tabbedProductShowcase.sectionSpacing} max={140} min={32} name="tabbedShowcaseSectionSpacing" type="number" />
+          </label>
+          <label>
+            Scroll amount
+            <select defaultValue={advanced.tabbedProductShowcase.scrollAmount} name="tabbedShowcaseScrollAmount">
+              <option value="page">Page</option>
+              <option value="one">One product</option>
+            </select>
+          </label>
+        </div>
+        <RepeaterTextarea
+          helper="One tab per line. Format: Label | source | product count | enabled. Sources: all, featured, best-sellers, new-arrivals, on-sale, category, collection, manual."
+          label="Tabs"
+          name="tabbedShowcaseTabs"
+          value={advanced.tabbedProductShowcase.tabs.map((tab) => `${tab.label} | ${tab.source} | ${tab.productCount} | ${tab.enabled}`).join("\n")}
+        />
+      </SettingsCard>
+
+      <SettingsCard
+        title="Shop / Collection Page"
+        description="Control the premium product listing page header, toolbar, filters, sorting, grid, and product card options."
+      >
+        <div className="theme-settings-grid three">
+          <label>
+            Page title
+            <input defaultValue={advanced.shopPage.pageTitle} name="shopPageTitle" type="text" />
+          </label>
+          <label>
+            Description
+            <input defaultValue={advanced.shopPage.description} name="shopDescription" type="text" />
+          </label>
+          <ToggleField label="Show description" name="shopDescriptionEnabled" value={advanced.shopPage.descriptionEnabled} />
+          <label>
+            Products per row
+            <select defaultValue={advanced.shopPage.productsPerRow} name="shopProductsPerRow">
+              <option value={2}>2 columns</option>
+              <option value={3}>3 columns</option>
+              <option value={4}>4 columns</option>
+            </select>
+          </label>
+          <label>
+            Products per page
+            <input defaultValue={advanced.shopPage.productsPerPage} max={48} min={4} name="shopProductsPerPage" type="number" />
+          </label>
+          <label>
+            Grid spacing
+            <input defaultValue={advanced.shopPage.gridSpacing} max={36} min={0} name="shopGridSpacing" type="number" />
+          </label>
+          <label>
+            Section spacing
+            <input defaultValue={advanced.shopPage.sectionSpacing} max={140} min={32} name="shopSectionSpacing" type="number" />
+          </label>
+          <label>
+            Width mode
+            <select defaultValue={advanced.shopPage.widthMode} name="shopWidthMode">
+              <option value="full">Full width</option>
+              <option value="boxed">Boxed</option>
+              <option value="custom">Custom container</option>
+            </select>
+          </label>
+          <label>
+            Pagination
+            <select defaultValue={advanced.shopPage.paginationMode} name="shopPaginationMode">
+              <option value="pagination">Pagination</option>
+              <option value="load-more">Load more</option>
+            </select>
+          </label>
+          <label>
+            Default sorting
+            <select defaultValue={advanced.shopPage.defaultSort} name="shopDefaultSort">
+              <option value="featured">Featured</option>
+              <option value="newest">Newest</option>
+              <option value="best-selling">Best Selling</option>
+              <option value="price-asc">Price Low -&gt; High</option>
+              <option value="price-desc">Price High -&gt; Low</option>
+              <option value="alpha-asc">Alphabetically A-Z</option>
+              <option value="alpha-desc">Alphabetically Z-A</option>
+            </select>
+          </label>
+        </div>
+        <div className="theme-settings-grid four compact">
+          <ToggleField label="Show filter button" name="shopEnableFilters" value={advanced.shopPage.enableFilters} />
+          <ToggleField label="Show sorting" name="shopEnableSorting" value={advanced.shopPage.enableSorting} />
+          <ToggleField label="Show result counter" name="shopEnableResultCounter" value={advanced.shopPage.enableResultCounter} />
+          <ToggleField label="Collections filter" name="shopEnableCollectionFilter" value={advanced.shopPage.enableCollectionFilter} />
+          <ToggleField label="Categories filter" name="shopEnableCategoryFilter" value={advanced.shopPage.enableCategoryFilter} />
+          <ToggleField label="Brand filter" name="shopEnableBrandFilter" value={advanced.shopPage.enableBrandFilter} />
+          <ToggleField label="Price filter" name="shopEnablePriceFilter" value={advanced.shopPage.enablePriceFilter} />
+          <ToggleField label="Availability filter" name="shopEnableAvailabilityFilter" value={advanced.shopPage.enableAvailabilityFilter} />
+          <ToggleField label="Tags filter" name="shopEnableTagFilter" value={advanced.shopPage.enableTagFilter} />
+          <ToggleField label="Colors filter" name="shopEnableColorFilter" value={advanced.shopPage.enableColorFilter} />
+          <ToggleField label="Sizes filter" name="shopEnableSizeFilter" value={advanced.shopPage.enableSizeFilter} />
+          <ToggleField label="Show product brand" name="shopEnableProductBrand" value={advanced.shopPage.enableProductBrand} />
+          <ToggleField label="Show compare price" name="shopEnableComparePrice" value={advanced.shopPage.enableComparePrice} />
+          <ToggleField label="Show badges" name="shopEnableProductBadges" value={advanced.shopPage.enableProductBadges} />
+          <ToggleField label="Show color count" name="shopEnableProductColorCount" value={advanced.shopPage.enableProductColorCount} />
+          <ToggleField label="Hover image" name="shopEnableHoverImage" value={advanced.shopPage.enableHoverImage} />
+          <ToggleField label="Quick view placeholder" name="shopEnableQuickView" value={advanced.shopPage.enableQuickView} />
+        </div>
+        <RepeaterTextarea
+          helper="One option per line. Supported values: featured, newest, best-selling, price-asc, price-desc, alpha-asc, alpha-desc."
+          label="Available sorting options"
+          name="shopSortOptions"
+          value={advanced.shopPage.sortOptions.join("\n")}
+        />
+      </SettingsCard>
+
+      <SettingsCard
+        title="Cart Page"
+        description="Control the minimal cart layout, free shipping progress, order notes, and checkout button style."
+      >
+        <div className="theme-settings-grid three">
+          <ToggleField label="Enable breadcrumb" name="cartBreadcrumbEnabled" value={advanced.cartPage.breadcrumbEnabled} />
+          <ToggleField label="Enable free shipping bar" name="cartFreeShippingEnabled" value={advanced.cartPage.freeShippingEnabled} />
+          <ToggleField label="Enable order notes" name="cartOrderNotesEnabled" value={advanced.cartPage.orderNotesEnabled} />
+          <ToggleField label="Show estimated delivery" name="cartEstimatedDeliveryEnabled" value={advanced.cartPage.estimatedDeliveryEnabled} />
+          <ToggleField label="Show taxes" name="cartTaxesEnabled" value={advanced.cartPage.taxesEnabled} />
+          <ToggleField label="Show brand" name="cartShowBrand" value={advanced.cartPage.showBrand} />
+          <ToggleField label="Show variant" name="cartShowVariant" value={advanced.cartPage.showVariant} />
+          <ToggleField label="Show remove button" name="cartShowRemoveButton" value={advanced.cartPage.showRemoveButton} />
+          <label>
+            Width mode
+            <select defaultValue={advanced.cartPage.widthMode} name="cartWidthMode">
+              <option value="full">Full width</option>
+              <option value="boxed">Boxed</option>
+            </select>
+          </label>
+          <label>
+            Free shipping amount
+            <input defaultValue={advanced.cartPage.freeShippingAmount} min={0} name="cartFreeShippingAmount" type="number" />
+          </label>
+          <label>
+            Free shipping text
+            <input defaultValue={advanced.cartPage.freeShippingText} name="cartFreeShippingText" type="text" />
+          </label>
+          <label>
+            Free shipping CTA
+            <input defaultValue={advanced.cartPage.freeShippingCtaText} name="cartFreeShippingCtaText" type="text" />
+          </label>
+          <label>
+            Free shipping CTA link
+            <input defaultValue={advanced.cartPage.freeShippingCtaLink} name="cartFreeShippingCtaLink" type="text" />
+          </label>
+          <label>
+            Checkout button text
+            <input defaultValue={advanced.cartPage.checkoutButtonText} name="cartCheckoutButtonText" type="text" />
+          </label>
+          <ColorPickerField
+            label="Checkout button background"
+            name="cartCheckoutButtonBackgroundColor"
+            value={advanced.cartPage.checkoutButtonBackgroundColor}
+          />
+          <ColorPickerField
+            label="Checkout button text"
+            name="cartCheckoutButtonTextColor"
+            value={advanced.cartPage.checkoutButtonTextColor}
+          />
+          <label>
+            Button radius
+            <input
+              defaultValue={advanced.cartPage.checkoutButtonBorderRadius}
+              max={32}
+              min={0}
+              name="cartCheckoutButtonBorderRadius"
+              type="number"
+            />
+          </label>
+          <label>
+            Continue shopping link
+            <input defaultValue={advanced.cartPage.continueShoppingLink} name="cartContinueShoppingLink" type="text" />
+          </label>
+        </div>
+      </SettingsCard>
+
+      <SettingsCard
+        title="Mini Cart Drawer"
+        description="Control the slide-in cart drawer that opens from the storefront cart icon."
+      >
+        <div className="theme-settings-grid three">
+          <ToggleField label="Enable mini cart" name="miniCartEnabled" value={advanced.miniCart.enabled} />
+          <ToggleField label="Auto open after add to cart" name="miniCartAutoOpenAfterAdd" value={advanced.miniCart.autoOpenAfterAdd} />
+          <ToggleField label="Show item count" name="miniCartShowItemCount" value={advanced.miniCart.showItemCount} />
+          <ToggleField label="Enable free shipping" name="miniCartFreeShippingEnabled" value={advanced.miniCart.freeShippingEnabled} />
+          <ToggleField label="Show brand" name="miniCartShowBrand" value={advanced.miniCart.showBrand} />
+          <ToggleField label="Show variant" name="miniCartShowVariant" value={advanced.miniCart.showVariant} />
+          <ToggleField label="Show quantity" name="miniCartShowQuantity" value={advanced.miniCart.showQuantity} />
+          <ToggleField label="Show remove" name="miniCartShowRemoveButton" value={advanced.miniCart.showRemoveButton} />
+          <ToggleField label="Enable order notes" name="miniCartOrderNotesEnabled" value={advanced.miniCart.orderNotesEnabled} />
+          <ToggleField label="Enable checkout button" name="miniCartCheckoutButtonEnabled" value={advanced.miniCart.checkoutButtonEnabled} />
+          <ToggleField label="Enable view cart button" name="miniCartViewCartButtonEnabled" value={advanced.miniCart.viewCartButtonEnabled} />
+          <label>
+            Drawer width
+            <input defaultValue={advanced.miniCart.drawerWidth} max={560} min={320} name="miniCartDrawerWidth" type="number" />
+          </label>
+          <label>
+            Overlay opacity
+            <input defaultValue={advanced.miniCart.overlayOpacity} max={90} min={0} name="miniCartOverlayOpacity" type="number" />
+          </label>
+          <label>
+            Free shipping amount
+            <input defaultValue={advanced.miniCart.freeShippingAmount} min={0} name="miniCartFreeShippingAmount" type="number" />
+          </label>
+          <label>
+            Free shipping text
+            <input defaultValue={advanced.miniCart.freeShippingText} name="miniCartFreeShippingText" type="text" />
+          </label>
+          <label>
+            Free shipping CTA
+            <input defaultValue={advanced.miniCart.freeShippingCtaText} name="miniCartFreeShippingCtaText" type="text" />
+          </label>
+          <label>
+            Free shipping CTA link
+            <input defaultValue={advanced.miniCart.freeShippingCtaLink} name="miniCartFreeShippingCtaLink" type="text" />
+          </label>
+          <label>
+            Checkout button text
+            <input defaultValue={advanced.miniCart.checkoutButtonText} name="miniCartCheckoutButtonText" type="text" />
+          </label>
+          <ColorPickerField
+            label="Checkout background"
+            name="miniCartCheckoutButtonBackgroundColor"
+            value={advanced.miniCart.checkoutButtonBackgroundColor}
+          />
+          <ColorPickerField
+            label="Checkout text"
+            name="miniCartCheckoutButtonTextColor"
+            value={advanced.miniCart.checkoutButtonTextColor}
+          />
+          <label>
+            Checkout radius
+            <input
+              defaultValue={advanced.miniCart.checkoutButtonBorderRadius}
+              max={32}
+              min={0}
+              name="miniCartCheckoutButtonBorderRadius"
+              type="number"
+            />
+          </label>
+          <label>
+            View cart text
+            <input defaultValue={advanced.miniCart.viewCartButtonText} name="miniCartViewCartButtonText" type="text" />
+          </label>
+          <label>
+            View cart link
+            <input defaultValue={advanced.miniCart.viewCartButtonLink} name="miniCartViewCartButtonLink" type="text" />
+          </label>
+        </div>
+      </SettingsCard>
+
+      <SettingsCard
         title="Product Sections"
         description="Control the reusable storefront product listing layout used by featured products, shop pages, search results, and related products."
       >
@@ -279,6 +569,74 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
           <ProductSectionFields label="Search Results" name="search" section={advanced.productSections.search} />
           <ProductSectionFields label="Related Products" name="related" section={advanced.productSections.related} />
           <ProductSectionFields label="Recently Viewed" name="recentlyViewed" section={advanced.productSections.recentlyViewed} />
+        </div>
+      </SettingsCard>
+
+      <SettingsCard
+        title="Product Page"
+        description="Control the single product page gallery, purchase area, accordions, shipping copy, and promotional blocks."
+      >
+        <div className="theme-settings-grid four compact">
+          <ToggleField label="Show breadcrumb" name="productPageBreadcrumbEnabled" value={advanced.productPage.breadcrumbEnabled} />
+          <ToggleField label="Enable zoom" name="productPageZoomEnabled" value={advanced.productPage.zoomEnabled} />
+          <ToggleField label="Enable lightbox" name="productPageLightboxEnabled" value={advanced.productPage.lightboxEnabled} />
+          <ToggleField label="Show variants" name="productPageVariantEnabled" value={advanced.productPage.variantEnabled} />
+          <ToggleField label="Show buy now" name="productPageBuyNowEnabled" value={advanced.productPage.buyNowEnabled} />
+          <ToggleField label="Show shipping info" name="productPageShippingEnabled" value={advanced.productPage.shippingEnabled} />
+          <ToggleField label="Show accordions" name="productPageAccordionEnabled" value={advanced.productPage.accordionEnabled} />
+          <ToggleField label="Show promo blocks" name="productPagePromoBlocksEnabled" value={advanced.productPage.promoBlocksEnabled} />
+        </div>
+        <div className="theme-settings-grid three compact">
+          <label>
+            Gallery layout
+            <select defaultValue={advanced.productPage.galleryLayout} name="productPageGalleryLayout">
+              <option value="two-column">Two-column</option>
+              <option value="vertical">Vertical</option>
+              <option value="horizontal">Horizontal</option>
+            </select>
+          </label>
+          <label>
+            Image ratio
+            <select defaultValue={advanced.productPage.imageRatio} name="productPageImageRatio">
+              <option value="portrait">Portrait</option>
+              <option value="square">Square</option>
+              <option value="wide">Wide</option>
+            </select>
+          </label>
+          <label>
+            Gallery spacing
+            <input defaultValue={advanced.productPage.gallerySpacing} max={32} min={0} name="productPageGallerySpacing" type="number" />
+          </label>
+          <label>
+            Variant style
+            <select defaultValue={advanced.productPage.variantStyle} name="productPageVariantStyle">
+              <option value="buttons">Buttons</option>
+              <option value="dropdown">Dropdown</option>
+            </select>
+          </label>
+          <label>
+            Add to cart text
+            <input defaultValue={advanced.productPage.addToCartText} name="productPageAddToCartText" type="text" />
+          </label>
+          <label>
+            Button radius
+            <input
+              defaultValue={advanced.productPage.addToCartButtonRadius}
+              max={32}
+              min={0}
+              name="productPageAddToCartButtonRadius"
+              type="number"
+            />
+          </label>
+          <ColorPickerField
+            label="Button color"
+            name="productPageAddToCartButtonColor"
+            value={advanced.productPage.addToCartButtonColor}
+          />
+          <label>
+            Shipping notice
+            <input defaultValue={advanced.productPage.shippingNotice} name="productPageShippingNotice" type="text" />
+          </label>
         </div>
       </SettingsCard>
 
@@ -402,6 +760,7 @@ function ProductSectionFields({
             <option value={2}>2 columns</option>
             <option value={3}>3 columns</option>
             <option value={4}>4 columns</option>
+            <option value={5}>5 columns</option>
           </select>
         </label>
         <label>

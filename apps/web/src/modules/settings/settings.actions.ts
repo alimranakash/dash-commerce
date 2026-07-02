@@ -12,7 +12,8 @@ import {
   type StorefrontHeroSlide,
   type StorefrontMenuItem,
   type StorefrontMessage,
-  type StorefrontProductSectionSettings
+  type StorefrontProductSectionSettings,
+  type StorefrontTabbedProductTab
 } from "../storefront/customization";
 import { getStoreSettings, updateStoreSettings, updateThemeSettings } from "./settings.service";
 import type { StoreSettingsInput, ThemeSettingsInput } from "./settings.schema";
@@ -227,6 +228,51 @@ async function advancedSettingsFromFormData(storeId: string, formData: FormData,
       sectionPadding: Number(getValue(formData, "layoutSectionPadding")),
       widthMode: getValue(formData, "layoutWidthMode")
     },
+    cartPage: {
+      breadcrumbEnabled: checkbox(formData, "cartBreadcrumbEnabled"),
+      checkoutButtonBackgroundColor: getValue(formData, "cartCheckoutButtonBackgroundColor"),
+      checkoutButtonBorderRadius: Number(getValue(formData, "cartCheckoutButtonBorderRadius")),
+      checkoutButtonText: getValue(formData, "cartCheckoutButtonText"),
+      checkoutButtonTextColor: getValue(formData, "cartCheckoutButtonTextColor"),
+      continueShoppingLink: getValue(formData, "cartContinueShoppingLink"),
+      estimatedDeliveryEnabled: checkbox(formData, "cartEstimatedDeliveryEnabled"),
+      freeShippingAmount: Number(getValue(formData, "cartFreeShippingAmount")),
+      freeShippingCtaLink: getValue(formData, "cartFreeShippingCtaLink"),
+      freeShippingCtaText: getValue(formData, "cartFreeShippingCtaText"),
+      freeShippingEnabled: checkbox(formData, "cartFreeShippingEnabled"),
+      freeShippingText: getValue(formData, "cartFreeShippingText"),
+      orderNotesEnabled: checkbox(formData, "cartOrderNotesEnabled"),
+      showBrand: checkbox(formData, "cartShowBrand"),
+      showRemoveButton: checkbox(formData, "cartShowRemoveButton"),
+      showVariant: checkbox(formData, "cartShowVariant"),
+      taxesEnabled: checkbox(formData, "cartTaxesEnabled"),
+      widthMode: getValue(formData, "cartWidthMode")
+    },
+    miniCart: {
+      autoOpenAfterAdd: checkbox(formData, "miniCartAutoOpenAfterAdd"),
+      checkoutButtonBackgroundColor: getValue(formData, "miniCartCheckoutButtonBackgroundColor"),
+      checkoutButtonBorderRadius: Number(getValue(formData, "miniCartCheckoutButtonBorderRadius")),
+      checkoutButtonEnabled: checkbox(formData, "miniCartCheckoutButtonEnabled"),
+      checkoutButtonText: getValue(formData, "miniCartCheckoutButtonText"),
+      checkoutButtonTextColor: getValue(formData, "miniCartCheckoutButtonTextColor"),
+      drawerWidth: Number(getValue(formData, "miniCartDrawerWidth")),
+      enabled: checkbox(formData, "miniCartEnabled"),
+      freeShippingAmount: Number(getValue(formData, "miniCartFreeShippingAmount")),
+      freeShippingCtaLink: getValue(formData, "miniCartFreeShippingCtaLink"),
+      freeShippingCtaText: getValue(formData, "miniCartFreeShippingCtaText"),
+      freeShippingEnabled: checkbox(formData, "miniCartFreeShippingEnabled"),
+      freeShippingText: getValue(formData, "miniCartFreeShippingText"),
+      orderNotesEnabled: checkbox(formData, "miniCartOrderNotesEnabled"),
+      overlayOpacity: Number(getValue(formData, "miniCartOverlayOpacity")),
+      showBrand: checkbox(formData, "miniCartShowBrand"),
+      showItemCount: checkbox(formData, "miniCartShowItemCount"),
+      showQuantity: checkbox(formData, "miniCartShowQuantity"),
+      showRemoveButton: checkbox(formData, "miniCartShowRemoveButton"),
+      showVariant: checkbox(formData, "miniCartShowVariant"),
+      viewCartButtonEnabled: checkbox(formData, "miniCartViewCartButtonEnabled"),
+      viewCartButtonLink: getValue(formData, "miniCartViewCartButtonLink"),
+      viewCartButtonText: getValue(formData, "miniCartViewCartButtonText")
+    },
     productSections: {
       bestSellers: productSectionFromFormData(formData, "bestSellers"),
       featured: productSectionFromFormData(formData, "featured"),
@@ -236,6 +282,71 @@ async function advancedSettingsFromFormData(storeId: string, formData: FormData,
       recentlyViewed: productSectionFromFormData(formData, "recentlyViewed"),
       search: productSectionFromFormData(formData, "search"),
       trending: productSectionFromFormData(formData, "trending")
+    },
+    productPage: {
+      accordionEnabled: checkbox(formData, "productPageAccordionEnabled"),
+      addToCartButtonColor: getValue(formData, "productPageAddToCartButtonColor"),
+      addToCartButtonRadius: Number(getValue(formData, "productPageAddToCartButtonRadius")),
+      addToCartText: getValue(formData, "productPageAddToCartText"),
+      breadcrumbEnabled: checkbox(formData, "productPageBreadcrumbEnabled"),
+      buyNowEnabled: checkbox(formData, "productPageBuyNowEnabled"),
+      galleryLayout: getValue(formData, "productPageGalleryLayout"),
+      gallerySpacing: Number(getValue(formData, "productPageGallerySpacing")),
+      imageRatio: getValue(formData, "productPageImageRatio"),
+      lightboxEnabled: checkbox(formData, "productPageLightboxEnabled"),
+      promoBlocksEnabled: checkbox(formData, "productPagePromoBlocksEnabled"),
+      shippingEnabled: checkbox(formData, "productPageShippingEnabled"),
+      shippingNotice: getValue(formData, "productPageShippingNotice"),
+      variantEnabled: checkbox(formData, "productPageVariantEnabled"),
+      variantStyle: getValue(formData, "productPageVariantStyle"),
+      zoomEnabled: checkbox(formData, "productPageZoomEnabled")
+    },
+    shopPage: {
+      defaultSort: getValue(formData, "shopDefaultSort"),
+      description: getValue(formData, "shopDescription"),
+      descriptionEnabled: checkbox(formData, "shopDescriptionEnabled"),
+      enableAvailabilityFilter: checkbox(formData, "shopEnableAvailabilityFilter"),
+      enableBrandFilter: checkbox(formData, "shopEnableBrandFilter"),
+      enableCategoryFilter: checkbox(formData, "shopEnableCategoryFilter"),
+      enableColorFilter: checkbox(formData, "shopEnableColorFilter"),
+      enableCollectionFilter: checkbox(formData, "shopEnableCollectionFilter"),
+      enableComparePrice: checkbox(formData, "shopEnableComparePrice"),
+      enableFilters: checkbox(formData, "shopEnableFilters"),
+      enableHoverImage: checkbox(formData, "shopEnableHoverImage"),
+      enableProductBadges: checkbox(formData, "shopEnableProductBadges"),
+      enableProductBrand: checkbox(formData, "shopEnableProductBrand"),
+      enableProductColorCount: checkbox(formData, "shopEnableProductColorCount"),
+      enablePriceFilter: checkbox(formData, "shopEnablePriceFilter"),
+      enableQuickView: checkbox(formData, "shopEnableQuickView"),
+      enableSizeFilter: checkbox(formData, "shopEnableSizeFilter"),
+      enableSorting: checkbox(formData, "shopEnableSorting"),
+      enableTagFilter: checkbox(formData, "shopEnableTagFilter"),
+      enableResultCounter: checkbox(formData, "shopEnableResultCounter"),
+      gridSpacing: Number(getValue(formData, "shopGridSpacing")),
+      paginationMode: getValue(formData, "shopPaginationMode"),
+      pageTitle: getValue(formData, "shopPageTitle"),
+      productsPerPage: Number(getValue(formData, "shopProductsPerPage")),
+      productsPerRow: Number(getValue(formData, "shopProductsPerRow")),
+      sectionSpacing: Number(getValue(formData, "shopSectionSpacing")),
+      sortOptions: parseShopSortOptions(getValue(formData, "shopSortOptions")),
+      widthMode: getValue(formData, "shopWidthMode")
+    },
+    tabbedProductShowcase: {
+      arrowsVisible: checkbox(formData, "tabbedShowcaseArrowsVisible"),
+      autoplay: checkbox(formData, "tabbedShowcaseAutoplay"),
+      backgroundColor: getValue(formData, "tabbedShowcaseBackgroundColor"),
+      defaultActiveTab: Number(getValue(formData, "tabbedShowcaseDefaultActiveTab")),
+      description: getValue(formData, "tabbedShowcaseDescription"),
+      enabled: checkbox(formData, "tabbedShowcaseEnabled"),
+      fullWidth: checkbox(formData, "tabbedShowcaseFullWidth"),
+      infiniteLoop: checkbox(formData, "tabbedShowcaseInfiniteLoop"),
+      productsPerTab: Number(getValue(formData, "tabbedShowcaseProductsPerTab")),
+      productsPerView: Number(getValue(formData, "tabbedShowcaseProductsPerView")),
+      scrollAmount: getValue(formData, "tabbedShowcaseScrollAmount"),
+      sectionSpacing: Number(getValue(formData, "tabbedShowcaseSectionSpacing")),
+      sliderEnabled: checkbox(formData, "tabbedShowcaseSliderEnabled"),
+      tabs: parseTabbedProductTabs(getValue(formData, "tabbedShowcaseTabs")),
+      title: getValue(formData, "tabbedShowcaseTitle")
     }
   });
 }
@@ -247,7 +358,7 @@ function productSectionFromFormData(
   const fallback = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections[key];
 
   return {
-    columns: Number(getValue(formData, `productSection_${key}_columns`)) as 2 | 3 | 4,
+    columns: Number(getValue(formData, `productSection_${key}_columns`)) as 2 | 3 | 4 | 5,
     count: Number(getValue(formData, `productSection_${key}_count`)),
     ctaLink: getValue(formData, `productSection_${key}_ctaLink`) || fallback.ctaLink,
     ctaText: getValue(formData, `productSection_${key}_ctaText`) || fallback.ctaText,
@@ -294,6 +405,37 @@ function parseMessages(value: string): StorefrontMessage[] {
     .filter((item): item is StorefrontMessage => Boolean(item));
 
   return messages.length > 0 ? messages : DEFAULT_STOREFRONT_ADVANCED_SETTINGS.announcement.messages;
+}
+
+function parseTabbedProductTabs(value: string): StorefrontTabbedProductTab[] {
+  const tabs = value
+    .split(/\r?\n/)
+    .map((line): StorefrontTabbedProductTab | null => {
+      const [label, source, count, enabled] = line.split("|").map((part) => part.trim());
+
+      if (!label) {
+        return null;
+      }
+
+      return {
+        enabled: enabled ? enabled.toLowerCase() !== "false" : true,
+        label,
+        productCount: Number(count) || DEFAULT_STOREFRONT_ADVANCED_SETTINGS.tabbedProductShowcase.productsPerTab,
+        source: source as StorefrontTabbedProductTab["source"]
+      };
+    })
+    .filter((item): item is StorefrontTabbedProductTab => Boolean(item));
+
+  return tabs.length > 0 ? tabs : DEFAULT_STOREFRONT_ADVANCED_SETTINGS.tabbedProductShowcase.tabs;
+}
+
+function parseShopSortOptions(value: string) {
+  const options = value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  return options.length > 0 ? options : DEFAULT_STOREFRONT_ADVANCED_SETTINGS.shopPage.sortOptions;
 }
 
 async function parseSlides(storeId: string, formData: FormData): Promise<StorefrontHeroSlide[]> {

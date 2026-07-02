@@ -16,7 +16,7 @@ export type StorefrontHeroSlide = {
 };
 
 export type StorefrontProductSectionSettings = {
-  columns: 2 | 3 | 4;
+  columns: 2 | 3 | 4 | 5;
   count: number;
   ctaLink: string;
   ctaText: string;
@@ -28,6 +28,147 @@ export type StorefrontProductSectionSettings = {
   source: "manual" | "featured" | "best-sellers" | "new-arrivals" | "trending" | "related" | "search" | "recently-viewed";
   subtitle: string;
   title: string;
+};
+
+export type StorefrontProductPageSettings = {
+  accordionEnabled: boolean;
+  addToCartButtonColor: string;
+  addToCartButtonRadius: number;
+  addToCartText: string;
+  breadcrumbEnabled: boolean;
+  buyNowEnabled: boolean;
+  galleryLayout: "two-column" | "vertical" | "horizontal";
+  gallerySpacing: number;
+  imageRatio: "portrait" | "square" | "wide";
+  lightboxEnabled: boolean;
+  promoBlocksEnabled: boolean;
+  shippingEnabled: boolean;
+  shippingNotice: string;
+  variantEnabled: boolean;
+  variantStyle: "buttons" | "dropdown";
+  zoomEnabled: boolean;
+};
+
+export type StorefrontTabbedProductSource =
+  | "all"
+  | "featured"
+  | "best-sellers"
+  | "new-arrivals"
+  | "on-sale"
+  | "category"
+  | "collection"
+  | "manual";
+
+export type StorefrontTabbedProductTab = {
+  enabled: boolean;
+  label: string;
+  productCount: number;
+  source: StorefrontTabbedProductSource;
+};
+
+export type StorefrontTabbedProductShowcaseSettings = {
+  arrowsVisible: boolean;
+  autoplay: boolean;
+  backgroundColor: string;
+  defaultActiveTab: number;
+  description: string;
+  enabled: boolean;
+  fullWidth: boolean;
+  infiniteLoop: boolean;
+  productsPerTab: number;
+  productsPerView: 2 | 3 | 4 | 5;
+  scrollAmount: "one" | "page";
+  sectionSpacing: number;
+  sliderEnabled: boolean;
+  tabs: StorefrontTabbedProductTab[];
+  title: string;
+};
+
+export type StorefrontShopPageSortOption =
+  | "featured"
+  | "newest"
+  | "best-selling"
+  | "price-asc"
+  | "price-desc"
+  | "alpha-asc"
+  | "alpha-desc";
+
+export type StorefrontShopPageSettings = {
+  defaultSort: StorefrontShopPageSortOption;
+  description: string;
+  descriptionEnabled: boolean;
+  enableAvailabilityFilter: boolean;
+  enableBrandFilter: boolean;
+  enableCategoryFilter: boolean;
+  enableColorFilter: boolean;
+  enableCollectionFilter: boolean;
+  enableComparePrice: boolean;
+  enableFilters: boolean;
+  enableHoverImage: boolean;
+  enableProductBadges: boolean;
+  enableProductBrand: boolean;
+  enableProductColorCount: boolean;
+  enablePriceFilter: boolean;
+  enableQuickView: boolean;
+  enableSizeFilter: boolean;
+  enableSorting: boolean;
+  enableTagFilter: boolean;
+  enableResultCounter: boolean;
+  gridSpacing: number;
+  paginationMode: "pagination" | "load-more";
+  pageTitle: string;
+  productsPerPage: number;
+  productsPerRow: 2 | 3 | 4;
+  sectionSpacing: number;
+  sortOptions: StorefrontShopPageSortOption[];
+  widthMode: "full" | "boxed" | "custom";
+};
+
+export type StorefrontCartPageSettings = {
+  breadcrumbEnabled: boolean;
+  checkoutButtonBackgroundColor: string;
+  checkoutButtonBorderRadius: number;
+  checkoutButtonText: string;
+  checkoutButtonTextColor: string;
+  continueShoppingLink: string;
+  estimatedDeliveryEnabled: boolean;
+  freeShippingAmount: number;
+  freeShippingCtaLink: string;
+  freeShippingCtaText: string;
+  freeShippingEnabled: boolean;
+  freeShippingText: string;
+  orderNotesEnabled: boolean;
+  showBrand: boolean;
+  showRemoveButton: boolean;
+  showVariant: boolean;
+  taxesEnabled: boolean;
+  widthMode: "full" | "boxed";
+};
+
+export type StorefrontMiniCartSettings = {
+  autoOpenAfterAdd: boolean;
+  checkoutButtonBackgroundColor: string;
+  checkoutButtonBorderRadius: number;
+  checkoutButtonEnabled: boolean;
+  checkoutButtonText: string;
+  checkoutButtonTextColor: string;
+  drawerWidth: number;
+  enabled: boolean;
+  freeShippingAmount: number;
+  freeShippingCtaLink: string;
+  freeShippingCtaText: string;
+  freeShippingEnabled: boolean;
+  freeShippingText: string;
+  orderNotesEnabled: boolean;
+  overlayOpacity: number;
+  showBrand: boolean;
+  showItemCount: boolean;
+  showQuantity: boolean;
+  showRemoveButton: boolean;
+  showVariant: boolean;
+  viewCartButtonEnabled: boolean;
+  viewCartButtonLink: string;
+  viewCartButtonText: string;
 };
 
 export type StorefrontAdvancedSettings = {
@@ -80,6 +221,8 @@ export type StorefrontAdvancedSettings = {
     videoUrl?: string | undefined;
     youtubeUrl?: string | undefined;
   };
+  cartPage: StorefrontCartPageSettings;
+  miniCart: StorefrontMiniCartSettings;
   layout: {
     boxedMaxWidth: number;
     pageBackgroundColor: string;
@@ -96,6 +239,9 @@ export type StorefrontAdvancedSettings = {
     search: StorefrontProductSectionSettings;
     trending: StorefrontProductSectionSettings;
   };
+  productPage: StorefrontProductPageSettings;
+  shopPage: StorefrontShopPageSettings;
+  tabbedProductShowcase: StorefrontTabbedProductShowcaseSettings;
 };
 
 export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = {
@@ -160,6 +306,51 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     textColor: "#ffffff",
     title: "Discover Quality Products for Every Lifestyle"
   },
+  cartPage: {
+    breadcrumbEnabled: true,
+    checkoutButtonBackgroundColor: "#000000",
+    checkoutButtonBorderRadius: 0,
+    checkoutButtonText: "Go to Checkout",
+    checkoutButtonTextColor: "#ffffff",
+    continueShoppingLink: "/products",
+    estimatedDeliveryEnabled: true,
+    freeShippingAmount: 250,
+    freeShippingCtaLink: "/products",
+    freeShippingCtaText: "Shop Now",
+    freeShippingEnabled: true,
+    freeShippingText: "Just {amount} away from free shipping.",
+    orderNotesEnabled: true,
+    showBrand: true,
+    showRemoveButton: true,
+    showVariant: true,
+    taxesEnabled: false,
+    widthMode: "full"
+  },
+  miniCart: {
+    autoOpenAfterAdd: true,
+    checkoutButtonBackgroundColor: "#000000",
+    checkoutButtonBorderRadius: 0,
+    checkoutButtonEnabled: true,
+    checkoutButtonText: "Go to Checkout",
+    checkoutButtonTextColor: "#ffffff",
+    drawerWidth: 460,
+    enabled: true,
+    freeShippingAmount: 250,
+    freeShippingCtaLink: "/products",
+    freeShippingCtaText: "Shop Now",
+    freeShippingEnabled: true,
+    freeShippingText: "Just {amount} away from free shipping.",
+    orderNotesEnabled: true,
+    overlayOpacity: 42,
+    showBrand: true,
+    showItemCount: true,
+    showQuantity: true,
+    showRemoveButton: true,
+    showVariant: true,
+    viewCartButtonEnabled: true,
+    viewCartButtonLink: "/cart",
+    viewCartButtonText: "View Cart"
+  },
   layout: {
     boxedMaxWidth: 1440,
     pageBackgroundColor: "#ffffff",
@@ -169,12 +360,14 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
   productSections: {
     bestSellers: productSectionDefault({
       ctaText: "View all",
+      mode: "slider",
       source: "best-sellers",
       subtitle: "Customer favorites selected from the public catalog.",
       title: "Best Sellers"
     }),
     featured: productSectionDefault({
       ctaText: "Shop Now",
+      mode: "slider",
       source: "featured",
       subtitle: "Pieces made for repeat use - versatile in size, dependable in design, and easy to carry.",
       title: "The Daily Edit"
@@ -188,6 +381,7 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     }),
     newArrivals: productSectionDefault({
       ctaText: "View all",
+      mode: "slider",
       source: "new-arrivals",
       subtitle: "Freshly added products from the latest catalog update.",
       title: "New Arrivals"
@@ -195,6 +389,7 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     related: productSectionDefault({
       count: 4,
       ctaText: "View all",
+      mode: "slider",
       source: "related",
       subtitle: "More products selected from the same collection.",
       title: "You may also like"
@@ -202,6 +397,7 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     recentlyViewed: productSectionDefault({
       count: 4,
       ctaText: "View all",
+      mode: "slider",
       source: "recently-viewed",
       subtitle: "A clean product rail for items a shopper has viewed recently.",
       title: "Recently Viewed"
@@ -215,10 +411,81 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     }),
     trending: productSectionDefault({
       ctaText: "View all",
+      mode: "slider",
       source: "trending",
       subtitle: "A refined selection of products getting attention now.",
       title: "Trending Products"
     })
+  },
+  productPage: {
+    accordionEnabled: true,
+    addToCartButtonColor: "#000000",
+    addToCartButtonRadius: 0,
+    addToCartText: "Add to Cart",
+    breadcrumbEnabled: true,
+    buyNowEnabled: false,
+    galleryLayout: "two-column",
+    gallerySpacing: 4,
+    imageRatio: "portrait",
+    lightboxEnabled: true,
+    promoBlocksEnabled: true,
+    shippingEnabled: true,
+    shippingNotice: "Next day delivery available",
+    variantEnabled: true,
+    variantStyle: "buttons",
+    zoomEnabled: true
+  },
+  shopPage: {
+    defaultSort: "alpha-asc",
+    description: "Everything in one place - from the ones you return to, to the ones worth trying for the first time. Find what belongs in your day.",
+    descriptionEnabled: true,
+    enableAvailabilityFilter: true,
+    enableBrandFilter: true,
+    enableCategoryFilter: true,
+    enableColorFilter: true,
+    enableCollectionFilter: true,
+    enableComparePrice: true,
+    enableFilters: true,
+    enableHoverImage: true,
+    enableProductBadges: true,
+    enableProductBrand: true,
+    enableProductColorCount: true,
+    enablePriceFilter: true,
+    enableQuickView: false,
+    enableSizeFilter: true,
+    enableSorting: true,
+    enableTagFilter: true,
+    enableResultCounter: true,
+    gridSpacing: 4,
+    paginationMode: "pagination",
+    pageTitle: "Products",
+    productsPerPage: 12,
+    productsPerRow: 4,
+    sectionSpacing: 72,
+    sortOptions: ["featured", "newest", "best-selling", "price-asc", "price-desc", "alpha-asc", "alpha-desc"],
+    widthMode: "full"
+  },
+  tabbedProductShowcase: {
+    arrowsVisible: true,
+    autoplay: false,
+    backgroundColor: "#ffffff",
+    defaultActiveTab: 0,
+    description: "Footwear built around one idea: that the best shoes are the ones you stop noticing. Precise in form, deliberate in material.",
+    enabled: true,
+    fullWidth: true,
+    infiniteLoop: false,
+    productsPerTab: 5,
+    productsPerView: 5,
+    scrollAmount: "page",
+    sectionSpacing: 84,
+    sliderEnabled: true,
+    tabs: [
+      { enabled: true, label: "All", productCount: 5, source: "all" },
+      { enabled: true, label: "Bestsellers", productCount: 5, source: "best-sellers" },
+      { enabled: true, label: "On Sale", productCount: 5, source: "on-sale" },
+      { enabled: true, label: "New In", productCount: 5, source: "new-arrivals" }
+    ],
+    title: ""
   }
 };
 
@@ -227,7 +494,12 @@ export function normalizeAdvancedSettings(value: unknown): StorefrontAdvancedSet
   const announcement = isRecord(input.announcement) ? input.announcement : {};
   const header = isRecord(input.header) ? input.header : {};
   const hero = isRecord(input.hero) ? input.hero : {};
+  const cartPage = isRecord(input.cartPage) ? input.cartPage : {};
+  const miniCart = isRecord(input.miniCart) ? input.miniCart : {};
   const layout = isRecord(input.layout) ? input.layout : {};
+  const productPage = isRecord(input.productPage) ? input.productPage : {};
+  const shopPage = isRecord(input.shopPage) ? input.shopPage : {};
+  const tabbedProductShowcase = isRecord(input.tabbedProductShowcase) ? input.tabbedProductShowcase : {};
 
   return {
     announcement: {
@@ -282,6 +554,8 @@ export function normalizeAdvancedSettings(value: unknown): StorefrontAdvancedSet
       videoUrl: text(hero.videoUrl),
       youtubeUrl: text(hero.youtubeUrl)
     },
+    cartPage: cartPageSettings(cartPage),
+    miniCart: miniCartSettings(miniCart),
     layout: {
       ...DEFAULT_STOREFRONT_ADVANCED_SETTINGS.layout,
       boxedMaxWidth: numberInRange(layout.boxedMaxWidth, 960, 1920, DEFAULT_STOREFRONT_ADVANCED_SETTINGS.layout.boxedMaxWidth),
@@ -298,7 +572,88 @@ export function normalizeAdvancedSettings(value: unknown): StorefrontAdvancedSet
       recentlyViewed: productSection(input.productSections, "recentlyViewed"),
       search: productSection(input.productSections, "search"),
       trending: productSection(input.productSections, "trending")
-    }
+    },
+    productPage: productPageSettings(productPage),
+    shopPage: shopPageSettings(shopPage),
+    tabbedProductShowcase: tabbedProductShowcaseSettings(tabbedProductShowcase)
+  };
+}
+
+function productPageSettings(input: Record<string, unknown>): StorefrontProductPageSettings {
+  const defaults = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productPage;
+
+  return {
+    accordionEnabled: bool(input.accordionEnabled, defaults.accordionEnabled),
+    addToCartButtonColor: hex(input.addToCartButtonColor, defaults.addToCartButtonColor),
+    addToCartButtonRadius: numberInRange(input.addToCartButtonRadius, 0, 32, defaults.addToCartButtonRadius),
+    addToCartText: text(input.addToCartText, defaults.addToCartText),
+    breadcrumbEnabled: bool(input.breadcrumbEnabled, defaults.breadcrumbEnabled),
+    buyNowEnabled: bool(input.buyNowEnabled, defaults.buyNowEnabled),
+    galleryLayout: oneOf(input.galleryLayout, ["two-column", "vertical", "horizontal"], defaults.galleryLayout),
+    gallerySpacing: numberInRange(input.gallerySpacing, 0, 32, defaults.gallerySpacing),
+    imageRatio: oneOf(input.imageRatio, ["portrait", "square", "wide"], defaults.imageRatio),
+    lightboxEnabled: bool(input.lightboxEnabled, defaults.lightboxEnabled),
+    promoBlocksEnabled: bool(input.promoBlocksEnabled, defaults.promoBlocksEnabled),
+    shippingEnabled: bool(input.shippingEnabled, defaults.shippingEnabled),
+    shippingNotice: text(input.shippingNotice, defaults.shippingNotice),
+    variantEnabled: bool(input.variantEnabled, defaults.variantEnabled),
+    variantStyle: oneOf(input.variantStyle, ["buttons", "dropdown"], defaults.variantStyle),
+    zoomEnabled: bool(input.zoomEnabled, defaults.zoomEnabled)
+  };
+}
+
+function miniCartSettings(input: Record<string, unknown>): StorefrontMiniCartSettings {
+  const defaults = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.miniCart;
+
+  return {
+    autoOpenAfterAdd: bool(input.autoOpenAfterAdd, defaults.autoOpenAfterAdd),
+    checkoutButtonBackgroundColor: hex(input.checkoutButtonBackgroundColor, defaults.checkoutButtonBackgroundColor),
+    checkoutButtonBorderRadius: numberInRange(input.checkoutButtonBorderRadius, 0, 32, defaults.checkoutButtonBorderRadius),
+    checkoutButtonEnabled: bool(input.checkoutButtonEnabled, defaults.checkoutButtonEnabled),
+    checkoutButtonText: text(input.checkoutButtonText, defaults.checkoutButtonText),
+    checkoutButtonTextColor: hex(input.checkoutButtonTextColor, defaults.checkoutButtonTextColor),
+    drawerWidth: numberInRange(input.drawerWidth, 320, 560, defaults.drawerWidth),
+    enabled: bool(input.enabled, defaults.enabled),
+    freeShippingAmount: numberInRange(input.freeShippingAmount, 0, 1000000, defaults.freeShippingAmount),
+    freeShippingCtaLink: path(input.freeShippingCtaLink, defaults.freeShippingCtaLink),
+    freeShippingCtaText: text(input.freeShippingCtaText, defaults.freeShippingCtaText),
+    freeShippingEnabled: bool(input.freeShippingEnabled, defaults.freeShippingEnabled),
+    freeShippingText: text(input.freeShippingText, defaults.freeShippingText),
+    orderNotesEnabled: bool(input.orderNotesEnabled, defaults.orderNotesEnabled),
+    overlayOpacity: numberInRange(input.overlayOpacity, 0, 90, defaults.overlayOpacity),
+    showBrand: bool(input.showBrand, defaults.showBrand),
+    showItemCount: bool(input.showItemCount, defaults.showItemCount),
+    showQuantity: bool(input.showQuantity, defaults.showQuantity),
+    showRemoveButton: bool(input.showRemoveButton, defaults.showRemoveButton),
+    showVariant: bool(input.showVariant, defaults.showVariant),
+    viewCartButtonEnabled: bool(input.viewCartButtonEnabled, defaults.viewCartButtonEnabled),
+    viewCartButtonLink: path(input.viewCartButtonLink, defaults.viewCartButtonLink),
+    viewCartButtonText: text(input.viewCartButtonText, defaults.viewCartButtonText)
+  };
+}
+
+function cartPageSettings(input: Record<string, unknown>): StorefrontCartPageSettings {
+  const defaults = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.cartPage;
+
+  return {
+    breadcrumbEnabled: bool(input.breadcrumbEnabled, defaults.breadcrumbEnabled),
+    checkoutButtonBackgroundColor: hex(input.checkoutButtonBackgroundColor, defaults.checkoutButtonBackgroundColor),
+    checkoutButtonBorderRadius: numberInRange(input.checkoutButtonBorderRadius, 0, 32, defaults.checkoutButtonBorderRadius),
+    checkoutButtonText: text(input.checkoutButtonText, defaults.checkoutButtonText),
+    checkoutButtonTextColor: hex(input.checkoutButtonTextColor, defaults.checkoutButtonTextColor),
+    continueShoppingLink: path(input.continueShoppingLink, defaults.continueShoppingLink),
+    estimatedDeliveryEnabled: bool(input.estimatedDeliveryEnabled, defaults.estimatedDeliveryEnabled),
+    freeShippingAmount: numberInRange(input.freeShippingAmount, 0, 1000000, defaults.freeShippingAmount),
+    freeShippingCtaLink: path(input.freeShippingCtaLink, defaults.freeShippingCtaLink),
+    freeShippingCtaText: text(input.freeShippingCtaText, defaults.freeShippingCtaText),
+    freeShippingEnabled: bool(input.freeShippingEnabled, defaults.freeShippingEnabled),
+    freeShippingText: text(input.freeShippingText, defaults.freeShippingText),
+    orderNotesEnabled: bool(input.orderNotesEnabled, defaults.orderNotesEnabled),
+    showBrand: bool(input.showBrand, defaults.showBrand),
+    showRemoveButton: bool(input.showRemoveButton, defaults.showRemoveButton),
+    showVariant: bool(input.showVariant, defaults.showVariant),
+    taxesEnabled: bool(input.taxesEnabled, defaults.taxesEnabled),
+    widthMode: oneOf(input.widthMode, ["full", "boxed"], defaults.widthMode)
   };
 }
 
@@ -437,7 +792,7 @@ function productSection(
 ): StorefrontProductSectionSettings {
   const defaults = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections[key];
   const record = isRecord(sections) && isRecord(sections[key]) ? sections[key] : {};
-  const columns = Math.round(numberInRange(record.columns, 2, 4, defaults.columns)) as 2 | 3 | 4;
+  const columns = Math.round(numberInRange(record.columns, 2, 5, defaults.columns)) as 2 | 3 | 4 | 5;
 
   return {
     columns,
@@ -471,4 +826,115 @@ function productSectionDefault(input: Partial<StorefrontProductSectionSettings>)
     title: "Products",
     ...input
   };
+}
+
+function tabbedProductShowcaseSettings(input: Record<string, unknown>): StorefrontTabbedProductShowcaseSettings {
+  const defaults = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.tabbedProductShowcase;
+  const productsPerView = Math.round(numberInRange(input.productsPerView, 2, 5, defaults.productsPerView)) as 2 | 3 | 4 | 5;
+  const tabs = tabbedProductTabs(input.tabs);
+
+  return {
+    arrowsVisible: bool(input.arrowsVisible, defaults.arrowsVisible),
+    autoplay: bool(input.autoplay, defaults.autoplay),
+    backgroundColor: hex(input.backgroundColor, defaults.backgroundColor),
+    defaultActiveTab: Math.round(numberInRange(input.defaultActiveTab, 0, Math.max(tabs.length - 1, 0), defaults.defaultActiveTab)),
+    description: text(input.description, defaults.description),
+    enabled: bool(input.enabled, defaults.enabled),
+    fullWidth: bool(input.fullWidth, defaults.fullWidth),
+    infiniteLoop: bool(input.infiniteLoop, defaults.infiniteLoop),
+    productsPerTab: numberInRange(input.productsPerTab, 1, 20, defaults.productsPerTab),
+    productsPerView,
+    scrollAmount: oneOf(input.scrollAmount, ["one", "page"], defaults.scrollAmount),
+    sectionSpacing: numberInRange(input.sectionSpacing, 32, 140, defaults.sectionSpacing),
+    sliderEnabled: bool(input.sliderEnabled, defaults.sliderEnabled),
+    tabs,
+    title: text(input.title, defaults.title)
+  };
+}
+
+function tabbedProductTabs(value: unknown): StorefrontTabbedProductTab[] {
+  const defaults = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.tabbedProductShowcase.tabs;
+
+  if (!Array.isArray(value)) {
+    return defaults;
+  }
+
+  const tabs = value
+    .map((item): StorefrontTabbedProductTab | null => {
+      if (!isRecord(item)) {
+        return null;
+      }
+
+      const label = text(item.label);
+
+      if (!label) {
+        return null;
+      }
+
+      return {
+        enabled: bool(item.enabled, true),
+        label,
+        productCount: numberInRange(item.productCount, 1, 20, DEFAULT_STOREFRONT_ADVANCED_SETTINGS.tabbedProductShowcase.productsPerTab),
+        source: oneOf(
+          item.source,
+          ["all", "featured", "best-sellers", "new-arrivals", "on-sale", "category", "collection", "manual"],
+          "all"
+        )
+      };
+    })
+    .filter((item): item is StorefrontTabbedProductTab => Boolean(item));
+
+  return tabs.length > 0 ? tabs.slice(0, 8) : defaults;
+}
+
+function shopPageSettings(input: Record<string, unknown>): StorefrontShopPageSettings {
+  const defaults = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.shopPage;
+  const productsPerRow = Math.round(numberInRange(input.productsPerRow, 2, 4, defaults.productsPerRow)) as 2 | 3 | 4;
+  const sortOptions = shopSortOptions(input.sortOptions);
+
+  return {
+    defaultSort: oneOf(input.defaultSort, sortOptions, defaults.defaultSort),
+    description: text(input.description, defaults.description),
+    descriptionEnabled: bool(input.descriptionEnabled, defaults.descriptionEnabled),
+    enableAvailabilityFilter: bool(input.enableAvailabilityFilter, defaults.enableAvailabilityFilter),
+    enableBrandFilter: bool(input.enableBrandFilter, defaults.enableBrandFilter),
+    enableCategoryFilter: bool(input.enableCategoryFilter, defaults.enableCategoryFilter),
+    enableColorFilter: bool(input.enableColorFilter, defaults.enableColorFilter),
+    enableCollectionFilter: bool(input.enableCollectionFilter, defaults.enableCollectionFilter),
+    enableComparePrice: bool(input.enableComparePrice, defaults.enableComparePrice),
+    enableFilters: bool(input.enableFilters, defaults.enableFilters),
+    enableHoverImage: bool(input.enableHoverImage, defaults.enableHoverImage),
+    enableProductBadges: bool(input.enableProductBadges, defaults.enableProductBadges),
+    enableProductBrand: bool(input.enableProductBrand, defaults.enableProductBrand),
+    enableProductColorCount: bool(input.enableProductColorCount, defaults.enableProductColorCount),
+    enablePriceFilter: bool(input.enablePriceFilter, defaults.enablePriceFilter),
+    enableQuickView: bool(input.enableQuickView, defaults.enableQuickView),
+    enableSizeFilter: bool(input.enableSizeFilter, defaults.enableSizeFilter),
+    enableSorting: bool(input.enableSorting, defaults.enableSorting),
+    enableTagFilter: bool(input.enableTagFilter, defaults.enableTagFilter),
+    enableResultCounter: bool(input.enableResultCounter, defaults.enableResultCounter),
+    gridSpacing: numberInRange(input.gridSpacing, 0, 36, defaults.gridSpacing),
+    paginationMode: oneOf(input.paginationMode, ["pagination", "load-more"], defaults.paginationMode),
+    pageTitle: text(input.pageTitle, defaults.pageTitle),
+    productsPerPage: numberInRange(input.productsPerPage, 4, 48, defaults.productsPerPage),
+    productsPerRow,
+    sectionSpacing: numberInRange(input.sectionSpacing, 32, 140, defaults.sectionSpacing),
+    sortOptions,
+    widthMode: oneOf(input.widthMode, ["full", "boxed", "custom"], defaults.widthMode)
+  };
+}
+
+function shopSortOptions(value: unknown): StorefrontShopPageSortOption[] {
+  const defaults = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.shopPage.sortOptions;
+
+  if (!Array.isArray(value)) {
+    return defaults;
+  }
+
+  const options = value.filter((item): item is StorefrontShopPageSortOption =>
+    typeof item === "string" &&
+    ["featured", "newest", "best-selling", "price-asc", "price-desc", "alpha-asc", "alpha-desc"].includes(item)
+  );
+
+  return options.length > 0 ? Array.from(new Set(options)) : defaults;
 }

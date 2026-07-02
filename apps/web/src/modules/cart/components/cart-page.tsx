@@ -1,0 +1,105 @@
+import Link from "next/link";
+import type { StorefrontCartPageSettings } from "../../storefront/customization";
+import type { Cart } from "../cart.types";
+import { CartSummary } from "./cart-summary";
+import { CartTable } from "./cart-table";
+import { EmptyCart } from "./empty-cart";
+import { ShippingProgress } from "./shipping-progress";
+
+type CartPageFeedback = {
+  added?: string;
+  cartError?: string;
+  cleared?: string;
+  removed?: string;
+  updated?: string;
+};
+
+type CartPageProps = {
+  cart: Cart;
+  currency: string;
+  feedback: CartPageFeedback;
+  settings: StorefrontCartPageSettings;
+  store: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+};
+
+export function CartPage({ cart, currency, feedback, settings, store }: CartPageProps) {
+  const itemLabel = cart.totals.itemCount === 1 ? "1 item" : `${cart.totals.itemCount} items`;
+  const continueHref = storefrontHref(store.slug, settings.continueShoppingLink);
+  const checkoutHref = `/s/${store.slug}/checkout`;
+  const shopHref = storefrontHref(store.slug, settings.freeShippingCtaLink);
+  const isEmpty = cart.items.length === 0;
+
+  return (
+    <section className={`general-cart-page general-cart-page-${settings.widthMode}`} aria-labelledby="cart-title">
+      <div className="general-cart-inner">
+        {settings.breadcrumbEnabled ? (
+          <nav className="general-cart-breadcrumb" aria-label="Breadcrumb">
+            <Link href={`/s/${store.slug}`}>Home</Link>
+            <span aria-hidden="true">&gt;</span>
+            <span>Shopping Cart</span>
+          </nav>
+        ) : null}
+
+        <div className="general-cart-title-row">
+          <h1 id="cart-title">Cart</h1>
+          <span>{itemLabel}</span>
+        </div>
+
+        {feedback.cartError ? <p className="sf-alert">{feedback.cartError}</p> : null}
+        {feedback.added ? <p className="sf-success">Product added to cart.</p> : null}
+        {feedback.updated ? <p className="sf-success">Cart quantity updated.</p> : null}
+        {feedback.removed ? <p className="sf-success">Product removed from cart.</p> : null}
+        {feedback.cleared ? <p className="sf-success">Cart cleared.</p> : null}
+
+        {settings.freeShippingEnabled && !isEmpty ? (
+          <ShippingProgress
+            amount={settings.freeShippingAmount}
+            ctaHref={shopHref}
+            ctaText={settings.freeShippingCtaText}
+            currency={currency}
+            subtotal={cart.totals.subtotal}
+            text={settings.freeShippingText}
+          />
+        ) : null}
+
+        {isEmpty ? (
+          <EmptyCart continueHref={continueHref} />
+        ) : (
+          <>
+            <CartTable
+              cart={cart}
+              currency={currency}
+              showBrand={settings.showBrand}
+              showRemoveButton={settings.showRemoveButton}
+              showVariant={settings.showVariant}
+              storeId={store.id}
+              storeName={store.name}
+              storeSlug={store.slug}
+            />
+            <CartSummary cart={cart} checkoutHref={checkoutHref} currency={currency} settings={settings} />
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function storefrontHref(storeSlug: string, value: string) {
+  if (value.startsWith("http")) {
+    return value;
+  }
+
+  if (value.startsWith(`/s/${storeSlug}`)) {
+    return value;
+  }
+
+  if (value === "/") {
+    return `/s/${storeSlug}`;
+  }
+
+  return `/s/${storeSlug}${value.startsWith("/") ? value : `/${value}`}`;
+}

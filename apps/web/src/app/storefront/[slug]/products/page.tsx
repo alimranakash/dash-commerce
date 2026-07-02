@@ -1,8 +1,7 @@
 import Link from "next/link";
-import {
-  ProductGrid,
-  SectionHeader
-} from "../../../../modules/storefront/components/product-listing";
+import type { CSSProperties } from "react";
+import { ProductGrid } from "../../../../modules/storefront/components/product-listing";
+import { ShopToolbar } from "../../../../modules/storefront/components/shop-toolbar";
 import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../../../modules/storefront/customization";
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../modules/storefront/components/storefront-header";
@@ -21,14 +20,15 @@ type StorefrontProductsPageProps = {
     slug: string;
   }>;
   searchParams: Promise<{
+    availability?: string;
     brand?: string;
     category?: string;
+    maxPrice?: string;
+    minPrice?: string;
     page?: string;
     sort?: string;
   }>;
 };
-
-const PRODUCTS_PER_PAGE = 12;
 
 export default async function StorefrontProductsPage({
   params,
@@ -40,92 +40,81 @@ export default async function StorefrontProductsPage({
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
   const template = getStorefrontTemplateForStore(store);
   const settings = await getStorefrontThemeSettings(store.id);
-  const sort = parseSort(filters.sort);
+  const shopSettings = settings.advancedSettings.shopPage ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.shopPage;
+  const sort = parseSort(filters.sort, shopSettings.defaultSort);
   const currentPage = parsePage(filters.page);
+  const productsPerPage = Math.round(shopSettings.productsPerPage);
   const query = {
+    availability: parseAvailability(filters.availability),
     categorySlug: filters.category,
+    maxPrice: parsePrice(filters.maxPrice),
+    minPrice: parsePrice(filters.minPrice),
     sort
   };
   const [categories, products, totalProducts] = await Promise.all([
     getStorefrontCategories(store.id),
     getStorefrontProducts(store.id, {
       ...query,
-      skip: (currentPage - 1) * PRODUCTS_PER_PAGE,
-      take: PRODUCTS_PER_PAGE
+      skip: (currentPage - 1) * productsPerPage,
+      take: productsPerPage
     }),
     getStorefrontProductCount(store.id, query)
   ]);
   const activeCategory = categories.find((category) => category.slug === filters.category);
-  const totalPages = Math.max(1, Math.ceil(totalProducts / PRODUCTS_PER_PAGE));
+  const totalPages = Math.max(1, Math.ceil(totalProducts / productsPerPage));
   const listingSection = {
     ...(settings.advancedSettings.productSections?.listing ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.listing),
-    subtitle: activeCategory?.description ?? settings.advancedSettings.productSections.listing.subtitle,
-    title: activeCategory ? activeCategory.name : settings.advancedSettings.productSections.listing.title
+    columns: shopSettings.productsPerRow,
+    count: productsPerPage,
+    enableBadges: shopSettings.enableProductBadges,
+    enableComparePrice: shopSettings.enableComparePrice,
+    enableHoverImage: shopSettings.enableHoverImage,
+    enableVariants: shopSettings.enableProductColorCount,
+    mode: "grid" as const,
+    subtitle: activeCategory?.description ?? shopSettings.description,
+    title: activeCategory ? activeCategory.name : shopSettings.pageTitle
   };
+  const gridId = "storefront-shop-product-grid";
+  const pageDescription = activeCategory?.description ?? shopSettings.description;
 
   return (
     <main className="sf-page" data-storefront-template={template.id}>
       <StorefrontHeader store={store} />
-      <section className="sf-shop-hero" aria-labelledby="shop-title">
-        <p>{primaryDomain?.domain ?? `${store.slug}.dash.com`}</p>
-        <h1 id="shop-title">Shop {store.name}</h1>
-        <span>
-          Browse the public catalog. Only available products selected by the seller appear here.
-        </span>
+      <section className="sf-shop-page-header" aria-labelledby="shop-title">
+        <p>{activeCategory ? "Collection" : shopSettings.pageTitle}</p>
+        {shopSettings.descriptionEnabled && pageDescription ? <span>{pageDescription}</span> : null}
       </section>
-      <section className="sf-section general-product-section" aria-labelledby="all-products">
-        <SectionHeader
-          count={`${totalProducts} products`}
-          ctaHref={`/s/${store.slug}/products`}
-          ctaText="Shop all"
-          id="all-products"
-          subtitle={listingSection.subtitle}
-          title={listingSection.title}
+      <section
+        className={`sf-shop-page sf-shop-page-${shopSettings.widthMode}`}
+        style={{
+          "--shop-grid-gap": `${shopSettings.gridSpacing}px`,
+          "--shop-section-spacing": `${shopSettings.sectionSpacing}px`
+        } as CSSProperties}
+        aria-labelledby="shop-title"
+      >
+        <h1 className="sr-only" id="shop-title">{listingSection.title}</h1>
+        <ShopToolbar
+          categories={categories}
+          productCount={totalProducts}
+          settings={shopSettings}
+          storeName={store.name}
         />
-        <form className="sf-shop-filters" action={`/s/${store.slug}/products`} method="get">
-          <label>
-            Category
-            <select defaultValue={filters.category ?? ""} name="category">
-              <option value="">All categories</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.slug}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          {["beauty-default", "electronics-default", "fashion-default"].includes(template.id) ? (
-            <label>
-              Brand
-              <select defaultValue={filters.brand ?? ""} name="brand">
-                <option value="">All brands</option>
-                <option value={store.name}>{store.name}</option>
-              </select>
-            </label>
-          ) : null}
-          <label>
-            Sort
-            <select defaultValue={sort} name="sort">
-              <option value="newest">Newest</option>
-              <option value="price-asc">Price low to high</option>
-              <option value="price-desc">Price high to low</option>
-            </select>
-          </label>
-          <button type="submit">Apply</button>
-        </form>
         {products.length === 0 ? (
-          <div className="sf-empty">
-            <h3>No products published yet</h3>
+          <div className="sf-shop-empty">
+            <div aria-hidden="true" />
+            <h3>No products found</h3>
             <p>
               {activeCategory
-                ? "No public products are available in this category yet."
-                : "This store is getting its catalog ready. Published products will show here."}
+                ? "No public products are available in this collection yet."
+                : "Try changing filters or sorting to find more products."}
             </p>
+            <Link href={`/s/${store.slug}/products`}>Reset Filters</Link>
           </div>
         ) : (
           <>
             <ProductGrid
               currency={store.currency}
+              gridId={gridId}
               products={products}
               section={listingSection}
               storeSlug={store.slug}
@@ -142,7 +131,7 @@ export default async function StorefrontProductsPage({
               <PaginationLink
                 disabled={currentPage >= totalPages}
                 href={buildProductsHref(store.slug, filters, currentPage + 1)}
-                label="Next"
+                label={shopSettings.paginationMode === "load-more" ? "Load More" : "Next"}
               />
             </div>
           </>
@@ -153,8 +142,20 @@ export default async function StorefrontProductsPage({
   );
 }
 
-function parseSort(value: string | undefined): StorefrontProductSort {
-  return value === "price-asc" || value === "price-desc" ? value : "newest";
+function parseAvailability(value: string | undefined): "in-stock" | "out-of-stock" | undefined {
+  return value === "in-stock" || value === "out-of-stock" ? value : undefined;
+}
+
+function parsePrice(value: string | undefined) {
+  const price = Number(value);
+
+  return Number.isFinite(price) && price >= 0 ? price : undefined;
+}
+
+function parseSort(value: string | undefined, fallback: StorefrontProductSort): StorefrontProductSort {
+  return ["alpha-asc", "alpha-desc", "best-selling", "featured", "newest", "price-asc", "price-desc"].includes(value ?? "")
+    ? (value as StorefrontProductSort)
+    : fallback;
 }
 
 function parsePage(value: string | undefined) {
@@ -166,8 +167,11 @@ function parsePage(value: string | undefined) {
 function buildProductsHref(
   storeSlug: string,
   filters: {
+    availability?: string;
     brand?: string;
     category?: string;
+    maxPrice?: string;
+    minPrice?: string;
     sort?: string;
   },
   page: number
@@ -176,6 +180,18 @@ function buildProductsHref(
 
   if (filters.category) {
     params.set("category", filters.category);
+  }
+
+  if (filters.availability) {
+    params.set("availability", filters.availability);
+  }
+
+  if (filters.minPrice) {
+    params.set("minPrice", filters.minPrice);
+  }
+
+  if (filters.maxPrice) {
+    params.set("maxPrice", filters.maxPrice);
   }
 
   if (filters.brand) {

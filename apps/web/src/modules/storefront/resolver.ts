@@ -3,10 +3,20 @@ import { notFound } from "next/navigation";
 import { ensureDefaultSettingsForStore } from "../settings/settings.service";
 import { withStoreActiveTemplate } from "./templates/template-store";
 
-export type StorefrontProductSort = "newest" | "price-asc" | "price-desc";
+export type StorefrontProductSort =
+  | "alpha-asc"
+  | "alpha-desc"
+  | "best-selling"
+  | "featured"
+  | "newest"
+  | "price-asc"
+  | "price-desc";
 
 type StorefrontProductQuery = {
+  availability?: "in-stock" | "out-of-stock" | undefined;
   categorySlug?: string | undefined;
+  maxPrice?: number | undefined;
+  minPrice?: number | undefined;
   search?: string | undefined;
   skip?: number | undefined;
   sort?: StorefrontProductSort | undefined;
@@ -182,6 +192,8 @@ export async function getStorefrontProducts(
             }
           }
         : {}),
+      ...priceWhere(input.minPrice, input.maxPrice),
+      ...availabilityWhere(input.availability),
       ...(search
         ? {
             OR: [
@@ -228,6 +240,8 @@ export async function getStorefrontProductCount(storeId: string, input?: Storefr
             }
           }
         : {}),
+      ...priceWhere(input?.minPrice, input?.maxPrice),
+      ...availabilityWhere(input?.availability),
       ...(search
         ? {
             OR: [
@@ -411,7 +425,56 @@ function publicProductWhere(storeId: string) {
   };
 }
 
+function availabilityWhere(availability: StorefrontProductQuery["availability"]) {
+  if (availability === "in-stock") {
+    return {
+      stockQuantity: {
+        gt: 0
+      }
+    };
+  }
+
+  if (availability === "out-of-stock") {
+    return {
+      stockQuantity: {
+        lte: 0
+      }
+    };
+  }
+
+  return {};
+}
+
+function priceWhere(minPrice: number | undefined, maxPrice: number | undefined) {
+  const price: {
+    gte?: number;
+    lte?: number;
+  } = {};
+
+  if (typeof minPrice === "number" && Number.isFinite(minPrice)) {
+    price.gte = minPrice;
+  }
+
+  if (typeof maxPrice === "number" && Number.isFinite(maxPrice)) {
+    price.lte = maxPrice;
+  }
+
+  return Object.keys(price).length > 0 ? { price } : {};
+}
+
 function storefrontProductOrderBy(sort: StorefrontProductSort | undefined) {
+  if (sort === "alpha-asc") {
+    return {
+      title: "asc" as const
+    };
+  }
+
+  if (sort === "alpha-desc") {
+    return {
+      title: "desc" as const
+    };
+  }
+
   if (sort === "price-asc") {
     return {
       price: "asc" as const
@@ -421,6 +484,12 @@ function storefrontProductOrderBy(sort: StorefrontProductSort | undefined) {
   if (sort === "price-desc") {
     return {
       price: "desc" as const
+    };
+  }
+
+  if (sort === "featured" || sort === "best-selling") {
+    return {
+      updatedAt: "desc" as const
     };
   }
 

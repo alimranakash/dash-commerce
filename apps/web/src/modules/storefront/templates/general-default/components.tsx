@@ -24,6 +24,7 @@ type GeneralSectionWrapperProps = {
 
 type GeneralProductGridProps = {
   currency: string;
+  gridId?: string;
   products: StorefrontProduct[];
   section: StorefrontProductSectionSettings;
   storeSlug: string;
@@ -152,6 +153,7 @@ export function GeneralCategoryStrip({
 
 export function GeneralProductGrid({
   currency,
+  gridId,
   products,
   section,
   storeSlug
@@ -159,11 +161,11 @@ export function GeneralProductGrid({
   const hasProducts = products.length > 0;
 
   if (hasProducts) {
-    return <ProductGrid currency={currency} products={products} section={section} storeSlug={storeSlug} />;
+    return <ProductGrid currency={currency} gridId={gridId} products={products} section={section} storeSlug={storeSlug} />;
   }
 
   return (
-    <div className={`general-product-listing-grid general-product-listing-grid-${section.columns} general-product-listing-${section.mode}`}>
+    <div id={gridId} className={`general-product-listing-grid general-product-listing-grid-${section.columns} general-product-listing-${section.mode}`}>
       {demoProducts.slice(0, section.count).map((product, index) => (
         <Link className="general-product-listing-card" href={`/s/${storeSlug}/products`} key={`${product.title}-${index}`}>
           <ProductImage fallback={product.image} alt={product.title} />
@@ -186,29 +188,30 @@ export function GeneralProductGrid({
 
 export function GeneralProductSection({
   currency,
-  count,
   products,
   section,
   storeSlug
 }: {
-  count?: string;
   currency: string;
   products: StorefrontProduct[];
   section: StorefrontProductSectionSettings;
   storeSlug: string;
 }) {
+  const gridId = `general-product-grid-${section.source}`;
+
   return (
     <section className="general-home-section general-product-section" aria-labelledby={`${section.source}-products-title`}>
       <SectionHeader
-        count={count}
         ctaHref={`/s/${storeSlug}${section.ctaLink.startsWith("/") ? section.ctaLink : `/${section.ctaLink}`}`}
         ctaText={section.ctaText}
         id={`${section.source}-products-title`}
+        sliderTargetId={gridId}
         subtitle={section.subtitle}
         title={section.title}
       />
       <GeneralProductGrid
         currency={currency}
+        gridId={gridId}
         products={products}
         section={section}
         storeSlug={storeSlug}

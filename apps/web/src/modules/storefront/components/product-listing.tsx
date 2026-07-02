@@ -1,51 +1,56 @@
 import Link from "next/link";
 import type { StorefrontProductSectionSettings } from "../customization";
 import type { StorefrontProduct } from "../storefront.types";
+import { ProductSectionSliderControls } from "./product-section-slider-controls";
 import { StorefrontImage } from "./storefront-image";
 
 export type ProductGridProps = {
   currency: string;
+  gridId?: string | undefined;
   products: StorefrontProduct[];
   section: StorefrontProductSectionSettings;
   storeSlug: string;
 };
 
 export type SectionHeaderProps = {
-  count?: string | undefined;
   ctaHref?: string | undefined;
   ctaText?: string | undefined;
   id?: string | undefined;
+  sliderTargetId?: string | undefined;
   subtitle?: string | undefined;
   title: string;
 };
 
 export function SectionHeader({
-  count,
   ctaHref,
   ctaText,
   id,
+  sliderTargetId,
   subtitle,
   title
 }: SectionHeaderProps) {
   return (
     <div className="general-product-section-header">
-      <div>
+      <div className="general-product-section-copy">
         <h2 id={id}>{title}</h2>
         {subtitle ? <p>{subtitle}</p> : null}
+      </div>
+      <div className="general-product-section-toolbar">
         {ctaHref && ctaText ? (
           <Link className="general-product-section-cta" href={ctaHref}>
             {ctaText} <span aria-hidden="true">&rsaquo;</span>
           </Link>
         ) : null}
+        {sliderTargetId ? <ProductSectionSliderControls targetId={sliderTargetId} /> : null}
       </div>
-      {count ? <span className="general-product-section-count">{count}</span> : null}
     </div>
   );
 }
 
-export function ProductGrid({ currency, products, section, storeSlug }: ProductGridProps) {
+export function ProductGrid({ currency, gridId, products, section, storeSlug }: ProductGridProps) {
   return (
     <div
+      id={gridId}
       className={`general-product-listing-grid general-product-listing-grid-${section.columns} general-product-listing-${section.mode}`}
     >
       {products.slice(0, section.count).map((product) => (

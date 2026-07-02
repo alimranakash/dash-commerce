@@ -1,5 +1,7 @@
 import type { StorefrontTemplateHomepageProps } from "../types";
 import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../customization";
+import { TabbedProductSection } from "../../components/tabbed-product-section";
+import type { StorefrontProduct } from "../../storefront.types";
 import {
   GeneralCategoryStrip,
   GeneralCollections,
@@ -24,6 +26,14 @@ export function GeneralHomepageSections({
   const bestSellerSection = productSections.bestSellers;
   const newArrivalsSection = productSections.newArrivals;
   const trendingSection = productSections.trending;
+  const tabbedProductShowcase = settings?.advancedSettings.tabbedProductShowcase ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.tabbedProductShowcase;
+  const allProducts = uniqueProducts([
+    ...homeData.featuredProducts,
+    ...homeData.bestSellers,
+    ...homeData.newArrivals
+  ]);
+  const bestSellers = homeData.bestSellers.length > 0 ? homeData.bestSellers : homeData.featuredProducts;
+  const onSaleProducts = allProducts.filter((product) => Boolean(product.compareAtPrice));
 
   return (
     <div className="general-homepage">
@@ -39,17 +49,30 @@ export function GeneralHomepageSections({
       <GeneralSectionWrapper actionHref={`/s/${store.slug}/products`} id="general-categories" title="Shop by Category">
         <GeneralCategoryStrip categories={homeData.categories} storeSlug={store.slug} />
       </GeneralSectionWrapper>
+      <TabbedProductSection
+        currency={store.currency}
+        productsBySource={{
+          all: allProducts,
+          "best-sellers": bestSellers,
+          category: allProducts,
+          collection: allProducts,
+          featured: homeData.featuredProducts,
+          manual: allProducts,
+          "new-arrivals": homeData.newArrivals,
+          "on-sale": onSaleProducts.length > 0 ? onSaleProducts : allProducts
+        }}
+        section={tabbedProductShowcase}
+        storeSlug={store.slug}
+      />
       <GeneralProductSection
-        count="1 / 3"
         currency={store.currency}
         products={homeData.featuredProducts}
         section={featuredSection}
         storeSlug={store.slug}
       />
       <GeneralProductSection
-        count="1 / 3"
         currency={store.currency}
-        products={homeData.bestSellers.length > 0 ? homeData.bestSellers : homeData.featuredProducts}
+        products={bestSellers}
         section={trendingSection}
         storeSlug={store.slug}
       />
@@ -58,14 +81,12 @@ export function GeneralHomepageSections({
       </GeneralSectionWrapper>
       <GeneralPromoBanner storeSlug={store.slug} />
       <GeneralProductSection
-        count="1 / 3"
         currency={store.currency}
-        products={homeData.bestSellers.length > 0 ? homeData.bestSellers : homeData.featuredProducts}
+        products={bestSellers}
         section={bestSellerSection}
         storeSlug={store.slug}
       />
       <GeneralProductSection
-        count="1 / 3"
         currency={store.currency}
         products={homeData.newArrivals}
         section={newArrivalsSection}
@@ -74,4 +95,17 @@ export function GeneralHomepageSections({
       <GeneralNewsletter />
     </div>
   );
+}
+
+function uniqueProducts(products: StorefrontProduct[]) {
+  const seen = new Set<string>();
+
+  return products.filter((product) => {
+    if (seen.has(product.id)) {
+      return false;
+    }
+
+    seen.add(product.id);
+    return true;
+  });
 }

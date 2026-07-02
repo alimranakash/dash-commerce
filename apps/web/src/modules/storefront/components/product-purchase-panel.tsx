@@ -1,33 +1,82 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, type CSSProperties, type FormEvent } from "react";
+import { notifyCartUpdated, submitCartAction } from "../../cart/components/cart-client-actions";
 
 type ProductPurchasePanelProps = {
+  addToCartButtonColor?: string;
+  addToCartButtonRadius?: number;
+  addToCartText?: string;
+  buyNowEnabled?: boolean;
   maxQuantity: number;
   productId: string;
   productSlug: string;
+  secondaryActionsEnabled?: boolean;
   storeId: string;
   storeSlug: string;
 };
 
 export function ProductPurchasePanel({
+  addToCartButtonColor,
+  addToCartButtonRadius,
+  addToCartText = "Add to Cart",
+  buyNowEnabled = true,
   maxQuantity,
   productId,
   productSlug,
+  secondaryActionsEnabled = true,
   storeId,
   storeSlug
 }: ProductPurchasePanelProps) {
   const isUnavailable = maxQuantity < 1;
   const [quantity, setQuantity] = useState(1);
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
   const safeMax = Math.max(maxQuantity, 1);
+  const buttonStyle = {
+    "--product-add-button-bg": addToCartButtonColor,
+    "--product-add-button-radius": addToCartButtonRadius !== undefined ? `${addToCartButtonRadius}px` : undefined
+  } as CSSProperties;
 
   function updateQuantity(nextQuantity: number) {
     setQuantity(Math.min(Math.max(nextQuantity, 1), safeMax));
   }
 
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (isUnavailable || isSubmitting) {
+      return;
+    }
+
+    setError("");
+    setIsSubmitting(true);
+
+    const result = await submitCartAction({
+      cartAction: "add",
+      productId,
+      productSlug,
+      quantity: String(quantity),
+      storeId,
+      storeSlug
+    });
+
+    setIsSubmitting(false);
+
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+
+    notifyCartUpdated();
+    router.refresh();
+  }
+
   return (
     <div className="sf-purchase-panel">
-      <form action="/api/cart" className="sf-purchase-box" method="post">
+      <form action="/api/cart" className="sf-purchase-box" method="post" onSubmit={handleSubmit} style={buttonStyle}>
         <input name="cartAction" type="hidden" value="add" />
         <input name="storeId" type="hidden" value={storeId} />
         <input name="storeSlug" type="hidden" value={storeSlug} />
@@ -65,19 +114,24 @@ export function ProductPurchasePanel({
         </div>
 
         <div className="sf-purchase-actions">
-          <button className="sf-cart-submit" disabled={isUnavailable} type="submit">
-            Add to Cart
+          <button className="sf-cart-submit" disabled={isUnavailable || isSubmitting} type="submit">
+            {isSubmitting ? "Adding..." : addToCartText}
           </button>
-          <button className="sf-buy-now" disabled={isUnavailable} type="button">
-            Buy Now
-          </button>
+          {buyNowEnabled ? (
+            <button className="sf-buy-now" disabled={isUnavailable} type="button">
+              Buy Now
+            </button>
+          ) : null}
         </div>
+        {error ? <p className="sf-alert">{error}</p> : null}
       </form>
 
-      <div className="sf-secondary-actions">
-        <button type="button">Wishlist</button>
-        <button type="button">Share</button>
-      </div>
+      {secondaryActionsEnabled ? (
+        <div className="sf-secondary-actions">
+          <button type="button">Wishlist</button>
+          <button type="button">Share</button>
+        </div>
+      ) : null}
     </div>
   );
 }
