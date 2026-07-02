@@ -1,25 +1,26 @@
 "use client";
 
 import { Button } from "@dash/ui";
-import { useActionState, useState, type ReactNode } from "react";
-import { MediaUrlPicker } from "../../media/components/media-url-picker";
+import { useActionState } from "react";
 import type { MediaPickerAsset } from "../../media/media.types";
 import {
   normalizeAdvancedSettings,
-  type StorefrontAdvancedSettings
+  type StorefrontAdvancedSettings,
+  type StorefrontHeroSlide
 } from "../../storefront/customization";
 import type { SettingsActionState } from "../settings.actions";
+import { ColorPickerField, SettingsCard, ToggleField, UploadField } from "./theme-form-fields";
 
 export type ThemeSettingsFormValue = {
-  themeName: string;
-  primaryColor: string;
-  secondaryColor?: string | null;
-  heroTitle: string;
-  heroSubtitle?: string | null;
-  heroImageUrl?: string | null;
+  advancedSettings?: StorefrontAdvancedSettings | null;
   announcementText?: string | null;
   featuredSectionTitle: string;
-  advancedSettings?: StorefrontAdvancedSettings | null;
+  heroImageUrl?: string | null;
+  heroSubtitle?: string | null;
+  heroTitle: string;
+  primaryColor: string;
+  secondaryColor?: string | null;
+  themeName: string;
 };
 
 type ThemeSettingsFormProps = {
@@ -34,349 +35,327 @@ const initialState: SettingsActionState = {
 
 export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeSettingsFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
-  const [heroImageUrl, setHeroImageUrl] = useState(settings.heroImageUrl ?? "");
   const advanced = normalizeAdvancedSettings(settings.advancedSettings);
+  const slides = normalizeSlides(advanced.hero.slides);
+  const announcementText = advanced.announcement.messages[0]?.text ?? settings.announcementText ?? "";
 
   return (
-    <form action={formAction} className="resource-form">
+    <form action={formAction} className="theme-settings-form">
       {state.status === "error" ? <p className="form-error">{state.message}</p> : null}
-      <div className="form-section-heading">
-        <h2>Theme</h2>
-        <p>Theme v1 keeps storefront customization polished and hard to break.</p>
-      </div>
-      <div className="form-grid">
-        <label>
-          Theme name
-          <input name="themeName" readOnly value={settings.themeName} />
-        </label>
-        <FieldError errors={state.fieldErrors} name="primaryColor">
+      <input name="themeName" type="hidden" value="Theme v1" />
+      <input name="announcementText" type="hidden" value={announcementText} />
+
+      <SettingsCard
+        title="Announcement Bar"
+        description="Create a full-width scrolling top bar with promotional messages."
+      >
+        <div className="theme-settings-grid three">
+          <ToggleField label="Enable announcement bar" name="announcementEnabled" value={advanced.announcement.enabled} />
+          <ColorPickerField label="Background color" name="announcementBackgroundColor" value={advanced.announcement.backgroundColor} />
+          <ColorPickerField label="Text color" name="announcementTextColor" value={advanced.announcement.textColor} />
           <label>
-            Primary color
-            <span className="color-input-row">
-              <input
-                defaultValue={settings.primaryColor}
-                name="primaryColor"
-                type="color"
-              />
-              <input
-                defaultValue={settings.primaryColor}
-                aria-label="Primary color hex"
-                pattern="^#[0-9a-fA-F]{6}$"
-                readOnly
-                type="text"
-              />
-            </span>
+            Scroll speed
+            <select defaultValue={advanced.announcement.scrollSpeed} name="announcementScrollSpeed">
+              <option value="slow">Slow</option>
+              <option value="normal">Normal</option>
+              <option value="fast">Fast</option>
+            </select>
           </label>
-        </FieldError>
-        <FieldError errors={state.fieldErrors} name="secondaryColor">
           <label>
-            Secondary color
-            <input
-              defaultValue={settings.secondaryColor ?? ""}
-              name="secondaryColor"
-              placeholder="#c89356"
-              type="text"
-            />
+            Font size
+            <input defaultValue={advanced.announcement.fontSize} max={20} min={10} name="announcementFontSize" type="number" />
           </label>
-        </FieldError>
-      </div>
-      <div className="form-section-heading">
-        <h2>Homepage</h2>
-        <p>These fields power the public storefront hero and featured products section.</p>
-      </div>
-      <FieldError errors={state.fieldErrors} name="announcementText">
-        <label>
-          Announcement text
-          <input
-            defaultValue={settings.announcementText ?? ""}
-            name="announcementText"
-            type="text"
+        </div>
+        <RepeaterTextarea
+          helper="One message per line. Add a link like: Free shipping | /products"
+          label="Messages"
+          name="announcementMessages"
+          value={advanced.announcement.messages.map((message) => `${message.text}${message.link ? ` | ${message.link}` : ""}`).join("\n")}
+        />
+      </SettingsCard>
+
+      <SettingsCard
+        title="Header"
+        description="Control storefront logo, navigation, icons, sticky behavior, and colors."
+      >
+        <div className="theme-settings-grid three">
+          <ToggleField label="Enable header" name="headerEnabled" value={advanced.header.enabled} />
+          <ToggleField label="Sticky header" name="headerSticky" value={advanced.header.sticky} />
+          <ToggleField label="Show search" name="headerShowSearch" value={advanced.header.showSearch} />
+          <ToggleField label="Show account" name="headerShowAccount" value={advanced.header.showAccount} />
+          <ToggleField label="Show cart" name="headerShowCart" value={advanced.header.showCart} />
+          <ToggleField label="Show currency/language" name="headerShowCurrency" value={advanced.header.showCurrency} />
+        </div>
+        <div className="theme-settings-grid three">
+          <label>
+            Logo text override
+            <input defaultValue={advanced.header.logoText ?? ""} name="headerLogoText" placeholder="Optional" type="text" />
+          </label>
+          <label>
+            Header height
+            <input defaultValue={advanced.header.height} max={140} min={56} name="headerHeight" type="number" />
+          </label>
+          <label>
+            Menu spacing
+            <input defaultValue={advanced.header.spacing} max={96} min={16} name="headerSpacing" type="number" />
+          </label>
+          <ColorPickerField label="Header background" name="headerBackgroundColor" value={advanced.header.backgroundColor} />
+          <ColorPickerField label="Header text color" name="headerTextColor" value={advanced.header.textColor} />
+        </div>
+        <RepeaterTextarea
+          helper="One item per line. Format: Label | /path. Reorder lines to reorder menu."
+          label="Menu items"
+          name="headerMenuItems"
+          value={advanced.header.menuItems.map((item) => `${item.label} | ${item.url}`).join("\n")}
+        />
+      </SettingsCard>
+
+      <SettingsCard
+        title="Hero Section"
+        description="Manage the top hero with image, slider, video, YouTube, overlay, title, and CTA buttons."
+      >
+        <div className="theme-settings-grid two">
+          <UploadField
+            assets={mediaAssets}
+            fileName="heroImageFile"
+            label="Hero Image"
+            name="heroImageUrl"
+            value={settings.heroImageUrl ?? advanced.hero.imageUrl}
           />
-        </label>
-      </FieldError>
-      <div className="form-grid">
-        <FieldError errors={state.fieldErrors} name="heroTitle">
+          <div className="theme-settings-grid two compact">
+            <ToggleField label="Enable hero" name="heroEnabled" value={advanced.hero.enabled} />
+            <ToggleField label="Autoplay slider" name="heroAutoplay" value={advanced.hero.autoplay} />
+            <ToggleField label="Show arrows" name="heroShowArrows" value={advanced.hero.showArrows} />
+            <ToggleField label="Show dots" name="heroShowDots" value={advanced.hero.showDots} />
+          </div>
+        </div>
+        <div className="theme-settings-grid three">
           <label>
-            Hero title
+            Content type
+            <select defaultValue={advanced.hero.contentType} name="heroContentType">
+              <option value="single-image">Single Image</option>
+              <option value="image-slider">Image Slider</option>
+              <option value="single-video">Single Video</option>
+              <option value="video-slider">Video Slider</option>
+              <option value="mixed-slider">Mixed Slider</option>
+              <option value="youtube">YouTube Video</option>
+            </select>
+          </label>
+          <label>
+            Hero height
+            <select defaultValue={advanced.hero.height} name="heroHeight">
+              <option value="small">Small</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+              <option value="custom">Custom</option>
+            </select>
+          </label>
+          <label>
+            Text alignment
+            <select defaultValue={advanced.hero.align} name="heroAlign">
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+          </label>
+          <label>
+            Title
             <input defaultValue={settings.heroTitle} name="heroTitle" required type="text" />
           </label>
-        </FieldError>
-        <FieldError errors={state.fieldErrors} name="featuredSectionTitle">
+          <label>
+            Subtitle
+            <input defaultValue={settings.heroSubtitle ?? advanced.hero.subtitle} name="heroSubtitle" type="text" />
+          </label>
           <label>
             Featured section title
-            <input
-              defaultValue={settings.featuredSectionTitle}
-              name="featuredSectionTitle"
-              required
-              type="text"
-            />
+            <input defaultValue={settings.featuredSectionTitle} name="featuredSectionTitle" required type="text" />
           </label>
-        </FieldError>
-      </div>
-      <FieldError errors={state.fieldErrors} name="heroSubtitle">
-        <label>
-          Hero subtitle
-          <textarea defaultValue={settings.heroSubtitle ?? ""} name="heroSubtitle" rows={4} />
-        </label>
-      </FieldError>
-      <FieldError errors={state.fieldErrors} name="heroImageUrl">
-        <label>
-          Hero image URL
-          <input
-            name="heroImageUrl"
-            onChange={(event) => setHeroImageUrl(event.target.value)}
-            type="url"
-            value={heroImageUrl}
-          />
-        </label>
-        <MediaUrlPicker assets={mediaAssets} onSelect={setHeroImageUrl} />
-      </FieldError>
-      <div className="form-section-heading">
-        <h2>Announcement Bar</h2>
-        <p>Control the full-width scrolling message bar above the storefront header.</p>
-      </div>
-      <div className="form-grid">
-        <ToggleLabel label="Enable announcement bar" name="announcementEnabled" value={advanced.announcement.enabled} />
-        <label>
-          Scroll speed
-          <select defaultValue={advanced.announcement.scrollSpeed} name="announcementScrollSpeed">
-            <option value="slow">Slow</option>
-            <option value="normal">Normal</option>
-            <option value="fast">Fast</option>
-          </select>
-        </label>
-        <label>
-          Background color
-          <input defaultValue={advanced.announcement.backgroundColor} name="announcementBackgroundColor" type="color" />
-        </label>
-        <label>
-          Text color
-          <input defaultValue={advanced.announcement.textColor} name="announcementTextColor" type="color" />
-        </label>
-        <label>
-          Font size
-          <input defaultValue={advanced.announcement.fontSize} min={10} max={20} name="announcementFontSize" type="number" />
-        </label>
-      </div>
-      <label>
-        Messages
-        <textarea
-          defaultValue={advanced.announcement.messages.map((message) => `${message.text}${message.link ? ` | ${message.link}` : ""}`).join("\n")}
-          name="announcementMessages"
-          rows={4}
-        />
-        <span className="field-help">One message per line. Optional format: Message | /link</span>
-      </label>
-      <div className="form-section-heading">
-        <h2>Header</h2>
-        <p>Control logo text, navigation, icons, colors, spacing, and sticky behavior.</p>
-      </div>
-      <div className="form-grid">
-        <ToggleLabel label="Enable header" name="headerEnabled" value={advanced.header.enabled} />
-        <ToggleLabel label="Sticky header" name="headerSticky" value={advanced.header.sticky} />
-        <ToggleLabel label="Show search" name="headerShowSearch" value={advanced.header.showSearch} />
-        <ToggleLabel label="Show account" name="headerShowAccount" value={advanced.header.showAccount} />
-        <ToggleLabel label="Show cart" name="headerShowCart" value={advanced.header.showCart} />
-        <ToggleLabel label="Show currency/language" name="headerShowCurrency" value={advanced.header.showCurrency} />
-        <label>
-          Logo text override
-          <input defaultValue={advanced.header.logoText ?? ""} name="headerLogoText" placeholder={settings.themeName} type="text" />
-        </label>
-        <label>
-          Header height
-          <input defaultValue={advanced.header.height} min={56} max={140} name="headerHeight" type="number" />
-        </label>
-        <label>
-          Menu spacing
-          <input defaultValue={advanced.header.spacing} min={16} max={96} name="headerSpacing" type="number" />
-        </label>
-        <label>
-          Background color
-          <input defaultValue={advanced.header.backgroundColor} name="headerBackgroundColor" type="color" />
-        </label>
-        <label>
-          Text color
-          <input defaultValue={advanced.header.textColor} name="headerTextColor" type="color" />
-        </label>
-      </div>
-      <label>
-        Menu items
-        <textarea
-          defaultValue={advanced.header.menuItems.map((item) => `${item.label} | ${item.url}`).join("\n")}
-          name="headerMenuItems"
-          rows={5}
-        />
-        <span className="field-help">One item per line. Format: Label | /path</span>
-      </label>
-      <div className="form-section-heading">
-        <h2>Advanced Hero</h2>
-        <p>Prepare image, video, YouTube, and slider hero content without changing templates later.</p>
-      </div>
-      <div className="form-grid">
-        <ToggleLabel label="Enable hero" name="heroEnabled" value={advanced.hero.enabled} />
-        <ToggleLabel label="Autoplay slider" name="heroAutoplay" value={advanced.hero.autoplay} />
-        <ToggleLabel label="Show arrows" name="heroShowArrows" value={advanced.hero.showArrows} />
-        <ToggleLabel label="Show dots" name="heroShowDots" value={advanced.hero.showDots} />
-        <label>
-          Layout width
-          <select defaultValue={advanced.hero.layoutWidth} name="heroLayoutWidth">
-            <option value="full">Full width</option>
-            <option value="boxed">Boxed width</option>
-            <option value="custom">Custom width</option>
-          </select>
-        </label>
-        <label>
-          Content type
-          <select defaultValue={advanced.hero.contentType} name="heroContentType">
-            <option value="single-image">Single image</option>
-            <option value="image-slider">Image slider</option>
-            <option value="single-video">Single video</option>
-            <option value="video-slider">Video slider</option>
-            <option value="mixed-slider">Mixed image/video slider</option>
-            <option value="youtube">YouTube video</option>
-          </select>
-        </label>
-        <label>
-          Hero height
-          <select defaultValue={advanced.hero.height} name="heroHeight">
-            <option value="small">Small</option>
-            <option value="medium">Medium</option>
-            <option value="large">Large</option>
-            <option value="custom">Custom</option>
-          </select>
-        </label>
-        <label>
-          Custom height
-          <input defaultValue={advanced.hero.customHeight ?? ""} min={320} max={1000} name="heroCustomHeight" type="number" />
-        </label>
-        <label>
-          Custom width
-          <input defaultValue={advanced.hero.customWidth ?? ""} min={720} max={1920} name="heroCustomWidth" type="number" />
-        </label>
-        <label>
-          Text alignment
-          <select defaultValue={advanced.hero.align} name="heroAlign">
-            <option value="left">Left</option>
-            <option value="center">Center</option>
-            <option value="right">Right</option>
-          </select>
-        </label>
-        <label>
-          Hero text color
-          <input defaultValue={advanced.hero.textColor} name="heroTextColor" type="color" />
-        </label>
-        <label>
-          Overlay color
-          <input defaultValue={advanced.hero.overlayColor} name="heroOverlayColor" type="color" />
-        </label>
-        <label>
-          Overlay opacity
-          <input defaultValue={advanced.hero.overlayOpacity} min={0} max={90} name="heroOverlayOpacity" type="number" />
-        </label>
-        <label>
-          Slider speed
-          <input defaultValue={advanced.hero.sliderSpeed} min={2000} max={12000} name="heroSliderSpeed" type="number" />
-        </label>
-        <label>
-          Button style
-          <select defaultValue={advanced.hero.buttonStyle} name="heroButtonStyle">
-            <option value="light">Light</option>
-            <option value="filled">Filled</option>
-            <option value="outline">Outline</option>
-          </select>
-        </label>
-      </div>
-      <div className="form-grid">
-        <label>
-          Button 1 text
-          <input defaultValue={advanced.hero.button1Text} name="heroButton1Text" type="text" />
-        </label>
-        <label>
-          Button 1 link
-          <input defaultValue={advanced.hero.button1Link} name="heroButton1Link" type="text" />
-        </label>
-        <label>
-          Button 2 text
-          <input defaultValue={advanced.hero.button2Text} name="heroButton2Text" type="text" />
-        </label>
-        <label>
-          Button 2 link
-          <input defaultValue={advanced.hero.button2Link} name="heroButton2Link" type="text" />
-        </label>
-        <label>
-          Video URL
-          <input defaultValue={advanced.hero.videoUrl ?? ""} name="heroVideoUrl" type="url" />
-        </label>
-        <label>
-          YouTube URL
-          <input defaultValue={advanced.hero.youtubeUrl ?? ""} name="heroYoutubeUrl" type="url" />
-        </label>
-      </div>
-      <label>
-        Slider items
-        <textarea
-          defaultValue={advanced.hero.slides.map((slide) => `${slide.mediaType} | ${slide.url} | ${slide.title ?? ""} | ${slide.subtitle ?? ""}`).join("\n")}
-          name="heroSlides"
-          rows={5}
-        />
-        <span className="field-help">One slide per line. Format: image/video/youtube | URL | title | subtitle</span>
-      </label>
-      <div className="form-section-heading">
-        <h2>Global Storefront Layout</h2>
-        <p>Reusable layout controls for all future website templates.</p>
-      </div>
-      <div className="form-grid">
-        <label>
-          Storefront width mode
-          <select defaultValue={advanced.layout.widthMode} name="layoutWidthMode">
-            <option value="full">Full width</option>
-            <option value="boxed">Boxed</option>
-          </select>
-        </label>
-        <label>
-          Boxed max width
-          <input defaultValue={advanced.layout.boxedMaxWidth} min={960} max={1920} name="layoutBoxedMaxWidth" type="number" />
-        </label>
-        <label>
-          Section padding
-          <input defaultValue={advanced.layout.sectionPadding} min={24} max={120} name="layoutSectionPadding" type="number" />
-        </label>
-        <label>
-          Page background
-          <input defaultValue={advanced.layout.pageBackgroundColor} name="layoutPageBackgroundColor" type="color" />
-        </label>
-      </div>
-      <div className="form-actions">
+          <label>
+            Button 1 text
+            <input defaultValue={advanced.hero.button1Text} name="heroButton1Text" type="text" />
+          </label>
+          <label>
+            Button 1 link
+            <input defaultValue={advanced.hero.button1Link} name="heroButton1Link" type="text" />
+          </label>
+          <label>
+            Button 2 text
+            <input defaultValue={advanced.hero.button2Text} name="heroButton2Text" type="text" />
+          </label>
+          <label>
+            Button 2 link
+            <input defaultValue={advanced.hero.button2Link} name="heroButton2Link" type="text" />
+          </label>
+          <ColorPickerField label="Text color" name="heroTextColor" value={advanced.hero.textColor} />
+          <ColorPickerField label="Overlay color" name="heroOverlayColor" value={advanced.hero.overlayColor} />
+          <label>
+            Overlay opacity
+            <input defaultValue={advanced.hero.overlayOpacity} max={90} min={0} name="heroOverlayOpacity" type="number" />
+          </label>
+          <label>
+            Slider speed
+            <input defaultValue={advanced.hero.sliderSpeed} max={12000} min={2000} name="heroSliderSpeed" type="number" />
+          </label>
+          <label>
+            Custom height
+            <input defaultValue={advanced.hero.customHeight ?? ""} max={1000} min={320} name="heroCustomHeight" type="number" />
+          </label>
+          <label>
+            Layout width
+            <select defaultValue={advanced.hero.layoutWidth} name="heroLayoutWidth">
+              <option value="full">Full width</option>
+              <option value="boxed">Boxed width</option>
+              <option value="custom">Custom width</option>
+            </select>
+          </label>
+          <label>
+            Custom width
+            <input defaultValue={advanced.hero.customWidth ?? ""} max={1920} min={720} name="heroCustomWidth" type="number" />
+          </label>
+          <label>
+            Button style
+            <select defaultValue={advanced.hero.buttonStyle} name="heroButtonStyle">
+              <option value="light">Light</option>
+              <option value="filled">Filled</option>
+              <option value="outline">Outline</option>
+            </select>
+          </label>
+          <label>
+            Video URL
+            <input defaultValue={advanced.hero.videoUrl ?? ""} name="heroVideoUrl" placeholder="Optional video URL" type="url" />
+          </label>
+          <label>
+            YouTube URL
+            <input defaultValue={advanced.hero.youtubeUrl ?? ""} name="heroYoutubeUrl" placeholder="https://youtube.com/watch?v=..." type="url" />
+          </label>
+        </div>
+        <div className="theme-slider-editor">
+          <div>
+            <h3>Hero Slider Images</h3>
+            <p>Upload up to 4 slides. Use the title/subtitle fields only when a slide needs custom copy.</p>
+          </div>
+          {slides.map((slide, index) => (
+            <HeroSlideFields assets={mediaAssets} index={index} key={index} slide={slide} />
+          ))}
+        </div>
+      </SettingsCard>
+
+      <SettingsCard
+        title="Colors & Layout"
+        description="Reusable storefront color and layout controls for all templates."
+      >
+        <div className="theme-settings-grid three">
+          <ColorPickerField label="Primary color" name="primaryColor" value={settings.primaryColor} />
+          <ColorPickerField label="Secondary color" name="secondaryColor" value={settings.secondaryColor ?? "#f5f1e8"} />
+          <ColorPickerField label="Page background" name="layoutPageBackgroundColor" value={advanced.layout.pageBackgroundColor} />
+          <label>
+            Storefront width
+            <select defaultValue={advanced.layout.widthMode} name="layoutWidthMode">
+              <option value="full">Full width</option>
+              <option value="boxed">Boxed</option>
+            </select>
+          </label>
+          <label>
+            Boxed max width
+            <input defaultValue={advanced.layout.boxedMaxWidth} max={1920} min={960} name="layoutBoxedMaxWidth" type="number" />
+          </label>
+          <label>
+            Section spacing
+            <input defaultValue={advanced.layout.sectionPadding} max={120} min={24} name="layoutSectionPadding" type="number" />
+          </label>
+        </div>
+      </SettingsCard>
+
+      <div className="theme-sticky-save">
+        <div>
+          <strong>Theme settings</strong>
+          <span>Changes apply to the public storefront after saving.</span>
+        </div>
         <Button className="primary action-button" disabled={isPending} type="submit">
-          {isPending ? "Saving..." : "Save theme"}
+          {isPending ? "Saving..." : "Save theme settings"}
         </Button>
       </div>
     </form>
   );
 }
 
-function ToggleLabel({ label, name, value }: { label: string; name: string; value: boolean }) {
+function HeroSlideFields({
+  assets,
+  index,
+  slide
+}: {
+  assets: MediaPickerAsset[];
+  index: number;
+  slide: StorefrontHeroSlide;
+}) {
   return (
-    <label className="toggle-field">
+    <div className="theme-slide-card">
+      <UploadField
+        assets={assets}
+        fileName={`heroSlideImageFile${index}`}
+        label={`Slide ${index + 1} Image`}
+        name={`heroSlideImageUrl${index}`}
+        value={slide.mediaType === "image" ? slide.url : ""}
+      />
+      <div className="theme-settings-grid two compact">
+        <label>
+          Media type
+          <select defaultValue={slide.mediaType} name={`heroSlideMediaType${index}`}>
+            <option value="image">Image</option>
+            <option value="video">Video</option>
+            <option value="youtube">YouTube</option>
+          </select>
+        </label>
+        <label>
+          Slide title
+          <input defaultValue={slide.title ?? ""} name={`heroSlideTitle${index}`} type="text" />
+        </label>
+        <label>
+          Slide subtitle
+          <input defaultValue={slide.subtitle ?? ""} name={`heroSlideSubtitle${index}`} type="text" />
+        </label>
+        <label>
+          Video URL
+          <input defaultValue={slide.mediaType === "video" ? slide.url : ""} name={`heroSlideVideoUrl${index}`} type="url" />
+        </label>
+        <label>
+          YouTube URL
+          <input defaultValue={slide.mediaType === "youtube" ? slide.url : ""} name={`heroSlideYoutubeUrl${index}`} type="url" />
+        </label>
+      </div>
+    </div>
+  );
+}
+
+function RepeaterTextarea({
+  helper,
+  label,
+  name,
+  value
+}: {
+  helper: string;
+  label: string;
+  name: string;
+  value: string;
+}) {
+  return (
+    <label className="theme-repeater-field">
       {label}
-      <input defaultChecked={value} name={name} type="checkbox" />
+      <textarea defaultValue={value} name={name} rows={5} />
+      <span>{helper}</span>
     </label>
   );
 }
 
-function FieldError({
-  children,
-  errors,
-  name
-}: {
-  children: ReactNode;
-  errors?: Record<string, string> | undefined;
-  name: string;
-}) {
-  return (
-    <div className="field-shell">
-      {children}
-      {errors?.[name] ? <span className="field-error">{errors[name]}</span> : null}
-    </div>
-  );
+function normalizeSlides(slides: StorefrontHeroSlide[]) {
+  const normalized = [...slides].slice(0, 4);
+
+  while (normalized.length < 4) {
+    normalized.push({
+      mediaType: "image",
+      url: ""
+    });
+  }
+
+  return normalized;
 }

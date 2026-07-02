@@ -1,11 +1,11 @@
 "use client";
 
 import { Button } from "@dash/ui";
-import { useActionState, useState, type ReactNode } from "react";
-import { MediaUrlPicker } from "../../media/components/media-url-picker";
+import { useActionState } from "react";
 import type { MediaPickerAsset } from "../../media/media.types";
 import type { SettingsActionState } from "../settings.actions";
 import type { StoreSettingsFormValue } from "./store-settings-form";
+import { SettingsCard, UploadField } from "./theme-form-fields";
 
 const initialState: SettingsActionState = { status: "idle" };
 
@@ -15,22 +15,37 @@ export function BrandAssetsForm({ action, mediaAssets, settings }: {
   settings: StoreSettingsFormValue;
 }) {
   const [state, formAction, isPending] = useActionState(action, initialState);
-  const [logoUrl, setLogoUrl] = useState(settings.logoUrl ?? "");
-  const [faviconUrl, setFaviconUrl] = useState(settings.faviconUrl ?? "");
 
   return (
-    <form action={formAction} className="resource-form">
+    <form action={formAction} className="theme-settings-form">
       {state.status === "error" ? <p className="form-error">{state.message}</p> : null}
-      <div className="form-section-heading"><h2>Store branding</h2><p>Logo and favicon used across the storefront and browser.</p></div>
-      <div className="form-grid">
-        <FieldError errors={state.fieldErrors} name="logoUrl"><label>Store Logo URL<input name="logoUrl" onChange={(event) => setLogoUrl(event.target.value)} type="url" value={logoUrl} /></label><MediaUrlPicker assets={mediaAssets} onSelect={setLogoUrl} /></FieldError>
-        <FieldError errors={state.fieldErrors} name="faviconUrl"><label>Favicon URL<input name="faviconUrl" onChange={(event) => setFaviconUrl(event.target.value)} type="url" value={faviconUrl} /></label><MediaUrlPicker assets={mediaAssets} onSelect={setFaviconUrl} /></FieldError>
-      </div>
-      <div className="form-actions"><Button className="primary action-button" disabled={isPending} type="submit">{isPending ? "Saving..." : "Save branding"}</Button></div>
+      <SettingsCard
+        title="Branding"
+        description="Upload the storefront logo and browser favicon. Existing media can be selected from your library."
+      >
+        <div className="theme-settings-grid two">
+          <UploadField
+            assets={mediaAssets}
+            fileName="logoFile"
+            label="Store Logo"
+            name="logoUrl"
+            value={settings.logoUrl}
+          />
+          <UploadField
+            accept="image/jpeg,image/png,image/webp,image/svg+xml,image/x-icon"
+            assets={mediaAssets}
+            fileName="faviconFile"
+            label="Favicon"
+            name="faviconUrl"
+            value={settings.faviconUrl}
+          />
+        </div>
+        <div className="theme-form-actions">
+          <Button className="primary action-button" disabled={isPending} type="submit">
+            {isPending ? "Saving..." : "Save branding"}
+          </Button>
+        </div>
+      </SettingsCard>
     </form>
   );
-}
-
-function FieldError({ children, errors, name }: { children: ReactNode; errors?: Record<string, string> | undefined; name: string }) {
-  return <div className="field-shell">{children}{errors?.[name] ? <span className="field-error">{errors[name]}</span> : null}</div>;
 }
