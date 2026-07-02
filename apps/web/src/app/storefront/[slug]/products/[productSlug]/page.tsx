@@ -76,7 +76,7 @@ export default async function StorefrontProductPage({
         <Link href={`/s/${store.slug}`}>Home</Link>
         <span>&gt;</span>
         {product.category ? (
-          <Link href={`/s/${store.slug}/${product.category.slug}`}>{product.category.name}</Link>
+          <Link href={`/s/${store.slug}/categories/${product.category.slug}`}>{product.category.name}</Link>
         ) : (
           <Link href={`/s/${store.slug}/products`}>Products</Link>
         )}
