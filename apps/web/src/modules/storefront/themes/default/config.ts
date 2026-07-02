@@ -1,8 +1,10 @@
 import type { StorefrontThemeConfig } from "../types";
+import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../customization";
 
 export const defaultStorefrontTheme: StorefrontThemeConfig = {
   defaultSettings: {
     announcementText: null,
+    advancedSettings: DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
     faviconUrl: null,
     featuredSectionTitle: "Products worth a closer look",
     heroImageUrl: null,

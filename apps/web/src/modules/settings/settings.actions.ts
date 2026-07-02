@@ -5,6 +5,13 @@ import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import { uploadMediaAsset } from "../media/media.service";
 import { requireStore } from "../stores/queries";
+import {
+  DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
+  normalizeAdvancedSettings,
+  type StorefrontHeroSlide,
+  type StorefrontMenuItem,
+  type StorefrontMessage
+} from "../storefront/customization";
 import { getStoreSettings, updateStoreSettings, updateThemeSettings } from "./settings.service";
 import type { StoreSettingsInput, ThemeSettingsInput } from "./settings.schema";
 
@@ -110,6 +117,7 @@ function storeSettingsFromFormData(formData: FormData): StoreSettingsInput {
 
 function themeSettingsFromFormData(formData: FormData): ThemeSettingsInput {
   return {
+    advancedSettings: advancedSettingsFromFormData(formData),
     themeName: "Theme v1",
     primaryColor: getValue(formData, "primaryColor") || "#135d66",
     secondaryColor: getValue(formData, "secondaryColor"),
@@ -119,6 +127,130 @@ function themeSettingsFromFormData(formData: FormData): ThemeSettingsInput {
     announcementText: getValue(formData, "announcementText"),
     featuredSectionTitle: getValue(formData, "featuredSectionTitle")
   };
+}
+
+function advancedSettingsFromFormData(formData: FormData) {
+  return normalizeAdvancedSettings({
+    announcement: {
+      backgroundColor: getValue(formData, "announcementBackgroundColor"),
+      enabled: checkbox(formData, "announcementEnabled"),
+      fontSize: Number(getValue(formData, "announcementFontSize")),
+      messages: parseMessages(getValue(formData, "announcementMessages")),
+      scrollSpeed: getValue(formData, "announcementScrollSpeed"),
+      textColor: getValue(formData, "announcementTextColor")
+    },
+    header: {
+      backgroundColor: getValue(formData, "headerBackgroundColor"),
+      enabled: checkbox(formData, "headerEnabled"),
+      height: Number(getValue(formData, "headerHeight")),
+      logoText: getValue(formData, "headerLogoText"),
+      menuItems: parseMenuItems(getValue(formData, "headerMenuItems")),
+      showAccount: checkbox(formData, "headerShowAccount"),
+      showCart: checkbox(formData, "headerShowCart"),
+      showCurrency: checkbox(formData, "headerShowCurrency"),
+      showSearch: checkbox(formData, "headerShowSearch"),
+      spacing: Number(getValue(formData, "headerSpacing")),
+      sticky: checkbox(formData, "headerSticky"),
+      textColor: getValue(formData, "headerTextColor")
+    },
+    hero: {
+      align: getValue(formData, "heroAlign"),
+      autoplay: checkbox(formData, "heroAutoplay"),
+      button1Link: getValue(formData, "heroButton1Link"),
+      button1Text: getValue(formData, "heroButton1Text"),
+      button2Link: getValue(formData, "heroButton2Link"),
+      button2Text: getValue(formData, "heroButton2Text"),
+      buttonStyle: getValue(formData, "heroButtonStyle"),
+      contentType: getValue(formData, "heroContentType"),
+      customHeight: Number(getValue(formData, "heroCustomHeight")),
+      customWidth: Number(getValue(formData, "heroCustomWidth")),
+      enabled: checkbox(formData, "heroEnabled"),
+      height: getValue(formData, "heroHeight"),
+      imageUrl: getValue(formData, "heroImageUrl"),
+      layoutWidth: getValue(formData, "heroLayoutWidth"),
+      overlayColor: getValue(formData, "heroOverlayColor"),
+      overlayOpacity: Number(getValue(formData, "heroOverlayOpacity")),
+      showArrows: checkbox(formData, "heroShowArrows"),
+      showDots: checkbox(formData, "heroShowDots"),
+      sliderSpeed: Number(getValue(formData, "heroSliderSpeed")),
+      slides: parseSlides(getValue(formData, "heroSlides")),
+      subtitle: getValue(formData, "heroSubtitle"),
+      textColor: getValue(formData, "heroTextColor"),
+      title: getValue(formData, "heroTitle"),
+      videoUrl: getValue(formData, "heroVideoUrl"),
+      youtubeUrl: getValue(formData, "heroYoutubeUrl")
+    },
+    layout: {
+      boxedMaxWidth: Number(getValue(formData, "layoutBoxedMaxWidth")),
+      pageBackgroundColor: getValue(formData, "layoutPageBackgroundColor"),
+      sectionPadding: Number(getValue(formData, "layoutSectionPadding")),
+      widthMode: getValue(formData, "layoutWidthMode")
+    }
+  });
+}
+
+function checkbox(formData: FormData, key: string) {
+  return formData.get(key) === "on";
+}
+
+function parseMenuItems(value: string): StorefrontMenuItem[] {
+  const items = value
+    .split(/\r?\n/)
+    .map((line) => {
+      const [label, url] = line.split("|").map((part) => part.trim());
+
+      return label ? { label, url: url || "/" } : null;
+    })
+    .filter((item): item is StorefrontMenuItem => Boolean(item));
+
+  return items.length > 0 ? items : DEFAULT_STOREFRONT_ADVANCED_SETTINGS.header.menuItems;
+}
+
+function parseMessages(value: string): StorefrontMessage[] {
+  const messages = value
+    .split(/\r?\n/)
+    .map((line): StorefrontMessage | null => {
+      const [text, link] = line.split("|").map((part) => part.trim());
+
+      if (!text) {
+        return null;
+      }
+
+      return link ? { link, text } : { text };
+    })
+    .filter((item): item is StorefrontMessage => Boolean(item));
+
+  return messages.length > 0 ? messages : DEFAULT_STOREFRONT_ADVANCED_SETTINGS.announcement.messages;
+}
+
+function parseSlides(value: string): StorefrontHeroSlide[] {
+  const slides = value
+    .split(/\r?\n/)
+    .map((line): StorefrontHeroSlide | null => {
+      const [mediaType, url, title, subtitle] = line.split("|").map((part) => part.trim());
+
+      if (!url) {
+        return null;
+      }
+
+      const slide: StorefrontHeroSlide = {
+        mediaType: mediaType === "video" || mediaType === "youtube" ? mediaType : "image",
+        url
+      };
+
+      if (title) {
+        slide.title = title;
+      }
+
+      if (subtitle) {
+        slide.subtitle = subtitle;
+      }
+
+      return slide;
+    })
+    .filter((item): item is StorefrontHeroSlide => Boolean(item));
+
+  return slides.length > 0 ? slides : DEFAULT_STOREFRONT_ADVANCED_SETTINGS.hero.slides;
 }
 
 function getValue(formData: FormData, key: string) {

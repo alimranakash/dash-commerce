@@ -395,6 +395,7 @@ model ThemeSetting {
   heroImageUrl         String?
   announcementText     String?
   featuredSectionTitle String   @default("Products worth a closer look")
+  advancedSettings     Json?
   store                Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @default(now()) @updatedAt

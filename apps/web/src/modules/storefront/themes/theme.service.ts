@@ -47,6 +47,7 @@ export async function getStorefrontThemeSettings(storeId: string) {
 
   return {
     announcementText: themeSetting.announcementText ?? defaultSettings.announcementText,
+    advancedSettings: records.themeSetting.advancedSettings ?? defaultSettings.advancedSettings,
     faviconUrl: storeSetting.faviconUrl ?? defaultSettings.faviconUrl,
     featuredSectionTitle: themeSetting.featuredSectionTitle || defaultSettings.featuredSectionTitle,
     heroImageUrl: themeSetting.heroImageUrl ?? defaultSettings.heroImageUrl,
@@ -76,6 +77,7 @@ export function createStorefrontThemeContext(input: {
   };
   const settings: StorefrontThemeSettings = {
     announcementText: input.settings.announcementText,
+    advancedSettings: input.settings.advancedSettings,
     faviconUrl: input.settings.faviconUrl,
     featuredSectionTitle: input.settings.featuredSectionTitle,
     heroImageUrl: input.settings.heroImageUrl,

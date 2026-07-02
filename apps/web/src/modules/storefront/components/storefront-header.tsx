@@ -12,6 +12,7 @@ export async function StorefrontHeader({ store }: StorefrontHeaderProps) {
   return (
     <DefaultStorefrontHeader
       announcementText={settings.announcementText}
+      advancedSettings={settings.advancedSettings}
       cartCount={0}
       logoUrl={settings.logoUrl}
       storeName={store.name}

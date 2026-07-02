@@ -13,11 +13,14 @@ import {
 export function GeneralHomepageSections({
   homeData,
   primaryDomain,
+  settings,
   store
 }: StorefrontTemplateHomepageProps) {
   return (
     <div className="general-homepage">
       <GeneralHero
+        advancedSettings={settings?.advancedSettings}
+        heroImageUrl={settings?.heroImageUrl ?? store.themeSetting?.heroImageUrl}
         primaryDomain={primaryDomain}
         storeName={store.name}
         storeSlug={store.slug}

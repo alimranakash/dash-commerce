@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { StorefrontAdvancedSettings } from "../storefront/customization";
 
 const optionalUrlSchema = z
   .union([z.url("Use a valid URL."), z.literal(""), z.null(), z.undefined()])
@@ -47,7 +48,8 @@ export const themeSettingsSchema = z.object({
     .string()
     .trim()
     .min(2, "Featured section title is required.")
-    .max(120)
+    .max(120),
+  advancedSettings: z.custom<StorefrontAdvancedSettings>().optional()
 });
 
 export type StoreSettingsInput = z.infer<typeof storeSettingsSchema>;

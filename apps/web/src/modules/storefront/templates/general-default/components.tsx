@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { HeroSlider } from "../../components/hero-slider";
 import { StorefrontImage } from "../../components/storefront-image";
+import type { StorefrontAdvancedSettings } from "../../customization";
 import type { StorefrontProduct } from "../../storefront.types";
 
 type GeneralSectionWrapperProps = {
@@ -88,39 +90,32 @@ export function GeneralSectionWrapper({
 }
 
 export function GeneralHero({
+  advancedSettings,
+  heroImageUrl,
   primaryDomain,
   storeName,
   storeSlug,
   subtitle,
   title
 }: {
+  advancedSettings?: StorefrontAdvancedSettings | null | undefined;
+  heroImageUrl?: string | null | undefined;
   primaryDomain: string | undefined;
   storeName: string;
   storeSlug: string;
-  subtitle?: string | null;
-  title?: string | null;
+  subtitle?: string | null | undefined;
+  title?: string | null | undefined;
 }) {
+  void primaryDomain;
+
   return (
-    <section className="general-hero" aria-labelledby="general-hero-title">
-      <div className="general-hero-copy">
-        <p>{primaryDomain ?? `${storeSlug}.dash.com`}</p>
-        <h1 id="general-hero-title">{title || "Discover Quality Products for Every Lifestyle"}</h1>
-        <span>
-          {subtitle || `Shop the latest collection from ${storeName} with reliable delivery and a seamless checkout experience.`}
-        </span>
-        <Link className="general-dark-button" href={`/s/${storeSlug}/products`}>
-          Shop Now
-        </Link>
-      </div>
-      <div className="general-hero-scene" aria-hidden="true">
-        <div className="general-hero-window">
-          <div className="general-hero-sofa" />
-          <div className="general-hero-table" />
-          <div className="general-hero-plant" />
-          <div className="general-hero-lamp" />
-        </div>
-      </div>
-    </section>
+    <HeroSlider
+      fallbackImageUrl={heroImageUrl}
+      settings={advancedSettings}
+      storeSlug={storeSlug}
+      subtitle={subtitle || `Shop the latest collection from ${storeName} with reliable delivery and a seamless checkout experience.`}
+      title={title || "Discover Quality Products for Every Lifestyle"}
+    />
   );
 }
 

@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { StorefrontStore } from "../storefront.types";
+import type { StorefrontAdvancedSettings } from "../customization";
 
 export type StorefrontThemeSection =
   | "announcement"
@@ -16,6 +17,7 @@ export type StorefrontThemeSection =
 
 export type StorefrontThemeSettings = {
   announcementText: string | null;
+  advancedSettings: StorefrontAdvancedSettings;
   faviconUrl: string | null;
   featuredSectionTitle: string;
   heroImageUrl: string | null;

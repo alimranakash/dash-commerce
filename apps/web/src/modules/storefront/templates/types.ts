@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import type { getStorefrontHomeData } from "../resolver";
 import type { StorefrontProduct, StorefrontProductDetails, StorefrontStore } from "../storefront.types";
+import type { getStorefrontThemeSettings } from "../themes/theme.service";
 
 export type StorefrontTemplateBusinessType =
   | "Cosmetics & Beauty"
@@ -40,6 +41,7 @@ export type StorefrontTemplateColors = {
 export type StorefrontTemplateHomepageProps = {
   homeData: Awaited<ReturnType<typeof getStorefrontHomeData>>;
   primaryDomain: string | undefined;
+  settings?: Awaited<ReturnType<typeof getStorefrontThemeSettings>>;
   store: StorefrontStore;
 };
 
