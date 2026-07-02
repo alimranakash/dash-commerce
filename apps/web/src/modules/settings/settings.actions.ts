@@ -11,7 +11,8 @@ import {
   normalizeAdvancedSettings,
   type StorefrontHeroSlide,
   type StorefrontMenuItem,
-  type StorefrontMessage
+  type StorefrontMessage,
+  type StorefrontProductSectionSettings
 } from "../storefront/customization";
 import { getStoreSettings, updateStoreSettings, updateThemeSettings } from "./settings.service";
 import type { StoreSettingsInput, ThemeSettingsInput } from "./settings.schema";
@@ -225,8 +226,40 @@ async function advancedSettingsFromFormData(storeId: string, formData: FormData,
       pageBackgroundColor: getValue(formData, "layoutPageBackgroundColor"),
       sectionPadding: Number(getValue(formData, "layoutSectionPadding")),
       widthMode: getValue(formData, "layoutWidthMode")
+    },
+    productSections: {
+      bestSellers: productSectionFromFormData(formData, "bestSellers"),
+      featured: productSectionFromFormData(formData, "featured"),
+      listing: productSectionFromFormData(formData, "listing"),
+      newArrivals: productSectionFromFormData(formData, "newArrivals"),
+      related: productSectionFromFormData(formData, "related"),
+      recentlyViewed: productSectionFromFormData(formData, "recentlyViewed"),
+      search: productSectionFromFormData(formData, "search"),
+      trending: productSectionFromFormData(formData, "trending")
     }
   });
+}
+
+function productSectionFromFormData(
+  formData: FormData,
+  key: keyof typeof DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections
+): StorefrontProductSectionSettings {
+  const fallback = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections[key];
+
+  return {
+    columns: Number(getValue(formData, `productSection_${key}_columns`)) as 2 | 3 | 4,
+    count: Number(getValue(formData, `productSection_${key}_count`)),
+    ctaLink: getValue(formData, `productSection_${key}_ctaLink`) || fallback.ctaLink,
+    ctaText: getValue(formData, `productSection_${key}_ctaText`) || fallback.ctaText,
+    enableBadges: checkbox(formData, `productSection_${key}_enableBadges`),
+    enableComparePrice: checkbox(formData, `productSection_${key}_enableComparePrice`),
+    enableHoverImage: checkbox(formData, `productSection_${key}_enableHoverImage`),
+    enableVariants: checkbox(formData, `productSection_${key}_enableVariants`),
+    mode: getValue(formData, `productSection_${key}_mode`) as StorefrontProductSectionSettings["mode"],
+    source: getValue(formData, `productSection_${key}_source`) as StorefrontProductSectionSettings["source"],
+    subtitle: getValue(formData, `productSection_${key}_subtitle`) || fallback.subtitle,
+    title: getValue(formData, `productSection_${key}_title`) || fallback.title
+  };
 }
 
 function checkbox(formData: FormData, key: string) {

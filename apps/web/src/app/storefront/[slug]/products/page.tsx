@@ -1,4 +1,9 @@
 import Link from "next/link";
+import {
+  ProductGrid,
+  SectionHeader
+} from "../../../../modules/storefront/components/product-listing";
+import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../../../modules/storefront/customization";
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../modules/storefront/components/storefront-header";
 import {
@@ -9,6 +14,7 @@ import {
 } from "../../../../modules/storefront/resolver";
 import type { StorefrontProductSort } from "../../../../modules/storefront/resolver";
 import { getStorefrontTemplateForStore } from "../../../../modules/storefront/templates/registry";
+import { getStorefrontThemeSettings } from "../../../../modules/storefront/themes/theme.service";
 
 type StorefrontProductsPageProps = {
   params: Promise<{
@@ -33,7 +39,7 @@ export default async function StorefrontProductsPage({
   const store = await requireStorefrontBySlug(slug);
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
   const template = getStorefrontTemplateForStore(store);
-  const TemplateProductCard = template.components.ProductCard;
+  const settings = await getStorefrontThemeSettings(store.id);
   const sort = parseSort(filters.sort);
   const currentPage = parsePage(filters.page);
   const query = {
@@ -51,6 +57,11 @@ export default async function StorefrontProductsPage({
   ]);
   const activeCategory = categories.find((category) => category.slug === filters.category);
   const totalPages = Math.max(1, Math.ceil(totalProducts / PRODUCTS_PER_PAGE));
+  const listingSection = {
+    ...(settings.advancedSettings.productSections?.listing ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.listing),
+    subtitle: activeCategory?.description ?? settings.advancedSettings.productSections.listing.subtitle,
+    title: activeCategory ? activeCategory.name : settings.advancedSettings.productSections.listing.title
+  };
 
   return (
     <main className="sf-page" data-storefront-template={template.id}>
@@ -62,11 +73,15 @@ export default async function StorefrontProductsPage({
           Browse the public catalog. Only available products selected by the seller appear here.
         </span>
       </section>
-      <section className="sf-section" aria-labelledby="all-products">
-        <div className="sf-section-heading">
-          <p>Catalog</p>
-          <h2 id="all-products">{activeCategory ? activeCategory.name : "All products"}</h2>
-        </div>
+      <section className="sf-section general-product-section" aria-labelledby="all-products">
+        <SectionHeader
+          count={`${totalProducts} products`}
+          ctaHref={`/s/${store.slug}/products`}
+          ctaText="Shop all"
+          id="all-products"
+          subtitle={listingSection.subtitle}
+          title={listingSection.title}
+        />
         <form className="sf-shop-filters" action={`/s/${store.slug}/products`} method="get">
           <label>
             Category
@@ -109,16 +124,12 @@ export default async function StorefrontProductsPage({
           </div>
         ) : (
           <>
-            <div className="sf-product-grid">
-              {products.map((product) => (
-                <TemplateProductCard
-                  currency={store.currency}
-                  key={product.id}
-                  product={product}
-                  storeSlug={store.slug}
-                />
-              ))}
-            </div>
+            <ProductGrid
+              currency={store.currency}
+              products={products}
+              section={listingSection}
+              storeSlug={store.slug}
+            />
             <div className="sf-pagination" aria-label="Product pagination">
               <PaginationLink
                 disabled={currentPage <= 1}

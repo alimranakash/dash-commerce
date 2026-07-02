@@ -1,4 +1,9 @@
 import { notFound } from "next/navigation";
+import {
+  ProductGrid,
+  SectionHeader
+} from "../../../../../modules/storefront/components/product-listing";
+import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../../../../modules/storefront/customization";
 import { StorefrontFooter } from "../../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../../modules/storefront/components/storefront-header";
 import {
@@ -7,6 +12,7 @@ import {
   requireStorefrontBySlug
 } from "../../../../../modules/storefront/resolver";
 import { getStorefrontTemplateForStore } from "../../../../../modules/storefront/templates/registry";
+import { getStorefrontThemeSettings } from "../../../../../modules/storefront/themes/theme.service";
 
 type StorefrontCategoryProductsPageProps = {
   params: Promise<{
@@ -22,7 +28,7 @@ export default async function StorefrontCategoryProductsPage({
   const store = await requireStorefrontBySlug(slug);
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
   const template = getStorefrontTemplateForStore(store);
-  const TemplateProductCard = template.components.ProductCard;
+  const settings = await getStorefrontThemeSettings(store.id);
   const category = await getStorefrontCategoryBySlug(store.id, categorySlug);
 
   if (!category) {
@@ -32,6 +38,12 @@ export default async function StorefrontCategoryProductsPage({
   const products = await getStorefrontProducts(store.id, {
     categorySlug: category.slug
   });
+  const listingDefaults = settings.advancedSettings.productSections?.listing ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.listing;
+  const listingSection = {
+    ...listingDefaults,
+    subtitle: category.description ?? `Shop products from ${category.name}.`,
+    title: `${category.name} products`
+  };
 
   return (
     <main className="sf-page" data-storefront-template={template.id}>
@@ -41,27 +53,27 @@ export default async function StorefrontCategoryProductsPage({
         <h1 id="category-title">{category.name}</h1>
         <span>{category.description ?? `Shop products from ${category.name}.`}</span>
       </section>
-      <section className="sf-section" aria-labelledby="category-products">
-        <div className="sf-section-heading">
-          <p>Collection</p>
-          <h2 id="category-products">{category.name} products</h2>
-        </div>
+      <section className="sf-section general-product-section" aria-labelledby="category-products">
+        <SectionHeader
+          count={`${products.length} products`}
+          ctaHref={`/s/${store.slug}/products`}
+          ctaText="Shop all"
+          id="category-products"
+          subtitle={listingSection.subtitle}
+          title={listingSection.title}
+        />
         {products.length === 0 ? (
           <div className="sf-empty">
             <h3>No products found</h3>
             <p>This category does not have public products yet.</p>
           </div>
         ) : (
-          <div className="sf-product-grid">
-            {products.map((product) => (
-              <TemplateProductCard
-                currency={store.currency}
-                key={product.id}
-                product={product}
-                storeSlug={store.slug}
-              />
-            ))}
-          </div>
+          <ProductGrid
+            currency={store.currency}
+            products={products}
+            section={listingSection}
+            storeSlug={store.slug}
+          />
         )}
       </section>
       <StorefrontFooter primaryDomain={primaryDomain?.domain} store={store} />

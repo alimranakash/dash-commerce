@@ -20,8 +20,8 @@ export function ElectronicsHomepageSections({
       <ElectronicsHero
         storeName={store.name}
         storeSlug={store.slug}
-        subtitle={store.themeSetting?.heroSubtitle}
-        title={store.themeSetting?.heroTitle}
+        subtitle={store.themeSetting?.heroSubtitle ?? null}
+        title={store.themeSetting?.heroTitle ?? null}
       />
       <ElectronicsSection actionHref={`/s/${store.slug}/products`} eyebrow="Categories" id="electronics-categories" title="Top categories">
         <ElectronicsCategoryGrid categories={homeData.categories} storeSlug={store.slug} />

@@ -15,6 +15,21 @@ export type StorefrontHeroSlide = {
   url: string;
 };
 
+export type StorefrontProductSectionSettings = {
+  columns: 2 | 3 | 4;
+  count: number;
+  ctaLink: string;
+  ctaText: string;
+  enableBadges: boolean;
+  enableComparePrice: boolean;
+  enableHoverImage: boolean;
+  enableVariants: boolean;
+  mode: "grid" | "slider";
+  source: "manual" | "featured" | "best-sellers" | "new-arrivals" | "trending" | "related" | "search" | "recently-viewed";
+  subtitle: string;
+  title: string;
+};
+
 export type StorefrontAdvancedSettings = {
   announcement: {
     backgroundColor: string;
@@ -70,6 +85,16 @@ export type StorefrontAdvancedSettings = {
     pageBackgroundColor: string;
     sectionPadding: number;
     widthMode: "full" | "boxed";
+  };
+  productSections: {
+    bestSellers: StorefrontProductSectionSettings;
+    featured: StorefrontProductSectionSettings;
+    listing: StorefrontProductSectionSettings;
+    newArrivals: StorefrontProductSectionSettings;
+    related: StorefrontProductSectionSettings;
+    recentlyViewed: StorefrontProductSectionSettings;
+    search: StorefrontProductSectionSettings;
+    trending: StorefrontProductSectionSettings;
   };
 };
 
@@ -140,6 +165,60 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     pageBackgroundColor: "#ffffff",
     sectionPadding: 64,
     widthMode: "full"
+  },
+  productSections: {
+    bestSellers: productSectionDefault({
+      ctaText: "View all",
+      source: "best-sellers",
+      subtitle: "Customer favorites selected from the public catalog.",
+      title: "Best Sellers"
+    }),
+    featured: productSectionDefault({
+      ctaText: "Shop Now",
+      source: "featured",
+      subtitle: "Pieces made for repeat use - versatile in size, dependable in design, and easy to carry.",
+      title: "The Daily Edit"
+    }),
+    listing: productSectionDefault({
+      count: 12,
+      ctaText: "Shop all",
+      source: "featured",
+      subtitle: "Browse the collection with a clean, focused product view.",
+      title: "All Products"
+    }),
+    newArrivals: productSectionDefault({
+      ctaText: "View all",
+      source: "new-arrivals",
+      subtitle: "Freshly added products from the latest catalog update.",
+      title: "New Arrivals"
+    }),
+    related: productSectionDefault({
+      count: 4,
+      ctaText: "View all",
+      source: "related",
+      subtitle: "More products selected from the same collection.",
+      title: "You may also like"
+    }),
+    recentlyViewed: productSectionDefault({
+      count: 4,
+      ctaText: "View all",
+      source: "recently-viewed",
+      subtitle: "A clean product rail for items a shopper has viewed recently.",
+      title: "Recently Viewed"
+    }),
+    search: productSectionDefault({
+      count: 12,
+      ctaText: "Shop all",
+      source: "search",
+      subtitle: "Products matching your search.",
+      title: "Search Results"
+    }),
+    trending: productSectionDefault({
+      ctaText: "View all",
+      source: "trending",
+      subtitle: "A refined selection of products getting attention now.",
+      title: "Trending Products"
+    })
   }
 };
 
@@ -209,6 +288,16 @@ export function normalizeAdvancedSettings(value: unknown): StorefrontAdvancedSet
       pageBackgroundColor: hex(layout.pageBackgroundColor, DEFAULT_STOREFRONT_ADVANCED_SETTINGS.layout.pageBackgroundColor),
       sectionPadding: numberInRange(layout.sectionPadding, 24, 120, DEFAULT_STOREFRONT_ADVANCED_SETTINGS.layout.sectionPadding),
       widthMode: oneOf(layout.widthMode, ["full", "boxed"], DEFAULT_STOREFRONT_ADVANCED_SETTINGS.layout.widthMode)
+    },
+    productSections: {
+      bestSellers: productSection(input.productSections, "bestSellers"),
+      featured: productSection(input.productSections, "featured"),
+      listing: productSection(input.productSections, "listing"),
+      newArrivals: productSection(input.productSections, "newArrivals"),
+      related: productSection(input.productSections, "related"),
+      recentlyViewed: productSection(input.productSections, "recentlyViewed"),
+      search: productSection(input.productSections, "search"),
+      trending: productSection(input.productSections, "trending")
     }
   };
 }
@@ -340,4 +429,46 @@ function slideList(value: unknown) {
 
 function text(value: unknown, fallback = "") {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+function productSection(
+  sections: unknown,
+  key: keyof StorefrontAdvancedSettings["productSections"]
+): StorefrontProductSectionSettings {
+  const defaults = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections[key];
+  const record = isRecord(sections) && isRecord(sections[key]) ? sections[key] : {};
+  const columns = Math.round(numberInRange(record.columns, 2, 4, defaults.columns)) as 2 | 3 | 4;
+
+  return {
+    columns,
+    count: numberInRange(record.count, 1, 24, defaults.count),
+    ctaLink: path(record.ctaLink, defaults.ctaLink),
+    ctaText: text(record.ctaText, defaults.ctaText),
+    enableBadges: bool(record.enableBadges, defaults.enableBadges),
+    enableComparePrice: bool(record.enableComparePrice, defaults.enableComparePrice),
+    enableHoverImage: bool(record.enableHoverImage, defaults.enableHoverImage),
+    enableVariants: bool(record.enableVariants, defaults.enableVariants),
+    mode: oneOf(record.mode, ["grid", "slider"], defaults.mode),
+    source: oneOf(record.source, ["manual", "featured", "best-sellers", "new-arrivals", "trending", "related", "search", "recently-viewed"], defaults.source),
+    subtitle: text(record.subtitle, defaults.subtitle),
+    title: text(record.title, defaults.title)
+  };
+}
+
+function productSectionDefault(input: Partial<StorefrontProductSectionSettings>): StorefrontProductSectionSettings {
+  return {
+    columns: 4,
+    count: 4,
+    ctaLink: "/products",
+    ctaText: "Shop Now",
+    enableBadges: true,
+    enableComparePrice: true,
+    enableHoverImage: true,
+    enableVariants: true,
+    mode: "grid",
+    source: "featured",
+    subtitle: "",
+    title: "Products",
+    ...input
+  };
 }

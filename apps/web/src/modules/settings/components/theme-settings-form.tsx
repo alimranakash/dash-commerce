@@ -6,7 +6,8 @@ import type { MediaPickerAsset } from "../../media/media.types";
 import {
   normalizeAdvancedSettings,
   type StorefrontAdvancedSettings,
-  type StorefrontHeroSlide
+  type StorefrontHeroSlide,
+  type StorefrontProductSectionSettings
 } from "../../storefront/customization";
 import type { SettingsActionState } from "../settings.actions";
 import { ColorPickerField, SettingsCard, ToggleField, UploadField } from "./theme-form-fields";
@@ -266,6 +267,21 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
         </div>
       </SettingsCard>
 
+      <SettingsCard
+        title="Product Sections"
+        description="Control the reusable storefront product listing layout used by featured products, shop pages, search results, and related products."
+      >
+        <div className="theme-product-section-editor">
+          <ProductSectionFields label="Featured Products" name="featured" section={advanced.productSections.featured} />
+          <ProductSectionFields label="Best Sellers" name="bestSellers" section={advanced.productSections.bestSellers} />
+          <ProductSectionFields label="New Arrivals" name="newArrivals" section={advanced.productSections.newArrivals} />
+          <ProductSectionFields label="Shop / Category Listing" name="listing" section={advanced.productSections.listing} />
+          <ProductSectionFields label="Search Results" name="search" section={advanced.productSections.search} />
+          <ProductSectionFields label="Related Products" name="related" section={advanced.productSections.related} />
+          <ProductSectionFields label="Recently Viewed" name="recentlyViewed" section={advanced.productSections.recentlyViewed} />
+        </div>
+      </SettingsCard>
+
       <div className="theme-sticky-save">
         <div>
           <strong>Theme settings</strong>
@@ -344,6 +360,78 @@ function RepeaterTextarea({
       <textarea defaultValue={value} name={name} rows={5} />
       <span>{helper}</span>
     </label>
+  );
+}
+
+function ProductSectionFields({
+  label,
+  name,
+  section
+}: {
+  label: string;
+  name: keyof StorefrontAdvancedSettings["productSections"];
+  section: StorefrontProductSectionSettings;
+}) {
+  return (
+    <details className="theme-product-section-panel" open={name === "featured"}>
+      <summary>{label}</summary>
+      <div className="theme-settings-grid three compact">
+        <label>
+          Section title
+          <input defaultValue={section.title} name={`productSection_${name}_title`} type="text" />
+        </label>
+        <label>
+          Subtitle
+          <input defaultValue={section.subtitle} name={`productSection_${name}_subtitle`} type="text" />
+        </label>
+        <label>
+          CTA text
+          <input defaultValue={section.ctaText} name={`productSection_${name}_ctaText`} type="text" />
+        </label>
+        <label>
+          CTA link
+          <input defaultValue={section.ctaLink} name={`productSection_${name}_ctaLink`} type="text" />
+        </label>
+        <label>
+          Products shown
+          <input defaultValue={section.count} max={24} min={1} name={`productSection_${name}_count`} type="number" />
+        </label>
+        <label>
+          Columns
+          <select defaultValue={section.columns} name={`productSection_${name}_columns`}>
+            <option value={2}>2 columns</option>
+            <option value={3}>3 columns</option>
+            <option value={4}>4 columns</option>
+          </select>
+        </label>
+        <label>
+          Display mode
+          <select defaultValue={section.mode} name={`productSection_${name}_mode`}>
+            <option value="grid">Grid</option>
+            <option value="slider">Slider-ready</option>
+          </select>
+        </label>
+        <label>
+          Product source
+          <select defaultValue={section.source} name={`productSection_${name}_source`}>
+            <option value="featured">Featured</option>
+            <option value="best-sellers">Best sellers</option>
+            <option value="new-arrivals">New arrivals</option>
+            <option value="trending">Trending</option>
+            <option value="related">Related</option>
+            <option value="search">Search</option>
+            <option value="recently-viewed">Recently viewed</option>
+            <option value="manual">Manual</option>
+          </select>
+        </label>
+      </div>
+      <div className="theme-settings-grid four compact">
+        <ToggleField label="Show badges" name={`productSection_${name}_enableBadges`} value={section.enableBadges} />
+        <ToggleField label="Show compare price" name={`productSection_${name}_enableComparePrice`} value={section.enableComparePrice} />
+        <ToggleField label="Show variant count" name={`productSection_${name}_enableVariants`} value={section.enableVariants} />
+        <ToggleField label="Enable hover image" name={`productSection_${name}_enableHoverImage`} value={section.enableHoverImage} />
+      </div>
+    </details>
   );
 }
 

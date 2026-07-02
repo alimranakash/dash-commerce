@@ -20,8 +20,8 @@ export function FashionHomepageSections({
       <FashionHero
         storeName={store.name}
         storeSlug={store.slug}
-        subtitle={store.themeSetting?.heroSubtitle}
-        title={store.themeSetting?.heroTitle}
+        subtitle={store.themeSetting?.heroSubtitle ?? null}
+        title={store.themeSetting?.heroTitle ?? null}
       />
       <FashionSection actionHref={`/s/${store.slug}/products`} eyebrow="New Collection" id="fashion-new-collection" title="The latest collection">
         <FashionProductGrid

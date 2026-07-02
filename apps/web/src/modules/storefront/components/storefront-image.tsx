@@ -15,5 +15,5 @@ export function StorefrontImage({ alt, fallback, src }: StorefrontImageProps) {
     return <span>{fallback}</span>;
   }
 
-  return <img alt={alt} onError={() => setFailed(true)} src={src} />;
+  return <img alt={alt} decoding="async" loading="lazy" onError={() => setFailed(true)} src={src} />;
 }

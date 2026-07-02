@@ -1,12 +1,12 @@
 import type { StorefrontTemplateHomepageProps } from "../types";
+import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../customization";
 import {
   GeneralCategoryStrip,
   GeneralCollections,
   GeneralHero,
   GeneralNewsletter,
-  GeneralProductGrid,
+  GeneralProductSection,
   GeneralPromoBanner,
-  GeneralRecentlyAddedFallback,
   GeneralSectionWrapper
 } from "./components";
 
@@ -16,6 +16,15 @@ export function GeneralHomepageSections({
   settings,
   store
 }: StorefrontTemplateHomepageProps) {
+  const productSections = settings?.advancedSettings.productSections ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections;
+  const featuredSection = {
+    ...productSections.featured,
+    title: store.themeSetting?.featuredSectionTitle || productSections.featured.title || "The Daily Edit"
+  };
+  const bestSellerSection = productSections.bestSellers;
+  const newArrivalsSection = productSections.newArrivals;
+  const trendingSection = productSections.trending;
+
   return (
     <div className="general-homepage">
       <GeneralHero
@@ -30,37 +39,38 @@ export function GeneralHomepageSections({
       <GeneralSectionWrapper actionHref={`/s/${store.slug}/products`} id="general-categories" title="Shop by Category">
         <GeneralCategoryStrip categories={homeData.categories} storeSlug={store.slug} />
       </GeneralSectionWrapper>
-      <GeneralSectionWrapper actionHref={`/s/${store.slug}/products`} id="featured-products" title={store.themeSetting?.featuredSectionTitle || "Featured Products"}>
-        <GeneralProductGrid
-          currency={store.currency}
-          products={homeData.featuredProducts}
-          storeSlug={store.slug}
-        />
-      </GeneralSectionWrapper>
+      <GeneralProductSection
+        count="1 / 3"
+        currency={store.currency}
+        products={homeData.featuredProducts}
+        section={featuredSection}
+        storeSlug={store.slug}
+      />
+      <GeneralProductSection
+        count="1 / 3"
+        currency={store.currency}
+        products={homeData.bestSellers.length > 0 ? homeData.bestSellers : homeData.featuredProducts}
+        section={trendingSection}
+        storeSlug={store.slug}
+      />
       <GeneralSectionWrapper actionHref={`/s/${store.slug}/products`} id="general-collections" title="Explore Collections">
         <GeneralCollections storeSlug={store.slug} />
       </GeneralSectionWrapper>
       <GeneralPromoBanner storeSlug={store.slug} />
-      <GeneralSectionWrapper actionHref={`/s/${store.slug}/products`} id="best-sellers" title="Best Sellers">
-        <GeneralProductGrid
-          currency={store.currency}
-          products={homeData.bestSellers.length > 0 ? homeData.bestSellers : homeData.featuredProducts}
-          storeSlug={store.slug}
-          variant="compact"
-        />
-      </GeneralSectionWrapper>
-      <GeneralSectionWrapper actionHref={`/s/${store.slug}/products`} id="new-arrivals" title="Recently Added">
-        {homeData.newArrivals.length > 0 ? (
-          <GeneralProductGrid
-            currency={store.currency}
-            products={homeData.newArrivals}
-            storeSlug={store.slug}
-            variant="compact"
-          />
-        ) : (
-          <GeneralRecentlyAddedFallback currency={store.currency} storeSlug={store.slug} />
-        )}
-      </GeneralSectionWrapper>
+      <GeneralProductSection
+        count="1 / 3"
+        currency={store.currency}
+        products={homeData.bestSellers.length > 0 ? homeData.bestSellers : homeData.featuredProducts}
+        section={bestSellerSection}
+        storeSlug={store.slug}
+      />
+      <GeneralProductSection
+        count="1 / 3"
+        currency={store.currency}
+        products={homeData.newArrivals}
+        section={newArrivalsSection}
+        storeSlug={store.slug}
+      />
       <GeneralNewsletter />
     </div>
   );

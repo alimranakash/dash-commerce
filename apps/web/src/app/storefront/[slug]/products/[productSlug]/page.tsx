@@ -3,8 +3,13 @@ import {
   ProductPrice,
   StockStatus
 } from "../../../../../modules/storefront/components/product-card";
+import {
+  ProductGrid,
+  SectionHeader
+} from "../../../../../modules/storefront/components/product-listing";
 import { ProductPurchasePanel } from "../../../../../modules/storefront/components/product-purchase-panel";
 import { ProductTabs } from "../../../../../modules/storefront/components/product-tabs";
+import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../../../../modules/storefront/customization";
 import { StorefrontFooter } from "../../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../../modules/storefront/components/storefront-header";
 import {
@@ -13,6 +18,7 @@ import {
   requireStorefrontBySlug
 } from "../../../../../modules/storefront/resolver";
 import { getStorefrontTemplateForStore } from "../../../../../modules/storefront/templates/registry";
+import { getStorefrontThemeSettings } from "../../../../../modules/storefront/themes/theme.service";
 
 type StorefrontProductPageProps = {
   params: Promise<{
@@ -33,8 +39,8 @@ export default async function StorefrontProductPage({
   const store = await requireStorefrontBySlug(slug);
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
   const template = getStorefrontTemplateForStore(store);
-  const TemplateProductCard = template.components.ProductCard;
   const ProductDetailExtras = template.components.ProductDetailExtras;
+  const settings = await getStorefrontThemeSettings(store.id);
   const product = await getStorefrontProductBySlug(store.id, productSlug);
 
   if (!product) {
@@ -68,6 +74,7 @@ export default async function StorefrontProductPage({
     productId: product.id,
     storeId: store.id
   });
+  const relatedSection = settings.advancedSettings.productSections?.related ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.related;
 
   return (
     <main className="sf-page" data-storefront-template={template.id}>
@@ -156,21 +163,21 @@ export default async function StorefrontProductPage({
       />
 
       {relatedProducts.length > 0 ? (
-        <section className="sf-section sf-related-products" aria-labelledby="related-products">
-          <div className="sf-section-heading">
-            <p>Related</p>
-            <h2 id="related-products">You may also like</h2>
-          </div>
-          <div className="sf-product-grid">
-            {relatedProducts.map((relatedProduct) => (
-              <TemplateProductCard
-                currency={store.currency}
-                key={relatedProduct.id}
-                product={relatedProduct}
-                storeSlug={store.slug}
-              />
-            ))}
-          </div>
+        <section className="sf-section sf-related-products general-product-section" aria-labelledby="related-products">
+          <SectionHeader
+            count={`${relatedProducts.length} products`}
+            ctaHref={`/s/${store.slug}/products`}
+            ctaText={relatedSection.ctaText}
+            id="related-products"
+            subtitle={relatedSection.subtitle}
+            title={relatedSection.title}
+          />
+          <ProductGrid
+            currency={store.currency}
+            products={relatedProducts}
+            section={relatedSection}
+            storeSlug={store.slug}
+          />
         </section>
       ) : null}
 

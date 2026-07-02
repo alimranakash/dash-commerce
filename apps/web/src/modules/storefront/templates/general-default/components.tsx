@@ -1,8 +1,16 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { HeroSlider } from "../../components/hero-slider";
-import { StorefrontImage } from "../../components/storefront-image";
-import type { StorefrontAdvancedSettings } from "../../customization";
+import {
+  ProductGrid,
+  ProductImage,
+  ProductPrice,
+  SectionHeader
+} from "../../components/product-listing";
+import type {
+  StorefrontAdvancedSettings,
+  StorefrontProductSectionSettings
+} from "../../customization";
 import type { StorefrontProduct } from "../../storefront.types";
 
 type GeneralSectionWrapperProps = {
@@ -17,8 +25,8 @@ type GeneralSectionWrapperProps = {
 type GeneralProductGridProps = {
   currency: string;
   products: StorefrontProduct[];
+  section: StorefrontProductSectionSettings;
   storeSlug: string;
-  variant?: "compact" | "standard";
 };
 
 type GeneralCategory = {
@@ -145,36 +153,67 @@ export function GeneralCategoryStrip({
 export function GeneralProductGrid({
   currency,
   products,
-  storeSlug,
-  variant = "standard"
+  section,
+  storeSlug
 }: GeneralProductGridProps) {
   const hasProducts = products.length > 0;
-  const cards = hasProducts ? products.slice(0, 4) : demoProducts;
+
+  if (hasProducts) {
+    return <ProductGrid currency={currency} products={products} section={section} storeSlug={storeSlug} />;
+  }
 
   return (
-    <div className={`general-product-grid general-product-grid-${variant}`}>
-      {cards.map((product, index) => {
-        if ("id" in product) {
-          return (
-            <Link className="general-product-card" href={`/s/${storeSlug}/products/${product.slug}`} key={product.id}>
-              <ProductMedia imageUrl={product.images[0]?.url} label={product.title} />
-              <span>{product.category?.name ?? "Product"}</span>
-              <strong>{product.title}</strong>
-              <p>{formatMoney(product.price, currency)}</p>
-            </Link>
-          );
-        }
-
-        return (
-          <Link className="general-product-card" href={`/s/${storeSlug}/products`} key={`${product.title}-${index}`}>
-            <ProductMedia label={product.image} />
-            {product.badge ? <em>{product.badge}</em> : null}
-            <strong>{product.title}</strong>
-            <p>{formatMoney(product.price, currency)}</p>
-          </Link>
-        );
-      })}
+    <div className={`general-product-listing-grid general-product-listing-grid-${section.columns} general-product-listing-${section.mode}`}>
+      {demoProducts.slice(0, section.count).map((product, index) => (
+        <Link className="general-product-listing-card" href={`/s/${storeSlug}/products`} key={`${product.title}-${index}`}>
+          <ProductImage fallback={product.image} alt={product.title} />
+          <div className="general-product-listing-meta">
+            <div>
+              <h3>{product.title}</h3>
+              <ProductPrice currency={currency} price={String(product.price)} />
+            </div>
+            {section.enableBadges && product.badge ? (
+              <div className="general-product-listing-flags">
+                <em className="general-product-listing-badge">{product.badge.toUpperCase()}</em>
+              </div>
+            ) : null}
+          </div>
+        </Link>
+      ))}
     </div>
+  );
+}
+
+export function GeneralProductSection({
+  currency,
+  count,
+  products,
+  section,
+  storeSlug
+}: {
+  count?: string;
+  currency: string;
+  products: StorefrontProduct[];
+  section: StorefrontProductSectionSettings;
+  storeSlug: string;
+}) {
+  return (
+    <section className="general-home-section general-product-section" aria-labelledby={`${section.source}-products-title`}>
+      <SectionHeader
+        count={count}
+        ctaHref={`/s/${storeSlug}${section.ctaLink.startsWith("/") ? section.ctaLink : `/${section.ctaLink}`}`}
+        ctaText={section.ctaText}
+        id={`${section.source}-products-title`}
+        subtitle={section.subtitle}
+        title={section.title}
+      />
+      <GeneralProductGrid
+        currency={currency}
+        products={products}
+        section={section}
+        storeSlug={storeSlug}
+      />
+    </section>
   );
 }
 
@@ -213,18 +252,24 @@ export function GeneralPromoBanner({ storeSlug }: { storeSlug: string }) {
 
 export function GeneralRecentlyAddedFallback({
   currency,
+  section,
   storeSlug
 }: {
   currency: string;
+  section: StorefrontProductSectionSettings;
   storeSlug: string;
 }) {
   return (
-    <div className="general-product-grid general-product-grid-compact">
+    <div className={`general-product-listing-grid general-product-listing-grid-${section.columns} general-product-listing-${section.mode}`}>
       {recentlyAddedFallback.map((product) => (
-        <Link className="general-product-card" href={`/s/${storeSlug}/products`} key={product.title}>
-          <ProductMedia label={product.image} />
-          <strong>{product.title}</strong>
-          <p>{formatMoney(product.price, currency)}</p>
+        <Link className="general-product-listing-card" href={`/s/${storeSlug}/products`} key={product.title}>
+          <ProductImage fallback={product.image} alt={product.title} />
+          <div className="general-product-listing-meta">
+            <div>
+              <h3>{product.title}</h3>
+              <ProductPrice currency={currency} price={String(product.price)} />
+            </div>
+          </div>
         </Link>
       ))}
     </div>
@@ -245,19 +290,4 @@ export function GeneralNewsletter() {
       <div className="general-newsletter-visual" aria-hidden="true" />
     </section>
   );
-}
-
-function ProductMedia({ imageUrl, label }: { imageUrl?: string | null | undefined; label: string }) {
-  return (
-    <div className="general-product-media">
-      <StorefrontImage alt={label} fallback={label} src={imageUrl} />
-    </div>
-  );
-}
-
-function formatMoney(value: unknown, currency: string) {
-  return new Intl.NumberFormat("en", {
-    currency,
-    style: "currency"
-  }).format(Number(value));
 }
