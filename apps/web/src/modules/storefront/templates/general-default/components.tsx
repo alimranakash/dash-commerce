@@ -32,6 +32,7 @@ type GeneralProductGridProps = {
 
 type GeneralCategory = {
   id: string;
+  imageUrl?: string | null;
   name: string;
   slug: string;
 };
@@ -135,16 +136,23 @@ export function GeneralCategoryStrip({
   categories: GeneralCategory[];
   storeSlug: string;
 }) {
-  const visibleCategories = categories.length > 0
-    ? categories.slice(0, 6).map((category) => ({ icon: category.name.slice(0, 2), name: category.name, slug: category.slug }))
+  const visibleCategories: Array<{ icon: string; imageUrl?: string | null; name: string; slug: string }> = categories.length > 0
+    ? categories.slice(0, 6).map((category) => ({
+      icon: category.name.trim().slice(0, 2),
+      imageUrl: category.imageUrl,
+      name: category.name.trim(),
+      slug: category.slug
+    }))
     : demoCategories;
 
   return (
     <div className="general-category-strip">
       {visibleCategories.map((category) => (
         <Link className="general-category-bubble" href={`/s/${storeSlug}/categories/${category.slug}`} key={category.slug}>
-          <span>{category.icon}</span>
-          <strong>{category.name}</strong>
+          <span suppressHydrationWarning>
+            {category.imageUrl ? <img alt="" loading="lazy" src={category.imageUrl} /> : category.icon.trim()}
+          </span>
+          <strong suppressHydrationWarning>{category.name.trim()}</strong>
         </Link>
       ))}
     </div>

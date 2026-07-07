@@ -1,7 +1,7 @@
 "use client";
 
 import { ImagePlus, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { MediaPickerAsset } from "../../media/media.types";
 
 type SettingsCardProps = {
@@ -39,6 +39,7 @@ export function UploadField({
   name: string;
   value?: string | null | undefined;
 }) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedUrl, setSelectedUrl] = useState(value ?? "");
   const [previewUrl, setPreviewUrl] = useState(value ?? "");
 
@@ -58,6 +59,10 @@ export function UploadField({
           <button
             className="theme-upload-remove"
             onClick={() => {
+              if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+              }
+
               setSelectedUrl("");
               setPreviewUrl("");
             }}
@@ -86,8 +91,10 @@ export function UploadField({
                 }
 
                 const objectUrl = URL.createObjectURL(file);
+                setSelectedUrl("");
                 setPreviewUrl(objectUrl);
               }}
+              ref={fileInputRef}
               type="file"
             />
           </label>

@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
+import { DM_Sans } from "next/font/google";
 import type { ReactNode } from "react";
 import "./globals.css";
+
+const storefrontFont = DM_Sans({
+  display: "swap",
+  subsets: ["latin"],
+  variable: "--font-storefront"
+});
 
 export const metadata: Metadata = {
   title: "Dash Commerce OS",
@@ -14,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body suppressHydrationWarning>{children}</body>
+      <body className={storefrontFont.variable} suppressHydrationWarning>{children}</body>
     </html>
   );
 }

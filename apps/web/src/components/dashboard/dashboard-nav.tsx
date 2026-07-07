@@ -145,8 +145,8 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
     >
       <div className="flex h-16 items-center justify-between border-b border-[#f0f0f7] px-5">
         <Link className="flex items-center gap-2" href="/dashboard" onClick={onClose}>
-          <span className="bg-[#6941ff] px-2.5 py-1 text-[13px] font-semibold tracking-[0.28em] text-white">DASH</span>
-          <span className="text-[10px] font-semibold tracking-wide text-[#111827]">COMMERCE</span>
+          <span className="bg-[#6941ff] px-2.5 py-1 text-[13px] font-semibold tracking-[0.28em] text-white" suppressHydrationWarning>{"DASH"}</span>
+          <span className="text-[10px] font-semibold tracking-wide text-[#111827]" suppressHydrationWarning>{"COMMERCE"}</span>
         </Link>
         <button className="text-gray-500 lg:hidden" onClick={onClose} type="button">
           <X className="h-5 w-5" />
@@ -159,7 +159,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
         <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${productRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
           <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/products" onClick={onClose}>
             <Package className="h-4 w-4 text-orange-500" />
-            <span>Products</span>
+            <SafeNavText text="Products" />
           </Link>
           <button aria-label="Toggle products menu" className="p-2" onClick={() => setProductsOpen((current) => !current)} type="button">
             <ChevronDown className={`h-3.5 w-3.5 transition-transform ${productsOpen ? "rotate-180" : ""}`} />
@@ -175,7 +175,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
                 key={link.href}
                 onClick={onClose}
               >
-                {link.label}
+                <SafeNavText text={link.label} />
               </Link>
             ))}
           </div>
@@ -184,7 +184,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
         <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${orderRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
           <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/orders" onClick={onClose}>
             <ReceiptText className="h-4 w-4 text-blue-600" />
-            <span>Orders</span>
+            <SafeNavText text="Orders" />
           </Link>
           <button aria-label="Toggle orders menu" className="p-2" onClick={() => setOrdersOpen((current) => !current)} type="button">
             <ChevronDown className={`h-3.5 w-3.5 transition-transform ${ordersOpen ? "rotate-180" : ""}`} />
@@ -200,7 +200,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
                 key={link.href}
                 onClick={onClose}
               >
-                {link.label}
+                <SafeNavText text={link.label} />
               </Link>
             ))}
           </div>
@@ -223,7 +223,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
         <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${reportRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
           <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/reports" onClick={onClose}>
             <FileText className="h-4 w-4 text-pink-500" />
-            <span>Reports</span>
+            <SafeNavText text="Reports" />
           </Link>
           <button aria-label="Toggle reports menu" className="p-2" onClick={() => setReportsOpen((current) => !current)} type="button">
             <ChevronDown className={`h-3.5 w-3.5 transition-transform ${reportsOpen ? "rotate-180" : ""}`} />
@@ -239,7 +239,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
                 key={link.href}
                 onClick={onClose}
               >
-                {link.label}
+                <SafeNavText text={link.label} />
               </Link>
             ))}
           </div>
@@ -262,7 +262,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
         <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${settingsRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
           <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/settings" onClick={onClose}>
             <Settings className="h-4 w-4 text-cyan-500" />
-            <span>Settings</span>
+            <SafeNavText text="Settings" />
           </Link>
           <button aria-label="Toggle settings menu" className="p-2" onClick={() => setSettingsOpen((current) => !current)} type="button">
             <ChevronDown className={`h-3.5 w-3.5 transition-transform ${settingsOpen ? "rotate-180" : ""}`} />
@@ -278,7 +278,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
                 key={link.href}
                 onClick={onClose}
               >
-                {link.label}
+                <SafeNavText text={link.label} />
               </Link>
             ))}
           </div>
@@ -292,7 +292,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
           onClick={onClose}
           target="_blank"
         >
-          <BarChart3 className="h-3.5 w-3.5" /> Open Storefront
+          <BarChart3 className="h-3.5 w-3.5" /> <SafeNavText text="Open Storefront" />
         </Link>
         <LogoutButton />
       </div>
@@ -351,6 +351,10 @@ function NavLink({ href, icon: Icon, iconClassName, label, onClick, pathname }: 
       <span suppressHydrationWarning>{navLabel}</span>
     </Link>
   );
+}
+
+function SafeNavText({ text }: { text: string }) {
+  return <span suppressHydrationWarning>{normalizeLabel(text)}</span>;
 }
 
 function normalizeLabel(label: string) {

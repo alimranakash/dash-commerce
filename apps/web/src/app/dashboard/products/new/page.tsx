@@ -4,13 +4,16 @@ import { getCategoriesForStore } from "../../../../modules/categories/category.s
 import { getMediaPickerAssets } from "../../../../modules/media/media.service";
 import { ProductForm } from "../../../../modules/products/components/product-form";
 import { createProductFormAction } from "../../../../modules/products/product.actions";
+import { getProductTaxonomyItems } from "../../../../modules/products/product-taxonomy.service";
 import { requireStore } from "../../../../modules/stores/queries";
 
 export default async function NewProductPage() {
   const store = await requireStore();
-  const [categories, mediaAssets] = await Promise.all([
+  const [categories, mediaAssets, tags, brands] = await Promise.all([
     getCategoriesForStore(store.id),
-    getMediaPickerAssets(store.id)
+    getMediaPickerAssets(store.id),
+    getProductTaxonomyItems(store.id, "TAG"),
+    getProductTaxonomyItems(store.id, "BRAND")
   ]);
 
   return (
@@ -28,12 +31,21 @@ export default async function NewProductPage() {
         </div>
         <ProductForm
           action={createProductFormAction}
+          brands={brands.map((brand) => ({
+            id: brand.id,
+            name: brand.name
+          }))}
           categories={categories.map((category) => ({
             id: category.id,
             name: category.name
           }))}
           mediaAssets={mediaAssets}
+          storeSlug={store.slug}
           submitLabel="Create product"
+          tags={tags.map((tag) => ({
+            id: tag.id,
+            name: tag.name
+          }))}
         />
       </section>
     </DashboardShell>

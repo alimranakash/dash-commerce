@@ -187,6 +187,7 @@ async function upsertCategoryRecord(
     ? await tx.category.update({
         data: {
           description: category.description ?? null,
+          imageUrl: category.imageUrl ?? null,
           name: category.name
         },
         where: {
@@ -196,6 +197,7 @@ async function upsertCategoryRecord(
     : await tx.category.create({
         data: {
           description: category.description ?? null,
+          imageUrl: category.imageUrl ?? null,
           name: category.name,
           slug: category.slug,
           storeId

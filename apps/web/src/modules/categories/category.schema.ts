@@ -9,6 +9,9 @@ const categoryBaseSchema = z.object({
     .optional()
     .transform((value) => (value ? normalizeSlug(value) : undefined)),
   description: z.string().trim().max(2000).optional(),
+  imageUrl: z
+    .union([z.string().trim(), z.null(), z.undefined()])
+    .transform((value) => (value ? value : null)),
   parentId: z
     .string()
     .trim()

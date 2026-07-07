@@ -15,7 +15,14 @@ const optionalMoneySchema = z
   .transform((value) => (value ? value : undefined));
 
 const productImageSchema = z.object({
-  url: z.url("Use a valid image URL."),
+  url: z
+    .string()
+    .trim()
+    .min(1, "Choose a product image or remove the empty image slot.")
+    .max(20000)
+    .refine(isValidProductImagePath, {
+      message: "Use a valid image URL or uploaded media path."
+    }),
   alt: z.string().trim().max(160).optional(),
   position: z.coerce.number().int().min(0).default(0)
 });
@@ -43,18 +50,34 @@ const productBaseSchema = z.object({
   status: productStatusSchema.default("DRAFT"),
   visibility: z.enum(["PUBLIC", "HIDDEN"]).default("HIDDEN"),
   categoryId: z
-    .string()
-    .trim()
-    .optional()
-    .transform((value) => value || undefined),
-  images: z.array(productImageSchema).max(12).default([])
+    .union([z.string().trim(), z.null(), z.undefined()])
+    .transform((value) => (value ? value : null)),
+  images: z.array(productImageSchema).max(4).default([])
 });
 
 export const createProductSchema = productBaseSchema;
 
 export const updateProductSchema = productBaseSchema.partial().extend({
-  images: z.array(productImageSchema).max(12).optional()
+  images: z.array(productImageSchema).max(4).optional()
 });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;
+
+function isValidProductImagePath(value: string) {
+  if (value.startsWith("/") && !value.startsWith("//")) {
+    return true;
+  }
+
+  if (/^data:image\/(jpeg|jpg|png|webp|svg\+xml);/i.test(value)) {
+    return true;
+  }
+
+  try {
+    const url = new URL(value);
+
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}

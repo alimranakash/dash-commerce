@@ -1,14 +1,18 @@
 import { prisma } from "@dash/db";
 import type { UpdateCategoryInput } from "./category.schema";
+import { ensureCategoryImageSchema } from "./category-image-schema";
 
 type CategoryWriteData = {
   name: string;
   slug: string;
   description?: string;
+  imageUrl?: string | null;
   parentId?: string;
 };
 
 export async function getCategoriesForStore(storeId: string) {
+  await ensureCategoryImageSchema();
+
   return prisma.category.findMany({
     where: {
       storeId
@@ -24,6 +28,8 @@ export async function getCategoriesForStore(storeId: string) {
 }
 
 export async function getCategoryByIdForStore(storeId: string, categoryId: string) {
+  await ensureCategoryImageSchema();
+
   return prisma.category.findFirst({
     where: {
       id: categoryId,
@@ -33,6 +39,8 @@ export async function getCategoryByIdForStore(storeId: string, categoryId: strin
 }
 
 export async function isCategorySlugAvailable(storeId: string, slug: string, ignoreCategoryId?: string) {
+  await ensureCategoryImageSchema();
+
   const where = ignoreCategoryId
     ? {
         storeId,
@@ -57,6 +65,8 @@ export async function isCategorySlugAvailable(storeId: string, slug: string, ign
 }
 
 export async function createCategoryRecord(storeId: string, data: CategoryWriteData) {
+  await ensureCategoryImageSchema();
+
   const categoryData: Parameters<typeof prisma.category.create>[0]["data"] = {
     storeId,
     name: data.name,
@@ -65,6 +75,10 @@ export async function createCategoryRecord(storeId: string, data: CategoryWriteD
 
   if (data.description) {
     categoryData.description = data.description;
+  }
+
+  if (data.imageUrl !== undefined) {
+    categoryData.imageUrl = data.imageUrl;
   }
 
   if (data.parentId) {
@@ -81,6 +95,8 @@ export async function updateCategoryRecord(
   categoryId: string,
   data: UpdateCategoryInput
 ) {
+  await ensureCategoryImageSchema();
+
   const category = await prisma.category.findFirst({
     where: {
       id: categoryId,
@@ -100,6 +116,7 @@ export async function updateCategoryRecord(
   if (data.name !== undefined) categoryData.name = data.name;
   if (data.slug !== undefined) categoryData.slug = data.slug;
   if (data.description !== undefined) categoryData.description = data.description;
+  if (data.imageUrl !== undefined) categoryData.imageUrl = data.imageUrl;
   if (data.parentId !== undefined) categoryData.parentId = data.parentId;
 
   return prisma.category.update({
@@ -111,6 +128,8 @@ export async function updateCategoryRecord(
 }
 
 export async function deleteCategoryRecord(storeId: string, categoryId: string) {
+  await ensureCategoryImageSchema();
+
   return prisma.category.deleteMany({
     where: {
       id: categoryId,

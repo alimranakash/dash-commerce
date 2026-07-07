@@ -15,6 +15,7 @@ type ElectronicsSectionProps = {
 
 type ElectronicsCategory = {
   id: string;
+  imageUrl?: string | null;
   name: string;
   slug: string;
 };
@@ -34,7 +35,8 @@ const fallbackProducts = [
   { brand: "Aero", label: "XR", price: 899, title: "AeroPhone XR" },
   { brand: "Nova", label: "NB", price: 1299, title: "NovaBook Pro" },
   { brand: "Pulse", label: "HD", price: 199, title: "Pulse Headphones" },
-  { brand: "Orbit", label: "DR", price: 749, title: "Orbit Mini Drone" }
+  { brand: "Orbit", label: "DR", price: 749, title: "Orbit Mini Drone" },
+  { brand: "Core", label: "KB", price: 159, title: "Core Mechanical Keyboard" }
 ];
 
 export function ElectronicsSection({
@@ -106,16 +108,23 @@ export function ElectronicsCategoryGrid({
   categories: ElectronicsCategory[];
   storeSlug: string;
 }) {
-  const visibleCategories = categories.length > 0
-    ? categories.slice(0, 6).map((category) => ({ icon: category.name.slice(0, 2).toUpperCase(), name: category.name, slug: category.slug }))
+  const visibleCategories: Array<{ icon: string; imageUrl?: string | null; name: string; slug: string }> = categories.length > 0
+    ? categories.slice(0, 6).map((category) => ({
+      icon: category.name.trim().slice(0, 2).toUpperCase(),
+      imageUrl: category.imageUrl,
+      name: category.name.trim(),
+      slug: category.slug
+    }))
     : fallbackCategories;
 
   return (
     <div className="electronics-category-grid">
       {visibleCategories.map((category) => (
         <Link className="electronics-category-card" href={`/s/${storeSlug}/categories/${category.slug}`} key={category.slug}>
-          <span>{category.icon}</span>
-          <strong>{category.name}</strong>
+          <span suppressHydrationWarning>
+            {category.imageUrl ? <img alt="" loading="lazy" src={category.imageUrl} /> : category.icon.trim()}
+          </span>
+          <strong suppressHydrationWarning>{category.name.trim()}</strong>
         </Link>
       ))}
     </div>
@@ -146,7 +155,7 @@ export function ElectronicsProductGrid({
   storeSlug: string;
   variant?: "deal" | "standard";
 }) {
-  const items = products.length > 0 ? products.slice(0, 4) : fallbackProducts;
+  const items = products.length > 0 ? products.slice(0, 5) : fallbackProducts;
 
   return (
     <div className={`electronics-product-grid electronics-product-grid-${variant}`}>

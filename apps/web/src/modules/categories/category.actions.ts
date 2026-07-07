@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
+import { uploadMediaAsset } from "../media/media.service";
 import { requireStore } from "../stores/queries";
 import { createCategory, deleteCategory, updateCategory } from "./category.service";
 import type { CreateCategoryInput, UpdateCategoryInput } from "./category.schema";
@@ -29,7 +30,7 @@ export async function createCategoryFormAction(
   const store = await requireStore();
 
   try {
-    await createCategory(store.id, categoryInputFromFormData(formData));
+    await createCategory(store.id, await categoryInputFromFormData(store.id, formData));
   } catch (error) {
     return categoryErrorState(error);
   }
@@ -46,7 +47,7 @@ export async function updateCategoryFormAction(
   const store = await requireStore();
 
   try {
-    const category = await updateCategory(store.id, categoryId, categoryInputFromFormData(formData));
+    const category = await updateCategory(store.id, categoryId, await categoryInputFromFormData(store.id, formData));
 
     if (!category) {
       return {
@@ -70,11 +71,12 @@ export async function deleteCategoryFormAction(categoryId: string) {
   redirect("/dashboard/categories?deleted=1");
 }
 
-function categoryInputFromFormData(formData: FormData): CreateCategoryInput {
+async function categoryInputFromFormData(storeId: string, formData: FormData): Promise<CreateCategoryInput> {
   return {
     name: getValue(formData, "name"),
     slug: optionalValue(formData, "slug"),
     description: optionalValue(formData, "description"),
+    imageUrl: await resolveCategoryImage(storeId, formData),
     parentId: optionalValue(formData, "parentId")
   };
 }
@@ -87,6 +89,23 @@ function optionalValue(formData: FormData, key: string) {
   const value = getValue(formData, key);
 
   return value || undefined;
+}
+
+async function resolveCategoryImage(storeId: string, formData: FormData) {
+  const file = formData.get("imageFile");
+
+  if (file instanceof File && file.size > 0) {
+    const asset = await uploadMediaAsset({
+      alt: getValue(formData, "name") || "Category image",
+      file,
+      storeId,
+      usageType: "CATEGORY"
+    });
+
+    return asset.url;
+  }
+
+  return getValue(formData, "imageUrl") || null;
 }
 
 function categoryErrorState(error: unknown): CategoryActionState {

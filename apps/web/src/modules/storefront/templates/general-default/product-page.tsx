@@ -20,10 +20,10 @@ import type {
 } from "../../storefront.types";
 import { GeneralProductAccordion } from "./product-accordion";
 import { GeneralProductGallery } from "./product-gallery";
+import { ProductVariantControls } from "./product-variant-controls";
 
 type GeneralProductPageProps = {
-  cartError?: string;
-  primaryDomain?: string | undefined;
+  cartError?: string | undefined;
   product: StorefrontProductDetails;
   ProductDetailExtras?: ComponentType<StorefrontTemplateProductDetailExtrasProps> | undefined;
   productPage: StorefrontProductPageSettings;
@@ -44,51 +44,73 @@ export function GeneralProductPage({
   const badge = productBadge(product);
   const description = product.description || product.shortDescription || `${product.title} is ready for your everyday shopping routine.`;
   const descriptionParagraphs = description.split(/\r?\n+/).filter(Boolean).slice(0, 4);
+  const galleryImages = product.images.map((image) => ({
+    alt: image.alt ?? product.title,
+    id: image.id,
+    url: image.url
+  }));
   const relatedGridId = "storefront-related-product-grid";
+  const variantConfiguration = product.variantConfiguration;
+  const hasVariants = variantConfiguration.variants.length > 0;
 
   return (
     <>
       {productPage.breadcrumbEnabled ? <GeneralProductBreadcrumb product={product} store={store} /> : null}
 
       <article className="general-product-detail" aria-labelledby="product-title">
-        <GeneralProductGallery product={product} settings={productPage} />
+        <GeneralProductGallery images={galleryImages} settings={productPage} title={product.title} />
 
         <aside className="general-product-info">
           {badge ? <span className="general-product-sale-badge">{badge}</span> : null}
           <h1 id="product-title">{product.title}</h1>
-          <ProductPrice
-            compareAtPrice={product.compareAtPrice?.toString()}
-            currency={store.currency}
-            price={product.price.toString()}
-          />
+          {hasVariants ? null : (
+            <ProductPrice
+              compareAtPrice={product.compareAtPrice?.toString()}
+              currency={store.currency}
+              price={product.price.toString()}
+            />
+          )}
 
           {product.shortDescription ? <p className="general-product-short-copy">{product.shortDescription}</p> : null}
 
-          {productPage.variantEnabled ? (
-            <GeneralProductVariantSelector
-              product={product}
-              style={productPage.variantStyle}
-            />
-          ) : null}
-
-          <p className="general-product-stock">
-            {product.stockQuantity > 0 ? `${product.stockQuantity} in Stock` : "Out of Stock"}
-          </p>
-
           {cartError ? <p className="sf-alert">{cartError}</p> : null}
 
-          <ProductPurchasePanel
-            addToCartButtonColor={productPage.addToCartButtonColor}
-            addToCartButtonRadius={productPage.addToCartButtonRadius}
-            addToCartText={productPage.addToCartText}
-            buyNowEnabled={productPage.buyNowEnabled}
-            maxQuantity={product.stockQuantity}
-            productId={product.id}
-            productSlug={product.slug}
-            secondaryActionsEnabled={false}
-            storeId={store.id}
-            storeSlug={store.slug}
-          />
+          {hasVariants ? (
+            <ProductVariantControls
+              addToCartButtonColor={productPage.addToCartButtonColor}
+              addToCartButtonRadius={productPage.addToCartButtonRadius}
+              addToCartText={productPage.addToCartText}
+              baseCompareAtPrice={product.compareAtPrice?.toString()}
+              basePrice={product.price.toString()}
+              baseSku={product.sku}
+              baseStockQuantity={product.stockQuantity}
+              buyNowEnabled={productPage.buyNowEnabled}
+              currency={store.currency}
+              productId={product.id}
+              productSlug={product.slug}
+              storeId={store.id}
+              storeSlug={store.slug}
+              variantConfiguration={variantConfiguration}
+            />
+          ) : (
+            <>
+              <p className="general-product-stock">
+                {product.stockQuantity > 0 ? `${product.stockQuantity} in Stock` : "Out of Stock"}
+              </p>
+              <ProductPurchasePanel
+                addToCartButtonColor={productPage.addToCartButtonColor}
+                addToCartButtonRadius={productPage.addToCartButtonRadius}
+                addToCartText={productPage.addToCartText}
+                buyNowEnabled={productPage.buyNowEnabled}
+                maxQuantity={product.stockQuantity}
+                productId={product.id}
+                productSlug={product.slug}
+                secondaryActionsEnabled={false}
+                storeId={store.id}
+                storeSlug={store.slug}
+              />
+            </>
+          )}
 
           {productPage.shippingEnabled ? (
             <div className="general-product-shipping" aria-label="Shipping information">
@@ -163,40 +185,6 @@ function GeneralProductBreadcrumb({
       <span>&gt;</span>
       <strong>{product.title}</strong>
     </nav>
-  );
-}
-
-function GeneralProductVariantSelector({
-  product,
-  style
-}: {
-  product: StorefrontProductDetails;
-  style: StorefrontProductPageSettings["variantStyle"];
-}) {
-  const options = product.sku ? [product.sku, "Standard"] : ["Standard", "Premium"];
-
-  if (style === "dropdown") {
-    return (
-      <label className="general-product-variant-select">
-        Option
-        <select defaultValue={options[0]}>
-          {options.map((option) => <option key={option}>{option}</option>)}
-        </select>
-      </label>
-    );
-  }
-
-  return (
-    <div className="general-product-variants" aria-label="Product options">
-      <span>Option</span>
-      <div>
-        {options.map((option, index) => (
-          <button aria-pressed={index === 0} key={option} type="button">
-            {option}
-          </button>
-        ))}
-      </div>
-    </div>
   );
 }
 

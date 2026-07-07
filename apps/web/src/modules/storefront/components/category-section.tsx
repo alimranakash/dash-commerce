@@ -2,6 +2,7 @@ import Link from "next/link";
 
 type StorefrontCategory = {
   id: string;
+  imageUrl: string | null;
   name: string;
   slug: string;
   description: string | null;
@@ -32,6 +33,9 @@ export function CategorySection({ categories, storeSlug }: CategorySectionProps)
         <div className="sf-category-grid">
           {categories.map((category) => (
             <article className="sf-category-card" key={category.id}>
+              {category.imageUrl ? (
+                <img alt="" loading="lazy" src={category.imageUrl} />
+              ) : null}
               <span>{category.slug}</span>
               <h3>{category.name}</h3>
               <p>{category.description ?? "Explore products in this collection."}</p>

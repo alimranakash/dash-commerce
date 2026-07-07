@@ -1,12 +1,14 @@
-import { Edit3, Trash2 } from "lucide-react";
+import { Edit3, ImageIcon, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { DeleteConfirmationButton } from "../../../components/dashboard/delete-confirmation-button";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
+import type { MediaPickerAsset } from "../../media/media.types";
 import { createCategoryFormAction, deleteCategoryFormAction } from "../category.actions";
 import { CategoryForm } from "./category-form";
 
 type CategoryItem = {
   id: string;
+  imageUrl: string | null;
   name: string;
   parent: { name: string } | null;
   slug: string;
@@ -14,11 +16,12 @@ type CategoryItem = {
 
 type CategoryManagementProps = {
   categories: CategoryItem[];
+  mediaAssets?: MediaPickerAsset[];
   message?: string | null;
   storeSlug: string;
 };
 
-export function CategoryManagement({ categories, message, storeSlug }: CategoryManagementProps) {
+export function CategoryManagement({ categories, mediaAssets = [], message, storeSlug }: CategoryManagementProps) {
   const parentOptions = categories.map(({ id, name }) => ({ id, name }));
 
   return (
@@ -46,7 +49,18 @@ export function CategoryManagement({ categories, message, storeSlug }: CategoryM
                   {categories.length ? categories.map((category) => (
                     <tr key={category.id}>
                       <td><input aria-label={`Select ${category.name}`} type="checkbox" /></td>
-                      <td>{category.name}</td>
+                      <td>
+                        <div className="catalog-name-with-image">
+                          <span className="catalog-category-thumb">
+                            {category.imageUrl ? (
+                              <img alt="" src={category.imageUrl} />
+                            ) : (
+                              <ImageIcon aria-hidden="true" />
+                            )}
+                          </span>
+                          <span>{category.name}</span>
+                        </div>
+                      </td>
                       <td>{category.slug}</td>
                       <td>{category.parent?.name ?? "None"}</td>
                       <td>
@@ -71,7 +85,12 @@ export function CategoryManagement({ categories, message, storeSlug }: CategoryM
           <section className="catalog-card catalog-form-card">
             <header><h2>Add New Category</h2></header>
             <div className="catalog-form-body">
-              <CategoryForm action={createCategoryFormAction} parentOptions={parentOptions} submitLabel="Create Category" />
+              <CategoryForm
+                action={createCategoryFormAction}
+                mediaAssets={mediaAssets}
+                parentOptions={parentOptions}
+                submitLabel="Create Category"
+              />
             </div>
           </section>
         </div>

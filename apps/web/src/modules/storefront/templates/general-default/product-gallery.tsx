@@ -3,95 +3,142 @@
 import { X } from "lucide-react";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { StorefrontProductPageSettings } from "../../customization";
-import type { StorefrontProductDetails } from "../../storefront.types";
 
 type GeneralProductGalleryProps = {
-  product: StorefrontProductDetails;
+  images: Array<{
+    alt: string;
+    id: string;
+    url: string;
+  }>;
   settings: StorefrontProductPageSettings;
+  title: string;
 };
 
-export function GeneralProductGallery({ product, settings }: GeneralProductGalleryProps) {
+type GalleryImage = {
+  alt: string;
+  id: string;
+  url: string;
+};
+
+export function GeneralProductGallery({ images: productImages, settings, title }: GeneralProductGalleryProps) {
   const images = useMemo(
-    () => product.images.map((image) => ({
-      alt: image.alt ?? product.title,
+    () => productImages.slice(0, 4).map((image) => ({
+      alt: image.alt || title,
       id: image.id,
       url: image.url
     })),
-    [product.images, product.title]
+    [productImages, title]
   );
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [variantImageUrl, setVariantImageUrl] = useState("");
   const canOpenLightbox = settings.lightboxEnabled && images.length > 0;
+  const displayImages = useMemo(() => (
+    variantImageUrl
+      ? [{ alt: title, id: "selected-variant-image", url: variantImageUrl }, ...images.filter((image) => image.url !== variantImageUrl)].slice(0, 4)
+      : images
+  ), [images, title, variantImageUrl]);
 
   useEffect(() => {
-    if (activeIndex === null) {
+    if (lightboxIndex === null) {
       return;
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setActiveIndex(null);
+        setLightboxIndex(null);
       }
 
       if (event.key === "ArrowRight") {
-        setActiveIndex((current) => current === null ? current : (current + 1) % images.length);
+        setLightboxIndex((current) => current === null ? current : (current + 1) % displayImages.length);
       }
 
       if (event.key === "ArrowLeft") {
-        setActiveIndex((current) => current === null ? current : (current - 1 + images.length) % images.length);
+        setLightboxIndex((current) => current === null ? current : (current - 1 + displayImages.length) % displayImages.length);
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
 
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeIndex, images.length]);
+  }, [lightboxIndex, displayImages.length]);
 
-  const visibleImages = images.length > 0 ? images : [{ alt: product.title, id: "fallback", url: "" }];
+  useEffect(() => {
+    function onVariantMedia(event: Event) {
+      const imageUrl = event instanceof CustomEvent ? String(event.detail?.imageUrl ?? "") : "";
+
+      setVariantImageUrl(imageUrl);
+      setActiveIndex(0);
+    }
+
+    window.addEventListener("dash:storefront-variant-media", onVariantMedia);
+
+    return () => window.removeEventListener("dash:storefront-variant-media", onVariantMedia);
+  }, []);
+
+  const fallbackImage: GalleryImage = { alt: title, id: "fallback", url: "" };
+  const visibleImages: GalleryImage[] = displayImages.length > 0 ? displayImages : [fallbackImage];
+  const activeImage = visibleImages[activeIndex] ?? fallbackImage;
 
   return (
     <>
       <section
-        aria-label={`${product.title} product media`}
+        aria-label={`${title} product media`}
         className={[
           "general-product-gallery",
           `general-product-gallery-${settings.galleryLayout}`,
           `general-product-gallery-${settings.imageRatio}`,
+          "general-product-gallery-focused",
           settings.zoomEnabled ? "is-zoomable" : ""
         ].join(" ")}
         style={{ "--product-gallery-gap": `${settings.gallerySpacing}px` } as CSSProperties}
       >
-        {visibleImages.map((image, index) => (
-          <button
-            aria-label={`Open ${product.title} image ${index + 1}`}
-            className="general-product-gallery-item"
-            disabled={!canOpenLightbox || !image.url}
-            key={image.id}
-            onClick={() => image.url && setActiveIndex(index)}
-            type="button"
-          >
-            {image.url ? <img alt={image.alt} loading={index < 2 ? "eager" : "lazy"} src={image.url} /> : <span>{product.title}</span>}
-          </button>
-        ))}
+        <button
+          aria-label={activeImage.url ? `Open ${title} image ${activeIndex + 1}` : `${title} image placeholder`}
+          className="general-product-gallery-item general-product-gallery-main"
+          disabled={!canOpenLightbox || !activeImage.url}
+          onClick={() => activeImage.url && setLightboxIndex(activeIndex)}
+          type="button"
+        >
+          {activeImage.url ? <img alt={activeImage.alt} loading="eager" src={activeImage.url} /> : <span>{title}</span>}
+        </button>
+        {visibleImages.length > 1 ? (
+          <div className="general-product-gallery-thumbs" aria-label={`${title} thumbnails`}>
+            {visibleImages.map((image, index) => (
+              <button
+                aria-label={`Show ${title} image ${index + 1}`}
+                aria-pressed={activeIndex === index}
+                className={activeIndex === index ? "is-active" : ""}
+                disabled={!image.url}
+                key={image.id}
+                onClick={() => setActiveIndex(index)}
+                type="button"
+              >
+                {image.url ? <img alt="" loading="lazy" src={image.url} /> : <span>{index + 1}</span>}
+              </button>
+            ))}
+          </div>
+        ) : null}
       </section>
 
-      {activeIndex !== null && images[activeIndex] ? (
-        <div className="general-product-lightbox" role="dialog" aria-modal="true" aria-label={`${product.title} image preview`}>
-          <button aria-label="Close image preview" className="general-product-lightbox-close" onClick={() => setActiveIndex(null)} type="button">
+      {lightboxIndex !== null && displayImages[lightboxIndex] ? (
+        <div className="general-product-lightbox" role="dialog" aria-modal="true" aria-label={`${title} image preview`}>
+          <button aria-label="Close image preview" className="general-product-lightbox-close" onClick={() => setLightboxIndex(null)} type="button">
             <X className="h-5 w-5" />
           </button>
           <button
             aria-label="Previous image"
             className="general-product-lightbox-nav previous"
-            onClick={() => setActiveIndex((activeIndex - 1 + images.length) % images.length)}
+            onClick={() => setLightboxIndex((lightboxIndex - 1 + displayImages.length) % displayImages.length)}
             type="button"
           >
             &lsaquo;
           </button>
-          <img alt={images[activeIndex].alt} src={images[activeIndex].url} />
+          <img alt={displayImages[lightboxIndex].alt} src={displayImages[lightboxIndex].url} />
           <button
             aria-label="Next image"
             className="general-product-lightbox-nav next"
-            onClick={() => setActiveIndex((activeIndex + 1) % images.length)}
+            onClick={() => setLightboxIndex((lightboxIndex + 1) % displayImages.length)}
             type="button"
           >
             &rsaquo;

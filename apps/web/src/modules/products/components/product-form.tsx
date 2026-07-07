@@ -3,9 +3,17 @@
 import { Button } from "@dash/ui";
 import { useActionState, useMemo, useState, type ReactNode } from "react";
 import { normalizeSlug } from "../../../lib/slug";
-import { MediaUrlPicker } from "../../media/components/media-url-picker";
 import type { MediaPickerAsset } from "../../media/media.types";
-import type { ProductActionState } from "../product.actions";
+import { UploadField } from "../../settings/components/theme-form-fields";
+import {
+  quickCreateProductBrandAction,
+  quickCreateProductCategoryAction,
+  quickCreateProductTagAction,
+  type ProductActionState
+} from "../product.actions";
+import type { ProductVariantConfiguration } from "../product-variants.service";
+import { ProductVariantsEditor } from "./product-variants-editor";
+import { TaxonomyMultiSelect, type TaxonomyOption } from "./taxonomy-multi-select";
 
 export type ProductFormCategory = {
   id: string;
@@ -25,17 +33,24 @@ export type ProductFormValue = {
   stockQuantity?: number;
   lowStockThreshold?: number;
   categoryId?: string | undefined;
+  categoryIds?: string[] | undefined;
   status?: "DRAFT" | "ACTIVE" | "ARCHIVED";
   visibility?: "PUBLIC" | "HIDDEN";
-  imageUrls?: string | undefined;
+  brandIds?: string[] | undefined;
+  imageUrls?: string[] | undefined;
+  tagIds?: string[] | undefined;
+  variantConfiguration?: ProductVariantConfiguration | undefined;
 };
 
 type ProductFormProps = {
   action: (state: ProductActionState, formData: FormData) => Promise<ProductActionState>;
+  brands: ProductFormCategory[];
   categories: ProductFormCategory[];
   mediaAssets?: MediaPickerAsset[];
   product?: ProductFormValue;
+  storeSlug: string;
   submitLabel: string;
+  tags: ProductFormCategory[];
 };
 
 const initialState: ProductActionState = {
@@ -44,17 +59,34 @@ const initialState: ProductActionState = {
 
 export function ProductForm({
   action,
+  brands,
   categories,
   mediaAssets = [],
   product,
-  submitLabel
+  storeSlug,
+  submitLabel,
+  tags
 }: ProductFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
   const [title, setTitle] = useState(product?.title ?? "");
   const [slug, setSlug] = useState(product?.slug ?? "");
-  const [imageUrls, setImageUrls] = useState(product?.imageUrls ?? "");
+  const [productPrice, setProductPrice] = useState(product?.price ?? "");
+  const [productSku, setProductSku] = useState(product?.sku ?? "");
   const [slugTouched, setSlugTouched] = useState(Boolean(product?.slug));
-  const domainPreview = useMemo(() => (slug ? `${slug}.dash.com/products/${slug}` : ""), [slug]);
+  const [categoryOptions, setCategoryOptions] = useState(categories);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(product?.categoryIds?.length ? product.categoryIds : product?.categoryId ? [product.categoryId] : []);
+  const [categoryMessage, setCategoryMessage] = useState<string | null>(null);
+  const [creatingCategory, setCreatingCategory] = useState(false);
+  const [tagOptions, setTagOptions] = useState(tags);
+  const [brandOptions, setBrandOptions] = useState(brands);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(product?.tagIds ?? []);
+  const [selectedBrandIds, setSelectedBrandIds] = useState<string[]>(product?.brandIds ?? []);
+  const [tagMessage, setTagMessage] = useState<string | null>(null);
+  const [brandMessage, setBrandMessage] = useState<string | null>(null);
+  const [creatingTag, setCreatingTag] = useState(false);
+  const [creatingBrand, setCreatingBrand] = useState(false);
+  const domainPreview = useMemo(() => (slug ? `${storeSlug}.dash.com/products/${slug}` : ""), [slug, storeSlug]);
+  const imageUrls = product?.imageUrls ?? [];
 
   function handleTitleChange(value: string) {
     setTitle(value);
@@ -64,159 +96,290 @@ export function ProductForm({
     }
   }
 
+  async function quickCreateCategory(name: string): Promise<TaxonomyOption | null> {
+    setCategoryMessage(null);
+    setCreatingCategory(true);
+
+    const result = await quickCreateProductCategoryAction(name);
+
+    setCreatingCategory(false);
+
+    if (!result.ok) {
+      setCategoryMessage(result.error);
+      return null;
+    }
+
+    setCategoryOptions((current) => [...current, result.category].sort((a, b) => a.name.localeCompare(b.name)));
+    setCategoryMessage("Category created.");
+
+    return result.category;
+  }
+
+  async function quickCreateTag(name: string): Promise<TaxonomyOption | null> {
+    setTagMessage(null);
+    setCreatingTag(true);
+
+    const result = await quickCreateProductTagAction(name);
+
+    setCreatingTag(false);
+
+    if (!result.ok) {
+      setTagMessage(result.error);
+      return null;
+    }
+
+    setTagOptions((current) => [...current, result.item].sort((a, b) => a.name.localeCompare(b.name)));
+    setTagMessage("Tag created.");
+
+    return result.item;
+  }
+
+  async function quickCreateBrand(name: string): Promise<TaxonomyOption | null> {
+    setBrandMessage(null);
+    setCreatingBrand(true);
+
+    const result = await quickCreateProductBrandAction(name);
+
+    setCreatingBrand(false);
+
+    if (!result.ok) {
+      setBrandMessage(result.error);
+      return null;
+    }
+
+    setBrandOptions((current) => [...current, result.item].sort((a, b) => a.name.localeCompare(b.name)));
+    setBrandMessage("Brand created.");
+
+    return result.item;
+  }
+
   return (
-    <form action={formAction} className="resource-form">
+    <form action={formAction} className="product-editor-form">
       {state.status === "error" ? <p className="form-error">{state.message}</p> : null}
-      <div className="form-grid">
-        <FieldError errors={state.fieldErrors} name="title">
-          <label>
-            Title
-            <input
-              name="title"
-              onChange={(event) => handleTitleChange(event.target.value)}
-              required
-              type="text"
-              value={title}
-            />
-          </label>
-        </FieldError>
-        <FieldError errors={state.fieldErrors} name="slug">
-          <label>
-            Slug
-            <input
-              name="slug"
-              onChange={(event) => {
-                setSlugTouched(true);
-                setSlug(normalizeSlug(event.target.value));
-              }}
-              type="text"
-              value={slug}
-            />
-          </label>
-        </FieldError>
-      </div>
-      {domainPreview ? <p className="domain-preview">{domainPreview}</p> : null}
-      <FieldError errors={state.fieldErrors} name="shortDescription">
-        <label>
-          Short description
-          <input
-            defaultValue={product?.shortDescription}
-            name="shortDescription"
-            type="text"
-          />
-        </label>
-      </FieldError>
-      <FieldError errors={state.fieldErrors} name="description">
-        <label>
-          Description
-          <textarea defaultValue={product?.description} name="description" rows={5} />
-        </label>
-      </FieldError>
-      <div className="form-grid">
-        <FieldError errors={state.fieldErrors} name="sku">
-          <label>
-            SKU
-            <input defaultValue={product?.sku} name="sku" type="text" />
-          </label>
-        </FieldError>
-        <FieldError errors={state.fieldErrors} name="categoryId">
-          <label>
-            Category
-            <select defaultValue={product?.categoryId ?? ""} name="categoryId">
-              <option value="">No category</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
+
+      <div className="product-editor-layout">
+        <div className="product-editor-main">
+          <ProductEditorCard
+            description="Name, URL, and customer-facing copy for this product."
+            title="Basic Information"
+          >
+            <div className="form-grid">
+              <FieldError errors={state.fieldErrors} name="title">
+                <label>
+                  Title
+                  <input
+                    name="title"
+                    onChange={(event) => handleTitleChange(event.target.value)}
+                    placeholder="Breathable Mesh Cap"
+                    required
+                    type="text"
+                    value={title}
+                  />
+                </label>
+              </FieldError>
+              <FieldError errors={state.fieldErrors} name="slug">
+                <label>
+                  Slug
+                  <input
+                    name="slug"
+                    onChange={(event) => {
+                      setSlugTouched(true);
+                      setSlug(normalizeSlug(event.target.value));
+                    }}
+                    placeholder="breathable-mesh-cap"
+                    type="text"
+                    value={slug}
+                  />
+                </label>
+              </FieldError>
+            </div>
+            {domainPreview ? <p className="domain-preview">{domainPreview}</p> : null}
+            <FieldError errors={state.fieldErrors} name="shortDescription">
+              <label>
+                Short description
+                <input
+                  defaultValue={product?.shortDescription}
+                  name="shortDescription"
+                  placeholder="A short product summary for cards and product pages."
+                  type="text"
+                />
+              </label>
+            </FieldError>
+            <FieldError errors={state.fieldErrors} name="description">
+              <label>
+                Description
+                <textarea defaultValue={product?.description} name="description" placeholder="Describe the product, materials, and benefits." rows={6} />
+              </label>
+            </FieldError>
+          </ProductEditorCard>
+
+          <ProductEditorCard
+            description="Use one main image and up to three gallery images."
+            title="Media"
+          >
+            {state.fieldErrors?.images ? <p className="field-error">{state.fieldErrors.images}</p> : null}
+            <div className="product-image-slots">
+              <UploadField
+                accept="image/jpeg,image/png,image/webp"
+                assets={mediaAssets}
+                fileName="mainImageFile"
+                label="Main Image"
+                name="mainImageUrl"
+                value={imageUrls[0]}
+              />
+              {[0, 1, 2].map((index) => (
+                <UploadField
+                  accept="image/jpeg,image/png,image/webp"
+                  assets={mediaAssets}
+                  fileName={`galleryImageFile${index}`}
+                  key={index}
+                  label={`Gallery Image ${index + 1}`}
+                  name={`galleryImageUrl${index}`}
+                  value={imageUrls[index + 1]}
+                />
               ))}
-            </select>
-          </label>
-        </FieldError>
-      </div>
-      <div className="form-grid">
-        <MoneyField
-          defaultValue={product?.price}
-          errors={state.fieldErrors}
-          label="Price"
-          name="price"
-          required
-        />
-        <MoneyField
-          defaultValue={product?.compareAtPrice}
-          errors={state.fieldErrors}
-          label="Compare-at price"
-          name="compareAtPrice"
-        />
-        <MoneyField
-          defaultValue={product?.costPrice}
-          errors={state.fieldErrors}
-          label="Cost price"
-          name="costPrice"
-        />
-        <FieldError errors={state.fieldErrors} name="stockQuantity">
-          <label>
-            Stock
-            <input
-              defaultValue={product?.stockQuantity ?? 0}
-              min={0}
-              name="stockQuantity"
-              required
-              type="number"
-            />
-          </label>
-        </FieldError>
-        <FieldError errors={state.fieldErrors} name="lowStockThreshold">
-          <label>
-            Low stock threshold
-            <input
-              defaultValue={product?.lowStockThreshold ?? 0}
-              min={0}
-              name="lowStockThreshold"
-              required
-              type="number"
-            />
-          </label>
-        </FieldError>
-      </div>
-      <div className="form-grid">
-        <label>
-          Status
-          <select defaultValue={product?.status ?? "DRAFT"} name="status">
-            <option value="DRAFT">Draft</option>
-            <option value="ACTIVE">Active</option>
-            <option value="ARCHIVED">Archived</option>
-          </select>
-        </label>
-        <label>
-          Visibility
-          <select defaultValue={product?.visibility ?? "HIDDEN"} name="visibility">
-            <option value="HIDDEN">Hidden</option>
-            <option value="PUBLIC">Public</option>
-          </select>
-        </label>
-      </div>
-      <FieldError errors={state.fieldErrors} name="images">
-        <label>
-          Image URLs
-          <textarea
-            name="imageUrls"
-            onChange={(event) => setImageUrls(event.target.value)}
-            placeholder="https://example.com/product.jpg"
-            rows={4}
-            value={imageUrls}
+            </div>
+            <p className="product-editor-hint">Gallery limit: 3 images. The storefront shows 4 images total including the main image.</p>
+          </ProductEditorCard>
+
+          <ProductEditorCard
+            description="Pricing, cost, and inventory tracking values."
+            title="Pricing and inventory"
+          >
+            <div className="form-grid product-editor-money-grid">
+              <MoneyField defaultValue={product?.price} errors={state.fieldErrors} label="Price" name="price" onChange={setProductPrice} required />
+              <MoneyField defaultValue={product?.compareAtPrice} errors={state.fieldErrors} label="Compare-at price" name="compareAtPrice" />
+              <MoneyField defaultValue={product?.costPrice} errors={state.fieldErrors} label="Cost price" name="costPrice" />
+              <FieldError errors={state.fieldErrors} name="sku">
+                <label>
+                  SKU
+                  <input name="sku" onChange={(event) => setProductSku(event.target.value)} placeholder="SKU-001" type="text" value={productSku} />
+                </label>
+              </FieldError>
+              <FieldError errors={state.fieldErrors} name="stockQuantity">
+                <label>
+                  Stock
+                  <input defaultValue={product?.stockQuantity ?? 0} min={0} name="stockQuantity" required type="number" />
+                </label>
+              </FieldError>
+              <FieldError errors={state.fieldErrors} name="lowStockThreshold">
+                <label>
+                  Low stock threshold
+                  <input defaultValue={product?.lowStockThreshold ?? 0} min={0} name="lowStockThreshold" required type="number" />
+                </label>
+              </FieldError>
+            </div>
+          </ProductEditorCard>
+
+          <ProductVariantsEditor
+            attributes={product?.variantConfiguration?.attributes ?? []}
+            basePrice={productPrice}
+            baseSku={productSku}
+            mediaAssets={mediaAssets}
+            variants={product?.variantConfiguration?.variants ?? []}
           />
-        </label>
-        <MediaUrlPicker
-          assets={mediaAssets}
-          onSelect={(url) => setImageUrls((current) => (current ? `${current}\n${url}` : url))}
-        />
-      </FieldError>
-      <div className="form-actions">
-        <Button className="primary action-button" disabled={isPending} type="submit">
-          {isPending ? "Saving..." : submitLabel}
-        </Button>
+        </div>
+
+        <aside className="product-editor-sidebar">
+          <ProductEditorCard title="Publishing">
+            <label>
+              Status
+              <select defaultValue={product?.status ?? "DRAFT"} name="status">
+                <option value="DRAFT">Draft</option>
+                <option value="ACTIVE">Active</option>
+                <option value="ARCHIVED">Archived</option>
+              </select>
+            </label>
+            <label>
+              Visibility
+              <select defaultValue={product?.visibility ?? "HIDDEN"} name="visibility">
+                <option value="HIDDEN">Hidden</option>
+                <option value="PUBLIC">Public</option>
+              </select>
+            </label>
+          </ProductEditorCard>
+
+          <ProductEditorCard
+            description="Organize products without leaving this form."
+            title="Categories / Tags / Brands"
+          >
+            <FieldError errors={state.fieldErrors} name="categoryId">
+              <TaxonomyMultiSelect
+                createLabel="Create category"
+                description="Select one or more categories. The first selected category stays compatible with the current product catalog."
+                emptyLabel="No categories found."
+                hiddenName="categoryIds"
+                label="Categories"
+                loading={creatingCategory}
+                onChange={setSelectedCategoryIds}
+                onCreate={quickCreateCategory}
+                options={categoryOptions}
+                placeholder="Search categories"
+                primaryHiddenName="categoryId"
+                selectedIds={selectedCategoryIds}
+              />
+            </FieldError>
+            {categoryMessage ? <p className="product-editor-inline-message">{categoryMessage}</p> : null}
+
+            <TaxonomyMultiSelect
+              createLabel="Create tag"
+              description="Add searchable tags for future filters and product grouping."
+              emptyLabel="No tags found."
+              hiddenName="tagIds"
+              label="Tags"
+              loading={creatingTag}
+              onChange={setSelectedTagIds}
+              onCreate={quickCreateTag}
+              options={tagOptions}
+              placeholder="Search tags"
+              selectedIds={selectedTagIds}
+            />
+            {tagMessage ? <p className="product-editor-inline-message">{tagMessage}</p> : null}
+
+            <TaxonomyMultiSelect
+              createLabel="Create brand"
+              description="Brands support multiple selections for future marketplace and filtering features."
+              emptyLabel="No brands found."
+              hiddenName="brandIds"
+              label="Brands"
+              loading={creatingBrand}
+              onChange={setSelectedBrandIds}
+              onCreate={quickCreateBrand}
+              options={brandOptions}
+              placeholder="Search brands"
+              selectedIds={selectedBrandIds}
+            />
+            {brandMessage ? <p className="product-editor-inline-message">{brandMessage}</p> : null}
+          </ProductEditorCard>
+
+          <div className="product-editor-submit-card">
+            <Button className="primary action-button" disabled={isPending} type="submit">
+              {isPending ? "Saving..." : submitLabel}
+            </Button>
+          </div>
+        </aside>
       </div>
     </form>
+  );
+}
+
+function ProductEditorCard({
+  children,
+  description,
+  title
+}: {
+  children: ReactNode;
+  description?: string;
+  title: string;
+}) {
+  return (
+    <section className="product-editor-card">
+      <header>
+        <h2>{title}</h2>
+        {description ? <p>{description}</p> : null}
+      </header>
+      <div className="product-editor-card-body">{children}</div>
+    </section>
   );
 }
 
@@ -225,26 +388,21 @@ function MoneyField({
   errors,
   label,
   name,
+  onChange,
   required
 }: {
   defaultValue?: string | undefined;
   errors?: Record<string, string> | undefined;
   label: string;
   name: string;
+  onChange?: (value: string) => void;
   required?: boolean | undefined;
 }) {
   return (
     <FieldError errors={errors} name={name}>
       <label>
         {label}
-        <input
-          defaultValue={defaultValue}
-          min={0}
-          name={name}
-          required={required}
-          step="0.01"
-          type="number"
-        />
+        <input defaultValue={defaultValue} min={0} name={name} onChange={(event) => onChange?.(event.target.value)} required={required} step="0.01" type="number" />
       </label>
     </FieldError>
   );

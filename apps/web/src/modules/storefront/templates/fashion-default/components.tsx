@@ -15,6 +15,7 @@ type FashionSectionProps = {
 
 type FashionCategory = {
   id: string;
+  imageUrl?: string | null;
   name: string;
   slug: string;
 };
@@ -30,7 +31,8 @@ const fallbackProducts = [
   { label: "Linen", price: 89, title: "Linen Overshirt" },
   { label: "Cotton", price: 74, title: "Relaxed Trouser" },
   { label: "Knit", price: 119, title: "Ribbed Knit Dress" },
-  { label: "Leather", price: 139, title: "Minimal Crossbody" }
+  { label: "Leather", price: 139, title: "Minimal Crossbody" },
+  { label: "Wool", price: 98, title: "Structured Midi Skirt" }
 ];
 
 const featuredCollections = [
@@ -111,12 +113,17 @@ export function FashionCategoryCards({
   categories: FashionCategory[];
   storeSlug: string;
 }) {
-  const visibleCategories = categories.length > 0 ? categories.slice(0, 4) : fallbackCategories;
+  const visibleCategories = (categories.length > 0 ? categories.slice(0, 4) : fallbackCategories).map((category) => ({
+    imageUrl: "imageUrl" in category && typeof category.imageUrl === "string" ? category.imageUrl : null,
+    name: category.name,
+    slug: category.slug
+  }));
 
   return (
     <div className="fashion-category-grid">
       {visibleCategories.map((category, index) => (
         <Link className="fashion-category-card" href={`/s/${storeSlug}/categories/${category.slug}`} key={category.slug}>
+          {category.imageUrl ? <img alt="" loading="lazy" src={category.imageUrl} /> : null}
           <div aria-hidden="true">{String(index + 1).padStart(2, "0")}</div>
           <strong>{category.name}</strong>
         </Link>
@@ -134,7 +141,7 @@ export function FashionProductGrid({
   products: StorefrontProduct[];
   storeSlug: string;
 }) {
-  const items = products.length > 0 ? products.slice(0, 4) : fallbackProducts;
+  const items = products.length > 0 ? products.slice(0, 5) : fallbackProducts;
 
   return (
     <div className="fashion-product-grid">

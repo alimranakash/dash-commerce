@@ -3,6 +3,8 @@
 import { Button } from "@dash/ui";
 import { useActionState, useState, type ReactNode } from "react";
 import { normalizeSlug } from "../../../lib/slug";
+import type { MediaPickerAsset } from "../../media/media.types";
+import { UploadField } from "../../settings/components/theme-form-fields";
 import type { CategoryActionState } from "../category.actions";
 
 export type CategoryFormOption = {
@@ -15,12 +17,14 @@ export type CategoryFormValue = {
   name?: string | undefined;
   slug?: string | undefined;
   description?: string | undefined;
+  imageUrl?: string | null | undefined;
   parentId?: string | undefined;
 };
 
 type CategoryFormProps = {
   action: (state: CategoryActionState, formData: FormData) => Promise<CategoryActionState>;
   category?: CategoryFormValue;
+  mediaAssets?: MediaPickerAsset[];
   parentOptions: CategoryFormOption[];
   submitLabel: string;
 };
@@ -29,7 +33,7 @@ const initialState: CategoryActionState = {
   status: "idle"
 };
 
-export function CategoryForm({ action, category, parentOptions, submitLabel }: CategoryFormProps) {
+export function CategoryForm({ action, category, mediaAssets = [], parentOptions, submitLabel }: CategoryFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
   const [name, setName] = useState(category?.name ?? "");
   const [slug, setSlug] = useState(category?.slug ?? "");
@@ -79,6 +83,16 @@ export function CategoryForm({ action, category, parentOptions, submitLabel }: C
           Description
           <textarea defaultValue={category?.description} name="description" rows={4} />
         </label>
+      </FieldError>
+      <FieldError errors={state.fieldErrors} name="imageUrl">
+        <UploadField
+          accept="image/jpeg,image/png,image/webp"
+          assets={mediaAssets}
+          fileName="imageFile"
+          label="Category Image"
+          name="imageUrl"
+          value={category?.imageUrl}
+        />
       </FieldError>
       <FieldError errors={state.fieldErrors} name="parentId">
         <label>

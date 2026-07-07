@@ -7,6 +7,12 @@ import { getStockMovementsForProduct } from "../../../../../modules/inventory/in
 import { getMediaPickerAssets } from "../../../../../modules/media/media.service";
 import { ProductForm } from "../../../../../modules/products/components/product-form";
 import { updateProductFormAction } from "../../../../../modules/products/product.actions";
+import {
+  getProductCategoryAssignmentIds,
+  getProductTaxonomyIds,
+  getProductTaxonomyItems
+} from "../../../../../modules/products/product-taxonomy.service";
+import { getProductVariantConfiguration } from "../../../../../modules/products/product-variants.service";
 import { getProductByIdForStore } from "../../../../../modules/products/product.service";
 import { requireStore } from "../../../../../modules/stores/queries";
 
@@ -19,11 +25,17 @@ type EditProductPageProps = {
 export default async function EditProductPage({ params }: EditProductPageProps) {
   const store = await requireStore();
   const { productId } = await params;
-  const [product, categories, mediaAssets, stockMovements] = await Promise.all([
+  const [product, categories, mediaAssets, stockMovements, tags, brands, selectedTagIds, selectedBrandIds, selectedCategoryIds, variantConfiguration] = await Promise.all([
     getProductByIdForStore(store.id, productId),
     getCategoriesForStore(store.id),
     getMediaPickerAssets(store.id),
-    getStockMovementsForProduct(store.organizationId, store.id, productId, 8)
+    getStockMovementsForProduct(store.organizationId, store.id, productId, 8),
+    getProductTaxonomyItems(store.id, "TAG"),
+    getProductTaxonomyItems(store.id, "BRAND"),
+    getProductTaxonomyIds(store.id, productId, "TAG"),
+    getProductTaxonomyIds(store.id, productId, "BRAND"),
+    getProductCategoryAssignmentIds(store.id, productId),
+    getProductVariantConfiguration(store.id, productId)
   ]);
 
   if (!product) {
@@ -45,6 +57,10 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         </div>
         <ProductForm
           action={updateProductFormAction.bind(null, product.id)}
+          brands={brands.map((brand) => ({
+            id: brand.id,
+            name: brand.name
+          }))}
           categories={categories.map((category) => ({
             id: category.id,
             name: category.name
@@ -63,11 +79,20 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
             stockQuantity: product.stockQuantity,
             lowStockThreshold: product.lowStockThreshold,
             categoryId: product.categoryId ?? undefined,
+            categoryIds: selectedCategoryIds.length ? selectedCategoryIds : product.categoryId ? [product.categoryId] : [],
             status: product.status,
             visibility: product.visibility,
-            imageUrls: product.images.map((image) => image.url).join("\n")
+            brandIds: selectedBrandIds,
+            imageUrls: product.images.slice(0, 4).map((image) => image.url),
+            tagIds: selectedTagIds,
+            variantConfiguration
           }}
+          storeSlug={store.slug}
           submitLabel="Save product"
+          tags={tags.map((tag) => ({
+            id: tag.id,
+            name: tag.name
+          }))}
         />
         <ProductStockHistory movements={stockMovements} productId={product.id} />
       </section>

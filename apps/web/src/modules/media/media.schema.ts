@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const mediaUsageTypes = ["PRODUCT", "LOGO", "FAVICON", "HERO", "GENERAL"] as const;
+export const mediaUsageTypes = ["PRODUCT", "CATEGORY", "LOGO", "FAVICON", "HERO", "GENERAL"] as const;
 
 export const uploadMediaSchema = z.object({
   alt: z

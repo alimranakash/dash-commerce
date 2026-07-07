@@ -1,5 +1,9 @@
 import type { StorefrontTemplateHomepageProps } from "../types";
-import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../customization";
+import {
+  DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
+  type StorefrontProductSectionSettings,
+  type StorefrontTabbedProductShowcaseSettings
+} from "../../customization";
 import { TabbedProductSection } from "../../components/tabbed-product-section";
 import type { StorefrontProduct } from "../../storefront.types";
 import {
@@ -20,13 +24,13 @@ export function GeneralHomepageSections({
 }: StorefrontTemplateHomepageProps) {
   const productSections = settings?.advancedSettings.productSections ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections;
   const featuredSection = {
-    ...productSections.featured,
+    ...homepageProductSection(productSections.featured),
     title: store.themeSetting?.featuredSectionTitle || productSections.featured.title || "The Daily Edit"
   };
-  const bestSellerSection = productSections.bestSellers;
-  const newArrivalsSection = productSections.newArrivals;
-  const trendingSection = productSections.trending;
-  const tabbedProductShowcase = settings?.advancedSettings.tabbedProductShowcase ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.tabbedProductShowcase;
+  const bestSellerSection = homepageProductSection(productSections.bestSellers);
+  const newArrivalsSection = homepageProductSection(productSections.newArrivals);
+  const trendingSection = homepageProductSection(productSections.trending);
+  const tabbedProductShowcase = homepageTabbedSection(settings?.advancedSettings.tabbedProductShowcase ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.tabbedProductShowcase);
   const allProducts = uniqueProducts([
     ...homeData.featuredProducts,
     ...homeData.bestSellers,
@@ -108,4 +112,20 @@ function uniqueProducts(products: StorefrontProduct[]) {
     seen.add(product.id);
     return true;
   });
+}
+
+function homepageProductSection(section: StorefrontProductSectionSettings): StorefrontProductSectionSettings {
+  return {
+    ...section,
+    columns: 5 as const,
+    count: Math.max(section.count, 5)
+  };
+}
+
+function homepageTabbedSection(section: StorefrontTabbedProductShowcaseSettings): StorefrontTabbedProductShowcaseSettings {
+  return {
+    ...section,
+    productsPerTab: Math.max(section.productsPerTab, 5),
+    productsPerView: 5 as const
+  };
 }

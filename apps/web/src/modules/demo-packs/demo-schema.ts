@@ -11,6 +11,7 @@ export async function ensureDemoContentSchema(db: DemoSchemaClient) {
   await db.$executeRawUnsafe(`ALTER TABLE "${schema}"."Product" ADD COLUMN IF NOT EXISTS "demoPackId" TEXT`);
   await db.$executeRawUnsafe(`ALTER TABLE "${schema}"."Category" ADD COLUMN IF NOT EXISTS "isDemoContent" BOOLEAN NOT NULL DEFAULT FALSE`);
   await db.$executeRawUnsafe(`ALTER TABLE "${schema}"."Category" ADD COLUMN IF NOT EXISTS "demoPackId" TEXT`);
+  await db.$executeRawUnsafe(`ALTER TABLE "${schema}"."Category" ADD COLUMN IF NOT EXISTS "imageUrl" TEXT`);
 }
 
 export function getDatabaseSchemaName() {

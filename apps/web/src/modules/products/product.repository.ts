@@ -15,7 +15,7 @@ type ProductWriteData = {
   sku?: string;
   compareAtPrice?: string;
   costPrice?: string;
-  categoryId?: string;
+  categoryId?: string | null;
 };
 
 type ProductUpdateData = Partial<ProductWriteData>;

@@ -1,5 +1,7 @@
 import { prisma } from "@dash/db";
 import { notFound } from "next/navigation";
+import { ensureCategoryImageSchema } from "../categories/category-image-schema";
+import { getProductVariantConfiguration } from "../products/product-variants.service";
 import { ensureDefaultSettingsForStore } from "../settings/settings.service";
 import { withStoreActiveTemplate } from "./templates/template-store";
 
@@ -143,6 +145,8 @@ export async function getStorefrontByDomain(domain: string) {
 }
 
 export async function getStorefrontHomeData(storeId: string) {
+  await ensureCategoryImageSchema();
+
   const [products, categories, newArrivals, bestSellers] = await Promise.all([
     getStorefrontProducts(storeId, 8),
     prisma.category.findMany({
@@ -179,6 +183,8 @@ export async function getStorefrontProducts(
   storeId: string,
   inputOrTake?: StorefrontProductQuery | number
 ) {
+  await ensureCategoryImageSchema();
+
   const input = typeof inputOrTake === "number" ? { take: inputOrTake } : (inputOrTake ?? {});
   const search = input.search?.trim();
 
@@ -265,6 +271,8 @@ export async function getStorefrontProductCount(storeId: string, input?: Storefr
 }
 
 export async function getStorefrontCategories(storeId: string) {
+  await ensureCategoryImageSchema();
+
   return prisma.category.findMany({
     where: {
       storeId,
@@ -279,6 +287,8 @@ export async function getStorefrontCategories(storeId: string) {
 }
 
 export async function getStorefrontCategoryBySlug(storeId: string, categorySlug: string) {
+  await ensureCategoryImageSchema();
+
   return prisma.category.findFirst({
     where: {
       slug: categorySlug,
@@ -288,7 +298,9 @@ export async function getStorefrontCategoryBySlug(storeId: string, categorySlug:
 }
 
 export async function getStorefrontProductBySlug(storeId: string, productSlug: string) {
-  return prisma.product.findFirst({
+  await ensureCategoryImageSchema();
+
+  const product = await prisma.product.findFirst({
     where: {
       ...publicProductWhere(storeId),
       slug: productSlug
@@ -302,6 +314,17 @@ export async function getStorefrontProductBySlug(storeId: string, productSlug: s
       }
     }
   });
+
+  if (!product) {
+    return null;
+  }
+
+  const variantConfiguration = await getProductVariantConfiguration(storeId, product.id);
+
+  return {
+    ...product,
+    variantConfiguration
+  };
 }
 
 export async function getRelatedStorefrontProducts(input: {
@@ -309,6 +332,8 @@ export async function getRelatedStorefrontProducts(input: {
   productId: string;
   storeId: string;
 }) {
+  await ensureCategoryImageSchema();
+
   if (!input.categoryId) {
     return [];
   }

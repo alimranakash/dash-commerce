@@ -87,6 +87,9 @@ export default async function StorefrontCategoryProductsPage({
     <main className="sf-page" data-storefront-template={template.id}>
       <StorefrontHeader store={store} />
       <section className="sf-shop-page-header" aria-labelledby="category-title">
+        {category.imageUrl ? (
+          <img alt="" className="sf-shop-page-header-image" loading="lazy" src={category.imageUrl} />
+        ) : null}
         <p>Collection</p>
         {shopSettings.descriptionEnabled ? <span>{category.description ?? `Shop products from ${category.name}.`}</span> : null}
       </section>

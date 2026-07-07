@@ -15,6 +15,7 @@ type BeautySectionProps = {
 
 type BeautyCategory = {
   id: string;
+  imageUrl?: string | null;
   name: string;
   slug: string;
 };
@@ -39,7 +40,8 @@ const fallbackProducts = [
   { brand: "Luma", label: "Glow", price: 42, title: "Hydrating Face Serum" },
   { brand: "Rose", label: "Tint", price: 28, title: "Soft Matte Lip Tint" },
   { brand: "Aura", label: "SPF", price: 36, title: "Daily Mineral SPF" },
-  { brand: "Nude", label: "Mist", price: 24, title: "Calming Beauty Mist" }
+  { brand: "Nude", label: "Mist", price: 24, title: "Calming Beauty Mist" },
+  { brand: "Silk", label: "Mask", price: 34, title: "Restorative Hair Mask" }
 ];
 
 const beautyTips = [
@@ -116,12 +118,17 @@ export function BeautyCategoryGrid({
   categories: BeautyCategory[];
   storeSlug: string;
 }) {
-  const visibleCategories = categories.length > 0 ? categories.slice(0, 5) : fallbackCategories;
+  const visibleCategories = (categories.length > 0 ? categories.slice(0, 5) : fallbackCategories).map((category) => ({
+    imageUrl: "imageUrl" in category && typeof category.imageUrl === "string" ? category.imageUrl : null,
+    name: category.name,
+    slug: category.slug
+  }));
 
   return (
     <div className="beauty-category-grid">
       {visibleCategories.map((category, index) => (
         <Link className="beauty-category-card" href={`/s/${storeSlug}/categories/${category.slug}`} key={category.slug}>
+          {category.imageUrl ? <img alt="" loading="lazy" src={category.imageUrl} /> : null}
           <span>{String(index + 1).padStart(2, "0")}</span>
           <strong>{category.name}</strong>
         </Link>
@@ -139,7 +146,7 @@ export function BeautyProductGrid({
   products: StorefrontProduct[];
   storeSlug: string;
 }) {
-  const items = products.length > 0 ? products.slice(0, 4) : fallbackProducts;
+  const items = products.length > 0 ? products.slice(0, 5) : fallbackProducts;
 
   return (
     <div className="beauty-product-grid">
