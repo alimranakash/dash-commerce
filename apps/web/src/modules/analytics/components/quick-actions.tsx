@@ -14,7 +14,7 @@ const actionItems = [
     label: "View Orders"
   },
   {
-    href: "/dashboard/theme",
+    href: "/dashboard/storefront/themes",
     label: "Customize Store"
   },
   {

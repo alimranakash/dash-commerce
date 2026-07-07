@@ -109,7 +109,7 @@ export async function updateBrandSettingsFormAction(_state: SettingsActionState,
   }
 
   revalidateSettingsPaths(store.slug);
-  redirect("/dashboard/theme?brandingUpdated=1");
+  redirect("/dashboard/storefront/themes?brandingUpdated=1");
 }
 
 export async function updateSocialProfilesFormAction(_state: SettingsActionState, formData: FormData) {
@@ -129,7 +129,7 @@ export async function updateThemeSettingsFormAction(
   }
 
   revalidateSettingsPaths(store.slug);
-  redirect("/dashboard/theme?updated=1");
+  redirect("/dashboard/storefront/themes?updated=1");
 }
 
 function storeSettingsFromFormData(formData: FormData): StoreSettingsInput {
@@ -562,6 +562,7 @@ function settingsErrorState(error: unknown, fallbackMessage: string): SettingsAc
 function revalidateSettingsPaths(storeSlug: string) {
   revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard/theme");
+  revalidatePath("/dashboard/storefront/themes");
   revalidatePath(`/s/${storeSlug}`);
   revalidatePath(`/s/${storeSlug}/cart`);
   revalidatePath(`/s/${storeSlug}/checkout`);

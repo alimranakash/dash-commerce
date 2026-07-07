@@ -7,12 +7,13 @@ import type { MediaPickerAsset } from "../../media/media.types";
 type SettingsCardProps = {
   children: ReactNode;
   description?: string;
+  id?: string;
   title: string;
 };
 
-export function SettingsCard({ children, description, title }: SettingsCardProps) {
+export function SettingsCard({ children, description, id, title }: SettingsCardProps) {
   return (
-    <section className="theme-settings-card">
+    <section className="theme-settings-card" id={id}>
       <div className="theme-settings-card-header">
         <div>
           <h2>{title}</h2>

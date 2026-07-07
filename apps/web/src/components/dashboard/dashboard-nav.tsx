@@ -15,6 +15,7 @@ import {
   ShoppingBag,
   Settings,
   ShoppingCart,
+  Store,
   Truck,
   WalletCards,
   Users,
@@ -70,10 +71,20 @@ const settingsLinks = [
   { href: "/dashboard/settings/social", label: "Social" },
   { href: "/dashboard/payments", label: "Payments" },
   { href: "/dashboard/shipping", label: "Shipping" },
-  { href: "/dashboard/theme", label: "Theme" },
   { href: "/dashboard/media", label: "Media" },
   { href: "/dashboard/settings/demo-content", label: "Demo Content" },
   { href: "/dashboard/ai", label: "StoreOS / AI" }
+];
+
+const storefrontLinks = [
+  { href: "/dashboard/storefront/themes", label: "Themes" },
+  { href: "/dashboard/storefront/themes#theme-settings", label: "Customize" },
+  { href: "/dashboard/storefront/themes#theme-settings", label: "Homepage" },
+  { href: "/dashboard/storefront/themes#header", label: "Header" },
+  { href: "/dashboard/storefront/themes#footer-social-preview", label: "Footer" },
+  { href: "/dashboard/storefront/themes#header", label: "Navigation" },
+  { href: "/dashboard/storefront/themes#colors-layout", label: "Colors & Typography" },
+  { href: "/dashboard/storefront/themes#shop-collection-page", label: "Pages" }
 ];
 
 const mainLinks: NavItem[] = [
@@ -104,6 +115,7 @@ const iconColors: Record<string, string> = {
   Reports: "text-pink-500",
   Sales: "text-purple-500",
   Settings: "text-cyan-500",
+  Storefront: "text-violet-600",
   Suppliers: "text-amber-500",
   Transactions: "text-emerald-500"
 };
@@ -115,12 +127,14 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
   );
   const orderRouteActive = pathname.startsWith("/dashboard/orders");
   const reportRouteActive = pathname.startsWith("/dashboard/reports");
-  const settingsRouteActive = pathname.startsWith("/dashboard/settings") || ["/dashboard/payments", "/dashboard/shipping", "/dashboard/theme", "/dashboard/media", "/dashboard/ai"].some(
+  const storefrontRouteActive = pathname.startsWith("/dashboard/storefront") || pathname.startsWith("/dashboard/theme");
+  const settingsRouteActive = pathname.startsWith("/dashboard/settings") || ["/dashboard/payments", "/dashboard/shipping", "/dashboard/media", "/dashboard/ai"].some(
     (route) => pathname.startsWith(route)
   );
   const [productsOpen, setProductsOpen] = useState(productRouteActive);
   const [ordersOpen, setOrdersOpen] = useState(orderRouteActive);
   const [reportsOpen, setReportsOpen] = useState(reportRouteActive);
+  const [storefrontOpen, setStorefrontOpen] = useState(storefrontRouteActive);
   const [settingsOpen, setSettingsOpen] = useState(settingsRouteActive);
 
   useEffect(() => {
@@ -134,6 +148,10 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
   useEffect(() => {
     if (reportRouteActive) setReportsOpen(true);
   }, [reportRouteActive]);
+
+  useEffect(() => {
+    if (storefrontRouteActive) setStorefrontOpen(true);
+  }, [storefrontRouteActive]);
 
   useEffect(() => {
     if (settingsRouteActive) setSettingsOpen(true);
@@ -245,6 +263,31 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
           </div>
         ) : null}
 
+        <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${storefrontRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
+          <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/storefront/themes" onClick={onClose}>
+            <Store className="h-4 w-4 text-violet-600" />
+            <SafeNavText text="Storefront" />
+          </Link>
+          <button aria-label="Toggle storefront menu" className="p-2" onClick={() => setStorefrontOpen((current) => !current)} type="button">
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${storefrontOpen ? "rotate-180" : ""}`} />
+          </button>
+        </div>
+        {storefrontOpen ? (
+          <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
+            {storefrontLinks.map((link) => (
+              <Link
+                aria-current={isStorefrontLinkActive(pathname, link.href, link.label) ? "page" : undefined}
+                className={`block rounded-md px-3 py-2 text-[12px] transition ${isStorefrontLinkActive(pathname, link.href, link.label) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                href={link.href}
+                key={`${link.href}-${link.label}`}
+                onClick={onClose}
+              >
+                <SafeNavText text={link.label} />
+              </Link>
+            ))}
+          </div>
+        ) : null}
+
         <div className="mt-1 space-y-1">
           {trailingLinks.map((link) => (
             <NavLink
@@ -322,6 +365,16 @@ function isOrderLinkActive(pathname: string, href: string) {
   }
 
   return pathname === "/dashboard/orders";
+}
+
+function isStorefrontLinkActive(pathname: string, href: string, label: string) {
+  const hrefPath = href.split("#")[0] ?? href;
+
+  if (label === "Themes" && hrefPath === "/dashboard/storefront/themes") {
+    return pathname === hrefPath || pathname === "/dashboard/theme";
+  }
+
+  return pathname === hrefPath && !href.includes("#");
 }
 
 function matchesRoute(pathname: string, href: string) {

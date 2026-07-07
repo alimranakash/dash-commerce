@@ -26,13 +26,15 @@ const labels: Record<string, string> = {
   sales: "Sales",
   settings: "Settings",
   shipping: "Shipping",
+  storefront: "Storefront",
   suppliers: "Suppliers",
   theme: "Theme",
+  themes: "Themes",
   verification: "Verification Queue"
 };
 
 export function DashboardTopbar({ onMenuClick }: DashboardTopbarProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const segments = pathname.split("/").filter(Boolean).slice(1);
 
   return (

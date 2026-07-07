@@ -35,6 +35,7 @@ export async function applyStorefrontTemplateAction(
 
 function revalidateTemplatePaths(storeSlug: string) {
   revalidatePath("/dashboard/theme");
+  revalidatePath("/dashboard/storefront/themes");
   revalidatePath(`/s/${storeSlug}`);
   revalidatePath(`/s/${storeSlug}/categories`);
   revalidatePath(`/s/${storeSlug}/products`);

@@ -9,6 +9,7 @@ export default async function SettingsSectionPage({ params }: { params: Promise<
   const { section } = await params;
 
   if (section === "general") redirect("/dashboard/settings");
+  if (section === "theme") redirect("/dashboard/storefront/themes");
 
   const title = settingsSections[section];
   if (!title) notFound();

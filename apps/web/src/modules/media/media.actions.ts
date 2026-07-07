@@ -61,6 +61,7 @@ function revalidateMediaPaths() {
   revalidatePath("/dashboard/products/new");
   revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard/theme");
+  revalidatePath("/dashboard/storefront/themes");
 }
 
 function getValue(formData: FormData, key: string) {

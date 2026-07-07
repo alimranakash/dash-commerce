@@ -47,6 +47,7 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
       <input name="announcementText" type="hidden" value={announcementText} />
 
       <SettingsCard
+        id="announcement-bar"
         title="Announcement Bar"
         description="Create a full-width scrolling top bar with promotional messages."
       >
@@ -76,6 +77,7 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
       </SettingsCard>
 
       <SettingsCard
+        id="header"
         title="Header"
         description="Control storefront logo, navigation, icons, sticky behavior, and colors."
       >
@@ -112,6 +114,7 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
       </SettingsCard>
 
       <SettingsCard
+        id="hero-section"
         title="Hero Section"
         description="Manage the top hero with image, slider, video, YouTube, overlay, title, and CTA buttons."
       >
@@ -242,6 +245,7 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
       </SettingsCard>
 
       <SettingsCard
+        id="colors-layout"
         title="Colors & Layout"
         description="Reusable storefront color and layout controls for all templates."
       >
@@ -268,6 +272,7 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
       </SettingsCard>
 
       <SettingsCard
+        id="tabbed-product-showcase"
         title="Tabbed Product Showcase"
         description="Create a premium product rail with category-style tabs, slider controls, and reusable product sources."
       >
@@ -327,6 +332,7 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
       </SettingsCard>
 
       <SettingsCard
+        id="shop-collection-page"
         title="Shop / Collection Page"
         description="Control the premium product listing page header, toolbar, filters, sorting, grid, and product card options."
       >
@@ -416,6 +422,7 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
       </SettingsCard>
 
       <SettingsCard
+        id="cart-page"
         title="Cart Page"
         description="Control the minimal cart layout, free shipping progress, order notes, and checkout button style."
       >
@@ -483,6 +490,7 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
       </SettingsCard>
 
       <SettingsCard
+        id="mini-cart-drawer"
         title="Mini Cart Drawer"
         description="Control the slide-in cart drawer that opens from the storefront cart icon."
       >
@@ -558,6 +566,7 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
       </SettingsCard>
 
       <SettingsCard
+        id="product-sections"
         title="Product Sections"
         description="Control the reusable storefront product listing layout used by featured products, shop pages, search results, and related products."
       >
@@ -573,6 +582,7 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
       </SettingsCard>
 
       <SettingsCard
+        id="product-page"
         title="Product Page"
         description="Control the single product page gallery, purchase area, accordions, shipping copy, and promotional blocks."
       >
