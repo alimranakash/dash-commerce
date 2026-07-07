@@ -198,6 +198,37 @@ export async function archiveProductRecord(storeId: string, productId: string) {
   });
 }
 
+export async function deleteProductPermanentlyRecord(storeId: string, productId: string) {
+  return prisma.$transaction(async (tx) => {
+    const product = await tx.product.findFirst({
+      where: {
+        id: productId,
+        status: "ARCHIVED",
+        storeId
+      },
+      select: {
+        id: true
+      }
+    });
+
+    if (!product) {
+      return null;
+    }
+
+    await tx.saleItem.deleteMany({
+      where: {
+        productId
+      }
+    });
+
+    return tx.product.delete({
+      where: {
+        id: productId
+      }
+    });
+  });
+}
+
 export async function updateProductStatusRecord(
   storeId: string,
   productId: string,

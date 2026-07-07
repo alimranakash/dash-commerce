@@ -11,6 +11,7 @@ import {
   archiveProduct,
   bulkUpdateProductStatus,
   createProduct,
+  deleteProductPermanently,
   updateProduct,
   updateProductStatus
 } from "./product.service";
@@ -125,6 +126,29 @@ export async function archiveProductFormAction(productId: string) {
 
   revalidatePath("/dashboard/products");
   redirect("/dashboard/products?archived=1");
+}
+
+export async function restoreProductFormAction(productId: string) {
+  const store = await requireStore();
+
+  await updateProductStatus(store.id, productId, "DRAFT");
+
+  revalidatePath("/dashboard/products");
+  redirect("/dashboard/products?restored=1");
+}
+
+export async function deleteProductPermanentlyFormAction(productId: string) {
+  const store = await requireStore();
+
+  try {
+    await deleteProductPermanently(store.id, productId);
+  } catch {
+    revalidatePath("/dashboard/products");
+    redirect("/dashboard/products?deleteError=1&status=trash");
+  }
+
+  revalidatePath("/dashboard/products");
+  redirect("/dashboard/products?permanentlyDeleted=1&status=trash");
 }
 
 type ProductFormPayload = {

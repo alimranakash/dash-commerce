@@ -4,6 +4,7 @@ import {
   archiveProductRecord,
   bulkUpdateProductStatusRecord,
   createProductRecord,
+  deleteProductPermanentlyRecord,
   getProductByIdForStore,
   getProductsForStore,
   isProductSkuAvailable,
@@ -85,6 +86,16 @@ export async function updateProduct(
 
 export async function archiveProduct(storeId: string, productId: string) {
   return archiveProductRecord(storeId, productId);
+}
+
+export async function deleteProductPermanently(storeId: string, productId: string) {
+  const product = await deleteProductPermanentlyRecord(storeId, productId);
+
+  if (!product) {
+    throw new Error("Product was not found in trash.");
+  }
+
+  return product;
 }
 
 export async function updateProductStatus(storeId: string, productId: string, status: unknown) {

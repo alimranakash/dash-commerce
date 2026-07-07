@@ -49,6 +49,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     title: product.title
   }));
   const message = getProductsMessage(params);
+  const isErrorMessage = Boolean(params.deleteError);
 
   return (
     <DashboardShell storeSlug={store.slug}>
@@ -58,7 +59,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           <button aria-disabled="true" className="text-xs font-semibold text-[#6d3cf5] underline underline-offset-4" title="Product import is not available yet" type="button">Import Products</button>
         </div>
 
-        {message ? <p className="success-message">{message}</p> : null}
+        {message ? <p className={isErrorMessage ? "form-error" : "success-message"}>{message}</p> : null}
 
         <div className="rounded-xl border border-[#ececf5] bg-white p-5 shadow-[0_8px_24px_rgba(62,54,114,0.04)]">
           <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -82,4 +83,12 @@ function sortProducts<T extends { price: unknown; stockQuantity: number; title: 
   if (sort === "stock") return sorted.sort((a, b) => b.stockQuantity - a.stockQuantity);
   return sorted;
 }
-function getProductsMessage(searchParams: Record<string, string | string[] | undefined>) { if (searchParams.created) return "Product created."; if (searchParams.updated) return "Product updated."; if (searchParams.archived) return "Product moved to trash."; return null; }
+function getProductsMessage(searchParams: Record<string, string | string[] | undefined>) {
+  if (searchParams.created) return "Product created.";
+  if (searchParams.updated) return "Product updated.";
+  if (searchParams.archived) return "Product moved to trash.";
+  if (searchParams.restored) return "Product restored.";
+  if (searchParams.permanentlyDeleted) return "Product permanently deleted.";
+  if (searchParams.deleteError) return "Product could not be permanently deleted.";
+  return null;
+}

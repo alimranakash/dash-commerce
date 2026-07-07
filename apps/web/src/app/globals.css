@@ -10434,6 +10434,63 @@ textarea {
   gap: var(--general-grid-gap);
 }
 
+/* General Default homepage section rhythm */
+.sf-page[data-storefront-template="general-default"] .general-homepage {
+  --general-section-padding-block: clamp(48px, 6vw, 88px);
+  --general-section-padding-inline: clamp(20px, 4vw, 72px);
+  --general-section-gap: clamp(34px, 4.8vw, 72px);
+  display: grid;
+  gap: var(--general-section-gap);
+  padding-bottom: var(--general-section-gap);
+}
+
+.sf-page[data-storefront-template="general-default"] .general-homepage > .general-hero {
+  margin-bottom: 0;
+}
+
+.sf-page[data-storefront-template="general-default"] .general-homepage > .general-home-section {
+  padding: var(--general-section-padding-block) var(--general-section-padding-inline);
+}
+
+.sf-page[data-storefront-template="general-default"] .general-homepage > .general-product-section {
+  padding-block: var(--general-section-padding-block);
+}
+
+.sf-page[data-storefront-template="general-default"] .general-homepage > .general-promo-banner,
+.sf-page[data-storefront-template="general-default"] .general-homepage > .general-newsletter {
+  padding: var(--general-section-padding-block) var(--general-section-padding-inline);
+}
+
+.sf-page[data-storefront-template="general-default"] .general-homepage :is(.general-section-heading, .general-product-section-header) {
+  margin-bottom: clamp(18px, 2.5vw, 34px);
+}
+
+.sf-page[data-storefront-template="general-default"] .general-homepage .general-category-strip {
+  align-items: start;
+}
+
+.sf-page[data-storefront-template="general-default"] .general-homepage .general-collection-grid {
+  align-items: stretch;
+}
+
+.sf-page[data-storefront-template="general-default"] .general-homepage .general-promo-banner,
+.sf-page[data-storefront-template="general-default"] .general-homepage .general-newsletter {
+  min-height: clamp(280px, 28vw, 420px);
+}
+
+@media (max-width: 760px) {
+  .sf-page[data-storefront-template="general-default"] .general-homepage {
+    --general-section-padding-block: clamp(36px, 11vw, 58px);
+    --general-section-padding-inline: clamp(16px, 5vw, 24px);
+    --general-section-gap: clamp(24px, 8vw, 42px);
+  }
+
+  .sf-page[data-storefront-template="general-default"] .general-homepage .general-promo-banner,
+  .sf-page[data-storefront-template="general-default"] .general-homepage .general-newsletter {
+    min-height: auto;
+  }
+}
+
 /* Product variants workflow */
 .variant-workflow {
   display: grid;
