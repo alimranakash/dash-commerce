@@ -13,11 +13,12 @@ const TOAST_DURATION = 4200;
 
 function updateToastStack() {
   window.requestAnimationFrame(() => {
-    document
-      .querySelectorAll<HTMLElement>("[data-storefront-settings-toast='true']")
-      .forEach((toast, index) => {
-        toast.style.setProperty("--toast-index", String(index));
-      });
+    let offset = 0;
+
+    document.querySelectorAll<HTMLElement>("[data-storefront-settings-toast='true']").forEach((toast) => {
+      toast.style.setProperty("--toast-offset", `${offset}px`);
+      offset += toast.offsetHeight + 12;
+    });
   });
 }
 
