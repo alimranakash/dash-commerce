@@ -4,6 +4,7 @@ import { ProductPrice } from "../../components/product-card";
 import { StorefrontImage } from "../../components/storefront-image";
 import type { StorefrontAdvancedSettings } from "../../customization";
 import type { StorefrontProduct } from "../../storefront.types";
+import collectionStyles from "./fashion-collection-grid.module.css";
 import { FashionHeroSlider } from "./fashion-hero-slider";
 
 type FashionSectionProps = {
@@ -27,6 +28,13 @@ const fallbackCategories = [
   { name: "Men", slug: "men" },
   { name: "Shoes", slug: "shoes" },
   { name: "Accessories", slug: "accessories" }
+];
+
+const fallbackEditorialCollections = [
+  { cta: "Shop now", name: "Bikinis", slug: "bikinis" },
+  { cta: "One pieces", name: "One Pieces", slug: "one-pieces" },
+  { cta: "Swim tops", name: "Swim Tops", slug: "swim-tops" },
+  { cta: "Shop cover-ups", name: "Beachwear", slug: "beachwear" }
 ];
 
 const fallbackProducts = [
@@ -106,6 +114,60 @@ export function FashionCollectionCards({ storeSlug }: { storeSlug: string }) {
         </Link>
       ))}
     </div>
+  );
+}
+
+export function FashionEditorialCollectionGrid({
+  categories,
+  storeSlug
+}: {
+  categories: FashionCategory[];
+  storeSlug: string;
+}) {
+  const collections = (categories.length > 0 ? categories.slice(0, 4) : fallbackEditorialCollections).map(
+    (category, index) => ({
+      cta:
+        "cta" in category && typeof category.cta === "string"
+          ? category.cta
+          : fallbackEditorialCollections[index]?.cta ?? "Shop now",
+      imageUrl:
+        "imageUrl" in category && typeof category.imageUrl === "string"
+          ? category.imageUrl
+          : null,
+      name: category.name,
+      slug: category.slug
+    })
+  );
+
+  return (
+    <section
+      aria-label="Shop fashion collections"
+      className={collectionStyles.section}
+    >
+      <div className={collectionStyles.grid}>
+        {collections.map((collection, index) => (
+          <Link
+            className={collectionStyles.card}
+            href={`/s/${storeSlug}/categories/${collection.slug}`}
+            key={collection.slug}
+          >
+            <div className={collectionStyles.media}>
+              <StorefrontImage
+                alt={collection.name}
+                fallback={collection.name}
+                src={collection.imageUrl}
+              />
+            </div>
+            <div className={collectionStyles.shade} aria-hidden="true" />
+            <div className={collectionStyles.content}>
+              <h2>{collection.name}</h2>
+              <span>{collection.cta}</span>
+            </div>
+            <span className="sr-only">Collection {index + 1} of {collections.length}</span>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
 

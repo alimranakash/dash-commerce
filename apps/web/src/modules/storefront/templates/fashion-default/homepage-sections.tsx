@@ -4,6 +4,7 @@ import {
   FashionCollectionCards,
   FashionCommunityGallery,
   FashionEditorialBanner,
+  FashionEditorialCollectionGrid,
   FashionFeaturedLook,
   FashionHero,
   FashionNewsletter,
@@ -25,6 +26,10 @@ export function FashionHomepageSections({
         heroImageUrl={settings?.heroImageUrl ?? store.themeSetting?.heroImageUrl}
         subtitle={store.themeSetting?.heroSubtitle ?? null}
         title={store.themeSetting?.heroTitle ?? null}
+      />
+      <FashionEditorialCollectionGrid
+        categories={homeData.categories}
+        storeSlug={store.slug}
       />
       <FashionSection actionHref={`/s/${store.slug}/products`} eyebrow="New Collection" id="fashion-new-collection" title="The latest collection">
         <FashionProductGrid

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { DEFAULT_STOREFRONT_TEMPLATE_ID } from "../templates/template-mapping";
+import { FashionStorefrontFooter } from "../templates/fashion-default/fashion-footer";
 import type { StorefrontStore } from "../storefront.types";
 
 type StorefrontFooterProps = {
@@ -19,6 +20,10 @@ export function StorefrontFooter({ primaryDomain, store }: StorefrontFooterProps
     settings?.instagramUrl ? { href: settings.instagramUrl, label: "Instagram" } : null,
     whatsappHref ? { href: whatsappHref, label: "WhatsApp" } : null
   ].filter((link): link is { href: string; label: string } => Boolean(link));
+
+  if (templateId === "fashion-default") {
+    return <FashionStorefrontFooter primaryDomain={primaryDomain} store={store} templateId={templateId} />;
+  }
 
   return (
     <footer className="sf-footer" data-storefront-footer-template={templateId}>
