@@ -15,6 +15,7 @@ type ProductPurchasePanelProps = {
   secondaryActionsEnabled?: boolean;
   storeId: string;
   storeSlug: string;
+  variantId?: string | null;
 };
 
 export function ProductPurchasePanel({
@@ -27,7 +28,8 @@ export function ProductPurchasePanel({
   productSlug,
   secondaryActionsEnabled = true,
   storeId,
-  storeSlug
+  storeSlug,
+  variantId
 }: ProductPurchasePanelProps) {
   const isUnavailable = maxQuantity < 1;
   const [quantity, setQuantity] = useState(1);
@@ -60,7 +62,8 @@ export function ProductPurchasePanel({
       productSlug,
       quantity: String(quantity),
       storeId,
-      storeSlug
+      storeSlug,
+      ...(variantId ? { variantId } : {})
     });
 
     setIsSubmitting(false);
@@ -82,6 +85,7 @@ export function ProductPurchasePanel({
         <input name="storeSlug" type="hidden" value={storeSlug} />
         <input name="productId" type="hidden" value={productId} />
         <input name="productSlug" type="hidden" value={productSlug} />
+        {variantId ? <input name="variantId" type="hidden" value={variantId} /> : null}
 
         <div className="sf-quantity-row">
           <span>Quantity</span>

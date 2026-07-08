@@ -4,8 +4,8 @@ import { AlertCircle, AlertTriangle, CheckCircle2, Info, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react";
 
 type StorefrontSettingsToastProps = {
-  message?: string | null;
-  messageKey?: string | number | null;
+  message?: string | null | undefined;
+  messageKey?: string | number | null | undefined;
   type?: "error" | "info" | "success" | "warning";
 };
 

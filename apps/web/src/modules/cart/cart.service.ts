@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { prisma } from "@dash/db";
 import { cookies } from "next/headers";
+import { getProductVariantForCart } from "../products/product-variants.service";
 import type { Cart, StoredCart, StoredCartItem } from "./cart.types";
 
 const CART_COOKIE_PREFIX = "dash_cart";
@@ -17,20 +18,27 @@ export async function getCart(storeId: string): Promise<Cart> {
   return buildCart(storeId, cart.items);
 }
 
-export async function addToCart(storeId: string, productId: string, quantity: number) {
+export async function addToCart(storeId: string, productId: string, quantity: number, variantId?: string | null) {
   const requestedQuantity = normalizeQuantity(quantity);
   const product = await getPublicProductForCart(storeId, productId);
   const currentCart = await readStoredCart(storeId);
-  const existingItem = currentCart.items.find((item) => item.productId === product.id);
+  const variant = variantId ? await getActiveCartVariant(storeId, product.id, variantId) : null;
+  const lineId = cartLineId(product.id, variant?.id);
+  const existingItem = currentCart.items.find((item) => item.lineId === lineId);
   const nextQuantity = (existingItem?.quantity ?? 0) + requestedQuantity;
+  const availableStock = variant?.continueSelling ? Number.MAX_SAFE_INTEGER : variant?.stockQuantity ?? product.stockQuantity;
 
-  ensureStockAllows(product.stockQuantity, nextQuantity);
+  ensureStockAllows(availableStock, nextQuantity);
 
-  const image = product.images[0]?.url ?? null;
+  const image = variant?.imageUrl || product.images[0]?.url || null;
   const nextItem: StoredCartItem = {
+    lineId,
     productId: product.id,
+    sku: variant?.sku ?? product.sku ?? null,
     title: product.title,
-    price: product.price.toString(),
+    variantId: variant?.id ?? null,
+    variantTitle: variant?.title ?? null,
+    price: variant?.price ?? product.price.toString(),
     image,
     quantity: nextQuantity
   };
@@ -42,17 +50,25 @@ export async function addToCart(storeId: string, productId: string, quantity: nu
 
 export async function updateCartItemQuantity(
   storeId: string,
-  productId: string,
+  lineId: string,
   quantity: number
 ) {
   const nextQuantity = normalizeQuantity(quantity);
-  const product = await getPublicProductForCart(storeId, productId);
-
-  ensureStockAllows(product.stockQuantity, nextQuantity);
-
   const currentCart = await readStoredCart(storeId);
+  const currentItem = currentCart.items.find((item) => item.lineId === lineId || item.productId === lineId);
+
+  if (!currentItem) {
+    throw new Error("Cart item not found.");
+  }
+
+  const product = await getPublicProductForCart(storeId, currentItem.productId);
+  const variant = currentItem.variantId ? await getActiveCartVariant(storeId, product.id, currentItem.variantId) : null;
+  const availableStock = variant?.continueSelling ? Number.MAX_SAFE_INTEGER : variant?.stockQuantity ?? product.stockQuantity;
+
+  ensureStockAllows(availableStock, nextQuantity);
+
   const nextItems = currentCart.items.map((item) =>
-    item.productId === productId ? { ...item, quantity: nextQuantity } : item
+    item.lineId === currentItem.lineId ? { ...item, quantity: nextQuantity } : item
   );
 
   await writeStoredCart(storeId, nextItems);
@@ -60,9 +76,9 @@ export async function updateCartItemQuantity(
   return getCart(storeId);
 }
 
-export async function removeCartItem(storeId: string, productId: string) {
+export async function removeCartItem(storeId: string, lineId: string) {
   const currentCart = await readStoredCart(storeId);
-  const nextItems = currentCart.items.filter((item) => item.productId !== productId);
+  const nextItems = currentCart.items.filter((item) => item.lineId !== lineId && item.productId !== lineId);
 
   await writeStoredCart(storeId, nextItems);
 
@@ -90,6 +106,7 @@ export function calculateCartTotals(items: StoredCartItem[]) {
 function buildCart(storeId: string, items: StoredCartItem[]): Cart {
   const normalizedItems = items.map((item) => ({
     ...item,
+    lineId: item.lineId ?? cartLineId(item.productId, item.variantId),
     lineTotal: moneyString(Number(item.price) * item.quantity)
   }));
 
@@ -163,13 +180,13 @@ async function writeStoredCart(storeId: string, items: StoredCartItem[]) {
 }
 
 function upsertItem(items: StoredCartItem[], nextItem: StoredCartItem) {
-  const exists = items.some((item) => item.productId === nextItem.productId);
+  const exists = items.some((item) => item.lineId === nextItem.lineId);
 
   if (!exists) {
     return [...items, nextItem];
   }
 
-  return items.map((item) => (item.productId === nextItem.productId ? nextItem : item));
+  return items.map((item) => (item.lineId === nextItem.lineId ? nextItem : item));
 }
 
 function normalizeStoredItem(item: StoredCartItem): StoredCartItem | null {
@@ -184,12 +201,24 @@ function normalizeStoredItem(item: StoredCartItem): StoredCartItem | null {
   }
 
   return {
+    lineId: item.lineId ? String(item.lineId) : cartLineId(String(item.productId), item.variantId ? String(item.variantId) : null),
     productId: String(item.productId),
+    sku: item.sku ? String(item.sku) : null,
     title: String(item.title),
+    variantId: item.variantId ? String(item.variantId) : null,
+    variantTitle: item.variantTitle ? String(item.variantTitle) : null,
     price: moneyString(Number(item.price)),
     image: item.image ? String(item.image) : null,
     quantity
   };
+}
+
+async function getActiveCartVariant(storeId: string, productId: string, variantId: string) {
+  return getProductVariantForCart(storeId, productId, variantId);
+}
+
+function cartLineId(productId: string, variantId?: string | null) {
+  return variantId ? `${productId}:${variantId}` : productId;
 }
 
 function normalizeQuantity(quantity: number) {

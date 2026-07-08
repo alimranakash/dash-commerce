@@ -453,7 +453,7 @@ function VariantRow({
           index={index}
           mediaAssets={mediaAssets}
           onChange={(imageUrl) => onUpdate(variant.draftId, { imageUrl })}
-          value={variant.imageUrl}
+          value={variant.imageUrl ?? null}
         />
       </td>
       <td><strong>{variant.title}</strong></td>

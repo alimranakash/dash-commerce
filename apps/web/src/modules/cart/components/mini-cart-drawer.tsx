@@ -134,7 +134,7 @@ export function MiniCartDrawer({
                 <MiniCartItem
                   currency={currency}
                   item={item}
-                  key={item.productId}
+                  key={item.lineId}
                   settings={settings}
                   storeId={store.id}
                   storeName={store.name}
@@ -201,6 +201,7 @@ function MiniCartItem({
     startTransition(async () => {
       const result = await submitCartAction({
         cartAction: "update",
+        lineId: item.lineId,
         productId: item.productId,
         quantity: String(nextQuantity),
         storeId,
@@ -223,6 +224,7 @@ function MiniCartItem({
     startTransition(async () => {
       const result = await submitCartAction({
         cartAction: "remove",
+        lineId: item.lineId,
         productId: item.productId,
         storeId,
         storeSlug
@@ -245,7 +247,7 @@ function MiniCartItem({
       <div className="mini-cart-item-body">
         {settings.showBrand ? <p>{storeName}</p> : null}
         <h3>{item.title}</h3>
-        {settings.showVariant ? <span>Standard</span> : null}
+        {settings.showVariant ? <span>{item.variantTitle ?? "Standard"}</span> : null}
         <strong>{formatMoney(item.price, currency)}</strong>
         {error ? <small className="mini-cart-error">{error}</small> : null}
       </div>

@@ -4,6 +4,7 @@ import {
   getEnabledPaymentMethodForCheckout,
   isManualPaymentType
 } from "../payments/payment.service";
+import { decrementProductVariantStock, type CartVariantRecord } from "../products/product-variants.service";
 import { getEnabledShippingRateForCheckout } from "../shipping/shipping.service";
 import { checkoutSchema, type CheckoutInput } from "./checkout.schema";
 
@@ -46,12 +47,19 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
       }
     });
     const productsById = new Map(products.map((product) => [product.id, product]));
+    const variantsByLineId = new Map<string, CartVariantRecord>();
 
     for (const item of cart.items) {
       const product = productsById.get(item.productId);
 
       if (!product) {
         throw new Error(`${item.title} is no longer available.`);
+      }
+
+      if (item.variantId) {
+        const variant = await decrementProductVariantStock(tx, store.id, item.productId, item.variantId, item.quantity);
+        variantsByLineId.set(item.lineId, variant);
+        continue;
       }
 
       if (item.quantity > product.stockQuantity) {
@@ -96,6 +104,10 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
     });
 
     for (const item of cart.items) {
+      if (item.variantId) {
+        continue;
+      }
+
       const updated = await tx.product.updateMany({
         where: {
           id: item.productId,
@@ -155,8 +167,8 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
         items: {
           create: cart.items.map((item) => ({
             productId: item.productId,
-            title: item.title,
-            sku: productsById.get(item.productId)?.sku ?? null,
+            title: item.variantTitle ? `${item.title} - ${item.variantTitle}` : item.title,
+            sku: variantsByLineId.get(item.lineId)?.sku ?? productsById.get(item.productId)?.sku ?? null,
             price: item.price,
             quantity: item.quantity,
             total: item.lineTotal,

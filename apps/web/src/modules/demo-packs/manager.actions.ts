@@ -9,21 +9,21 @@ import {
   resetDemoContentForStore
 } from "./manager.service";
 
-export async function reinstallDemoPackAction(_formData: FormData) {
+export async function reinstallDemoPackAction() {
   const store = await requireStore();
   await reinstallDemoPackForStore(store.id, store.organizationId);
   revalidateDemoContentPaths();
   redirect("/dashboard/settings/demo-content?demoContent=reinstalled");
 }
 
-export async function resetDemoContentAction(_formData: FormData) {
+export async function resetDemoContentAction() {
   const store = await requireStore();
   await resetDemoContentForStore(store.id, store.organizationId);
   revalidateDemoContentPaths();
   redirect("/dashboard/settings/demo-content?demoContent=reset");
 }
 
-export async function removeDemoContentAction(_formData: FormData) {
+export async function removeDemoContentAction() {
   const store = await requireStore();
   await removeDemoContentForStore(store.id);
   revalidateDemoContentPaths();

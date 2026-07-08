@@ -3,6 +3,7 @@
 import { ArrowLeft, Download, FileText, PackageCheck, Printer, RefreshCcw, Truck, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { updateOrderStatusFormAction, updatePaymentStatusFormAction } from "../order.actions";
 
 export function OrderHeaderActions() {
   const [message, setMessage] = useState("");
@@ -18,19 +19,25 @@ export function OrderHeaderActions() {
   );
 }
 
-export function OrderQuickActions() {
+export function OrderQuickActions({ orderId }: { orderId: string }) {
   const [message, setMessage] = useState("");
   const actions = [
-    { icon: RefreshCcw, label: "Mark Processing", style: "border-blue-200 bg-blue-50 text-blue-700" },
-    { icon: PackageCheck, label: "Mark Completed", style: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-    { icon: XCircle, label: "Cancel Order", style: "border-rose-200 bg-rose-50 text-rose-700" },
-    { icon: FileText, label: "Create Invoice", style: "border-violet-200 bg-violet-50 text-violet-700" },
+    { action: updateOrderStatusFormAction.bind(null, orderId, "PROCESSING"), icon: RefreshCcw, label: "Mark Processing", style: "border-blue-200 bg-blue-50 text-blue-700" },
+    { action: updateOrderStatusFormAction.bind(null, orderId, "COMPLETED"), icon: PackageCheck, label: "Mark Completed", style: "border-emerald-200 bg-emerald-50 text-emerald-700" },
+    { action: updateOrderStatusFormAction.bind(null, orderId, "CANCELLED"), icon: XCircle, label: "Cancel Order", style: "border-rose-200 bg-rose-50 text-rose-700" },
+    { action: updatePaymentStatusFormAction.bind(null, orderId, "PAID"), icon: FileText, label: "Mark Paid", style: "border-violet-200 bg-violet-50 text-violet-700" },
     { icon: Truck, label: "Create Courier Booking", style: "border-[#dedcea] bg-white text-[#555762]" }
   ];
 
   return (
     <div className="grid gap-3">
-      {actions.map(({ icon: Icon, label, style }) => <button className={`flex min-h-11 items-center gap-2 rounded-lg border px-3.5 text-left text-xs font-semibold transition hover:brightness-95 ${style}`} key={label} onClick={() => setMessage(`${label} will be available when order workflow actions are connected.`)} type="button"><Icon className="h-4 w-4" />{label}</button>)}
+      {actions.map(({ action, icon: Icon, label, style }) => action ? (
+        <form action={action} key={label}>
+          <button className={`flex min-h-11 w-full items-center gap-2 rounded-lg border px-3.5 text-left text-xs font-semibold transition hover:brightness-95 ${style}`} type="submit"><Icon className="h-4 w-4" />{label}</button>
+        </form>
+      ) : (
+        <button className={`flex min-h-11 items-center gap-2 rounded-lg border px-3.5 text-left text-xs font-semibold transition hover:brightness-95 ${style}`} key={label} onClick={() => setMessage(`${label} will be available when courier booking is connected.`)} type="button"><Icon className="h-4 w-4" />{label}</button>
+      ))}
       {message ? <p className="m-0 rounded-lg bg-[#f7f4ff] px-3 py-2 text-[11px] leading-5 text-[#6c6380]">{message}</p> : null}
     </div>
   );

@@ -20,7 +20,7 @@ export function GoogleAuthButton({ callbackUrl = "/dashboard" }: { callbackUrl?:
   const [isLoading, setIsLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const oauthError = useMemo(() => {
-    const error = searchParams.get("error");
+    const error = searchParams?.get("error");
     return error ? oauthErrors[error] ?? "Google sign-in failed. Please try again." : null;
   }, [searchParams]);
 
@@ -29,7 +29,7 @@ export function GoogleAuthButton({ callbackUrl = "/dashboard" }: { callbackUrl?:
     setIsLoading(true);
     try {
       await signIn("google", {
-        callbackUrl: searchParams.get("callbackUrl") ?? callbackUrl
+        callbackUrl: searchParams?.get("callbackUrl") ?? callbackUrl
       });
     } catch {
       setLocalError("Google sign-in could not be started. Please try again.");

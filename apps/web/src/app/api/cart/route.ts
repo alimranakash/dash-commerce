@@ -13,12 +13,14 @@ export async function POST(request: NextRequest) {
   const storeId = getValue(formData, "storeId");
   const storeSlug = getValue(formData, "storeSlug");
   const productId = getValue(formData, "productId");
+  const lineId = getValue(formData, "lineId") || productId;
   const productSlug = getValue(formData, "productSlug");
+  const variantId = getValue(formData, "variantId");
   const wantsJson = isAjaxCartRequest(request);
 
   try {
     if (cartAction === "add") {
-      await addToCart(storeId, productId, Number(getValue(formData, "quantity") || 1));
+      await addToCart(storeId, productId, Number(getValue(formData, "quantity") || 1), variantId || null);
       revalidateStorefrontCart(storeSlug);
 
       if (wantsJson) {
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (cartAction === "update") {
-      await updateCartItemQuantity(storeId, productId, Number(getValue(formData, "quantity") || 1));
+      await updateCartItemQuantity(storeId, lineId, Number(getValue(formData, "quantity") || 1));
       revalidateStorefrontCart(storeSlug);
 
       if (wantsJson) {
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (cartAction === "remove") {
-      await removeCartItem(storeId, productId);
+      await removeCartItem(storeId, lineId);
       revalidateStorefrontCart(storeSlug);
 
       if (wantsJson) {

@@ -113,7 +113,7 @@ export default async function StorefrontCategoryProductsPage({
             <div aria-hidden="true" />
             <h3>No products found</h3>
             <p>This collection does not have products matching the selected filters.</p>
-            <a href={`/s/${store.slug}/categories/${category.slug}`}>Reset Filters</a>
+            <Link href={`/s/${store.slug}/categories/${category.slug}`}>Reset Filters</Link>
           </div>
         ) : (
           <>

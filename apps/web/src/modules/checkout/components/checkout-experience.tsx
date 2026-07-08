@@ -65,7 +65,7 @@ export function CheckoutExperience({
         cart={cart}
         currency={currency}
         shippingAmount={selectedShippingRate?.amount}
-        shippingLabel={selectedShippingRate?.name}
+        {...(selectedShippingRate?.name ? { shippingLabel: selectedShippingRate.name } : {})}
       />
     </section>
   );

@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { StorefrontImage } from "../../components/storefront-image";
 import type { StorefrontProductPageSettings } from "../../customization";
 
 type GeneralProductGalleryProps = {
@@ -100,7 +101,11 @@ export function GeneralProductGallery({ images: productImages, settings, title }
           onClick={() => activeImage.url && setLightboxIndex(activeIndex)}
           type="button"
         >
-          {activeImage.url ? <img alt={activeImage.alt} loading="eager" src={activeImage.url} /> : <span>{title}</span>}
+          {activeImage.url ? (
+            <StorefrontImage alt={activeImage.alt} fallback={title} loading="eager" src={activeImage.url} />
+          ) : (
+            <span>{title}</span>
+          )}
         </button>
         {visibleImages.length > 1 ? (
           <div className="general-product-gallery-thumbs" aria-label={`${title} thumbnails`}>
@@ -114,7 +119,7 @@ export function GeneralProductGallery({ images: productImages, settings, title }
                 onClick={() => setActiveIndex(index)}
                 type="button"
               >
-                {image.url ? <img alt="" loading="lazy" src={image.url} /> : <span>{index + 1}</span>}
+                {image.url ? <StorefrontImage alt="" fallback={String(index + 1)} src={image.url} /> : <span>{index + 1}</span>}
               </button>
             ))}
           </div>

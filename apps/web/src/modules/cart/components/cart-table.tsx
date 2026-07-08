@@ -36,7 +36,7 @@ export function CartTable({
           <CartRow
             currency={currency}
             item={item}
-            key={item.productId}
+            key={item.lineId}
             showBrand={showBrand}
             showRemoveButton={showRemoveButton}
             showVariant={showVariant}

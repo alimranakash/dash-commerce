@@ -43,13 +43,14 @@ export function CheckoutOrderSummary({
         </div>
         <div className="sf-checkout-summary-items">
           {cart.items.map((item) => (
-            <div className="sf-checkout-summary-item" key={item.productId}>
+            <div className="sf-checkout-summary-item" key={item.lineId}>
               <div className="sf-checkout-summary-image">
                 {item.image ? <img alt="" src={item.image} /> : <div aria-hidden="true" />}
                 <span>{item.quantity}</span>
               </div>
               <div className="sf-checkout-summary-meta">
                 <strong>{item.title}</strong>
+                {item.variantTitle ? <small>{item.variantTitle}</small> : null}
                 <small>Qty {item.quantity}</small>
               </div>
               <b>{formatMoney(item.lineTotal, currency)}</b>

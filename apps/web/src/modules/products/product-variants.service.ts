@@ -36,6 +36,11 @@ export type ProductVariantRecord = ProductVariantInput & {
   id: string;
 };
 
+export type CartVariantRecord = Pick<
+  ProductVariantRecord,
+  "continueSelling" | "id" | "imageUrl" | "price" | "sku" | "status" | "stockQuantity" | "title"
+>;
+
 export type ProductVariantConfiguration = {
   attributes: ProductAttributeInput[];
   variants: ProductVariantRecord[];
@@ -178,6 +183,68 @@ export async function setProductVariantConfiguration(input: {
   });
 }
 
+export async function getProductVariantForCart(storeId: string, productId: string, variantId: string) {
+  await ensureProductVariantSchema();
+
+  const rows = await prisma.$queryRawUnsafe<CartVariantRecord[]>(
+    `SELECT "id", "title", "sku", "imageUrl", "price", "stockQuantity", "continueSelling", "status"
+     FROM ${tableName("ProductVariant")}
+     WHERE "storeId" = $1 AND "productId" = $2 AND "id" = $3
+     LIMIT 1`,
+    storeId,
+    productId,
+    variantId
+  );
+  const variant = rows[0];
+
+  if (!variant || variant.status === "INACTIVE") {
+    throw new Error("This product option is not available.");
+  }
+
+  return normalizeCartVariant(variant);
+}
+
+export async function decrementProductVariantStock(
+  tx: Prisma.TransactionClient,
+  storeId: string,
+  productId: string,
+  variantId: string,
+  quantity: number
+) {
+  await ensureProductVariantSchema(tx);
+
+  const rows = await tx.$queryRawUnsafe<CartVariantRecord[]>(
+    `SELECT "id", "title", "sku", "imageUrl", "price", "stockQuantity", "continueSelling", "status"
+     FROM ${tableName("ProductVariant")}
+     WHERE "storeId" = $1 AND "productId" = $2 AND "id" = $3
+     LIMIT 1`,
+    storeId,
+    productId,
+    variantId
+  );
+  const variant = rows[0] ? normalizeCartVariant(rows[0]) : null;
+
+  if (!variant || variant.status === "INACTIVE") {
+    throw new Error("This product option is no longer available.");
+  }
+
+  if (!variant.continueSelling && quantity > variant.stockQuantity) {
+    throw new Error(`${variant.title} does not have enough stock.`);
+  }
+
+  await tx.$executeRawUnsafe(
+    `UPDATE ${tableName("ProductVariant")}
+     SET "stockQuantity" = "stockQuantity" - $4, "updatedAt" = CURRENT_TIMESTAMP
+     WHERE "storeId" = $1 AND "productId" = $2 AND "id" = $3`,
+    storeId,
+    productId,
+    variantId,
+    quantity
+  );
+
+  return variant;
+}
+
 function uniqueVariants(variants: ProductVariantInput[]) {
   const seen = new Set<string>();
 
@@ -189,6 +256,16 @@ function uniqueVariants(variants: ProductVariantInput[]) {
     seen.add(variant.optionSignature);
     return true;
   });
+}
+
+function normalizeCartVariant(variant: CartVariantRecord): CartVariantRecord {
+  return {
+    ...variant,
+    imageUrl: variant.imageUrl ?? null,
+    price: String(variant.price),
+    sku: variant.sku ?? null,
+    stockQuantity: Number(variant.stockQuantity ?? 0)
+  };
 }
 
 export function ensureProductVariantSchema(db: ProductVariantClient = prisma) {

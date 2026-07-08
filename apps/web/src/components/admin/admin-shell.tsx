@@ -46,7 +46,7 @@ const adminLinks: AdminNavItem[] = [
 ];
 
 export function AdminShell({ admin, children }: AdminShellProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const [open, setOpen] = useState(false);
 
   return (

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { PaymentMethodTypeValue } from "../../payments/payment.schema";
 import { defaultCheckoutSettings } from "../checkout-settings";
 
@@ -45,8 +46,11 @@ export function CheckoutForm({
 }: CheckoutFormProps) {
   const selectedShippingRate = shippingRates.find((rate) => rate.id === selectedShippingId) ?? shippingRates[0];
   const defaultPaymentMethod = paymentMethods[0];
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(defaultPaymentMethod?.type ?? "COD");
   const canSubmit = paymentMethods.length > 0 && shippingRates.length > 0;
   const settings = defaultCheckoutSettings;
+  const selectedPayment = paymentMethods.find((method) => method.type === selectedPaymentMethod) ?? defaultPaymentMethod;
+  const needsPaymentReference = selectedPayment ? isManualCheckoutPayment(selectedPayment.type) : false;
 
   return (
     <form action="/api/checkout" className="sf-checkout-form" method="post">
@@ -57,7 +61,7 @@ export function CheckoutForm({
       <input name="postalCode" type="hidden" value="" />
       <input name="email" type="hidden" value="" />
       <input name="notes" type="hidden" value="" />
-      <input name="paymentReference" type="hidden" value="" />
+      {!needsPaymentReference ? <input name="paymentReference" type="hidden" value="" /> : null}
       <input name="paymentNote" type="hidden" value="" />
       <input name="district" type="hidden" value={selectedShippingRate?.district ?? selectedShippingRate?.name ?? ""} />
       <input name="area" type="hidden" value={selectedShippingRate?.area ?? ""} />
@@ -129,6 +133,7 @@ export function CheckoutForm({
                 <input
                   defaultChecked={method.type === defaultPaymentMethod?.type}
                   name="paymentMethod"
+                  onChange={() => setSelectedPaymentMethod(method.type)}
                   required
                   type="radio"
                   value={method.type}
@@ -142,12 +147,27 @@ export function CheckoutForm({
             ))}
           </div>
         )}
+        {needsPaymentReference ? (
+          <label>
+            Transaction ID
+            <input
+              name="paymentReference"
+              placeholder="Enter your payment transaction ID"
+              required
+              type="text"
+            />
+          </label>
+        ) : null}
       </fieldset>
       <button disabled={!canSubmit} type="submit">
         {settings.confirmButtonText}
       </button>
     </form>
   );
+}
+
+function isManualCheckoutPayment(type: PaymentMethodTypeValue) {
+  return type === "BKASH_MANUAL" || type === "NAGAD_MANUAL" || type === "ROCKET_MANUAL";
 }
 
 function formatDeliveryArea(rate: CheckoutShippingRate) {

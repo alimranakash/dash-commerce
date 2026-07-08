@@ -101,7 +101,7 @@ export async function StorefrontThemeSettingsPage({
           <div id="current-template" className="storefront-settings-section">
             <StorefrontTemplatePreviewCard
               activeTemplate={activeTemplate}
-              businessType={store.businessType}
+              businessType={store.businessType ?? null}
               storeSlug={store.slug}
             />
           </div>

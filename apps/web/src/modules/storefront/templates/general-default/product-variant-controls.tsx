@@ -93,6 +93,7 @@ export function ProductVariantControls({
         secondaryActionsEnabled={false}
         storeId={storeId}
         storeSlug={storeSlug}
+        variantId={selectedVariant?.id ?? null}
       />
     </div>
   );

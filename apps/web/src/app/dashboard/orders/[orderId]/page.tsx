@@ -76,7 +76,7 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 
         <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,0.7fr)]">
           <OrderTimeline createdAt={order.createdAt} fulfillmentStatus={order.fulfillmentStatus} orderStatus={order.status} paymentStatus={order.paymentStatus} updatedAt={order.updatedAt} />
-          <QuickActionsCard />
+          <QuickActionsCard orderId={order.id} />
         </div>
       </section>
     </DashboardShell>

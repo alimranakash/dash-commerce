@@ -42,6 +42,7 @@ export function CartRow({
     startTransition(async () => {
       const result = await submitCartAction({
         cartAction: "update",
+        lineId: item.lineId,
         productId: item.productId,
         quantity: String(nextQuantity),
         storeId,
@@ -64,6 +65,7 @@ export function CartRow({
     startTransition(async () => {
       const result = await submitCartAction({
         cartAction: "remove",
+        lineId: item.lineId,
         productId: item.productId,
         storeId,
         storeSlug
@@ -87,7 +89,7 @@ export function CartRow({
         <div>
           {showBrand ? <p>{storeName}</p> : null}
           <h2>{item.title}</h2>
-          {showVariant ? <span>Standard</span> : null}
+          {showVariant ? <span>{item.variantTitle ?? "Standard"}</span> : null}
           {error ? <strong className="general-cart-row-error">{error}</strong> : null}
         </div>
       </div>

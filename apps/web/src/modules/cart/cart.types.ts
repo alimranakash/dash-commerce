@@ -1,6 +1,10 @@
 export type CartItem = {
+  lineId: string;
   productId: string;
+  sku?: string | null;
   title: string;
+  variantId?: string | null;
+  variantTitle?: string | null;
   price: string;
   image: string | null;
   quantity: number;

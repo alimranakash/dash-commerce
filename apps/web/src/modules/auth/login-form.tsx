@@ -24,7 +24,7 @@ export function LoginForm() {
     const password = String(formData.get("password") ?? "");
     if (!/^\S+@\S+\.\S+$/.test(email) || !password) { setError("Enter a valid email and password."); setIsSubmitting(false); return; }
 
-    const result = await signIn("credentials", { email, password, redirect: false, callbackUrl: searchParams.get("callbackUrl") ?? "/dashboard" });
+    const result = await signIn("credentials", { email, password, redirect: false, callbackUrl: searchParams?.get("callbackUrl") ?? "/dashboard" });
     if (!result?.ok) { setError("Invalid email or password."); setIsSubmitting(false); return; }
     setNotice("Login successful. Opening your dashboard...");
     router.push(result.url ?? "/dashboard"); router.refresh();
