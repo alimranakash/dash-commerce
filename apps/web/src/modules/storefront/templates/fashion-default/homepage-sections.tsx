@@ -13,6 +13,7 @@ import {
 
 export function FashionHomepageSections({
   homeData,
+  settings,
   store
 }: StorefrontTemplateHomepageProps) {
   return (
@@ -20,6 +21,8 @@ export function FashionHomepageSections({
       <FashionHero
         storeName={store.name}
         storeSlug={store.slug}
+        advancedSettings={settings?.advancedSettings}
+        heroImageUrl={settings?.heroImageUrl ?? store.themeSetting?.heroImageUrl}
         subtitle={store.themeSetting?.heroSubtitle ?? null}
         title={store.themeSetting?.heroTitle ?? null}
       />

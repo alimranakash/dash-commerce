@@ -1,5 +1,6 @@
 import type { StorefrontStore } from "../storefront.types";
 import { getCart } from "../../cart/cart.service";
+import { FashionStorefrontHeader } from "../templates/fashion-default/fashion-header";
 import { DefaultStorefrontHeader } from "../themes/default/components/default-storefront-header";
 import { getStorefrontThemeSettings } from "../themes/theme.service";
 
@@ -12,6 +13,22 @@ export async function StorefrontHeader({ store }: StorefrontHeaderProps) {
     getStorefrontThemeSettings(store.id),
     getCart(store.id)
   ]);
+
+  if (store.activeTemplate === "fashion-default") {
+    return (
+      <FashionStorefrontHeader
+        announcementText={settings.announcementText}
+        advancedSettings={settings.advancedSettings}
+        cart={cart}
+        currency={store.currency}
+        logoUrl={settings.logoUrl}
+        storeId={store.id}
+        storeName={store.name}
+        storeSlug={store.slug}
+        templateId={store.activeTemplate}
+      />
+    );
+  }
 
   return (
     <DefaultStorefrontHeader

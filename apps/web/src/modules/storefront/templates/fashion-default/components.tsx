@@ -2,7 +2,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ProductPrice } from "../../components/product-card";
 import { StorefrontImage } from "../../components/storefront-image";
+import type { StorefrontAdvancedSettings } from "../../customization";
 import type { StorefrontProduct } from "../../storefront.types";
+import { FashionHeroSlider } from "./fashion-hero-slider";
 
 type FashionSectionProps = {
   actionHref?: string;
@@ -66,29 +68,30 @@ export function FashionSection({
 }
 
 export function FashionHero({
+  advancedSettings,
+  heroImageUrl,
   storeName,
   storeSlug,
   subtitle,
   title
 }: {
+  advancedSettings?: StorefrontAdvancedSettings | null | undefined;
+  heroImageUrl?: string | null | undefined;
   storeName: string;
   storeSlug: string;
   subtitle?: string | null;
   title?: string | null;
 }) {
+  void storeName;
+
   return (
-    <section className="fashion-hero" aria-labelledby="fashion-hero-title">
-      <div className="fashion-hero-image" aria-hidden="true">
-        <div className="fashion-model fashion-model-left" />
-        <div className="fashion-model fashion-model-right" />
-      </div>
-      <div className="fashion-hero-copy">
-        <p>{storeName}</p>
-        <h1 id="fashion-hero-title">{title || "Modern essentials for every season"}</h1>
-        <span>{subtitle || "An editorial wardrobe of refined silhouettes, soft layers, and everyday luxury."}</span>
-        <Link href={`/s/${storeSlug}/products`}>Shop the Collection</Link>
-      </div>
-    </section>
+    <FashionHeroSlider
+      fallbackImageUrl={heroImageUrl}
+      settings={advancedSettings}
+      storeSlug={storeSlug}
+      subtitle={subtitle || "THAT FEEL GOOD FIT"}
+      title={title || "Iconic style,\nmaximum heat."}
+    />
   );
 }
 
