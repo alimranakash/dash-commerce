@@ -3,6 +3,7 @@
 import { Button } from "@dash/ui";
 import { useActionState } from "react";
 import type { MediaPickerAsset } from "../../media/media.types";
+import { StorefrontSettingsToast } from "../../storefront/dashboard/storefront-settings-toast";
 import type { SettingsActionState } from "../settings.actions";
 import type { StoreSettingsFormValue } from "./store-settings-form";
 import { SettingsCard, UploadField } from "./theme-form-fields";
@@ -18,7 +19,11 @@ export function BrandAssetsForm({ action, mediaAssets, settings }: {
 
   return (
     <form action={formAction} className="theme-settings-form">
-      {state.status === "error" ? <p className="form-error">{state.message}</p> : null}
+      <StorefrontSettingsToast
+        message={state.status === "idle" ? null : state.message}
+        messageKey={state.toastId}
+        type={state.status === "error" ? "error" : "success"}
+      />
       <SettingsCard
         title="Branding"
         description="Upload the storefront logo and browser favicon. Existing media can be selected from your library."

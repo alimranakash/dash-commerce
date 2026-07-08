@@ -3,6 +3,7 @@
 import { Button } from "@dash/ui";
 import { useActionState } from "react";
 import type { MediaPickerAsset } from "../../media/media.types";
+import { StorefrontSettingsToast } from "../../storefront/dashboard/storefront-settings-toast";
 import {
   normalizeAdvancedSettings,
   type StorefrontAdvancedSettings,
@@ -42,7 +43,11 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
 
   return (
     <form action={formAction} className="theme-settings-form">
-      {state.status === "error" ? <p className="form-error">{state.message}</p> : null}
+      <StorefrontSettingsToast
+        message={state.status === "idle" ? null : state.message}
+        messageKey={state.toastId}
+        type={state.status === "error" ? "error" : "success"}
+      />
       <input name="themeName" type="hidden" value="Theme v1" />
       <input name="announcementText" type="hidden" value={announcementText} />
 

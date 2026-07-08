@@ -12,6 +12,7 @@ import { StorefrontTemplatePreviewCard } from "../templates/components/storefron
 import { getAvailableStorefrontTemplates } from "../templates/registry";
 import { DEFAULT_STOREFRONT_TEMPLATE_ID } from "../templates/template-mapping";
 import { getStoreActiveTemplate } from "../templates/template-store";
+import { StorefrontSettingsToast } from "./storefront-settings-toast";
 
 type StorefrontThemeSettingsPageProps = {
   searchParams: Record<string, string | string[] | undefined>;
@@ -38,6 +39,10 @@ const storefrontSections = [
   { href: "#product-page", label: "Product Page" }
 ];
 
+function getSearchParamValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 export async function StorefrontThemeSettingsPage({
   searchParams,
   store
@@ -48,7 +53,11 @@ export async function StorefrontThemeSettingsPage({
     getMediaPickerAssets(store.id),
     getStoreActiveTemplate(store.id)
   ]);
-  const message = searchParams.updated ? "Theme settings updated." : searchParams.brandingUpdated ? "Store branding updated." : null;
+  const updated = getSearchParamValue(searchParams.updated);
+  const brandingUpdated = getSearchParamValue(searchParams.brandingUpdated);
+  const toastId = getSearchParamValue(searchParams.toast);
+  const message = updated ? "Theme settings updated." : brandingUpdated ? "Store branding updated." : null;
+  const messageKey = toastId ?? updated ?? brandingUpdated ?? null;
   const storefrontPreviewUrl = `/s/${store.slug}`;
   const activeTemplateId = activeTemplate || DEFAULT_STOREFRONT_TEMPLATE_ID;
   const templates = getAvailableStorefrontTemplates().map((template) => ({
@@ -74,7 +83,7 @@ export async function StorefrontThemeSettingsPage({
         </Link>
       </div>
 
-      {message ? <p className="success-message">{message}</p> : null}
+      <StorefrontSettingsToast message={message} messageKey={messageKey} type="success" />
 
       <div className="storefront-settings-layout">
         <aside className="storefront-settings-sidebar" aria-label="Storefront settings sections">

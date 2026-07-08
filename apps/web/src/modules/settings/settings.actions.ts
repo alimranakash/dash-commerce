@@ -19,8 +19,9 @@ import { getStoreSettings, updateStoreSettings, updateThemeSettings } from "./se
 import type { StoreSettingsInput, ThemeSettingsInput } from "./settings.schema";
 
 export type SettingsActionState = {
-  status: "idle" | "error";
+  status: "idle" | "success" | "error";
   message?: string;
+  toastId?: string;
   fieldErrors?: Record<string, string>;
 };
 
@@ -109,7 +110,7 @@ export async function updateBrandSettingsFormAction(_state: SettingsActionState,
   }
 
   revalidateSettingsPaths(store.slug);
-  redirect("/dashboard/storefront/themes?brandingUpdated=1");
+  return settingsSuccessState("Store branding updated.");
 }
 
 export async function updateSocialProfilesFormAction(_state: SettingsActionState, formData: FormData) {
@@ -129,7 +130,7 @@ export async function updateThemeSettingsFormAction(
   }
 
   revalidateSettingsPaths(store.slug);
-  redirect("/dashboard/storefront/themes?updated=1");
+  return settingsSuccessState("Theme settings updated.");
 }
 
 function storeSettingsFromFormData(formData: FormData): StoreSettingsInput {
@@ -547,6 +548,7 @@ function settingsErrorState(error: unknown, fallbackMessage: string): SettingsAc
     return {
       status: "error",
       message: fallbackMessage,
+      toastId: createToastId(),
       fieldErrors: Object.fromEntries(
         error.issues.map((issue) => [String(issue.path[0] ?? "form"), issue.message])
       )
@@ -555,8 +557,21 @@ function settingsErrorState(error: unknown, fallbackMessage: string): SettingsAc
 
   return {
     status: "error",
+    toastId: createToastId(),
     message: error instanceof Error ? error.message : "Settings update failed."
   };
+}
+
+function settingsSuccessState(message: string): SettingsActionState {
+  return {
+    status: "success",
+    message,
+    toastId: createToastId()
+  };
+}
+
+function createToastId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
 function revalidateSettingsPaths(storeSlug: string) {
