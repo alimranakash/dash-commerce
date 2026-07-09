@@ -1,0 +1,149 @@
+.shell {
+  position: relative;
+  width: 100%;
+}
+
+.viewport {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding: 2px 4px 4px;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.card {
+  align-items: center;
+  background: #f9fbff;
+  border: 1px solid #c9d6f6;
+  border-radius: 14px;
+  color: #102039;
+  display: grid;
+  flex: 0 0 calc((100% - 100px) / 6);
+  gap: 14px;
+  justify-items: center;
+  min-height: 222px;
+  min-width: 0;
+  padding: 22px 18px 19px;
+  scroll-snap-align: start;
+  text-align: center;
+  text-decoration: none;
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+
+.card:hover {
+  border-color: #7da0f6;
+  transform: translateY(-2px);
+}
+
+.image {
+  align-items: center;
+  aspect-ratio: 1.28 / 1;
+  display: flex;
+  justify-content: center;
+  max-width: 155px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.image :global(img) {
+  height: 100%;
+  object-fit: contain;
+  transition: transform 220ms ease;
+  width: 100%;
+}
+
+.card:hover .image :global(img) {
+  transform: scale(1.045);
+}
+
+.image :global(span) {
+  align-items: center;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.95), transparent 17%),
+    linear-gradient(145deg, #eef4ff, #dfe8ff);
+  border-radius: 22px;
+  color: #3767ea;
+  display: flex;
+  font-size: 2.25rem;
+  font-weight: 900;
+  height: 100%;
+  justify-content: center;
+  letter-spacing: -0.08em;
+  width: 100%;
+}
+
+.label {
+  color: #102039;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.arrow {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 999px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.14);
+  color: #1f2937;
+  cursor: pointer;
+  display: inline-flex;
+  height: 46px;
+  justify-content: center;
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    opacity 160ms ease;
+  width: 46px;
+  z-index: 2;
+}
+
+.arrow:hover {
+  background: #3767ea;
+  color: #ffffff;
+}
+
+.arrow:disabled {
+  cursor: default;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 1180px) {
+  .card {
+    flex-basis: calc((100% - 60px) / 4);
+  }
+}
+
+@media (max-width: 780px) {
+  .viewport {
+    gap: 14px;
+  }
+
+  .card {
+    flex-basis: calc((100% - 14px) / 2);
+    min-height: 190px;
+  }
+
+  .arrow {
+    right: 2px;
+  }
+}
+
+@media (max-width: 420px) {
+  .card {
+    flex-basis: 74%;
+  }
+}

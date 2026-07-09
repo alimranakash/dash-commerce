@@ -4,7 +4,6 @@ import {
   ElectronicsCategoryGrid,
   ElectronicsFlashDeals,
   ElectronicsHero,
-  ElectronicsNewsletter,
   ElectronicsProductGrid,
   ElectronicsSection,
   ElectronicsTechnologyBanner,
@@ -13,21 +12,43 @@ import {
 
 export function ElectronicsHomepageSections({
   homeData,
+  settings,
   store
 }: StorefrontTemplateHomepageProps) {
   return (
     <div className="electronics-homepage">
       <ElectronicsHero
-        storeName={store.name}
+        categories={homeData.categories}
+        heroSettings={settings?.advancedSettings?.hero}
+        products={[
+          ...homeData.featuredProducts,
+          ...homeData.bestSellers,
+          ...homeData.newArrivals
+        ]}
         storeSlug={store.slug}
         subtitle={store.themeSetting?.heroSubtitle ?? null}
         title={store.themeSetting?.heroTitle ?? null}
       />
       <ElectronicsSection actionHref={`/s/${store.slug}/products`} eyebrow="Categories" id="electronics-categories" title="Top categories">
-        <ElectronicsCategoryGrid categories={homeData.categories} storeSlug={store.slug} />
+        <ElectronicsCategoryGrid
+          categories={homeData.categories}
+          products={[
+            ...homeData.featuredProducts,
+            ...homeData.bestSellers,
+            ...homeData.newArrivals
+          ]}
+          storeSlug={store.slug}
+        />
       </ElectronicsSection>
       <ElectronicsSection eyebrow="Brands" id="electronics-brands" title="Featured brands">
-        <ElectronicsBrandGrid />
+        <ElectronicsBrandGrid
+          products={[
+            ...homeData.featuredProducts,
+            ...homeData.bestSellers,
+            ...homeData.newArrivals
+          ]}
+          storeSlug={store.slug}
+        />
       </ElectronicsSection>
       <ElectronicsSection actionHref={`/s/${store.slug}/products`} eyebrow="Featured" id="electronics-featured" title="Featured products">
         <ElectronicsProductGrid
@@ -48,9 +69,15 @@ export function ElectronicsHomepageSections({
           storeSlug={store.slug}
         />
       </ElectronicsSection>
-      <ElectronicsTechnologyBanner storeSlug={store.slug} />
+      <ElectronicsTechnologyBanner
+        products={[
+          ...homeData.featuredProducts,
+          ...homeData.bestSellers,
+          ...homeData.newArrivals
+        ]}
+        storeSlug={store.slug}
+      />
       <ElectronicsWhyChooseUs />
-      <ElectronicsNewsletter />
     </div>
   );
 }

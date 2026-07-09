@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { DEFAULT_STOREFRONT_TEMPLATE_ID } from "../templates/template-mapping";
+import { ElectronicsStorefrontFooter } from "../templates/electronics-default/electronics-footer";
 import { FashionStorefrontFooter } from "../templates/fashion-default/fashion-footer";
 import type { StorefrontStore } from "../storefront.types";
 
@@ -23,6 +24,10 @@ export function StorefrontFooter({ primaryDomain, store }: StorefrontFooterProps
 
   if (templateId === "fashion-default") {
     return <FashionStorefrontFooter primaryDomain={primaryDomain} store={store} templateId={templateId} />;
+  }
+
+  if (templateId === "electronics-default") {
+    return <ElectronicsStorefrontFooter primaryDomain={primaryDomain} store={store} templateId={templateId} />;
   }
 
   return (

@@ -1,0 +1,292 @@
+.section {
+  background: #f8f8f8;
+  color: #07090d;
+  padding: 0 50px 22px;
+}
+
+.grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 2.05fr) minmax(280px, 1fr) minmax(280px, 1fr);
+  margin: 0 auto;
+  max-width: 1820px;
+}
+
+.card {
+  background: #e8eef9;
+  border-radius: 4px;
+  color: #080a0f;
+  min-height: 265px;
+  overflow: hidden;
+  position: relative;
+}
+
+.mainCard {
+  display: grid;
+  grid-column: span 1;
+  grid-template-columns: minmax(300px, 0.95fr) minmax(320px, 1fr);
+  min-height: 545px;
+}
+
+.middleCard {
+  background: #dfe7ff;
+  min-height: 545px;
+}
+
+.rightColumn {
+  display: grid;
+  gap: 8px;
+}
+
+.headphoneCard {
+  background: #f3e8e2;
+}
+
+.watchCard {
+  background: #ecefdb;
+}
+
+.mainCopy {
+  align-content: center;
+  display: grid;
+  gap: 28px;
+  padding: clamp(42px, 4.6vw, 60px);
+  position: relative;
+  z-index: 2;
+}
+
+.status {
+  align-items: center;
+  color: #285be8;
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 800;
+  gap: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.status::before {
+  background: #35ba72;
+  border-radius: 999px;
+  content: "";
+  height: 5px;
+  width: 5px;
+}
+
+.mainCopy h1 {
+  font-size: clamp(2.6rem, 4vw, 4.2rem);
+  font-weight: 900;
+  letter-spacing: -0.07em;
+  line-height: 0.97;
+  margin: 34px 0 0;
+  max-width: 560px;
+}
+
+.mainCopy p {
+  color: #6b6f76;
+  font-size: clamp(1rem, 1.25vw, 1.35rem);
+  font-weight: 500;
+  line-height: 1.28;
+  margin: -10px 0 0;
+  max-width: 380px;
+}
+
+.cta {
+  align-items: center;
+  background: #3767ea;
+  border-radius: 5px;
+  color: #ffffff;
+  display: inline-flex;
+  font-size: 0.88rem;
+  font-weight: 800;
+  justify-content: center;
+  min-height: 45px;
+  padding: 0 32px;
+  text-decoration: none;
+  width: fit-content;
+}
+
+.cta:hover {
+  background: #2857dc;
+}
+
+.mainMedia {
+  align-items: stretch;
+  display: flex;
+  justify-content: flex-end;
+  min-height: 100%;
+  position: relative;
+}
+
+.mainMedia :global(img) {
+  height: 100%;
+  max-height: 545px;
+  object-fit: contain;
+  object-position: center bottom;
+  width: 100%;
+}
+
+.mainMedia :global(span),
+.promoMedia :global(span) {
+  align-items: center;
+  color: rgba(8, 10, 15, 0.22);
+  display: flex;
+  font-size: clamp(2.5rem, 6vw, 6rem);
+  font-weight: 900;
+  height: 100%;
+  justify-content: center;
+  letter-spacing: -0.08em;
+  min-height: 100%;
+  width: 100%;
+}
+
+.promoCard {
+  display: grid;
+  min-height: 265px;
+}
+
+.promoCardTall {
+  min-height: 545px;
+}
+
+.promoText {
+  align-content: end;
+  display: grid;
+  gap: 10px;
+  inset: 0;
+  padding: 30px;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+.promoCardTall .promoText {
+  padding-bottom: 30px;
+}
+
+.badge {
+  align-items: center;
+  background: #ffffff;
+  border-radius: 4px;
+  color: #090b10;
+  display: inline-flex;
+  font-size: 0.65rem;
+  font-weight: 900;
+  justify-content: center;
+  letter-spacing: 0.09em;
+  line-height: 1;
+  padding: 10px 18px;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.promoText h2 {
+  font-size: clamp(1.45rem, 2vw, 2.05rem);
+  font-weight: 900;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+  margin: 0;
+  max-width: 320px;
+}
+
+.promoMedia {
+  height: 100%;
+  inset: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.promoMedia :global(img) {
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  width: 100%;
+}
+
+.middleCard .promoMedia :global(img) {
+  object-position: center top;
+}
+
+.watchCard .promoMedia :global(img) {
+  object-position: right center;
+}
+
+.deviceFallback {
+  background:
+    radial-gradient(circle at 70% 24%, rgba(255, 255, 255, 0.95) 0 12%, transparent 13%),
+    radial-gradient(circle at 50% 52%, rgba(55, 103, 234, 0.12), transparent 38%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.38), transparent);
+}
+
+@media (max-width: 1240px) {
+  .section {
+    padding-inline: 28px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .mainCard {
+    grid-column: 1 / -1;
+  }
+
+  .middleCard {
+    min-height: 420px;
+  }
+}
+
+@media (max-width: 820px) {
+  .section {
+    padding: 0 18px 18px;
+  }
+
+  .grid,
+  .mainCard {
+    grid-template-columns: 1fr;
+  }
+
+  .mainCard,
+  .middleCard,
+  .promoCard {
+    min-height: 390px;
+  }
+
+  .mainMedia {
+    min-height: 260px;
+    order: -1;
+  }
+
+  .mainMedia :global(img) {
+    max-height: 300px;
+  }
+
+  .mainCopy {
+    padding: 28px;
+  }
+
+  .mainCopy h1 {
+    margin-top: 8px;
+  }
+
+  .rightColumn {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .section {
+    padding-inline: 14px;
+  }
+
+  .mainCard,
+  .middleCard,
+  .promoCard {
+    min-height: 340px;
+  }
+
+  .promoText {
+    padding: 22px;
+  }
+}
