@@ -5,6 +5,7 @@ import {
   ElectronicsFlashDeals,
   ElectronicsHero,
   ElectronicsProductGrid,
+  ElectronicsRecommendedForYou,
   ElectronicsSection,
   ElectronicsTechnologyBanner,
   ElectronicsWhyChooseUs
@@ -70,6 +71,15 @@ export function ElectronicsHomepageSections({
         />
       </ElectronicsSection>
       <ElectronicsTechnologyBanner
+        products={[
+          ...homeData.featuredProducts,
+          ...homeData.bestSellers,
+          ...homeData.newArrivals
+        ]}
+        storeSlug={store.slug}
+      />
+      <ElectronicsRecommendedForYou
+        currency={store.currency}
         products={[
           ...homeData.featuredProducts,
           ...homeData.bestSellers,

@@ -5546,6 +5546,7 @@ textarea {
 .electronics-home-section,
 .electronics-flash-deals,
 .electronics-promo-deals,
+.electronics-recommended,
 .electronics-trust,
 .electronics-newsletter {
   margin-inline: auto;
@@ -6170,6 +6171,171 @@ textarea {
   text-decoration: underline;
   text-underline-offset: 5px;
   width: fit-content;
+}
+
+.electronics-recommended {
+  background: #f5f5f5;
+  display: grid;
+  padding: 22px 20px 36px;
+}
+
+.electronics-recommended-inner {
+  display: grid;
+  gap: 18px;
+  margin-inline: auto;
+  max-width: 1820px;
+  width: 100%;
+}
+
+.electronics-recommended h2 {
+  color: #101318;
+  font-size: clamp(1.55rem, 1.8vw, 2rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.electronics-recommended-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.electronics-recommended-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.electronics-recommended-tabs button {
+  background: #fbfcff;
+  border: 1px solid #d9e1f0;
+  border-radius: 4px;
+  color: #2462f4;
+  cursor: pointer;
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  min-height: 44px;
+  padding: 0 18px;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.electronics-recommended-tabs button:hover,
+.electronics-recommended-tabs button.is-active {
+  background: #ffffff;
+  border-color: #2563ff;
+  color: #2563ff;
+}
+
+.electronics-recommended-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.electronics-recommended-card {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.02);
+  border-radius: 6px;
+  color: #101318;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  min-height: 100px;
+  padding: 18px 28px;
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.electronics-recommended-card:hover {
+  border-color: rgba(37, 99, 255, 0.16);
+  transform: translateY(-1px);
+}
+
+.electronics-recommended-media {
+  align-items: center;
+  aspect-ratio: 1;
+  color: #3767ea;
+  display: grid;
+  font-size: 0.75rem;
+  font-weight: 950;
+  justify-items: center;
+  min-width: 0;
+  place-items: center;
+  text-align: center;
+}
+
+.electronics-recommended-media img {
+  height: 100%;
+  object-fit: contain;
+  transition: transform 180ms ease;
+  width: 100%;
+}
+
+.electronics-recommended-card:hover .electronics-recommended-media img {
+  transform: scale(1.04);
+}
+
+.electronics-recommended-info {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.electronics-recommended-info small {
+  color: #777b84;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.electronics-recommended-info strong {
+  color: #101318;
+  font-size: 0.96rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.electronics-recommended-card .sf-price {
+  align-items: flex-end;
+  display: grid;
+  gap: 3px;
+  justify-items: end;
+  min-width: max-content;
+}
+
+.electronics-recommended-card .sf-price strong {
+  color: #0a0d12;
+  font-size: 1.02rem;
+  font-weight: 950;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.electronics-recommended-card .sf-price span {
+  color: #787d88;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: line-through;
+  white-space: nowrap;
+}
+
+.electronics-recommended-card .sf-price:has(span) strong {
+  color: #23804f;
 }
 
 .electronics-trust {
@@ -10639,6 +10805,7 @@ textarea {
   .electronics-home-section,
   .electronics-flash-deals,
   .electronics-promo-deals,
+  .electronics-recommended,
   .electronics-trust,
   .electronics-newsletter {
     width: 100%;
@@ -10686,8 +10853,13 @@ textarea {
   .electronics-category-grid,
   .electronics-brand-grid,
   .electronics-product-grid,
+  .electronics-recommended-grid,
   .electronics-trust {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .electronics-recommended-card {
+    padding: 16px 20px;
   }
 
   .electronics-promo-card-cooker .electronics-promo-image,
@@ -11038,6 +11210,20 @@ textarea {
   .electronics-promo-grid {
     grid-template-columns: 1fr;
     grid-template-rows: none;
+  }
+
+  .electronics-recommended {
+    padding-inline: 14px;
+  }
+
+  .electronics-recommended-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .electronics-recommended-card {
+    gap: 14px;
+    grid-template-columns: 54px minmax(0, 1fr) auto;
+    padding: 16px;
   }
 
   .electronics-promo-card,

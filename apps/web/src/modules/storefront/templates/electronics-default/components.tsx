@@ -402,6 +402,88 @@ export function ElectronicsTechnologyBanner({
   );
 }
 
+export function ElectronicsRecommendedForYou({
+  currency,
+  products = [],
+  storeSlug
+}: {
+  currency: string;
+  products?: StorefrontProduct[];
+  storeSlug: string;
+}) {
+  const tabs = ["All", "Gaming", "Laptops", "Phones", "Smart Watches", "Speakers"];
+  const items = products.length > 0 ? products.slice(0, 12) : fallbackProducts;
+
+  return (
+    <section className="electronics-recommended" aria-labelledby="electronics-recommended-title">
+      <div className="electronics-recommended-inner">
+        <h2 id="electronics-recommended-title">Recommended for You</h2>
+        <div className="electronics-recommended-tabs" role="tablist" aria-label="Recommended product categories">
+          {tabs.map((tab, index) => (
+            <button aria-selected={index === 0} className={index === 0 ? "is-active" : undefined} key={tab} role="tab" type="button">
+              {tab}
+            </button>
+          ))}
+        </div>
+        <div className="electronics-recommended-grid">
+          {items.map((product, index) => {
+            if ("id" in product) {
+              return (
+                <ElectronicsRecommendedProductCard
+                  currency={currency}
+                  key={`${product.id}-${index}`}
+                  product={product}
+                  storeSlug={storeSlug}
+                />
+              );
+            }
+
+            return (
+              <Link className="electronics-recommended-card" href={`/s/${storeSlug}/products`} key={`${product.title}-${index}`}>
+                <span className="electronics-recommended-media">{product.label}</span>
+                <span className="electronics-recommended-info">
+                  <small>{product.brand}</small>
+                  <strong>{product.title}</strong>
+                </span>
+                <ProductPrice currency={currency} price={String(product.price)} />
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ElectronicsRecommendedProductCard({
+  currency,
+  product,
+  storeSlug
+}: {
+  currency: string;
+  product: StorefrontProduct;
+  storeSlug: string;
+}) {
+  const image = product.images[0];
+
+  return (
+    <Link className="electronics-recommended-card" href={`/s/${storeSlug}/products/${product.slug}`}>
+      <span className="electronics-recommended-media">
+        <StorefrontImage alt={image?.alt ?? product.title} fallback={product.category?.name?.slice(0, 2).toUpperCase() ?? "TX"} src={image?.url} />
+      </span>
+      <span className="electronics-recommended-info">
+        <small>{product.category?.name ?? "Stockmart"}</small>
+        <strong>{product.title}</strong>
+      </span>
+      <ProductPrice
+        compareAtPrice={product.compareAtPrice?.toString()}
+        currency={currency}
+        price={product.price.toString()}
+      />
+    </Link>
+  );
+}
+
 function PromoBadge({ label }: { label: string }) {
   const [value, suffix = "OFF"] = label.split(" ");
 
