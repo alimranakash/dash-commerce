@@ -4,6 +4,7 @@ import { StorefrontImage } from "../../components/storefront-image";
 import type { StorefrontAdvancedSettings } from "../../customization";
 import type { StorefrontProduct } from "../../storefront.types";
 import collectionStyles from "./fashion-collection-grid.module.css";
+import editorialStyles from "./fashion-editorial-sections.module.css";
 import { FashionEditorialProductCard } from "./fashion-editorial-product-card";
 import { FashionHeroSlider } from "./fashion-hero-slider";
 import { toFashionProductCardData } from "./fashion-product-card-data";
@@ -36,12 +37,6 @@ const fallbackEditorialCollections = [
   { cta: "One pieces", name: "One Pieces", slug: "one-pieces" },
   { cta: "Swim tops", name: "Swim Tops", slug: "swim-tops" },
   { cta: "Shop cover-ups", name: "Beachwear", slug: "beachwear" }
-];
-
-const featuredCollections = [
-  { label: "01", subtitle: "Airy silhouettes for warm days", title: "Summer Collection" },
-  { label: "02", subtitle: "New textures, clean proportions", title: "New Arrivals" },
-  { label: "03", subtitle: "Everyday pieces with quiet polish", title: "Essentials" }
 ];
 
 const communityTiles = ["Street Edit", "Neutral Layers", "Weekend Set", "Soft Tailoring", "City Walk", "Evening Ease"];
@@ -96,14 +91,40 @@ export function FashionHero({
   );
 }
 
-export function FashionCollectionCards({ storeSlug }: { storeSlug: string }) {
+export function FashionCollectionCards({
+  categories,
+  storeSlug
+}: {
+  categories: FashionCategory[];
+  storeSlug: string;
+}) {
+  const collections = (categories.length > 0 ? categories.slice(0, 3) : fallbackCategories.slice(0, 3));
+
   return (
-    <div className="fashion-collection-grid">
-      {featuredCollections.map((collection) => (
-        <Link className="fashion-collection-card" href={`/s/${storeSlug}/products`} key={collection.title}>
-          <div aria-hidden="true">{collection.label}</div>
-          <span>{collection.subtitle}</span>
-          <strong>{collection.title}</strong>
+    <div className={editorialStyles.collectionGrid}>
+      {collections.map((collection, index) => (
+        <Link
+          className={editorialStyles.collectionCard}
+          href={`/s/${storeSlug}/categories/${collection.slug}`}
+          key={collection.slug}
+        >
+          <div className={editorialStyles.collectionMedia}>
+            <StorefrontImage
+              alt={collection.name}
+              fallback={collection.name}
+              src={
+                "imageUrl" in collection && typeof collection.imageUrl === "string"
+                  ? collection.imageUrl
+                  : null
+              }
+            />
+          </div>
+          <div className={editorialStyles.collectionOverlay} aria-hidden="true" />
+          <div className={editorialStyles.collectionContent}>
+            <small>{String(index + 1).padStart(2, "0")}</small>
+            <h3>{collection.name}</h3>
+            <span>Explore collection</span>
+          </div>
         </Link>
       ))}
     </div>
@@ -217,65 +238,130 @@ export function FashionProductGrid({
   );
 }
 
-export function FashionEditorialBanner({ storeSlug }: { storeSlug: string }) {
+export function FashionEditorialBanner({
+  ctaLabel,
+  imageUrl,
+  storeSlug,
+  subtitle,
+  title
+}: {
+  ctaLabel?: string | null | undefined;
+  imageUrl?: string | null | undefined;
+  storeSlug: string;
+  subtitle?: string | null | undefined;
+  title?: string | null | undefined;
+}) {
   return (
-    <section className="fashion-editorial" aria-labelledby="fashion-editorial-title">
-      <div className="fashion-editorial-image" aria-hidden="true" />
-      <div>
+    <section className={editorialStyles.campaign} aria-labelledby="fashion-editorial-title">
+      <div className={editorialStyles.campaignMedia}>
+        <StorefrontImage
+          alt=""
+          fallback="Campaign"
+          src={imageUrl}
+        />
+      </div>
+      <div className={editorialStyles.campaignContent}>
         <p>Campaign</p>
-        <h2 id="fashion-editorial-title">Quiet confidence, cut for everyday movement.</h2>
-        <span>Explore refined layers, understated textures, and pieces made to work beautifully together.</span>
-        <Link href={`/s/${storeSlug}/products`}>Explore the edit</Link>
+        <h2 id="fashion-editorial-title">{title?.trim() || "Quiet confidence, cut for everyday movement."}</h2>
+        <span>{subtitle?.trim() || "Refined layers, understated textures, and pieces designed to move beautifully together."}</span>
+        <Link href={`/s/${storeSlug}/products`}>{ctaLabel?.trim() || "Explore the edit"}</Link>
       </div>
     </section>
   );
 }
 
-export function FashionFeaturedLook({ storeSlug }: { storeSlug: string }) {
+export function FashionFeaturedLook({
+  imageUrl,
+  products,
+  storeSlug
+}: {
+  imageUrl?: string | null | undefined;
+  products: StorefrontProduct[];
+  storeSlug: string;
+}) {
   return (
-    <section className="fashion-lookbook" aria-labelledby="fashion-lookbook-title">
-      <div>
+    <section className={editorialStyles.lookbook} aria-labelledby="fashion-lookbook-title">
+      <div className={editorialStyles.lookbookMedia}>
+        <StorefrontImage alt="" fallback="Featured look" src={imageUrl} />
+      </div>
+      <div className={editorialStyles.lookbookContent}>
         <p>Featured Look</p>
-        <h2 id="fashion-lookbook-title">A complete outfit for the modern day.</h2>
-        <span>Curate jacket, knitwear, trousers, footwear, and accessories into one editorial shopping moment.</span>
+        <h2 id="fashion-lookbook-title">The art of effortless dressing.</h2>
+        <span>A considered edit of pieces designed to work together, season after season.</span>
         <Link href={`/s/${storeSlug}/products`}>Shop the look</Link>
-      </div>
-      <div className="fashion-lookbook-grid" aria-hidden="true">
-        <span>Coat</span>
-        <span>Knit</span>
-        <span>Bag</span>
+        <div className={editorialStyles.lookbookProducts}>
+          {products.slice(0, 3).map((product) => (
+            <Link href={`/s/${storeSlug}/products/${product.slug}`} key={product.id}>
+              <div>
+                <StorefrontImage
+                  alt={product.images[0]?.alt ?? product.title}
+                  fallback={product.title}
+                  src={product.images[0]?.url}
+                />
+              </div>
+              <span>{product.title}</span>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );
 }
 
-export function FashionCommunityGallery() {
+export function FashionCommunityGallery({
+  images
+}: {
+  images: Array<{ alt: string; url: string | null }>;
+}) {
+  const tiles = Array.from({ length: 6 }, (_, index) => (
+    images[index] ?? {
+      alt: communityTiles[index] ?? "Community style",
+      url: null
+    }
+  ));
+
   return (
-    <section className="fashion-home-section" aria-labelledby="fashion-community-title">
-      <div className="fashion-section-heading">
+    <section className={editorialStyles.community} aria-labelledby="fashion-community-title">
+      <div className={editorialStyles.communityHeading}>
         <div>
           <p>Community</p>
           <h2 id="fashion-community-title">Styled by the community</h2>
         </div>
+        <span>Real style, worn your way.</span>
       </div>
-      <div className="fashion-community-grid">
-        {communityTiles.map((tile) => (
-          <div key={tile}>{tile}</div>
+      <div className={editorialStyles.communityGrid}>
+        {tiles.map((tile, index) => (
+          <figure key={`${tile.alt}-${index}`}>
+            <StorefrontImage alt={tile.alt} fallback={tile.alt} src={tile.url} />
+            <figcaption>{tile.alt}</figcaption>
+          </figure>
         ))}
       </div>
     </section>
   );
 }
 
-export function FashionNewsletter() {
+export function FashionNewsletter({
+  imageUrl,
+  storeName
+}: {
+  imageUrl?: string | null | undefined;
+  storeName: string;
+}) {
   return (
-    <section className="fashion-newsletter" aria-labelledby="fashion-newsletter-title">
-      <p>Newsletter</p>
-      <h2 id="fashion-newsletter-title">Receive the next editorial drop.</h2>
-      <form>
-        <input aria-label="Email address" placeholder="Email address" type="email" />
-        <button type="button">Subscribe</button>
-      </form>
+    <section className={editorialStyles.newsletter} aria-labelledby="fashion-newsletter-title">
+      <div className={editorialStyles.newsletterMedia}>
+        <StorefrontImage alt="" fallback={storeName} src={imageUrl} />
+      </div>
+      <div className={editorialStyles.newsletterContent}>
+        <p>Private list</p>
+        <h2 id="fashion-newsletter-title">Receive the next editorial drop.</h2>
+        <span>New collections, campaign stories, and private offers from {storeName}.</span>
+        <form>
+          <input aria-label="Email address" placeholder="Email address" type="email" />
+          <button type="button">Subscribe</button>
+        </form>
+      </div>
     </section>
   );
 }

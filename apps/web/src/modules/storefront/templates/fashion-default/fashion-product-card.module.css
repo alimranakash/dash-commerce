@@ -34,6 +34,11 @@
   width: 100%;
 }
 
+.primaryImage {
+  opacity: 1;
+  z-index: 1;
+}
+
 .mediaLink > span {
   align-items: center;
   background: linear-gradient(145deg, #f2efeb, #d8d1c9);
@@ -42,13 +47,15 @@
   justify-content: center;
   padding: 24px;
   text-align: center;
+  z-index: 1;
 }
 
 .secondaryImage {
   opacity: 0;
+  z-index: 2;
 }
 
-.media:hover .mediaLink > img:first-of-type {
+.media:hover .primaryImage {
   transform: scale(1.025);
 }
 

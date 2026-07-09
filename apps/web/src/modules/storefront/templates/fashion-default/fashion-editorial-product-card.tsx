@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { StorefrontImage } from "../../components/storefront-image";
+import { useEffect, useState } from "react";
 import type { FashionProductCardData } from "./fashion-product-card-data";
 import styles from "./fashion-product-card.module.css";
 
@@ -38,20 +38,12 @@ export function FashionEditorialProductCard({
     <article className={styles.card}>
       <div className={styles.media}>
         <Link aria-label={`View ${product.title}`} className={styles.mediaLink} href={productHref}>
-          <StorefrontImage
-            alt={primaryImage?.alt ?? product.title}
-            fallback={product.title}
-            src={primaryImage?.url}
+          <FashionProductImages
+            primaryAlt={primaryImage?.alt ?? product.title}
+            primaryUrl={primaryImage?.url}
+            productTitle={product.title}
+            secondaryUrl={secondaryImage?.url}
           />
-          {secondaryImage ? (
-            <img
-              alt=""
-              className={styles.secondaryImage}
-              decoding="async"
-              loading="lazy"
-              src={secondaryImage.url}
-            />
-          ) : null}
         </Link>
         {badges.length > 0 ? (
           <div className={styles.badges}>
@@ -83,6 +75,65 @@ export function FashionEditorialProductCard({
         </div>
       </div>
     </article>
+  );
+}
+
+function FashionProductImages({
+  primaryAlt,
+  primaryUrl,
+  productTitle,
+  secondaryUrl
+}: {
+  primaryAlt: string;
+  primaryUrl?: string | undefined;
+  productTitle: string;
+  secondaryUrl?: string | undefined;
+}) {
+  const [visiblePrimary, setVisiblePrimary] = useState(primaryUrl ?? secondaryUrl ?? null);
+  const [visibleSecondary, setVisibleSecondary] = useState(
+    primaryUrl && secondaryUrl ? secondaryUrl : null
+  );
+
+  useEffect(() => {
+    setVisiblePrimary(primaryUrl ?? secondaryUrl ?? null);
+    setVisibleSecondary(primaryUrl && secondaryUrl ? secondaryUrl : null);
+  }, [primaryUrl, secondaryUrl]);
+
+  function handlePrimaryError() {
+    if (secondaryUrl && visiblePrimary !== secondaryUrl) {
+      setVisiblePrimary(secondaryUrl);
+      setVisibleSecondary(null);
+      return;
+    }
+
+    setVisiblePrimary(null);
+  }
+
+  return (
+    <>
+      {visiblePrimary ? (
+        <img
+          alt={primaryAlt}
+          className={styles.primaryImage}
+          decoding="async"
+          loading="lazy"
+          onError={handlePrimaryError}
+          src={visiblePrimary}
+        />
+      ) : (
+        <span>{productTitle}</span>
+      )}
+      {visibleSecondary ? (
+        <img
+          alt=""
+          className={styles.secondaryImage}
+          decoding="async"
+          loading="lazy"
+          onError={() => setVisibleSecondary(null)}
+          src={visibleSecondary}
+        />
+      ) : null}
+    </>
   );
 }
 

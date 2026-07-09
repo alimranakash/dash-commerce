@@ -1,6 +1,8 @@
 import type { StorefrontTemplateHomepageProps } from "../types";
+import { FashionBeforeAfter } from "./fashion-before-after";
 import { FashionEditorialSplitBanner } from "./fashion-editorial-split-banner";
 import { FashionNewArrivals } from "./fashion-new-arrivals";
+import { toFashionProductCardData } from "./fashion-product-card-data";
 import {
   FashionCategoryCards,
   FashionCollectionCards,
@@ -25,6 +27,27 @@ export function FashionHomepageSections({
   const heroSlides = settings?.advancedSettings.hero.slides.filter(
     (slide) => slide.mediaType === "image"
   ) ?? [];
+  const comparisonProduct = homeData.featuredProducts[0] ?? null;
+  const comparisonImages = homeData.featuredProducts
+    .flatMap((product) => product.images)
+    .map((image) => image.url);
+  const sectionMedia = [
+    ...homeData.categories
+      .filter((category) => Boolean(category.imageUrl))
+      .map((category) => ({ alt: category.name, url: category.imageUrl })),
+    ...homeData.featuredProducts.flatMap((product) =>
+      product.images.map((image) => ({
+        alt: image.alt ?? product.title,
+        url: image.url
+      }))
+    ),
+    ...homeData.newArrivals.flatMap((product) =>
+      product.images.map((image) => ({
+        alt: image.alt ?? product.title,
+        url: image.url
+      }))
+    )
+  ];
 
   return (
     <div className="fashion-homepage">
@@ -77,7 +100,7 @@ export function FashionHomepageSections({
         textPosition="center"
       />
       <FashionSection actionHref={`/s/${store.slug}/products`} eyebrow="Collections" id="fashion-featured-collections" title="Featured collections">
-        <FashionCollectionCards storeSlug={store.slug} />
+        <FashionCollectionCards categories={homeData.categories} storeSlug={store.slug} />
       </FashionSection>
       <FashionSection actionHref={`/s/${store.slug}/products`} eyebrow="Categories" id="fashion-categories" title="Shop by category">
         <FashionCategoryCards categories={homeData.categories} storeSlug={store.slug} />
@@ -89,10 +112,31 @@ export function FashionHomepageSections({
           storeSlug={store.slug}
         />
       </FashionSection>
-      <FashionEditorialBanner storeSlug={store.slug} />
-      <FashionFeaturedLook storeSlug={store.slug} />
-      <FashionCommunityGallery />
-      <FashionNewsletter />
+      <FashionBeforeAfter
+        afterImageUrl={comparisonImages[1] ?? heroSlides[1]?.url ?? comparisonImages[0]}
+        beforeImageUrl={comparisonImages[0] ?? heroSlides[0]?.url ?? settings?.heroImageUrl}
+        currency={store.currency}
+        initialPosition={50}
+        product={comparisonProduct ? toFashionProductCardData(comparisonProduct) : null}
+        storeSlug={store.slug}
+      />
+      <FashionEditorialBanner
+        ctaLabel={settings?.advancedSettings.productSections.featured.ctaText}
+        imageUrl={sectionMedia[0]?.url ?? settings?.heroImageUrl}
+        storeSlug={store.slug}
+        subtitle={settings?.advancedSettings.productSections.featured.subtitle}
+        title={settings?.advancedSettings.productSections.featured.title}
+      />
+      <FashionFeaturedLook
+        imageUrl={sectionMedia[1]?.url ?? sectionMedia[0]?.url}
+        products={homeData.featuredProducts}
+        storeSlug={store.slug}
+      />
+      <FashionCommunityGallery images={sectionMedia.slice(2, 8)} />
+      <FashionNewsletter
+        imageUrl={sectionMedia.at(-1)?.url ?? settings?.heroImageUrl}
+        storeName={store.name}
+      />
     </div>
   );
 }
