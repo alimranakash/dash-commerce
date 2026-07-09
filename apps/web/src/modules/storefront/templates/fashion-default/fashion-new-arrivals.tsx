@@ -1,0 +1,122 @@
+"use client";
+
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { FashionEditorialProductCard } from "./fashion-editorial-product-card";
+import type { FashionProductCardData } from "./fashion-product-card-data";
+import styles from "./fashion-new-arrivals.module.css";
+
+type FashionNewArrivalsProps = {
+  currency: string;
+  description: string;
+  products: FashionProductCardData[];
+  storeSlug: string;
+  title: string;
+};
+
+const fallbackProducts = [
+  { label: "Atelier", price: "142.50", title: "Sculpted Carryall" },
+  { label: "Studio", price: "98.00", title: "Fine Rib Layer" },
+  { label: "Edition", price: "120.00", title: "Tailored Straight Trouser" },
+  { label: "Form", price: "94.00", title: "Soft Leather Mini Bag" }
+];
+
+export function FashionNewArrivals({
+  currency,
+  description,
+  products,
+  storeSlug,
+  title
+}: FashionNewArrivalsProps) {
+  const tabs = useMemo(() => {
+    const unique = new Map<string, { label: string; slug: string }>();
+
+    products.forEach((product) => {
+      if (product.category && !unique.has(product.category.slug)) {
+        unique.set(product.category.slug, {
+          label: product.category.name,
+          slug: product.category.slug
+        });
+      }
+    });
+
+    return Array.from(unique.values()).slice(0, 2);
+  }, [products]);
+  const [activeTab, setActiveTab] = useState<string | null>(tabs[0]?.slug ?? null);
+  const visibleProducts = activeTab
+    ? products.filter((product) => product.category?.slug === activeTab).slice(0, 8)
+    : products.slice(0, 8);
+  const activeCategory = tabs.find((tab) => tab.slug === activeTab);
+  const shopHref = activeCategory
+    ? `/s/${storeSlug}/categories/${activeCategory.slug}`
+    : `/s/${storeSlug}/products`;
+
+  return (
+    <section className={styles.section} aria-labelledby="fashion-new-arrivals-title">
+      <header className={styles.header}>
+        <div className={styles.intro}>
+          <h2 id="fashion-new-arrivals-title">{title}</h2>
+          <p>{description}</p>
+          {tabs.length > 0 ? (
+            <div className={styles.tabs} role="tablist" aria-label="New arrival categories">
+              {tabs.map((tab, index) => (
+                <button
+                  aria-selected={activeTab === tab.slug}
+                  className={activeTab === tab.slug ? styles.activeTab : undefined}
+                  key={tab.slug}
+                  onClick={() => setActiveTab(tab.slug)}
+                  role="tab"
+                  type="button"
+                >
+                  {tab.label}
+                  {index < tabs.length - 1 ? <span aria-hidden="true">/</span> : null}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
+        <Link className={styles.shopLink} href={shopHref}>
+          Shop {activeCategory?.label ?? "Collection"}
+        </Link>
+      </header>
+
+      {products.length > 0 ? (
+        <div className={styles.grid}>
+          {visibleProducts.map((product, index) => (
+            <FashionEditorialProductCard
+              currency={currency}
+              editorialIndex={index}
+              key={product.id}
+              product={product}
+              showEditorialBadges
+              storeSlug={storeSlug}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className={styles.grid}>
+          {fallbackProducts.map((product, index) => (
+            <FashionEditorialProductCard
+              currency={currency}
+              editorialIndex={index}
+              key={product.title}
+              product={{
+                category: { name: product.label, slug: "" },
+                compareAtPrice: null,
+                id: null,
+                images: [],
+                price: product.price,
+                slug: null,
+                stockQuantity: 0,
+                storeId: null,
+                title: product.title
+              }}
+              showEditorialBadges
+              storeSlug={storeSlug}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}

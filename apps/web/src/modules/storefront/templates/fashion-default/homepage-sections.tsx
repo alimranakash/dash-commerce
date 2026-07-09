@@ -1,4 +1,5 @@
 import type { StorefrontTemplateHomepageProps } from "../types";
+import { FashionNewArrivals } from "./fashion-new-arrivals";
 import {
   FashionCategoryCards,
   FashionCollectionCards,
@@ -31,13 +32,31 @@ export function FashionHomepageSections({
         categories={homeData.categories}
         storeSlug={store.slug}
       />
-      <FashionSection actionHref={`/s/${store.slug}/products`} eyebrow="New Collection" id="fashion-new-collection" title="The latest collection">
-        <FashionProductGrid
-          currency={store.currency}
-          products={homeData.newArrivals}
-          storeSlug={store.slug}
-        />
-      </FashionSection>
+      <FashionNewArrivals
+        currency={store.currency}
+        description="Discover the latest ready-to-wear dresses."
+        products={homeData.newArrivals.map((product) => ({
+          category: product.category
+            ? {
+                name: product.category.name,
+                slug: product.category.slug
+              }
+            : null,
+          compareAtPrice: product.compareAtPrice?.toString() ?? null,
+          id: product.id,
+          images: product.images.map((image) => ({
+            alt: image.alt,
+            url: image.url
+          })),
+          price: product.price.toString(),
+          slug: product.slug,
+          stockQuantity: product.stockQuantity,
+          storeId: product.storeId,
+          title: product.title
+        }))}
+        storeSlug={store.slug}
+        title="New Arrivals"
+      />
       <FashionSection actionHref={`/s/${store.slug}/products`} eyebrow="Collections" id="fashion-featured-collections" title="Featured collections">
         <FashionCollectionCards storeSlug={store.slug} />
       </FashionSection>

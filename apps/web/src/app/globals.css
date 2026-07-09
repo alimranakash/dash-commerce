@@ -5148,13 +5148,14 @@ textarea {
 .fashion-lookbook,
 .fashion-newsletter {
   margin-inline: auto;
-  max-width: 1220px;
-  width: calc(100% - 64px);
+  max-width: none;
+  width: 100%;
 }
 
 .fashion-home-section {
   display: grid;
   gap: 24px;
+  padding-inline: clamp(20px, 2.6vw, 50px);
 }
 
 .fashion-section-heading {
@@ -5276,103 +5277,16 @@ textarea {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.fashion-product-card {
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  color: var(--fashion-ink);
-  display: grid;
-  gap: 14px;
-  text-decoration: none;
-}
-
-.fashion-product-card-media {
-  aspect-ratio: 4 / 5.3;
-  background: #e8ddd1;
-  color: var(--fashion-muted);
-  display: grid;
-  overflow: hidden;
-  place-items: center;
-  position: relative;
-  text-decoration: none;
-}
-
-.fashion-product-card-media img {
-  height: 100%;
-  object-fit: cover;
-  transition: transform 420ms ease;
-  width: 100%;
-}
-
-.fashion-product-card:hover .fashion-product-card-media img {
-  transform: scale(1.035);
-}
-
-.fashion-product-card-media strong {
-  background: rgba(36, 24, 20, 0.88);
-  border-radius: 999px;
-  color: #ffffff;
-  font-size: 0.68rem;
-  font-weight: 900;
-  left: 14px;
-  padding: 7px 10px;
-  position: absolute;
-  text-transform: uppercase;
-  top: 14px;
-}
-
-.fashion-product-card-body {
-  display: grid;
-  gap: 8px;
-  padding: 0;
-}
-
-.fashion-product-card-body p {
-  color: var(--fashion-ink);
-  font-size: 0.92rem;
-  font-weight: 850;
-  margin: 0;
-}
-
-.fashion-product-card-body h3 {
-  font-size: 0.95rem;
-  font-weight: 650;
-  margin: 0;
-}
-
-.fashion-product-card-body h3 a {
-  color: var(--fashion-ink);
-  text-decoration: none;
-}
-
-.fashion-product-card form button {
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid currentColor;
-  border-radius: 0;
-  color: var(--fashion-ink);
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 850;
-  justify-self: start;
-  min-height: auto;
-  padding: 0 0 3px;
-}
-
-.fashion-product-card form button:disabled {
-  background: transparent;
-  color: #b8a69b;
-  cursor: not-allowed;
-}
-
 .fashion-editorial,
 .fashion-lookbook {
   align-items: stretch;
   display: grid;
   gap: 40px;
   grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+}
+
+.fashion-editorial {
+  padding-inline: clamp(20px, 2.6vw, 50px);
 }
 
 .fashion-editorial-image {
@@ -5480,7 +5394,7 @@ textarea {
   display: grid;
   gap: 18px;
   justify-items: center;
-  padding: clamp(44px, 7vw, 88px) 0;
+  padding: clamp(44px, 7vw, 88px) clamp(20px, 2.6vw, 50px);
   text-align: center;
 }
 

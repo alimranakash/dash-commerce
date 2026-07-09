@@ -1,0 +1,111 @@
+.section {
+  background: #ffffff;
+  color: #0c0c0c;
+  padding: clamp(54px, 6vw, 96px) clamp(20px, 2.6vw, 50px);
+  width: 100%;
+}
+
+.header {
+  align-items: end;
+  display: flex;
+  gap: 32px;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.intro {
+  display: grid;
+  gap: 14px;
+}
+
+.intro h2 {
+  font-size: clamp(1.7rem, 2.2vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.intro > p {
+  font-size: 0.95rem;
+  margin: 0 0 4px;
+}
+
+.tabs {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+.tabs button {
+  background: transparent;
+  border: 0;
+  color: #969696;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1rem;
+  padding: 6px 0;
+  text-transform: uppercase;
+}
+
+.tabs button span {
+  color: #111111;
+  display: inline-block;
+  padding: 0 12px;
+}
+
+.tabs button:hover,
+.tabs .activeTab {
+  color: #111111;
+}
+
+.tabs .activeTab {
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+.shopLink {
+  color: #111111;
+  font-size: 0.84rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  white-space: nowrap;
+}
+
+.grid {
+  display: grid;
+  gap: 28px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .section {
+    padding-inline: 16px;
+  }
+
+  .header {
+    align-items: start;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .grid {
+    gap: 24px 8px;
+  }
+}
+
+@media (max-width: 390px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

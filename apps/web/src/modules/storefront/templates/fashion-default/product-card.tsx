@@ -1,6 +1,13 @@
 import type { StorefrontTemplateProductCardProps } from "../types";
-import { FashionProductCard as FashionProductCardBase } from "./components";
+import { FashionEditorialProductCard } from "./fashion-editorial-product-card";
+import { toFashionProductCardData } from "./fashion-product-card-data";
 
 export function FashionProductCard(props: StorefrontTemplateProductCardProps) {
-  return <FashionProductCardBase {...props} />;
+  return (
+    <FashionEditorialProductCard
+      currency={props.currency}
+      product={toFashionProductCardData(props.product)}
+      storeSlug={props.storeSlug}
+    />
+  );
 }

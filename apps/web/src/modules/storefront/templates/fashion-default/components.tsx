@@ -1,11 +1,12 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ProductPrice } from "../../components/product-card";
 import { StorefrontImage } from "../../components/storefront-image";
 import type { StorefrontAdvancedSettings } from "../../customization";
 import type { StorefrontProduct } from "../../storefront.types";
 import collectionStyles from "./fashion-collection-grid.module.css";
+import { FashionEditorialProductCard } from "./fashion-editorial-product-card";
 import { FashionHeroSlider } from "./fashion-hero-slider";
+import { toFashionProductCardData } from "./fashion-product-card-data";
 
 type FashionSectionProps = {
   actionHref?: string;
@@ -213,70 +214,39 @@ export function FashionProductGrid({
       {items.map((product, index) => {
         if ("id" in product) {
           return (
-            <FashionProductCard currency={currency} key={product.id} product={product} storeSlug={storeSlug} />
+            <FashionEditorialProductCard
+              currency={currency}
+              editorialIndex={index}
+              key={product.id}
+              product={toFashionProductCardData(product)}
+              showEditorialBadges
+              storeSlug={storeSlug}
+            />
           );
         }
 
         return (
-          <Link className="fashion-product-card fashion-product-card-demo" href={`/s/${storeSlug}/products`} key={`${product.title}-${index}`}>
-            <div className="fashion-product-card-media">
-              <span>{product.label}</span>
-            </div>
-            <div className="fashion-product-card-body">
-              <h3>{product.title}</h3>
-              <p>{formatMoney(product.price, currency)}</p>
-            </div>
-          </Link>
+          <FashionEditorialProductCard
+            currency={currency}
+            editorialIndex={index}
+            key={`${product.title}-${index}`}
+            product={{
+              category: { name: product.label, slug: "" },
+              compareAtPrice: null,
+              id: null,
+              images: [],
+              price: String(product.price),
+              slug: null,
+              stockQuantity: 0,
+              storeId: null,
+              title: product.title
+            }}
+            showEditorialBadges
+            storeSlug={storeSlug}
+          />
         );
       })}
     </div>
-  );
-}
-
-export function FashionProductCard({
-  currency,
-  product,
-  storeSlug
-}: {
-  currency: string;
-  product: StorefrontProduct;
-  storeSlug: string;
-}) {
-  const image = product.images[0];
-  const isSale = product.compareAtPrice && Number(product.compareAtPrice) > Number(product.price);
-  const isUnavailable = product.stockQuantity < 1;
-
-  return (
-    <article className="fashion-product-card">
-      <Link className="fashion-product-card-media" href={`/s/${storeSlug}/products/${product.slug}`}>
-        <StorefrontImage alt={image?.alt ?? product.title} fallback={product.category?.name ?? "Look"} src={image?.url} />
-        {isSale ? <strong>Sale</strong> : null}
-      </Link>
-      <div className="fashion-product-card-body">
-        <div>
-          {product.category ? <p>{product.category.name}</p> : null}
-          <h3>
-            <Link href={`/s/${storeSlug}/products/${product.slug}`}>{product.title}</Link>
-          </h3>
-        </div>
-        <ProductPrice
-          compareAtPrice={product.compareAtPrice?.toString()}
-          currency={currency}
-          price={product.price.toString()}
-        />
-        <form action="/api/cart" method="post">
-          <input name="cartAction" type="hidden" value="add" />
-          <input name="storeId" type="hidden" value={product.storeId} />
-          <input name="storeSlug" type="hidden" value={storeSlug} />
-          <input name="productId" type="hidden" value={product.id} />
-          <input name="productSlug" type="hidden" value={product.slug} />
-          <input name="quantity" type="hidden" value="1" />
-          <button disabled={isUnavailable} type="submit">
-            {isUnavailable ? "Out of stock" : "Add to cart"}
-          </button>
-        </form>
-      </div>
-    </article>
   );
 }
 
@@ -341,11 +311,4 @@ export function FashionNewsletter() {
       </form>
     </section>
   );
-}
-
-function formatMoney(value: unknown, currency: string) {
-  return new Intl.NumberFormat("en", {
-    currency,
-    style: "currency"
-  }).format(Number(value));
 }
