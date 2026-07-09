@@ -1,0 +1,150 @@
+.section {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  height: clamp(520px, var(--fashion-editorial-height), 860px);
+  min-height: 66svh;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.panel {
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.panel > img,
+.panel > div {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+}
+
+.darkPanel {
+  background: #171410;
+}
+
+.lightPanel {
+  background: #ecebea;
+}
+
+.darkFallback {
+  background:
+    radial-gradient(circle at 56% 52%, rgba(224, 211, 194, 0.3), transparent 12%),
+    linear-gradient(145deg, transparent 35%, rgba(255, 255, 255, 0.06)),
+    linear-gradient(120deg, #17130f, #3b2f24 58%, #0c0b09);
+}
+
+.lightFallback {
+  background:
+    linear-gradient(110deg, transparent 36%, rgba(26, 26, 26, 0.24) 36% 53%, transparent 53%),
+    linear-gradient(145deg, #f4f4f3, #d7d7d6);
+}
+
+.overlay {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, var(--fashion-editorial-overlay)) 0%,
+    rgba(0, 0, 0, var(--fashion-editorial-overlay)) 48%,
+    transparent 68%
+  );
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.content {
+  align-items: center;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 38px;
+  justify-content: center;
+  left: 0;
+  min-height: 100%;
+  padding: clamp(28px, 5vw, 90px);
+  position: absolute;
+  text-align: center;
+  top: 0;
+  width: 50%;
+  z-index: 1;
+}
+
+.content.left {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.content.right {
+  left: 50%;
+}
+
+.content h2 {
+  color: inherit;
+  font-size: clamp(2.5rem, 4vw, 5rem);
+  font-weight: 400;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  margin: 0;
+}
+
+.content h2 em {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  margin-left: 0.12em;
+}
+
+.content a {
+  border-bottom: 1px solid currentColor;
+  color: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  padding-bottom: 5px;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    opacity 180ms ease,
+    padding 180ms ease;
+}
+
+.content a:hover {
+  opacity: 0.72;
+  padding-inline: 6px;
+}
+
+@media (max-width: 768px) {
+  .section {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 0;
+  }
+
+  .panel {
+    min-height: min(110vw, 620px);
+  }
+
+  .content,
+  .content.right {
+    bottom: auto;
+    height: min(110vw, 620px);
+    left: 0;
+    min-height: 0;
+    padding: 28px;
+    top: 0;
+    width: 100%;
+  }
+
+  .overlay {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.44) 48%, transparent 50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content a {
+    transition: none;
+  }
+}

@@ -38,14 +38,6 @@ const fallbackEditorialCollections = [
   { cta: "Shop cover-ups", name: "Beachwear", slug: "beachwear" }
 ];
 
-const fallbackProducts = [
-  { label: "Linen", price: 89, title: "Linen Overshirt" },
-  { label: "Cotton", price: 74, title: "Relaxed Trouser" },
-  { label: "Knit", price: 119, title: "Ribbed Knit Dress" },
-  { label: "Leather", price: 139, title: "Minimal Crossbody" },
-  { label: "Wool", price: 98, title: "Structured Midi Skirt" }
-];
-
 const featuredCollections = [
   { label: "01", subtitle: "Airy silhouettes for warm days", title: "Summer Collection" },
   { label: "02", subtitle: "New textures, clean proportions", title: "New Arrivals" },
@@ -207,45 +199,20 @@ export function FashionProductGrid({
   products: StorefrontProduct[];
   storeSlug: string;
 }) {
-  const items = products.length > 0 ? products.slice(0, 5) : fallbackProducts;
-
   return (
     <div className="fashion-product-grid">
-      {items.map((product, index) => {
-        if ("id" in product) {
-          return (
-            <FashionEditorialProductCard
-              currency={currency}
-              editorialIndex={index}
-              key={product.id}
-              product={toFashionProductCardData(product)}
-              showEditorialBadges
-              storeSlug={storeSlug}
-            />
-          );
-        }
-
-        return (
+      {products.length > 0 ? (
+        products.slice(0, 4).map((product) => (
           <FashionEditorialProductCard
             currency={currency}
-            editorialIndex={index}
-            key={`${product.title}-${index}`}
-            product={{
-              category: { name: product.label, slug: "" },
-              compareAtPrice: null,
-              id: null,
-              images: [],
-              price: String(product.price),
-              slug: null,
-              stockQuantity: 0,
-              storeId: null,
-              title: product.title
-            }}
-            showEditorialBadges
+            key={product.id}
+            product={toFashionProductCardData(product)}
             storeSlug={storeSlug}
           />
-        );
-      })}
+        ))
+      ) : (
+        <p className="fashion-product-grid-empty">Products will appear here when they are published.</p>
+      )}
     </div>
   );
 }

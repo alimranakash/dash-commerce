@@ -5277,6 +5277,14 @@ textarea {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.fashion-product-grid-empty {
+  border-block: 1px solid var(--fashion-border);
+  color: var(--fashion-muted);
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 48px 0;
+}
+
 .fashion-editorial,
 .fashion-lookbook {
   align-items: stretch;
@@ -10419,7 +10427,7 @@ textarea {
   .fashion-editorial,
   .fashion-lookbook,
   .fashion-newsletter {
-    width: calc(100% - 32px);
+    width: 100%;
   }
 
   .fashion-section-heading {
@@ -11175,7 +11183,7 @@ textarea {
 .fashion-homepage .fashion-product-grid,
 .electronics-homepage .electronics-product-grid,
 .beauty-homepage .beauty-product-grid {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .general-homepage .general-product-listing-slider,

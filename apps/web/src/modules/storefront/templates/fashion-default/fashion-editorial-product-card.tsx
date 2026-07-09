@@ -7,17 +7,13 @@ import styles from "./fashion-product-card.module.css";
 
 type FashionEditorialProductCardProps = {
   currency: string;
-  editorialIndex?: number;
   product: FashionProductCardData;
-  showEditorialBadges?: boolean;
   storeSlug: string;
 };
 
 export function FashionEditorialProductCard({
   currency,
-  editorialIndex = -1,
   product,
-  showEditorialBadges = false,
   storeSlug
 }: FashionEditorialProductCardProps) {
   const productHref = product.slug
@@ -32,11 +28,9 @@ export function FashionEditorialProductCard({
     ? Math.round(((comparePrice - price) / comparePrice) * 100)
     : 0;
   const badges = [
-    showEditorialBadges && editorialIndex === 0 ? "New" : null,
-    showEditorialBadges && editorialIndex === 0 ? "Bestseller" : null,
+    product.isNew ? "New" : null,
     isSale ? "Sale" : null,
-    saving > 0 ? `Save ${saving}%` : null,
-    showEditorialBadges && editorialIndex === 2 ? "Trending" : null
+    saving > 0 ? `Save ${saving}%` : null
   ].filter((badge): badge is string => Boolean(badge));
   const canAddToCart = Boolean(product.id && product.slug && product.storeId);
 
@@ -81,7 +75,7 @@ export function FashionEditorialProductCard({
         ) : null}
       </div>
       <div className={styles.details}>
-        <p>{product.category?.name ?? "New collection"}</p>
+        {product.category ? <p>{product.category.name}</p> : null}
         <h3><Link href={productHref}>{product.title}</Link></h3>
         <div className={styles.price}>
           {isSale && comparePrice ? <del>{formatMoney(String(comparePrice), currency)}</del> : null}
@@ -95,8 +89,6 @@ export function FashionEditorialProductCard({
 function getBadgeKind(badge: string) {
   if (badge === "Sale") return "sale";
   if (badge.startsWith("Save")) return "save";
-  if (badge === "Trending") return "trending";
-  if (badge === "Bestseller") return "bestseller";
   return "new";
 }
 

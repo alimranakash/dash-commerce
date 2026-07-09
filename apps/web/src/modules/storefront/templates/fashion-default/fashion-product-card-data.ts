@@ -11,6 +11,7 @@ export type FashionProductCardData = {
     alt: string | null;
     url: string;
   }>;
+  isNew: boolean;
   price: string;
   slug: string | null;
   stockQuantity: number;
@@ -32,6 +33,7 @@ export function toFashionProductCardData(product: StorefrontProduct): FashionPro
       alt: image.alt,
       url: image.url
     })),
+    isNew: Date.now() - product.createdAt.getTime() <= 30 * 24 * 60 * 60 * 1000,
     price: product.price.toString(),
     slug: product.slug,
     stockQuantity: product.stockQuantity,

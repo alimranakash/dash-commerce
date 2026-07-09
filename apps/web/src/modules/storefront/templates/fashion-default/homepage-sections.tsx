@@ -1,4 +1,5 @@
 import type { StorefrontTemplateHomepageProps } from "../types";
+import { FashionEditorialSplitBanner } from "./fashion-editorial-split-banner";
 import { FashionNewArrivals } from "./fashion-new-arrivals";
 import {
   FashionCategoryCards,
@@ -18,6 +19,13 @@ export function FashionHomepageSections({
   settings,
   store
 }: StorefrontTemplateHomepageProps) {
+  const editorialImages = homeData.featuredProducts
+    .flatMap((product) => product.images)
+    .map((image) => image.url);
+  const heroSlides = settings?.advancedSettings.hero.slides.filter(
+    (slide) => slide.mediaType === "image"
+  ) ?? [];
+
   return (
     <div className="fashion-homepage">
       <FashionHero
@@ -48,6 +56,7 @@ export function FashionHomepageSections({
             alt: image.alt,
             url: image.url
           })),
+          isNew: Date.now() - product.createdAt.getTime() <= 30 * 24 * 60 * 60 * 1000,
           price: product.price.toString(),
           slug: product.slug,
           stockQuantity: product.stockQuantity,
@@ -56,6 +65,16 @@ export function FashionHomepageSections({
         }))}
         storeSlug={store.slug}
         title="New Arrivals"
+      />
+      <FashionEditorialSplitBanner
+        ctaLink={`/s/${store.slug}/products`}
+        ctaText="Explore"
+        heading="Timeless classics"
+        height={settings?.advancedSettings.hero.customHeight ?? 720}
+        leftImageUrl={heroSlides[1]?.url ?? editorialImages[0] ?? settings?.heroImageUrl}
+        overlayOpacity={settings?.advancedSettings.hero.overlayOpacity}
+        rightImageUrl={heroSlides[2]?.url ?? editorialImages[1] ?? editorialImages[0]}
+        textPosition="center"
       />
       <FashionSection actionHref={`/s/${store.slug}/products`} eyebrow="Collections" id="fashion-featured-collections" title="Featured collections">
         <FashionCollectionCards storeSlug={store.slug} />
@@ -66,7 +85,7 @@ export function FashionHomepageSections({
       <FashionSection actionHref={`/s/${store.slug}/products`} eyebrow="Trending" id="fashion-trending" title="Trending products">
         <FashionProductGrid
           currency={store.currency}
-          products={homeData.featuredProducts}
+          products={homeData.featuredProducts.slice(0, 4)}
           storeSlug={store.slug}
         />
       </FashionSection>

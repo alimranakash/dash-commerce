@@ -14,13 +14,6 @@ type FashionNewArrivalsProps = {
   title: string;
 };
 
-const fallbackProducts = [
-  { label: "Atelier", price: "142.50", title: "Sculpted Carryall" },
-  { label: "Studio", price: "98.00", title: "Fine Rib Layer" },
-  { label: "Edition", price: "120.00", title: "Tailored Straight Trouser" },
-  { label: "Form", price: "94.00", title: "Soft Leather Mini Bag" }
-];
-
 export function FashionNewArrivals({
   currency,
   description,
@@ -44,8 +37,8 @@ export function FashionNewArrivals({
   }, [products]);
   const [activeTab, setActiveTab] = useState<string | null>(tabs[0]?.slug ?? null);
   const visibleProducts = activeTab
-    ? products.filter((product) => product.category?.slug === activeTab).slice(0, 8)
-    : products.slice(0, 8);
+    ? products.filter((product) => product.category?.slug === activeTab).slice(0, 4)
+    : products.slice(0, 4);
   const activeCategory = tabs.find((tab) => tab.slug === activeTab);
   const shopHref = activeCategory
     ? `/s/${storeSlug}/categories/${activeCategory.slug}`
@@ -82,40 +75,17 @@ export function FashionNewArrivals({
 
       {products.length > 0 ? (
         <div className={styles.grid}>
-          {visibleProducts.map((product, index) => (
+          {visibleProducts.map((product) => (
             <FashionEditorialProductCard
               currency={currency}
-              editorialIndex={index}
               key={product.id}
               product={product}
-              showEditorialBadges
               storeSlug={storeSlug}
             />
           ))}
         </div>
       ) : (
-        <div className={styles.grid}>
-          {fallbackProducts.map((product, index) => (
-            <FashionEditorialProductCard
-              currency={currency}
-              editorialIndex={index}
-              key={product.title}
-              product={{
-                category: { name: product.label, slug: "" },
-                compareAtPrice: null,
-                id: null,
-                images: [],
-                price: product.price,
-                slug: null,
-                stockQuantity: 0,
-                storeId: null,
-                title: product.title
-              }}
-              showEditorialBadges
-              storeSlug={storeSlug}
-            />
-          ))}
-        </div>
+        <p className={styles.empty}>New arrivals will appear here when products are published.</p>
       )}
     </section>
   );

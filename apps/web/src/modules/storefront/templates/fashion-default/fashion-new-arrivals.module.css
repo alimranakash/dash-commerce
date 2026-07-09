@@ -82,6 +82,13 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.empty {
+  border-block: 1px solid #e7e7e7;
+  color: #777777;
+  margin: 0;
+  padding: 48px 0;
+}
+
 @media (max-width: 1024px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
