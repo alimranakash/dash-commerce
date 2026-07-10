@@ -1,37 +1,27 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { StorefrontStore } from "../../storefront.types";
+import { normalizeAdvancedSettings, type StorefrontAdvancedSettings } from "../../customization";
 import styles from "./electronics-footer.module.css";
 
 type ElectronicsFooterProps = {
+  advancedSettings?: StorefrontAdvancedSettings;
   primaryDomain: string | undefined;
   store: StorefrontStore;
   templateId: string;
 };
 
-const collectionLinks = [
-  { label: "Headphones", url: "/products?search=headphones" },
-  { label: "Smartwatches", url: "/products?search=smartwatch" },
-  { label: "Speakers", url: "/products?search=speakers" },
-  { label: "Desk lamps", url: "/products?search=desk%20lamp" },
-  { label: "Power banks", url: "/products?search=power%20bank" }
-];
-
-const informationLinks = [
-  { label: "FAQs", url: "#faqs" },
-  { label: "Shipping", url: "#shipping" },
-  { label: "About us", url: "#about" },
-  { label: "Contact", url: "#contact" }
-];
-
 const paymentBadges = ["Visa", "MC", "Amex", "Pay", "Diners", "Disc"];
 
 export function ElectronicsStorefrontFooter({
+  advancedSettings,
   primaryDomain,
   store,
   templateId
 }: ElectronicsFooterProps) {
   const settings = store.setting;
+  const advanced = normalizeAdvancedSettings(advancedSettings);
+  const electronics = advanced.electronics;
   const homeHref = `/s/${store.slug}`;
   const currentYear = new Date().getFullYear();
   const brandName = store.name.trim() || "Atlas";
@@ -57,7 +47,7 @@ export function ElectronicsStorefrontFooter({
         </section>
 
         <ElectronicsFooterColumn title="Collections">
-          {collectionLinks.map((link) => (
+          {electronics.footerCollectionLinks.map((link) => (
             <Link href={resolveFooterHref(homeHref, link.url)} key={link.label}>
               {link.label}
             </Link>
@@ -65,7 +55,7 @@ export function ElectronicsStorefrontFooter({
         </ElectronicsFooterColumn>
 
         <ElectronicsFooterColumn title="Information">
-          {informationLinks.map((link) => (
+          {electronics.footerInformationLinks.map((link) => (
             <Link href={resolveFooterHref(homeHref, link.url)} key={link.label}>
               {link.label}
             </Link>
@@ -73,8 +63,8 @@ export function ElectronicsStorefrontFooter({
         </ElectronicsFooterColumn>
 
         <section className={styles.newsletter} aria-label="Newsletter">
-          <h2>Subscribe to our newsletter</h2>
-          <p>Stay updated with our latest news and offers.</p>
+          <h2>{electronics.newsletterTitle}</h2>
+          <p>{electronics.newsletterDescription}</p>
           <form action="#" aria-label="Subscribe to newsletter">
             <input name="email" placeholder="Email" type="email" />
             <button type="button">Subscribe</button>

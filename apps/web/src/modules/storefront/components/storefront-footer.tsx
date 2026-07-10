@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { DEFAULT_STOREFRONT_TEMPLATE_ID } from "../templates/template-mapping";
 import { ElectronicsStorefrontFooter } from "../templates/electronics-default/electronics-footer";
 import { FashionStorefrontFooter } from "../templates/fashion-default/fashion-footer";
+import { getStorefrontThemeSettings } from "../themes/theme.service";
 import type { StorefrontStore } from "../storefront.types";
 
 type StorefrontFooterProps = {
@@ -10,7 +11,7 @@ type StorefrontFooterProps = {
   store: StorefrontStore;
 };
 
-export function StorefrontFooter({ primaryDomain, store }: StorefrontFooterProps) {
+export async function StorefrontFooter({ primaryDomain, store }: StorefrontFooterProps) {
   const settings = store.setting;
   const homeHref = `/s/${store.slug}`;
   const currentYear = new Date().getFullYear();
@@ -23,11 +24,29 @@ export function StorefrontFooter({ primaryDomain, store }: StorefrontFooterProps
   ].filter((link): link is { href: string; label: string } => Boolean(link));
 
   if (templateId === "fashion-default") {
-    return <FashionStorefrontFooter primaryDomain={primaryDomain} store={store} templateId={templateId} />;
+    const themeSettings = await getStorefrontThemeSettings(store.id);
+
+    return (
+      <FashionStorefrontFooter
+        advancedSettings={themeSettings.advancedSettings}
+        primaryDomain={primaryDomain}
+        store={store}
+        templateId={templateId}
+      />
+    );
   }
 
   if (templateId === "electronics-default") {
-    return <ElectronicsStorefrontFooter primaryDomain={primaryDomain} store={store} templateId={templateId} />;
+    const themeSettings = await getStorefrontThemeSettings(store.id);
+
+    return (
+      <ElectronicsStorefrontFooter
+        advancedSettings={themeSettings.advancedSettings}
+        primaryDomain={primaryDomain}
+        store={store}
+        templateId={templateId}
+      />
+    );
   }
 
   return (

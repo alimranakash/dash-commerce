@@ -6016,28 +6016,28 @@ textarea {
 }
 
 .electronics-promo-card-cooker {
-  background: #3b4368;
+  background: var(--electronics-promo-bg, #3b4368);
   color: #ffffff;
   grid-column: 1;
 }
 
 .electronics-promo-card-coffee {
-  background: #a7c3e5;
+  background: var(--electronics-promo-bg, #a7c3e5);
   grid-column: 2;
 }
 
 .electronics-promo-card-display {
-  background: #e5ebff;
+  background: var(--electronics-promo-bg, #e5ebff);
   color: #0b3b8a;
 }
 
 .electronics-promo-card-fryer {
-  background: #d7f1fb;
+  background: var(--electronics-promo-bg, #d7f1fb);
   color: #0b3b8a;
 }
 
 .electronics-promo-card-humidifier {
-  background: #172164;
+  background: var(--electronics-promo-bg, #172164);
   color: #ffffff;
 }
 
@@ -6237,6 +6237,47 @@ textarea {
   display: grid;
   gap: 8px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.electronics-recommended-panel {
+  animation: electronics-recommended-fade 180ms ease both;
+}
+
+.electronics-recommended-empty {
+  align-content: center;
+  background: #ffffff;
+  border: 1px solid #e4e8f0;
+  border-radius: 6px;
+  color: #777b84;
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  min-height: 180px;
+  padding: 28px;
+  text-align: center;
+}
+
+.electronics-recommended-empty strong {
+  color: #101318;
+  font-size: 1rem;
+}
+
+@keyframes electronics-recommended-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .electronics-recommended-panel {
+    animation: none;
+  }
 }
 
 .electronics-recommended-card {

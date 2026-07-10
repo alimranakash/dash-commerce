@@ -27,6 +27,8 @@ export function FashionHomepageSections({
   const heroSlides = settings?.advancedSettings.hero.slides.filter(
     (slide) => slide.mediaType === "image"
   ) ?? [];
+  const fashion = settings?.advancedSettings.fashion;
+  const productSections = settings?.advancedSettings.productSections;
   const comparisonProduct = homeData.featuredProducts[0] ?? null;
   const comparisonImages = homeData.featuredProducts
     .flatMap((product) => product.images)
@@ -61,11 +63,12 @@ export function FashionHomepageSections({
       />
       <FashionEditorialCollectionGrid
         categories={homeData.categories}
+        ctas={fashion?.collectionCtas}
         storeSlug={store.slug}
       />
       <FashionNewArrivals
         currency={store.currency}
-        description="Discover the latest ready-to-wear dresses."
+        description={fashion?.newArrivalsDescription ?? productSections?.newArrivals.subtitle ?? "Discover the latest ready-to-wear dresses."}
         products={homeData.newArrivals.map((product) => ({
           category: product.category
             ? {
@@ -79,7 +82,7 @@ export function FashionHomepageSections({
             alt: image.alt,
             url: image.url
           })),
-          isNew: Date.now() - product.createdAt.getTime() <= 30 * 24 * 60 * 60 * 1000,
+          isNew: true,
           price: product.price.toString(),
           slug: product.slug,
           stockQuantity: product.stockQuantity,
@@ -87,56 +90,81 @@ export function FashionHomepageSections({
           title: product.title
         }))}
         storeSlug={store.slug}
-        title="New Arrivals"
+        title={fashion?.newArrivalsTitle ?? productSections?.newArrivals.title ?? "New Arrivals"}
       />
       <FashionEditorialSplitBanner
-        ctaLink={`/s/${store.slug}/products`}
-        ctaText="Explore"
-        heading="Timeless classics"
-        height={settings?.advancedSettings.hero.customHeight ?? 720}
-        leftImageUrl={heroSlides[1]?.url ?? editorialImages[0] ?? settings?.heroImageUrl}
-        overlayOpacity={settings?.advancedSettings.hero.overlayOpacity}
-        rightImageUrl={heroSlides[2]?.url ?? editorialImages[1] ?? editorialImages[0]}
+        ctaLink={resolveStorefrontHref(store.slug, fashion?.editorialSplitCtaLink ?? "/products")}
+        ctaText={fashion?.editorialSplitCtaText ?? "Explore"}
+        heading={fashion?.editorialSplitHeading ?? "Timeless classics"}
+        height={fashion?.editorialSplitHeight ?? settings?.advancedSettings.hero.customHeight ?? 720}
+        leftImageUrl={fashion?.editorialSplitLeftImageUrl || heroSlides[1]?.url || editorialImages[0] || settings?.heroImageUrl}
+        overlayOpacity={fashion?.editorialSplitOverlayOpacity ?? settings?.advancedSettings.hero.overlayOpacity}
+        rightImageUrl={fashion?.editorialSplitRightImageUrl || heroSlides[2]?.url || editorialImages[1] || editorialImages[0]}
         textPosition="center"
       />
-      <FashionSection actionHref={`/s/${store.slug}/products`} eyebrow="Collections" id="fashion-featured-collections" title="Featured collections">
+      <FashionSection actionHref={resolveStorefrontHref(store.slug, productSections?.featured.ctaLink ?? "/products")} actionLabel={productSections?.featured.ctaText} eyebrow="Collections" id="fashion-featured-collections" title="Featured collections">
         <FashionCollectionCards categories={homeData.categories} storeSlug={store.slug} />
       </FashionSection>
       <FashionSection actionHref={`/s/${store.slug}/products`} eyebrow="Categories" id="fashion-categories" title="Shop by category">
         <FashionCategoryCards categories={homeData.categories} storeSlug={store.slug} />
       </FashionSection>
-      <FashionSection actionHref={`/s/${store.slug}/products`} eyebrow="Trending" id="fashion-trending" title="Trending products">
+      <FashionSection actionHref={resolveStorefrontHref(store.slug, productSections?.trending.ctaLink ?? "/products")} actionLabel={productSections?.trending.ctaText} eyebrow="Trending" id="fashion-trending" title={productSections?.trending.title ?? "Trending products"}>
         <FashionProductGrid
           currency={store.currency}
-          products={homeData.featuredProducts.slice(0, 4)}
+          products={homeData.featuredProducts.slice(0, productSections?.trending.count ?? 4)}
           storeSlug={store.slug}
         />
       </FashionSection>
       <FashionBeforeAfter
-        afterImageUrl={comparisonImages[1] ?? heroSlides[1]?.url ?? comparisonImages[0]}
-        beforeImageUrl={comparisonImages[0] ?? heroSlides[0]?.url ?? settings?.heroImageUrl}
+        afterImageUrl={fashion?.beforeAfterAfterImageUrl || comparisonImages[1] || heroSlides[1]?.url || comparisonImages[0]}
+        afterLabel={fashion?.beforeAfterAfterLabel}
+        beforeImageUrl={fashion?.beforeAfterBeforeImageUrl || comparisonImages[0] || heroSlides[0]?.url || settings?.heroImageUrl}
+        beforeLabel={fashion?.beforeAfterBeforeLabel}
         currency={store.currency}
-        initialPosition={50}
+        initialPosition={fashion?.beforeAfterInitialPosition ?? 50}
         product={comparisonProduct ? toFashionProductCardData(comparisonProduct) : null}
         storeSlug={store.slug}
       />
       <FashionEditorialBanner
-        ctaLabel={settings?.advancedSettings.productSections.featured.ctaText}
-        imageUrl={sectionMedia[0]?.url ?? settings?.heroImageUrl}
+        ctaLabel={fashion?.editorialBannerCtaText ?? settings?.advancedSettings.productSections.featured.ctaText}
+        ctaLink={fashion?.editorialBannerCtaLink}
+        imageUrl={fashion?.editorialBannerImageUrl || sectionMedia[0]?.url || settings?.heroImageUrl}
         storeSlug={store.slug}
-        subtitle={settings?.advancedSettings.productSections.featured.subtitle}
-        title={settings?.advancedSettings.productSections.featured.title}
+        subtitle={fashion?.editorialBannerSubtitle ?? settings?.advancedSettings.productSections.featured.subtitle}
+        title={fashion?.editorialBannerTitle ?? settings?.advancedSettings.productSections.featured.title}
       />
       <FashionFeaturedLook
-        imageUrl={sectionMedia[1]?.url ?? sectionMedia[0]?.url}
+        ctaLink={fashion?.featuredLookCtaLink}
+        ctaText={fashion?.featuredLookCtaText}
+        description={fashion?.featuredLookDescription}
+        imageUrl={fashion?.featuredLookImageUrl || sectionMedia[1]?.url || sectionMedia[0]?.url}
         products={homeData.featuredProducts}
         storeSlug={store.slug}
+        title={fashion?.featuredLookTitle}
       />
-      <FashionCommunityGallery images={sectionMedia.slice(2, 8)} />
+      <FashionCommunityGallery
+        description={fashion?.communityDescription}
+        images={[
+          ...(fashion?.communityImages ?? []).map((url, index) => ({ alt: `Community style ${index + 1}`, url })),
+          ...sectionMedia.slice(2, 8)
+        ]}
+        title={fashion?.communityTitle}
+      />
       <FashionNewsletter
-        imageUrl={sectionMedia.at(-1)?.url ?? settings?.heroImageUrl}
+        buttonText={fashion?.newsletterButtonText}
+        description={fashion?.newsletterDescription}
+        imageUrl={fashion?.newsletterImageUrl || sectionMedia.at(-1)?.url || settings?.heroImageUrl}
         storeName={store.name}
+        title={fashion?.newsletterTitle}
       />
     </div>
   );
+}
+
+function resolveStorefrontHref(storeSlug: string, href: string) {
+  if (href.startsWith("http") || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("#")) {
+    return href;
+  }
+
+  return `/s/${storeSlug}${href === "/" ? "" : href.startsWith("/") ? href : `/${href}`}`;
 }

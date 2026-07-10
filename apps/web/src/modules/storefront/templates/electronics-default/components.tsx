@@ -1,15 +1,23 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { ProductPrice } from "../../components/product-card";
 import { StorefrontImage } from "../../components/storefront-image";
 import type { StorefrontProduct } from "../../storefront.types";
-import type { StorefrontAdvancedSettings } from "../../customization";
+import type {
+  StorefrontAdvancedSettings,
+  StorefrontElectronicsHomepageSettings
+} from "../../customization";
 import { ElectronicsCategoryCarousel, type ElectronicsCarouselItem } from "./electronics-category-carousel";
+import {
+  ElectronicsRecommendedForYouClient,
+  type ElectronicsRecommendedCategory,
+  type ElectronicsRecommendedProduct
+} from "./electronics-recommended-for-you";
 import styles from "./electronics-hero.module.css";
 
 type ElectronicsSectionProps = {
   actionHref?: string;
-  actionLabel?: string;
+  actionLabel?: string | undefined;
   children: ReactNode;
   eyebrow?: string;
   id: string;
@@ -68,6 +76,7 @@ export function ElectronicsSection({
 
 export function ElectronicsHero({
   categories,
+  electronicsSettings,
   heroSettings,
   products,
   storeSlug,
@@ -75,6 +84,7 @@ export function ElectronicsHero({
   title
 }: {
   categories: ElectronicsCategory[];
+  electronicsSettings?: StorefrontElectronicsHomepageSettings | undefined;
   heroSettings: StorefrontAdvancedSettings["hero"] | undefined;
   products: StorefrontProduct[];
   storeSlug: string;
@@ -91,6 +101,8 @@ export function ElectronicsHero({
   const gamingImage = productImages[1] || categoryImages.find((url) => /gaming/i.test(url)) || productImages[0] || heroImage;
   const headphonesImage = productImages[2] || categoryImages.find((url) => /audio|headphone/i.test(url)) || productImages[1] || heroImage;
   const watchImage = productImages[3] || categoryImages.find((url) => /watch/i.test(url)) || productImages[2] || heroImage;
+  const [gamingCard, headphonesCard, watchCard] = electronicsSettings?.heroPromoCards ?? [];
+  const homeHref = `/s/${storeSlug}`;
 
   return (
     <section className={styles.section} aria-labelledby="electronics-hero-title">
@@ -99,8 +111,8 @@ export function ElectronicsHero({
           <div className={styles.mainCopy}>
             <span className={styles.status}>In stock now</span>
             <h1 id="electronics-hero-title">{title || "High-Output Mobile Devices"}</h1>
-            <p>{subtitle || "Find your perfect phone - sleek and stylish or budget-friendly."}</p>
-            <Link className={styles.cta} href={`/s/${storeSlug}/products`}>
+            <p>{subtitle || heroSettings?.subtitle || "Find your perfect phone - sleek and stylish or budget-friendly."}</p>
+            <Link className={styles.cta} href={resolveStorefrontHref(homeHref, heroSettings?.button1Link || "/products")}>
               {heroSettings?.button1Text || "Shop Now"}
             </Link>
           </div>
@@ -110,27 +122,30 @@ export function ElectronicsHero({
         </article>
 
         <PromoCard
-          badge="Gaming"
+          badge={gamingCard?.badge || "Gaming"}
           className={`${styles.middleCard} ${styles.promoCardTall}`}
           fallback="Gaming"
-          imageUrl={gamingImage}
-          title="Find ideal gaming consoles"
+          href={resolveStorefrontHref(homeHref, gamingCard?.ctaLink || "/categories/gaming")}
+          imageUrl={gamingCard?.imageUrl || gamingImage}
+          title={gamingCard?.title || "Find ideal gaming consoles"}
         />
 
         <div className={styles.rightColumn}>
           <PromoCard
-            badge="Headphones"
+            badge={headphonesCard?.badge || "Headphones"}
             className={styles.headphoneCard}
             fallback="Audio"
-            imageUrl={headphonesImage}
-            title="High-quality sound"
+            href={resolveStorefrontHref(homeHref, headphonesCard?.ctaLink || "/categories/audio")}
+            imageUrl={headphonesCard?.imageUrl || headphonesImage}
+            title={headphonesCard?.title || "High-quality sound"}
           />
           <PromoCard
-            badge="Smart Watches"
+            badge={watchCard?.badge || "Smart Watches"}
             className={styles.watchCard}
             fallback="Watch"
-            imageUrl={watchImage}
-            title="Smart features, long battery life"
+            href={resolveStorefrontHref(homeHref, watchCard?.ctaLink || "/products?search=watch")}
+            imageUrl={watchCard?.imageUrl || watchImage}
+            title={watchCard?.title || "Smart features, long battery life"}
           />
         </div>
       </div>
@@ -142,17 +157,19 @@ function PromoCard({
   badge,
   className,
   fallback,
+  href,
   imageUrl,
   title
 }: {
   badge: string;
   className: string | undefined;
   fallback: string;
+  href: string;
   imageUrl: string | null | undefined;
   title: string;
 }) {
   return (
-    <article className={`${styles.card} ${styles.promoCard} ${className ?? ""}`}>
+    <Link className={`${styles.card} ${styles.promoCard} ${className ?? ""}`} href={href}>
       <div className={styles.promoMedia}>
         <StorefrontImage alt="" fallback={fallback} src={imageUrl} />
       </div>
@@ -160,7 +177,7 @@ function PromoCard({
         <span className={styles.badge}>{badge}</span>
         <h2>{title}</h2>
       </div>
-    </article>
+    </Link>
   );
 }
 
@@ -218,17 +235,19 @@ function productImageForCategory(products: StorefrontProduct[], category: Electr
 }
 
 export function ElectronicsProductGrid({
+  count = 5,
   currency,
   products,
   storeSlug,
   variant = "standard"
 }: {
+  count?: number | undefined;
   currency: string;
   products: StorefrontProduct[];
   storeSlug: string;
   variant?: "deal" | "standard";
 }) {
-  const items = products.length > 0 ? products.slice(0, 5) : fallbackProducts;
+  const items = products.length > 0 ? products.slice(0, count) : fallbackProducts.slice(0, count);
 
   return (
     <div className={`electronics-product-grid electronics-product-grid-${variant}`}>
@@ -309,11 +328,15 @@ export function ElectronicsProductCard({
 }
 
 export function ElectronicsFlashDeals({
+  count,
   currency,
+  electronicsSettings,
   products,
   storeSlug
 }: {
+  count?: number | undefined;
   currency: string;
+  electronicsSettings?: StorefrontElectronicsHomepageSettings | undefined;
   products: StorefrontProduct[];
   storeSlug: string;
 }) {
@@ -321,8 +344,8 @@ export function ElectronicsFlashDeals({
     <section className="electronics-flash-deals" aria-labelledby="electronics-flash-title">
       <div className="electronics-flash-header">
         <div>
-          <p>Flash Deals</p>
-          <h2 id="electronics-flash-title">Limited-time tech offers</h2>
+          <p>{electronicsSettings?.flashDealEyebrow ?? "Flash Deals"}</p>
+          <h2 id="electronics-flash-title">{electronicsSettings?.flashDealTitle ?? "Limited-time tech offers"}</h2>
         </div>
         <div aria-label="Countdown placeholder">
           <span>02</span>
@@ -330,62 +353,101 @@ export function ElectronicsFlashDeals({
           <span>44</span>
         </div>
       </div>
-      <ElectronicsProductGrid currency={currency} products={products} storeSlug={storeSlug} variant="deal" />
+      <ElectronicsProductGrid count={count} currency={currency} products={products} storeSlug={storeSlug} variant="deal" />
     </section>
   );
 }
 
 export function ElectronicsTechnologyBanner({
+  electronicsSettings,
   products = [],
   storeSlug
 }: {
+  electronicsSettings?: StorefrontElectronicsHomepageSettings | undefined;
   products?: StorefrontProduct[];
   storeSlug: string;
 }) {
-  const promoCards = [
+  const defaultPromoCards = [
     {
+      backgroundColor: "#373e66",
       badge: "45% OFF",
       className: "electronics-promo-card-cooker",
+      ctaLink: "/products?search=electric%20cooker",
+      ctaText: "Shop now",
       description: "Let technology do the cooking - now 45% off!",
       fallback: "EC",
       imageUrl: products[0]?.images[0]?.url,
       title: "Electric Cooker"
     },
     {
+      backgroundColor: "#a9c2e2",
       badge: "35% OFF",
       className: "electronics-promo-card-coffee",
+      ctaLink: "/products?search=coffee",
+      ctaText: "Shop now",
       description: "Experience bold flavor - 35% off today!",
       fallback: "CM",
       imageUrl: products[1]?.images[0]?.url,
       title: "Coffee Machines"
     },
     {
+      backgroundColor: "#e7edff",
+      badge: "",
       className: "electronics-promo-card-display",
+      ctaLink: "/products?search=display",
+      ctaText: "Shop now",
+      description: "",
       fallback: "TV",
       imageUrl: products[2]?.images[0]?.url,
       title: "TV & Display"
     },
     {
+      backgroundColor: "#d6edf5",
+      badge: "",
       className: "electronics-promo-card-fryer",
+      ctaLink: "/products?search=air%20fryer",
+      ctaText: "Shop now",
+      description: "",
       fallback: "AF",
       imageUrl: products[3]?.images[0]?.url,
       title: "Air Fryers"
     },
     {
+      backgroundColor: "#131b5b",
+      badge: "",
       className: "electronics-promo-card-humidifier",
+      ctaLink: "/products?search=humidifier",
+      ctaText: "Shop now",
       description: "Breathe easier and sleep better with cleaner, fresher air.",
       fallback: "HU",
       imageUrl: products[4]?.images[0]?.url,
       title: "Humidifier"
     }
   ];
+  const configuredCards = electronicsSettings?.promoCards ?? [];
+  const promoCards = defaultPromoCards.map((fallback, index) => {
+    const configured = configuredCards[index];
+
+    return {
+      ...fallback,
+      ...configured,
+      className: fallback.className,
+      fallback: fallback.fallback,
+      imageUrl: configured?.imageUrl || products[index]?.images[0]?.url || fallback.imageUrl
+    };
+  });
+  const homeHref = `/s/${storeSlug}`;
 
   return (
     <section className="electronics-promo-deals" aria-labelledby="electronics-promo-title">
-      <h2 id="electronics-promo-title">Urgent Sale - Home Essentials You&apos;ll Love!</h2>
+      <h2 id="electronics-promo-title">{electronicsSettings?.promoSectionTitle ?? "Urgent Sale - Home Essentials You'll Love!"}</h2>
       <div className="electronics-promo-grid">
         {promoCards.map((card) => (
-          <article className={`electronics-promo-card ${card.className}`} key={card.title}>
+          <article
+            className={`electronics-promo-card ${card.className}`}
+            key={card.title}
+            style={{ "--electronics-promo-bg": card.backgroundColor } as CSSProperties}
+          >
             {card.badge ? <PromoBadge label={card.badge} /> : null}
             <div className="electronics-promo-image">
               <StorefrontImage alt="" fallback={card.fallback} src={card.imageUrl} />
@@ -393,7 +455,7 @@ export function ElectronicsTechnologyBanner({
             <div className="electronics-promo-copy">
               <h3>{card.title}</h3>
               {card.description ? <p>{card.description}</p> : null}
-              <Link href={`/s/${storeSlug}/products?search=${encodeURIComponent(card.title)}`}>Shop now</Link>
+              <Link href={resolveStorefrontHref(homeHref, card.ctaLink)}>{card.ctaText || "Shop now"}</Link>
             </div>
           </article>
         ))}
@@ -403,84 +465,53 @@ export function ElectronicsTechnologyBanner({
 }
 
 export function ElectronicsRecommendedForYou({
+  categories = [],
   currency,
+  electronicsSettings,
   products = [],
   storeSlug
 }: {
+  categories?: ElectronicsCategory[];
   currency: string;
+  electronicsSettings?: StorefrontElectronicsHomepageSettings | undefined;
   products?: StorefrontProduct[];
   storeSlug: string;
 }) {
-  const tabs = ["All", "Gaming", "Laptops", "Phones", "Smart Watches", "Speakers"];
-  const items = products.length > 0 ? products.slice(0, 12) : fallbackProducts;
+  const uniqueProducts = Array.from(new Map(products.map((product) => [product.id, product])).values());
+  const clientCategories: ElectronicsRecommendedCategory[] = categories.map((category) => ({
+    id: category.id,
+    name: category.name,
+    slug: category.slug
+  }));
+  const clientProducts: ElectronicsRecommendedProduct[] = uniqueProducts.map((product) => ({
+    category: product.category
+      ? {
+          id: product.category.id,
+          name: product.category.name,
+          slug: product.category.slug
+        }
+      : null,
+    compareAtPrice: product.compareAtPrice?.toString() ?? null,
+    id: product.id,
+    image: product.images[0]
+      ? {
+          alt: product.images[0].alt,
+          url: product.images[0].url
+        }
+      : null,
+    price: product.price.toString(),
+    slug: product.slug,
+    title: product.title
+  }));
 
   return (
-    <section className="electronics-recommended" aria-labelledby="electronics-recommended-title">
-      <div className="electronics-recommended-inner">
-        <h2 id="electronics-recommended-title">Recommended for You</h2>
-        <div className="electronics-recommended-tabs" role="tablist" aria-label="Recommended product categories">
-          {tabs.map((tab, index) => (
-            <button aria-selected={index === 0} className={index === 0 ? "is-active" : undefined} key={tab} role="tab" type="button">
-              {tab}
-            </button>
-          ))}
-        </div>
-        <div className="electronics-recommended-grid">
-          {items.map((product, index) => {
-            if ("id" in product) {
-              return (
-                <ElectronicsRecommendedProductCard
-                  currency={currency}
-                  key={`${product.id}-${index}`}
-                  product={product}
-                  storeSlug={storeSlug}
-                />
-              );
-            }
-
-            return (
-              <Link className="electronics-recommended-card" href={`/s/${storeSlug}/products`} key={`${product.title}-${index}`}>
-                <span className="electronics-recommended-media">{product.label}</span>
-                <span className="electronics-recommended-info">
-                  <small>{product.brand}</small>
-                  <strong>{product.title}</strong>
-                </span>
-                <ProductPrice currency={currency} price={String(product.price)} />
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ElectronicsRecommendedProductCard({
-  currency,
-  product,
-  storeSlug
-}: {
-  currency: string;
-  product: StorefrontProduct;
-  storeSlug: string;
-}) {
-  const image = product.images[0];
-
-  return (
-    <Link className="electronics-recommended-card" href={`/s/${storeSlug}/products/${product.slug}`}>
-      <span className="electronics-recommended-media">
-        <StorefrontImage alt={image?.alt ?? product.title} fallback={product.category?.name?.slice(0, 2).toUpperCase() ?? "TX"} src={image?.url} />
-      </span>
-      <span className="electronics-recommended-info">
-        <small>{product.category?.name ?? "Stockmart"}</small>
-        <strong>{product.title}</strong>
-      </span>
-      <ProductPrice
-        compareAtPrice={product.compareAtPrice?.toString()}
-        currency={currency}
-        price={product.price.toString()}
-      />
-    </Link>
+    <ElectronicsRecommendedForYouClient
+      categories={clientCategories}
+      currency={currency}
+      products={clientProducts}
+      storeSlug={storeSlug}
+      title={electronicsSettings?.recommendedTitle}
+    />
   );
 }
 
@@ -495,23 +526,41 @@ function PromoBadge({ label }: { label: string }) {
   );
 }
 
-export function ElectronicsWhyChooseUs() {
+export function ElectronicsWhyChooseUs({
+  items
+}: {
+  items?: StorefrontElectronicsHomepageSettings["trustItems"] | undefined;
+}) {
+  const trustItems = items?.length ? items : [
+    { title: "Official Warranty", description: "Clear warranty support for compatible products." },
+    { title: "Fast Delivery", description: "Delivery rates and zones configured by the seller." },
+    { title: "Secure Payment", description: "Checkout methods are managed per store." },
+    { title: "Easy Returns", description: "Prepare return policy messaging for customers." }
+  ];
+
   return (
     <section className="electronics-trust" aria-label="Why choose us">
-      {([
-        ["Official Warranty", "Clear warranty support for compatible products."],
-        ["Fast Delivery", "Delivery rates and zones configured by the seller."],
-        ["Secure Payment", "Checkout methods are managed per store."],
-        ["Easy Returns", "Prepare return policy messaging for customers."]
-      ] satisfies Array<[string, string]>).map(([title, text]) => (
-        <article key={title}>
-          <span>{title.slice(0, 2).toUpperCase()}</span>
-          <h3>{title}</h3>
-          <p>{text}</p>
+      {trustItems.map((item) => (
+        <article key={item.title}>
+          <span>{item.title.slice(0, 2).toUpperCase()}</span>
+          <h3>{item.title}</h3>
+          <p>{item.description}</p>
         </article>
       ))}
     </section>
   );
+}
+
+function resolveStorefrontHref(homeHref: string, url: string) {
+  if (url.startsWith("http") || url.startsWith("mailto:") || url.startsWith("tel:") || url.startsWith("#")) {
+    return url;
+  }
+
+  if (url === homeHref || url.startsWith(`${homeHref}/`)) {
+    return url;
+  }
+
+  return `${homeHref}${url === "/" ? "" : url.startsWith("/") ? url : `/${url}`}`;
 }
 
 export function ElectronicsNewsletter() {

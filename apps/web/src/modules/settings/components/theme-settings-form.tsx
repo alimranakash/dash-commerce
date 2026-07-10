@@ -587,6 +587,234 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
       </SettingsCard>
 
       <SettingsCard
+        id="fashion-homepage"
+        title="Fashion Homepage"
+        description="Fashion-only controls for editorial sections, media overrides, newsletter copy, and footer menus."
+      >
+        <div className="theme-settings-grid three">
+          <label>
+            New arrivals title
+            <input defaultValue={advanced.fashion.newArrivalsTitle} name="fashionNewArrivalsTitle" type="text" />
+          </label>
+          <label>
+            New arrivals description
+            <input defaultValue={advanced.fashion.newArrivalsDescription} name="fashionNewArrivalsDescription" type="text" />
+          </label>
+          <label>
+            Collection card CTAs
+            <textarea defaultValue={advanced.fashion.collectionCtas.join("\n")} name="fashionCollectionCtas" rows={4} />
+          </label>
+          <label>
+            Split banner heading
+            <input defaultValue={advanced.fashion.editorialSplitHeading} name="fashionEditorialSplitHeading" type="text" />
+          </label>
+          <label>
+            Split banner CTA text
+            <input defaultValue={advanced.fashion.editorialSplitCtaText} name="fashionEditorialSplitCtaText" type="text" />
+          </label>
+          <label>
+            Split banner CTA link
+            <input defaultValue={advanced.fashion.editorialSplitCtaLink} name="fashionEditorialSplitCtaLink" type="text" />
+          </label>
+          <label>
+            Split left image URL
+            <input defaultValue={advanced.fashion.editorialSplitLeftImageUrl} name="fashionEditorialSplitLeftImageUrl" type="text" />
+          </label>
+          <label>
+            Split right image URL
+            <input defaultValue={advanced.fashion.editorialSplitRightImageUrl} name="fashionEditorialSplitRightImageUrl" type="text" />
+          </label>
+          <label>
+            Split height
+            <input defaultValue={advanced.fashion.editorialSplitHeight} max={1000} min={360} name="fashionEditorialSplitHeight" type="number" />
+          </label>
+          <label>
+            Campaign title
+            <input defaultValue={advanced.fashion.editorialBannerTitle} name="fashionEditorialBannerTitle" type="text" />
+          </label>
+          <label>
+            Campaign subtitle
+            <input defaultValue={advanced.fashion.editorialBannerSubtitle} name="fashionEditorialBannerSubtitle" type="text" />
+          </label>
+          <label>
+            Campaign image URL
+            <input defaultValue={advanced.fashion.editorialBannerImageUrl} name="fashionEditorialBannerImageUrl" type="text" />
+          </label>
+          <label>
+            Featured look title
+            <input defaultValue={advanced.fashion.featuredLookTitle} name="fashionFeaturedLookTitle" type="text" />
+          </label>
+          <label>
+            Featured look description
+            <input defaultValue={advanced.fashion.featuredLookDescription} name="fashionFeaturedLookDescription" type="text" />
+          </label>
+          <label>
+            Featured look image URL
+            <input defaultValue={advanced.fashion.featuredLookImageUrl} name="fashionFeaturedLookImageUrl" type="text" />
+          </label>
+          <label>
+            Community title
+            <input defaultValue={advanced.fashion.communityTitle} name="fashionCommunityTitle" type="text" />
+          </label>
+          <label>
+            Community description
+            <input defaultValue={advanced.fashion.communityDescription} name="fashionCommunityDescription" type="text" />
+          </label>
+          <label>
+            Community image URLs
+            <textarea defaultValue={advanced.fashion.communityImages.join("\n")} name="fashionCommunityImages" rows={4} />
+          </label>
+          <label>
+            Newsletter title
+            <input defaultValue={advanced.fashion.newsletterTitle} name="fashionNewsletterTitle" type="text" />
+          </label>
+          <label>
+            Newsletter description
+            <input defaultValue={advanced.fashion.newsletterDescription} name="fashionNewsletterDescription" type="text" />
+          </label>
+          <label>
+            Newsletter image URL
+            <input defaultValue={advanced.fashion.newsletterImageUrl} name="fashionNewsletterImageUrl" type="text" />
+          </label>
+          <label>
+            Before image URL
+            <input defaultValue={advanced.fashion.beforeAfterBeforeImageUrl} name="fashionBeforeAfterBeforeImageUrl" type="text" />
+          </label>
+          <label>
+            After image URL
+            <input defaultValue={advanced.fashion.beforeAfterAfterImageUrl} name="fashionBeforeAfterAfterImageUrl" type="text" />
+          </label>
+          <label>
+            Comparison position
+            <input defaultValue={advanced.fashion.beforeAfterInitialPosition} max={90} min={10} name="fashionBeforeAfterInitialPosition" type="number" />
+          </label>
+          <label>
+            Footer description
+            <textarea defaultValue={advanced.fashion.footerDescription} name="fashionFooterDescription" rows={4} />
+          </label>
+          <label>
+            Footer newsletter title
+            <input defaultValue={advanced.fashion.footerNewsletterTitle} name="fashionFooterNewsletterTitle" type="text" />
+          </label>
+          <label>
+            Footer newsletter description
+            <input defaultValue={advanced.fashion.footerNewsletterDescription} name="fashionFooterNewsletterDescription" type="text" />
+          </label>
+        </div>
+        <div className="theme-settings-grid two">
+          <RepeaterTextarea
+            helper="One link per line. Format: Label | /path."
+            label="Footer about links"
+            name="fashionFooterAboutLinks"
+            value={advanced.fashion.footerAboutLinks.map((link) => `${link.label} | ${link.url}`).join("\n")}
+          />
+          <RepeaterTextarea
+            helper="One link per line. Format: Label | /path."
+            label="Footer shop links"
+            name="fashionFooterShopLinks"
+            value={advanced.fashion.footerShopLinks.map((link) => `${link.label} | ${link.url}`).join("\n")}
+          />
+          <RepeaterTextarea
+            helper="One link per line. Format: Label | /path."
+            label="Footer legal links"
+            name="fashionFooterLegalLinks"
+            value={advanced.fashion.footerLegalLinks.map((link) => `${link.label} | ${link.url}`).join("\n")}
+          />
+          <RepeaterTextarea
+            helper="One publication name per line."
+            label="Press logos"
+            name="fashionFooterPressLogos"
+            value={advanced.fashion.footerPressLogos.join("\n")}
+          />
+        </div>
+      </SettingsCard>
+
+      <SettingsCard
+        id="electronics-homepage"
+        title="Electronics Homepage"
+        description="Electronics-only controls for promo cards, recommendation copy, footer menus, and support text."
+      >
+        <div className="theme-settings-grid three">
+          <label>
+            Category section title
+            <input defaultValue={advanced.electronics.categorySectionTitle} name="electronicsCategorySectionTitle" type="text" />
+          </label>
+          <label>
+            Brand section title
+            <input defaultValue={advanced.electronics.brandSectionTitle} name="electronicsBrandSectionTitle" type="text" />
+          </label>
+          <label>
+            Featured section title
+            <input defaultValue={advanced.electronics.featuredSectionTitle} name="electronicsFeaturedSectionTitle" type="text" />
+          </label>
+          <label>
+            Flash deal eyebrow
+            <input defaultValue={advanced.electronics.flashDealEyebrow} name="electronicsFlashDealEyebrow" type="text" />
+          </label>
+          <label>
+            Flash deal title
+            <input defaultValue={advanced.electronics.flashDealTitle} name="electronicsFlashDealTitle" type="text" />
+          </label>
+          <label>
+            New arrivals title
+            <input defaultValue={advanced.electronics.newArrivalsTitle} name="electronicsNewArrivalsTitle" type="text" />
+          </label>
+          <label>
+            Urgent sale title
+            <input defaultValue={advanced.electronics.promoSectionTitle} name="electronicsPromoSectionTitle" type="text" />
+          </label>
+          <label>
+            Recommended title
+            <input defaultValue={advanced.electronics.recommendedTitle} name="electronicsRecommendedTitle" type="text" />
+          </label>
+          <label>
+            Support text
+            <input defaultValue={advanced.electronics.supportText} name="electronicsSupportText" type="text" />
+          </label>
+          <label>
+            Newsletter title
+            <input defaultValue={advanced.electronics.newsletterTitle} name="electronicsNewsletterTitle" type="text" />
+          </label>
+          <label>
+            Newsletter description
+            <input defaultValue={advanced.electronics.newsletterDescription} name="electronicsNewsletterDescription" type="text" />
+          </label>
+        </div>
+        <RepeaterTextarea
+          helper="One card per line. Format: title | badge | description | image URL | CTA text | CTA link | background color."
+          label="Hero promo cards"
+          name="electronicsHeroPromoCards"
+          value={advanced.electronics.heroPromoCards.map((card) => `${card.title} | ${card.badge} | ${card.description} | ${card.imageUrl} | ${card.ctaText} | ${card.ctaLink} | ${card.backgroundColor}`).join("\n")}
+        />
+        <RepeaterTextarea
+          helper="One card per line. Format: title | badge | description | image URL | CTA text | CTA link | background color."
+          label="Urgent sale promo cards"
+          name="electronicsPromoCards"
+          value={advanced.electronics.promoCards.map((card) => `${card.title} | ${card.badge} | ${card.description} | ${card.imageUrl} | ${card.ctaText} | ${card.ctaLink} | ${card.backgroundColor}`).join("\n")}
+        />
+        <RepeaterTextarea
+          helper="One item per line. Format: title | description."
+          label="Trust items"
+          name="electronicsTrustItems"
+          value={advanced.electronics.trustItems.map((item) => `${item.title} | ${item.description}`).join("\n")}
+        />
+        <div className="theme-settings-grid two">
+          <RepeaterTextarea
+            helper="One link per line. Format: Label | /path."
+            label="Footer collection links"
+            name="electronicsFooterCollectionLinks"
+            value={advanced.electronics.footerCollectionLinks.map((link) => `${link.label} | ${link.url}`).join("\n")}
+          />
+          <RepeaterTextarea
+            helper="One link per line. Format: Label | /path."
+            label="Footer information links"
+            name="electronicsFooterInformationLinks"
+            value={advanced.electronics.footerInformationLinks.map((link) => `${link.label} | ${link.url}`).join("\n")}
+          />
+        </div>
+      </SettingsCard>
+
+      <SettingsCard
         id="product-page"
         title="Product Page"
         description="Control the single product page gallery, purchase area, accordions, shipping copy, and promotional blocks."

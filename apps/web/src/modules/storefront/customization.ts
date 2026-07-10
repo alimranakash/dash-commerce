@@ -84,6 +84,85 @@ export type StorefrontTabbedProductShowcaseSettings = {
   title: string;
 };
 
+export type StorefrontLinkSetting = {
+  label: string;
+  url: string;
+};
+
+export type StorefrontElectronicsPromoCardSettings = {
+  backgroundColor: string;
+  badge: string;
+  ctaLink: string;
+  ctaText: string;
+  description: string;
+  imageUrl: string;
+  title: string;
+};
+
+export type StorefrontElectronicsHomepageSettings = {
+  brandSectionTitle: string;
+  categorySectionTitle: string;
+  featuredSectionTitle: string;
+  flashDealTitle: string;
+  flashDealEyebrow: string;
+  footerCollectionLinks: StorefrontLinkSetting[];
+  footerInformationLinks: StorefrontLinkSetting[];
+  heroPromoCards: StorefrontElectronicsPromoCardSettings[];
+  newsletterDescription: string;
+  newsletterTitle: string;
+  promoCards: StorefrontElectronicsPromoCardSettings[];
+  promoSectionTitle: string;
+  recommendedTitle: string;
+  supportText: string;
+  trustItems: Array<{
+    description: string;
+    title: string;
+  }>;
+  newArrivalsTitle: string;
+};
+
+export type StorefrontFashionHomepageSettings = {
+  beforeAfterAfterImageUrl: string;
+  beforeAfterAfterLabel: string;
+  beforeAfterBeforeImageUrl: string;
+  beforeAfterBeforeLabel: string;
+  beforeAfterInitialPosition: number;
+  collectionCtas: string[];
+  communityDescription: string;
+  communityImages: string[];
+  communityTitle: string;
+  editorialBannerCtaLink: string;
+  editorialBannerCtaText: string;
+  editorialBannerImageUrl: string;
+  editorialBannerSubtitle: string;
+  editorialBannerTitle: string;
+  editorialSplitCtaLink: string;
+  editorialSplitCtaText: string;
+  editorialSplitHeading: string;
+  editorialSplitHeight: number;
+  editorialSplitLeftImageUrl: string;
+  editorialSplitOverlayOpacity: number;
+  editorialSplitRightImageUrl: string;
+  featuredLookCtaLink: string;
+  featuredLookCtaText: string;
+  featuredLookDescription: string;
+  featuredLookImageUrl: string;
+  featuredLookTitle: string;
+  footerAboutLinks: StorefrontLinkSetting[];
+  footerDescription: string;
+  footerLegalLinks: StorefrontLinkSetting[];
+  footerNewsletterDescription: string;
+  footerNewsletterTitle: string;
+  footerPressLogos: string[];
+  footerShopLinks: StorefrontLinkSetting[];
+  newArrivalsDescription: string;
+  newArrivalsTitle: string;
+  newsletterButtonText: string;
+  newsletterDescription: string;
+  newsletterImageUrl: string;
+  newsletterTitle: string;
+};
+
 export type StorefrontShopPageSortOption =
   | "featured"
   | "newest"
@@ -239,6 +318,8 @@ export type StorefrontAdvancedSettings = {
     search: StorefrontProductSectionSettings;
     trending: StorefrontProductSectionSettings;
   };
+  electronics: StorefrontElectronicsHomepageSettings;
+  fashion: StorefrontFashionHomepageSettings;
   productPage: StorefrontProductPageSettings;
   shopPage: StorefrontShopPageSettings;
   tabbedProductShowcase: StorefrontTabbedProductShowcaseSettings;
@@ -417,6 +498,171 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
       title: "Trending Products"
     })
   },
+  electronics: {
+    brandSectionTitle: "Featured brands",
+    categorySectionTitle: "Top categories",
+    featuredSectionTitle: "Featured products",
+    flashDealEyebrow: "Flash Deals",
+    flashDealTitle: "Limited-time tech offers",
+    footerCollectionLinks: [
+      { label: "Headphones", url: "/products?search=headphones" },
+      { label: "Smartwatches", url: "/products?search=smartwatch" },
+      { label: "Speakers", url: "/products?search=speakers" },
+      { label: "Desk lamps", url: "/products?search=desk%20lamp" },
+      { label: "Power banks", url: "/products?search=power%20bank" }
+    ],
+    footerInformationLinks: [
+      { label: "FAQs", url: "#faqs" },
+      { label: "Shipping", url: "#shipping" },
+      { label: "About us", url: "#about" },
+      { label: "Contact", url: "#contact" }
+    ],
+    heroPromoCards: [
+      {
+        backgroundColor: "#dfe7ff",
+        badge: "Gaming",
+        ctaLink: "/categories/gaming",
+        ctaText: "Shop now",
+        description: "",
+        imageUrl: "",
+        title: "Find ideal gaming consoles"
+      },
+      {
+        backgroundColor: "#f3e8e2",
+        badge: "Headphones",
+        ctaLink: "/categories/audio",
+        ctaText: "Shop now",
+        description: "",
+        imageUrl: "",
+        title: "High-quality sound"
+      },
+      {
+        backgroundColor: "#ecefdb",
+        badge: "Smart Watches",
+        ctaLink: "/products?search=watch",
+        ctaText: "Shop now",
+        description: "",
+        imageUrl: "",
+        title: "Smart features, long battery life"
+      }
+    ],
+    newArrivalsTitle: "Latest devices and accessories",
+    newsletterDescription: "Stay updated with our latest news and offers.",
+    newsletterTitle: "Subscribe to our newsletter",
+    promoCards: [
+      {
+        backgroundColor: "#373e66",
+        badge: "45% OFF",
+        ctaLink: "/products?search=electric%20cooker",
+        ctaText: "Shop now",
+        description: "Let technology do the cooking - now 45% off!",
+        imageUrl: "",
+        title: "Electric Cooker"
+      },
+      {
+        backgroundColor: "#a9c2e2",
+        badge: "35% OFF",
+        ctaLink: "/products?search=coffee",
+        ctaText: "Shop now",
+        description: "Experience bold flavor - 35% off today!",
+        imageUrl: "",
+        title: "Coffee Machines"
+      },
+      {
+        backgroundColor: "#e7edff",
+        badge: "",
+        ctaLink: "/products?search=display",
+        ctaText: "Shop now",
+        description: "",
+        imageUrl: "",
+        title: "TV & Display"
+      },
+      {
+        backgroundColor: "#d6edf5",
+        badge: "",
+        ctaLink: "/products?search=air%20fryer",
+        ctaText: "Shop now",
+        description: "",
+        imageUrl: "",
+        title: "Air Fryers"
+      },
+      {
+        backgroundColor: "#131b5b",
+        badge: "",
+        ctaLink: "/products?search=humidifier",
+        ctaText: "Shop now",
+        description: "Breathe easier and sleep better with cleaner, fresher air.",
+        imageUrl: "",
+        title: "Humidifier"
+      }
+    ],
+    promoSectionTitle: "Urgent Sale - Home Essentials You'll Love!",
+    recommendedTitle: "Recommended for You",
+    supportText: "Need help? Call Us: +84 2500 888 33",
+    trustItems: [
+      { title: "Official Warranty", description: "Clear warranty support for compatible products." },
+      { title: "Fast Delivery", description: "Delivery rates and zones configured by the seller." },
+      { title: "Secure Payment", description: "Checkout methods are managed per store." },
+      { title: "Easy Returns", description: "Prepare return policy messaging for customers." }
+    ]
+  },
+  fashion: {
+    beforeAfterAfterImageUrl: "",
+    beforeAfterAfterLabel: "After",
+    beforeAfterBeforeImageUrl: "",
+    beforeAfterBeforeLabel: "Before",
+    beforeAfterInitialPosition: 50,
+    collectionCtas: ["Shop now", "One pieces", "Swim tops", "Shop cover-ups"],
+    communityDescription: "Real style, worn your way.",
+    communityImages: [],
+    communityTitle: "Styled by the community",
+    editorialBannerCtaLink: "/products",
+    editorialBannerCtaText: "Explore the edit",
+    editorialBannerImageUrl: "",
+    editorialBannerSubtitle: "Refined layers, understated textures, and pieces designed to move beautifully together.",
+    editorialBannerTitle: "Quiet confidence, cut for everyday movement.",
+    editorialSplitCtaLink: "/products",
+    editorialSplitCtaText: "Explore",
+    editorialSplitHeading: "Timeless classics",
+    editorialSplitHeight: 720,
+    editorialSplitLeftImageUrl: "",
+    editorialSplitOverlayOpacity: 26,
+    editorialSplitRightImageUrl: "",
+    featuredLookCtaLink: "/products",
+    featuredLookCtaText: "Shop the look",
+    featuredLookDescription: "A considered edit of pieces designed to work together, season after season.",
+    featuredLookImageUrl: "",
+    featuredLookTitle: "The art of effortless dressing.",
+    footerAboutLinks: [
+      { label: "Our blog", url: "#blog" },
+      { label: "About Us", url: "#about" },
+      { label: "Contact Us", url: "#contact" },
+      { label: "FAQs", url: "#faqs" },
+      { label: "Search", url: "/search" }
+    ],
+    footerDescription: "Best Swimwear is a bikini boutique, in sunny Hermosa Beach, California. A warm environment where instead of feeling self-conscious she feels secure in her own body, not limited by age, size or shape, wearing swimwear that fits and feels good.",
+    footerLegalLinks: [
+      { label: "Privacy Policy", url: "#privacy-policy" },
+      { label: "Shipping Policy", url: "#shipping-policy" },
+      { label: "FAQs", url: "#faqs" },
+      { label: "Returns Policy", url: "#returns-policy" }
+    ],
+    footerNewsletterDescription: "Be the first to know about sales, new product launches and exclusive offers!",
+    footerNewsletterTitle: "Newsletter",
+    footerPressLogos: ["Cosmopolitan", "Bazaar", "Vogue", "Elle"],
+    footerShopLinks: [
+      { label: "Swim Tops", url: "/products" },
+      { label: "Swim Bottoms", url: "/products" },
+      { label: "One Pieces", url: "/products" },
+      { label: "Cover-ups", url: "/products" }
+    ],
+    newArrivalsDescription: "Discover the latest ready-to-wear dresses.",
+    newArrivalsTitle: "New Arrivals",
+    newsletterButtonText: "Subscribe",
+    newsletterDescription: "New collections, campaign stories, and private offers from your store.",
+    newsletterImageUrl: "",
+    newsletterTitle: "Receive the next editorial drop."
+  },
   productPage: {
     accordionEnabled: true,
     addToCartButtonColor: "#000000",
@@ -500,6 +746,8 @@ export function normalizeAdvancedSettings(value: unknown): StorefrontAdvancedSet
   const productPage = isRecord(input.productPage) ? input.productPage : {};
   const shopPage = isRecord(input.shopPage) ? input.shopPage : {};
   const tabbedProductShowcase = isRecord(input.tabbedProductShowcase) ? input.tabbedProductShowcase : {};
+  const electronics = isRecord(input.electronics) ? input.electronics : {};
+  const fashion = isRecord(input.fashion) ? input.fashion : {};
 
   return {
     announcement: {
@@ -573,6 +821,8 @@ export function normalizeAdvancedSettings(value: unknown): StorefrontAdvancedSet
       search: productSection(input.productSections, "search"),
       trending: productSection(input.productSections, "trending")
     },
+    electronics: electronicsSettings(electronics),
+    fashion: fashionSettings(fashion),
     productPage: productPageSettings(productPage),
     shopPage: shopPageSettings(shopPage),
     tabbedProductShowcase: tabbedProductShowcaseSettings(tabbedProductShowcase)
@@ -600,6 +850,179 @@ function productPageSettings(input: Record<string, unknown>): StorefrontProductP
     variantStyle: oneOf(input.variantStyle, ["buttons", "dropdown"], defaults.variantStyle),
     zoomEnabled: bool(input.zoomEnabled, defaults.zoomEnabled)
   };
+}
+
+function electronicsSettings(input: Record<string, unknown>): StorefrontElectronicsHomepageSettings {
+  const defaults = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.electronics;
+
+  return {
+    brandSectionTitle: text(input.brandSectionTitle, defaults.brandSectionTitle),
+    categorySectionTitle: text(input.categorySectionTitle, defaults.categorySectionTitle),
+    featuredSectionTitle: text(input.featuredSectionTitle, defaults.featuredSectionTitle),
+    flashDealEyebrow: text(input.flashDealEyebrow, defaults.flashDealEyebrow),
+    flashDealTitle: text(input.flashDealTitle, defaults.flashDealTitle),
+    footerCollectionLinks: linkSettings(input.footerCollectionLinks, defaults.footerCollectionLinks),
+    footerInformationLinks: linkSettings(input.footerInformationLinks, defaults.footerInformationLinks),
+    heroPromoCards: electronicsPromoCards(input.heroPromoCards, defaults.heroPromoCards, 3),
+    newArrivalsTitle: text(input.newArrivalsTitle, defaults.newArrivalsTitle),
+    newsletterDescription: text(input.newsletterDescription, defaults.newsletterDescription),
+    newsletterTitle: text(input.newsletterTitle, defaults.newsletterTitle),
+    promoCards: electronicsPromoCards(input.promoCards, defaults.promoCards, 5),
+    promoSectionTitle: text(input.promoSectionTitle, defaults.promoSectionTitle),
+    recommendedTitle: text(input.recommendedTitle, defaults.recommendedTitle),
+    supportText: text(input.supportText, defaults.supportText),
+    trustItems: trustItems(input.trustItems, defaults.trustItems)
+  };
+}
+
+function electronicsPromoCards(
+  value: unknown,
+  defaults: StorefrontElectronicsPromoCardSettings[],
+  max: number
+) {
+  if (!Array.isArray(value)) {
+    return defaults;
+  }
+
+  const cards = value
+    .map((item, index): StorefrontElectronicsPromoCardSettings | null => {
+      if (!isRecord(item)) {
+        return null;
+      }
+
+      const fallback = defaults[index] ?? defaults[0]!;
+      const title = text(item.title, fallback.title);
+
+      if (!title) {
+        return null;
+      }
+
+      return {
+        backgroundColor: hex(item.backgroundColor, fallback.backgroundColor),
+        badge: text(item.badge, fallback.badge),
+        ctaLink: path(item.ctaLink, fallback.ctaLink),
+        ctaText: text(item.ctaText, fallback.ctaText),
+        description: text(item.description, fallback.description),
+        imageUrl: text(item.imageUrl, fallback.imageUrl),
+        title
+      };
+    })
+    .filter((item): item is StorefrontElectronicsPromoCardSettings => Boolean(item));
+
+  return cards.length > 0 ? cards.slice(0, max) : defaults;
+}
+
+function fashionSettings(input: Record<string, unknown>): StorefrontFashionHomepageSettings {
+  const defaults = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.fashion;
+
+  return {
+    beforeAfterAfterImageUrl: text(input.beforeAfterAfterImageUrl, defaults.beforeAfterAfterImageUrl),
+    beforeAfterAfterLabel: text(input.beforeAfterAfterLabel, defaults.beforeAfterAfterLabel),
+    beforeAfterBeforeImageUrl: text(input.beforeAfterBeforeImageUrl, defaults.beforeAfterBeforeImageUrl),
+    beforeAfterBeforeLabel: text(input.beforeAfterBeforeLabel, defaults.beforeAfterBeforeLabel),
+    beforeAfterInitialPosition: numberInRange(input.beforeAfterInitialPosition, 10, 90, defaults.beforeAfterInitialPosition),
+    collectionCtas: textList(input.collectionCtas, defaults.collectionCtas, 8),
+    communityDescription: text(input.communityDescription, defaults.communityDescription),
+    communityImages: textList(input.communityImages, defaults.communityImages, 12),
+    communityTitle: text(input.communityTitle, defaults.communityTitle),
+    editorialBannerCtaLink: path(input.editorialBannerCtaLink, defaults.editorialBannerCtaLink),
+    editorialBannerCtaText: text(input.editorialBannerCtaText, defaults.editorialBannerCtaText),
+    editorialBannerImageUrl: text(input.editorialBannerImageUrl, defaults.editorialBannerImageUrl),
+    editorialBannerSubtitle: text(input.editorialBannerSubtitle, defaults.editorialBannerSubtitle),
+    editorialBannerTitle: text(input.editorialBannerTitle, defaults.editorialBannerTitle),
+    editorialSplitCtaLink: path(input.editorialSplitCtaLink, defaults.editorialSplitCtaLink),
+    editorialSplitCtaText: text(input.editorialSplitCtaText, defaults.editorialSplitCtaText),
+    editorialSplitHeading: text(input.editorialSplitHeading, defaults.editorialSplitHeading),
+    editorialSplitHeight: numberInRange(input.editorialSplitHeight, 360, 1000, defaults.editorialSplitHeight),
+    editorialSplitLeftImageUrl: text(input.editorialSplitLeftImageUrl, defaults.editorialSplitLeftImageUrl),
+    editorialSplitOverlayOpacity: numberInRange(input.editorialSplitOverlayOpacity, 0, 80, defaults.editorialSplitOverlayOpacity),
+    editorialSplitRightImageUrl: text(input.editorialSplitRightImageUrl, defaults.editorialSplitRightImageUrl),
+    featuredLookCtaLink: path(input.featuredLookCtaLink, defaults.featuredLookCtaLink),
+    featuredLookCtaText: text(input.featuredLookCtaText, defaults.featuredLookCtaText),
+    featuredLookDescription: text(input.featuredLookDescription, defaults.featuredLookDescription),
+    featuredLookImageUrl: text(input.featuredLookImageUrl, defaults.featuredLookImageUrl),
+    featuredLookTitle: text(input.featuredLookTitle, defaults.featuredLookTitle),
+    footerAboutLinks: linkSettings(input.footerAboutLinks, defaults.footerAboutLinks),
+    footerDescription: text(input.footerDescription, defaults.footerDescription),
+    footerLegalLinks: linkSettings(input.footerLegalLinks, defaults.footerLegalLinks),
+    footerNewsletterDescription: text(input.footerNewsletterDescription, defaults.footerNewsletterDescription),
+    footerNewsletterTitle: text(input.footerNewsletterTitle, defaults.footerNewsletterTitle),
+    footerPressLogos: textList(input.footerPressLogos, defaults.footerPressLogos, 10),
+    footerShopLinks: linkSettings(input.footerShopLinks, defaults.footerShopLinks),
+    newArrivalsDescription: text(input.newArrivalsDescription, defaults.newArrivalsDescription),
+    newArrivalsTitle: text(input.newArrivalsTitle, defaults.newArrivalsTitle),
+    newsletterButtonText: text(input.newsletterButtonText, defaults.newsletterButtonText),
+    newsletterDescription: text(input.newsletterDescription, defaults.newsletterDescription),
+    newsletterImageUrl: text(input.newsletterImageUrl, defaults.newsletterImageUrl),
+    newsletterTitle: text(input.newsletterTitle, defaults.newsletterTitle)
+  };
+}
+
+function linkSettings(value: unknown, defaults: StorefrontLinkSetting[]) {
+  if (!Array.isArray(value)) {
+    return defaults;
+  }
+
+  const links = value
+    .map((item): StorefrontLinkSetting | null => {
+      if (!isRecord(item)) {
+        return null;
+      }
+
+      const label = text(item.label);
+
+      if (!label) {
+        return null;
+      }
+
+      return {
+        label,
+        url: path(item.url, "/")
+      };
+    })
+    .filter((item): item is StorefrontLinkSetting => Boolean(item));
+
+  return links.length > 0 ? links.slice(0, 12) : defaults;
+}
+
+function textList(value: unknown, defaults: string[], max: number) {
+  if (!Array.isArray(value)) {
+    return defaults;
+  }
+
+  const items = value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return items.length > 0 ? items.slice(0, max) : defaults;
+}
+
+function trustItems(value: unknown, defaults: StorefrontElectronicsHomepageSettings["trustItems"]) {
+  if (!Array.isArray(value)) {
+    return defaults;
+  }
+
+  const items = value
+    .map((item): StorefrontElectronicsHomepageSettings["trustItems"][number] | null => {
+      if (!isRecord(item)) {
+        return null;
+      }
+
+      const title = text(item.title);
+
+      if (!title) {
+        return null;
+      }
+
+      return {
+        description: text(item.description),
+        title
+      };
+    })
+    .filter((item): item is StorefrontElectronicsHomepageSettings["trustItems"][number] => Boolean(item));
+
+  return items.length > 0 ? items.slice(0, 6) : defaults;
 }
 
 function miniCartSettings(input: Record<string, unknown>): StorefrontMiniCartSettings {

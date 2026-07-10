@@ -33,7 +33,7 @@ export function toFashionProductCardData(product: StorefrontProduct): FashionPro
       alt: image.alt,
       url: image.url
     })),
-    isNew: Date.now() - product.createdAt.getTime() <= 30 * 24 * 60 * 60 * 1000,
+    isNew: false,
     price: product.price.toString(),
     slug: product.slug,
     stockQuantity: product.stockQuantity,

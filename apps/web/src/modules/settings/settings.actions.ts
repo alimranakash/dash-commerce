@@ -10,8 +10,12 @@ import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
   normalizeAdvancedSettings,
   type StorefrontHeroSlide,
+  type StorefrontLinkSetting,
   type StorefrontMenuItem,
   type StorefrontMessage,
+  type StorefrontElectronicsPromoCardSettings,
+  type StorefrontElectronicsHomepageSettings,
+  type StorefrontFashionHomepageSettings,
   type StorefrontProductSectionSettings,
   type StorefrontTabbedProductTab
 } from "../storefront/customization";
@@ -284,6 +288,65 @@ async function advancedSettingsFromFormData(storeId: string, formData: FormData,
       search: productSectionFromFormData(formData, "search"),
       trending: productSectionFromFormData(formData, "trending")
     },
+    electronics: {
+      brandSectionTitle: getValue(formData, "electronicsBrandSectionTitle"),
+      categorySectionTitle: getValue(formData, "electronicsCategorySectionTitle"),
+      featuredSectionTitle: getValue(formData, "electronicsFeaturedSectionTitle"),
+      flashDealEyebrow: getValue(formData, "electronicsFlashDealEyebrow"),
+      flashDealTitle: getValue(formData, "electronicsFlashDealTitle"),
+      footerCollectionLinks: parseLinks(getValue(formData, "electronicsFooterCollectionLinks")),
+      footerInformationLinks: parseLinks(getValue(formData, "electronicsFooterInformationLinks")),
+      heroPromoCards: parseElectronicsPromoCards(getValue(formData, "electronicsHeroPromoCards")),
+      newArrivalsTitle: getValue(formData, "electronicsNewArrivalsTitle"),
+      newsletterDescription: getValue(formData, "electronicsNewsletterDescription"),
+      newsletterTitle: getValue(formData, "electronicsNewsletterTitle"),
+      promoCards: parseElectronicsPromoCards(getValue(formData, "electronicsPromoCards")),
+      promoSectionTitle: getValue(formData, "electronicsPromoSectionTitle"),
+      recommendedTitle: getValue(formData, "electronicsRecommendedTitle"),
+      supportText: getValue(formData, "electronicsSupportText"),
+      trustItems: parseTrustItems(getValue(formData, "electronicsTrustItems"))
+    },
+    fashion: {
+      beforeAfterAfterImageUrl: getValue(formData, "fashionBeforeAfterAfterImageUrl"),
+      beforeAfterAfterLabel: getValue(formData, "fashionBeforeAfterAfterLabel"),
+      beforeAfterBeforeImageUrl: getValue(formData, "fashionBeforeAfterBeforeImageUrl"),
+      beforeAfterBeforeLabel: getValue(formData, "fashionBeforeAfterBeforeLabel"),
+      beforeAfterInitialPosition: Number(getValue(formData, "fashionBeforeAfterInitialPosition")),
+      collectionCtas: parseTextList(getValue(formData, "fashionCollectionCtas")),
+      communityDescription: getValue(formData, "fashionCommunityDescription"),
+      communityImages: parseTextList(getValue(formData, "fashionCommunityImages")),
+      communityTitle: getValue(formData, "fashionCommunityTitle"),
+      editorialBannerCtaLink: getValue(formData, "fashionEditorialBannerCtaLink"),
+      editorialBannerCtaText: getValue(formData, "fashionEditorialBannerCtaText"),
+      editorialBannerImageUrl: getValue(formData, "fashionEditorialBannerImageUrl"),
+      editorialBannerSubtitle: getValue(formData, "fashionEditorialBannerSubtitle"),
+      editorialBannerTitle: getValue(formData, "fashionEditorialBannerTitle"),
+      editorialSplitCtaLink: getValue(formData, "fashionEditorialSplitCtaLink"),
+      editorialSplitCtaText: getValue(formData, "fashionEditorialSplitCtaText"),
+      editorialSplitHeading: getValue(formData, "fashionEditorialSplitHeading"),
+      editorialSplitHeight: Number(getValue(formData, "fashionEditorialSplitHeight")),
+      editorialSplitLeftImageUrl: getValue(formData, "fashionEditorialSplitLeftImageUrl"),
+      editorialSplitOverlayOpacity: Number(getValue(formData, "fashionEditorialSplitOverlayOpacity")),
+      editorialSplitRightImageUrl: getValue(formData, "fashionEditorialSplitRightImageUrl"),
+      featuredLookCtaLink: getValue(formData, "fashionFeaturedLookCtaLink"),
+      featuredLookCtaText: getValue(formData, "fashionFeaturedLookCtaText"),
+      featuredLookDescription: getValue(formData, "fashionFeaturedLookDescription"),
+      featuredLookImageUrl: getValue(formData, "fashionFeaturedLookImageUrl"),
+      featuredLookTitle: getValue(formData, "fashionFeaturedLookTitle"),
+      footerAboutLinks: parseLinks(getValue(formData, "fashionFooterAboutLinks")),
+      footerDescription: getValue(formData, "fashionFooterDescription"),
+      footerLegalLinks: parseLinks(getValue(formData, "fashionFooterLegalLinks")),
+      footerNewsletterDescription: getValue(formData, "fashionFooterNewsletterDescription"),
+      footerNewsletterTitle: getValue(formData, "fashionFooterNewsletterTitle"),
+      footerPressLogos: parseTextList(getValue(formData, "fashionFooterPressLogos")),
+      footerShopLinks: parseLinks(getValue(formData, "fashionFooterShopLinks")),
+      newArrivalsDescription: getValue(formData, "fashionNewArrivalsDescription"),
+      newArrivalsTitle: getValue(formData, "fashionNewArrivalsTitle"),
+      newsletterButtonText: getValue(formData, "fashionNewsletterButtonText"),
+      newsletterDescription: getValue(formData, "fashionNewsletterDescription"),
+      newsletterImageUrl: getValue(formData, "fashionNewsletterImageUrl"),
+      newsletterTitle: getValue(formData, "fashionNewsletterTitle")
+    },
     productPage: {
       accordionEnabled: checkbox(formData, "productPageAccordionEnabled"),
       addToCartButtonColor: getValue(formData, "productPageAddToCartButtonColor"),
@@ -350,6 +413,58 @@ async function advancedSettingsFromFormData(storeId: string, formData: FormData,
       title: getValue(formData, "tabbedShowcaseTitle")
     }
   });
+}
+
+function parseLinks(value: string): StorefrontLinkSetting[] {
+  return value
+    .split(/\r?\n/)
+    .map((line): StorefrontLinkSetting | null => {
+      const [label, url] = line.split("|").map((part) => part.trim());
+
+      return label ? { label, url: url || "/" } : null;
+    })
+    .filter((item): item is StorefrontLinkSetting => Boolean(item));
+}
+
+function parseElectronicsPromoCards(value: string): StorefrontElectronicsPromoCardSettings[] {
+  return value
+    .split(/\r?\n/)
+    .map((line): StorefrontElectronicsPromoCardSettings | null => {
+      const [title, badge, description, imageUrl, ctaText, ctaLink, backgroundColor] = line.split("|").map((part) => part.trim());
+
+      if (!title) {
+        return null;
+      }
+
+      return {
+        backgroundColor: backgroundColor || "#f7f8fb",
+        badge: badge || "",
+        ctaLink: ctaLink || "/products",
+        ctaText: ctaText || "Shop now",
+        description: description || "",
+        imageUrl: imageUrl || "",
+        title
+      };
+    })
+    .filter((item): item is StorefrontElectronicsPromoCardSettings => Boolean(item));
+}
+
+function parseTrustItems(value: string): StorefrontElectronicsHomepageSettings["trustItems"] {
+  return value
+    .split(/\r?\n/)
+    .map((line): StorefrontElectronicsHomepageSettings["trustItems"][number] | null => {
+      const [title, description] = line.split("|").map((part) => part.trim());
+
+      return title ? { title, description: description || "" } : null;
+    })
+    .filter((item): item is StorefrontElectronicsHomepageSettings["trustItems"][number] => Boolean(item));
+}
+
+function parseTextList(value: string): StorefrontFashionHomepageSettings["collectionCtas"] {
+  return value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
 }
 
 function productSectionFromFormData(

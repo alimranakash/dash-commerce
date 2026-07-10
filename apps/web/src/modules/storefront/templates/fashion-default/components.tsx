@@ -133,9 +133,11 @@ export function FashionCollectionCards({
 
 export function FashionEditorialCollectionGrid({
   categories,
+  ctas,
   storeSlug
 }: {
   categories: FashionCategory[];
+  ctas?: string[] | undefined;
   storeSlug: string;
 }) {
   const collections = (categories.length > 0 ? categories.slice(0, 4) : fallbackEditorialCollections).map(
@@ -143,7 +145,7 @@ export function FashionEditorialCollectionGrid({
       cta:
         "cta" in category && typeof category.cta === "string"
           ? category.cta
-          : fallbackEditorialCollections[index]?.cta ?? "Shop now",
+          : ctas?.[index] ?? fallbackEditorialCollections[index]?.cta ?? "Shop now",
       imageUrl:
         "imageUrl" in category && typeof category.imageUrl === "string"
           ? category.imageUrl
@@ -240,12 +242,14 @@ export function FashionProductGrid({
 
 export function FashionEditorialBanner({
   ctaLabel,
+  ctaLink,
   imageUrl,
   storeSlug,
   subtitle,
   title
 }: {
   ctaLabel?: string | null | undefined;
+  ctaLink?: string | null | undefined;
   imageUrl?: string | null | undefined;
   storeSlug: string;
   subtitle?: string | null | undefined;
@@ -264,20 +268,28 @@ export function FashionEditorialBanner({
         <p>Campaign</p>
         <h2 id="fashion-editorial-title">{title?.trim() || "Quiet confidence, cut for everyday movement."}</h2>
         <span>{subtitle?.trim() || "Refined layers, understated textures, and pieces designed to move beautifully together."}</span>
-        <Link href={`/s/${storeSlug}/products`}>{ctaLabel?.trim() || "Explore the edit"}</Link>
+        <Link href={resolveFashionHref(storeSlug, ctaLink || "/products")}>{ctaLabel?.trim() || "Explore the edit"}</Link>
       </div>
     </section>
   );
 }
 
 export function FashionFeaturedLook({
+  ctaLink,
+  ctaText,
+  description,
   imageUrl,
   products,
-  storeSlug
+  storeSlug,
+  title
 }: {
+  ctaLink?: string | null | undefined;
+  ctaText?: string | null | undefined;
+  description?: string | null | undefined;
   imageUrl?: string | null | undefined;
   products: StorefrontProduct[];
   storeSlug: string;
+  title?: string | null | undefined;
 }) {
   return (
     <section className={editorialStyles.lookbook} aria-labelledby="fashion-lookbook-title">
@@ -286,9 +298,9 @@ export function FashionFeaturedLook({
       </div>
       <div className={editorialStyles.lookbookContent}>
         <p>Featured Look</p>
-        <h2 id="fashion-lookbook-title">The art of effortless dressing.</h2>
-        <span>A considered edit of pieces designed to work together, season after season.</span>
-        <Link href={`/s/${storeSlug}/products`}>Shop the look</Link>
+        <h2 id="fashion-lookbook-title">{title?.trim() || "The art of effortless dressing."}</h2>
+        <span>{description?.trim() || "A considered edit of pieces designed to work together, season after season."}</span>
+        <Link href={resolveFashionHref(storeSlug, ctaLink || "/products")}>{ctaText?.trim() || "Shop the look"}</Link>
         <div className={editorialStyles.lookbookProducts}>
           {products.slice(0, 3).map((product) => (
             <Link href={`/s/${storeSlug}/products/${product.slug}`} key={product.id}>
@@ -309,9 +321,13 @@ export function FashionFeaturedLook({
 }
 
 export function FashionCommunityGallery({
-  images
+  description,
+  images,
+  title
 }: {
+  description?: string | null | undefined;
   images: Array<{ alt: string; url: string | null }>;
+  title?: string | null | undefined;
 }) {
   const tiles = Array.from({ length: 6 }, (_, index) => (
     images[index] ?? {
@@ -325,9 +341,9 @@ export function FashionCommunityGallery({
       <div className={editorialStyles.communityHeading}>
         <div>
           <p>Community</p>
-          <h2 id="fashion-community-title">Styled by the community</h2>
+          <h2 id="fashion-community-title">{title?.trim() || "Styled by the community"}</h2>
         </div>
-        <span>Real style, worn your way.</span>
+        <span>{description?.trim() || "Real style, worn your way."}</span>
       </div>
       <div className={editorialStyles.communityGrid}>
         {tiles.map((tile, index) => (
@@ -342,11 +358,17 @@ export function FashionCommunityGallery({
 }
 
 export function FashionNewsletter({
+  buttonText,
+  description,
   imageUrl,
-  storeName
+  storeName,
+  title
 }: {
+  buttonText?: string | null | undefined;
+  description?: string | null | undefined;
   imageUrl?: string | null | undefined;
   storeName: string;
+  title?: string | null | undefined;
 }) {
   return (
     <section className={editorialStyles.newsletter} aria-labelledby="fashion-newsletter-title">
@@ -355,13 +377,21 @@ export function FashionNewsletter({
       </div>
       <div className={editorialStyles.newsletterContent}>
         <p>Private list</p>
-        <h2 id="fashion-newsletter-title">Receive the next editorial drop.</h2>
-        <span>New collections, campaign stories, and private offers from {storeName}.</span>
+        <h2 id="fashion-newsletter-title">{title?.trim() || "Receive the next editorial drop."}</h2>
+        <span>{description?.trim() || `New collections, campaign stories, and private offers from ${storeName}.`}</span>
         <form>
           <input aria-label="Email address" placeholder="Email address" type="email" />
-          <button type="button">Subscribe</button>
+          <button type="button">{buttonText?.trim() || "Subscribe"}</button>
         </form>
       </div>
     </section>
   );
+}
+
+function resolveFashionHref(storeSlug: string, href: string) {
+  if (href.startsWith("http") || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("#")) {
+    return href;
+  }
+
+  return `/s/${storeSlug}${href === "/" ? "" : href.startsWith("/") ? href : `/${href}`}`;
 }

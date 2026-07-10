@@ -1,50 +1,32 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import type { StorefrontAdvancedSettings } from "../../customization";
 import type { StorefrontStore } from "../../storefront.types";
 
 type FashionFooterProps = {
+  advancedSettings?: StorefrontAdvancedSettings | null | undefined;
   primaryDomain: string | undefined;
   store: StorefrontStore;
   templateId: string;
 };
 
-const fallbackDescription = "Best Swimwear is a bikini boutique, in sunny Hermosa Beach, California. A warm environment where instead of feeling self-conscious she feels secure in her own body, not limited by age, size or shape, wearing swimwear that fits and feels good.";
-
-const aboutLinks = [
-  { label: "Our blog", url: "#blog" },
-  { label: "About Us", url: "#about" },
-  { label: "Contact Us", url: "#contact" },
-  { label: "FAQs", url: "#faqs" },
-  { label: "Search", url: "/search" }
-];
-
-const shopLinks = [
-  { label: "Swim Tops", url: "/products" },
-  { label: "Swim Bottoms", url: "/products" },
-  { label: "One Pieces", url: "/products" },
-  { label: "Cover-ups", url: "/products" }
-];
-
-const legalLinks = [
-  { label: "Privacy Policy", url: "#privacy-policy" },
-  { label: "Shipping Policy", url: "#shipping-policy" },
-  { label: "FAQs", url: "#faqs" },
-  { label: "Returns Policy", url: "#returns-policy" }
-];
-
-const pressNames = ["Cosmopolitan", "Bazaar", "Vogue", "Elle"];
-
 export function FashionStorefrontFooter({
+  advancedSettings,
   primaryDomain,
   store,
   templateId
 }: FashionFooterProps) {
   const settings = store.setting;
+  const fashion = advancedSettings?.fashion;
   const homeHref = `/s/${store.slug}`;
   const currentYear = new Date().getFullYear();
   const brandText = store.name.trim() || "Symmetry";
-  const description = settings?.tagline?.trim() || fallbackDescription;
+  const description = settings?.tagline?.trim() || fashion?.footerDescription || "Best Swimwear is a bikini boutique, in sunny Hermosa Beach, California. A warm environment where instead of feeling self-conscious she feels secure in her own body, not limited by age, size or shape, wearing swimwear that fits and feels good.";
   const socialLinks = resolveSocialLinks(settings);
+  const aboutLinks = fashion?.footerAboutLinks ?? [];
+  const shopLinks = fashion?.footerShopLinks ?? [];
+  const legalLinks = fashion?.footerLegalLinks ?? [];
+  const pressNames = fashion?.footerPressLogos ?? [];
 
   return (
     <footer className="fashion-footer" data-storefront-footer-template={templateId}>
@@ -95,8 +77,8 @@ export function FashionStorefrontFooter({
         </FashionFooterColumn>
 
         <section className="fashion-footer-newsletter" aria-label="Newsletter">
-          <h2>Newsletter</h2>
-          <p>Be the first to know about sales, new product launches and exclusive offers!</p>
+          <h2>{fashion?.footerNewsletterTitle || "Newsletter"}</h2>
+          <p>{fashion?.footerNewsletterDescription || "Be the first to know about sales, new product launches and exclusive offers!"}</p>
           <form action="#" aria-label="Subscribe to newsletter">
             <input name="email" placeholder="Your email" type="email" />
             <button type="button">Subscribe</button>
