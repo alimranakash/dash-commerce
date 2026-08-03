@@ -157,7 +157,7 @@ export function AdminUserManagement({ activeRole, activeStatus, search, users }:
                               <UserX className="h-4 w-4" />
                             </button>
                           )}
-                          <button className="grid h-8 w-8 place-items-center rounded-lg text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={user.isCurrentAdmin} onClick={() => setDeleteTarget(user)} title="Delete user" type="button">
+                          <button className="grid h-8 w-8 place-items-center rounded-lg text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={pending || user.isCurrentAdmin} onClick={() => setDeleteTarget(user)} title="Delete user" type="button">
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>

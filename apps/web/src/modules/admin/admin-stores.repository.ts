@@ -119,6 +119,15 @@ export async function getAdminStores(filters: { search?: string; status?: AdminS
         },
         take: 1
       },
+      subscription: {
+        include: {
+          plan: {
+            select: {
+              name: true
+            }
+          }
+        }
+      },
       organization: {
         include: {
           members: {

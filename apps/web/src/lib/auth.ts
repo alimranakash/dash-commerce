@@ -38,7 +38,7 @@ const providers: NextAuthOptions["providers"] = [
         }
       });
 
-      if (!user?.passwordHash) {
+      if (!user?.passwordHash || user.isSuspended) {
         return null;
       }
 
@@ -98,6 +98,10 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
+      if (await isSuspendedAccount(email)) {
+        return false;
+      }
+
       await ensurePlatformOwnerAdmin(email);
       return true;
     },
@@ -141,6 +145,25 @@ export async function requireUser() {
   }
 
   return user;
+}
+
+async function isSuspendedAccount(email: string | null | undefined) {
+  const normalizedEmail = email?.trim().toLowerCase();
+
+  if (!normalizedEmail) {
+    return false;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      email: normalizedEmail
+    },
+    select: {
+      isSuspended: true
+    }
+  });
+
+  return user?.isSuspended === true;
 }
 
 async function ensurePlatformOwnerAdmin(email: string | null | undefined) {

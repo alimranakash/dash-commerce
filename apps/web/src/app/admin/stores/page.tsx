@@ -62,7 +62,7 @@ function toStoreListItem(store: AdminStoreRecord): AdminStoreListItem {
     ownerEmail: owner?.user.email ?? "No owner email",
     ownerImage: owner?.user.image ?? null,
     ownerName: owner?.user.name ?? "No owner assigned",
-    plan: planLabel(store.status),
+    plan: store.subscription?.plan.name ?? planLabel(store.status),
     productsCount: store._count.products,
     slug: store.slug,
     status: store.status as AdminStoreListItem["status"],

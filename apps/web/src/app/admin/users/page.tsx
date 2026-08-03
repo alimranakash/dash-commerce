@@ -66,7 +66,7 @@ function toUserListItem(user: AdminUserRecord, currentAdminId: string): AdminUse
     isCurrentAdmin: user.id === currentAdminId,
     isSuspended: user.isSuspended,
     joinedStores,
-    lastActivity: user.sessions[0]?.expires ? formatDate(user.updatedAt) : formatDate(user.updatedAt),
+    lastActivity: formatDate(user.updatedAt),
     loginProviders: user.accounts.map((account) => account.provider),
     name: user.name ?? user.email,
     role: user.role,
