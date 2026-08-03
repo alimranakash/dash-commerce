@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { prisma, type Prisma } from "@dash/db";
 import { normalizeSlug } from "../../lib/slug";
 
-export type ProductTaxonomyType = "TAG" | "BRAND";
+export type ProductTaxonomyType = "TAG" | "BRAND" | "ATTRIBUTE";
 
 export type ProductTaxonomyItem = {
   id: string;
@@ -252,7 +252,9 @@ function uniqueIds(ids: string[]) {
 }
 
 function taxonomyLabel(type: ProductTaxonomyType) {
-  return type === "TAG" ? "Tag" : "Brand";
+  if (type === "TAG") return "Tag";
+
+  return type === "ATTRIBUTE" ? "Attribute" : "Brand";
 }
 
 export function ensureProductTaxonomySchema(db: ProductTaxonomyClient = prisma) {

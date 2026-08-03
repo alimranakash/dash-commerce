@@ -42,8 +42,16 @@ type AbandonedCartDashboardProps = {
 
 export function AbandonedCartDashboard({ activeFilter, carts, currency, search }: AbandonedCartDashboardProps) {
   const [records, setRecords] = useState(carts);
+  const [loadedCarts, setLoadedCarts] = useState(carts);
   const [selectedCart, setSelectedCart] = useState<AbandonedCartRecord | null>(null);
   const [notice, setNotice] = useState("");
+
+  // Filtering/searching re-renders this component with a fresh server list; without
+  // this the local copy would keep showing the first page's carts forever.
+  if (loadedCarts !== carts) {
+    setLoadedCarts(carts);
+    setRecords(carts);
+  }
 
   useEffect(() => {
     if (!selectedCart) return;

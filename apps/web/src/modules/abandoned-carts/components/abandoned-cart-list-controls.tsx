@@ -26,9 +26,12 @@ export function AbandonedCartListControls({ activeFilter, counts, dateRange, sea
         <nav aria-label="Abandoned cart filters" className="-mb-px flex min-w-0 gap-5 overflow-x-auto border-b border-[#eeeef5]">
           {tabs.map((tab) => {
             const params = new URLSearchParams();
-            if (tab.key !== "all") params.set("status", tab.key);
-            if (search) params.set("search", search);
-            if (dateRange) params.set("dateRange", dateRange);
+            // "Clean" clears every active filter rather than adding one of its own.
+            if (tab.key !== "all" && tab.key !== "clean") params.set("status", tab.key);
+            if (tab.key !== "clean") {
+              if (search) params.set("search", search);
+              if (dateRange) params.set("dateRange", dateRange);
+            }
             const active = activeFilter === tab.key;
 
             return (

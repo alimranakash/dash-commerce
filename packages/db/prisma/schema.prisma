@@ -379,6 +379,7 @@ model StoreSetting {
   facebookUrl     String?
   instagramUrl    String?
   whatsappNumber  String?
+  moduleSettings  Json?
   store           Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @default(now()) @updatedAt

@@ -70,7 +70,7 @@ export async function createPurchase(context: PurchaseContext, input: CreatePurc
     });
 
     if (shouldReceive) {
-      await increaseProductStock(tx, context.organizationId, context.storeId, purchase.id, items);
+      await applyProductStock(tx, context.organizationId, context.storeId, purchase.id, items);
     }
 
     return purchase;
@@ -139,7 +139,16 @@ export async function updatePurchase(
     });
 
     if (shouldReceiveNow) {
-      await increaseProductStock(tx, context.organizationId, context.storeId, purchase.id, items);
+      await applyProductStock(tx, context.organizationId, context.storeId, purchase.id, items);
+    } else if (existing.receivedAt) {
+      await applyProductStock(
+        tx,
+        context.organizationId,
+        context.storeId,
+        purchase.id,
+        stockChangesBetween(existing.items, items),
+        "Purchase updated"
+      );
     }
 
     return purchase;
@@ -168,7 +177,7 @@ export async function markPurchaseReceived(context: PurchaseContext, purchaseId:
     }
 
     if (!purchase.receivedAt) {
-      await increaseProductStock(tx, context.organizationId, context.storeId, purchase.id, purchase.items);
+      await applyProductStock(tx, context.organizationId, context.storeId, purchase.id, purchase.items);
     }
 
     return tx.purchase.update({
@@ -234,8 +243,7 @@ async function assertSupplierBelongsToOrganization(
   const supplier = await tx.supplier.findFirst({
     where: {
       id: supplierId,
-      organizationId,
-      status: "ACTIVE"
+      organizationId
     },
     select: {
       id: true
@@ -318,15 +326,43 @@ function calculateTotals(
   };
 }
 
-async function increaseProductStock(
+function stockChangesBetween(
+  previous: Array<{ productId?: string | null; productName?: string; quantity: number }>,
+  next: Array<{ productId?: string | null; productName?: string; quantity: number }>
+) {
+  const changes = new Map<string, { productId: string; productName?: string; quantity: number }>();
+
+  function add(items: typeof previous, sign: number) {
+    for (const item of items) {
+      if (!item.productId) continue;
+
+      const entry = changes.get(item.productId) ?? {
+        productId: item.productId,
+        ...(item.productName ? { productName: item.productName } : {}),
+        quantity: 0
+      };
+
+      entry.quantity += sign * item.quantity;
+      changes.set(item.productId, entry);
+    }
+  }
+
+  add(next, 1);
+  add(previous, -1);
+
+  return Array.from(changes.values()).filter((change) => change.quantity !== 0);
+}
+
+async function applyProductStock(
   tx: TransactionClient,
   organizationId: string,
   storeId: string,
   purchaseId: string,
-  items: Array<{ productId?: string | null; productName?: string; quantity: number }>
+  items: Array<{ productId?: string | null; productName?: string; quantity: number }>,
+  reason = "Purchase received"
 ) {
   for (const item of items) {
-    if (!item.productId) continue;
+    if (!item.productId || item.quantity === 0) continue;
 
     const product = await tx.product.findFirst({
       where: {
@@ -345,7 +381,7 @@ async function increaseProductStock(
     }
 
     const previousQuantity = product.stockQuantity;
-    const newQuantity = previousQuantity + item.quantity;
+    const newQuantity = Math.max(previousQuantity + item.quantity, 0);
 
     await tx.product.update({
       where: {
@@ -364,12 +400,12 @@ async function increaseProductStock(
         organizationId,
         previousQuantity,
         productId: product.id,
-        quantityChange: item.quantity,
-        reason: "Purchase received",
+        quantityChange: newQuantity - previousQuantity,
+        reason,
         sourceId: purchaseId,
         sourceType: "PURCHASE",
         storeId,
-        type: "STOCK_IN"
+        type: item.quantity > 0 ? "STOCK_IN" : "STOCK_OUT"
       }
     });
   }

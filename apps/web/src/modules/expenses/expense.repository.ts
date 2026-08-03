@@ -65,6 +65,21 @@ export async function getExpenseCategoryByIdForOrganization(organizationId: stri
   });
 }
 
+export async function getExpenseCategoryByNameForOrganization(organizationId: string, name: string) {
+  return prisma.expenseCategory.findFirst({
+    where: {
+      name: {
+        equals: name,
+        mode: "insensitive"
+      },
+      organizationId
+    },
+    select: {
+      id: true
+    }
+  });
+}
+
 export async function getExpensesForStore(organizationId: string, storeId: string, filters: ExpenseFilters = {}) {
   const query = filters.search?.trim();
   const dateRange = dateFilter(filters.dateFrom, filters.dateTo);

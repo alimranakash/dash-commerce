@@ -1,5 +1,10 @@
 import { prisma } from "@dash/db";
-import type { StoreSettingsInput, ThemeSettingsInput } from "./settings.schema";
+import {
+  normalizeModuleSettings,
+  type ModuleSettings,
+  type StoreSettingsInput,
+  type ThemeSettingsInput
+} from "./settings.schema";
 import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
   normalizeAdvancedSettings,
@@ -140,6 +145,49 @@ function nullableThemeData(data: ThemeSettingsInput) {
   };
 }
 
+export async function getModuleSettingsRecord(storeId: string): Promise<ModuleSettings> {
+  await ensureModuleSettingsColumn();
+  const tableName = await getSettingsTableName("StoreSetting");
+
+  const rows = await prisma.$queryRawUnsafe<Array<{ moduleSettings: unknown }>>(
+    `SELECT "moduleSettings" FROM ${tableName} WHERE "storeId" = $1 LIMIT 1`,
+    storeId
+  );
+
+  return normalizeModuleSettings(rows[0]?.moduleSettings);
+}
+
+export async function updateModuleSettingsRecord(storeId: string, settings: ModuleSettings) {
+  await ensureModuleSettingsColumn();
+  const tableName = await getSettingsTableName("StoreSetting");
+
+  await prisma.storeSetting.upsert({
+    where: {
+      storeId
+    },
+    update: {},
+    create: {
+      storeId
+    }
+  });
+
+  await prisma.$executeRawUnsafe(
+    `UPDATE ${tableName} SET "moduleSettings" = $1::jsonb WHERE "storeId" = $2`,
+    JSON.stringify(settings),
+    storeId
+  );
+
+  return settings;
+}
+
+async function ensureModuleSettingsColumn() {
+  const tableName = await getSettingsTableName("StoreSetting");
+
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE ${tableName} ADD COLUMN IF NOT EXISTS "moduleSettings" JSONB`
+  );
+}
+
 async function ensureThemeAdvancedSettingsColumn() {
   const tableName = await getThemeSettingsTableName();
 
@@ -171,15 +219,19 @@ async function updateThemeAdvancedSettings(storeId: string, settings: Storefront
   );
 }
 
-async function getThemeSettingsTableName() {
+function getThemeSettingsTableName() {
+  return getSettingsTableName("ThemeSetting");
+}
+
+async function getSettingsTableName(name: "StoreSetting" | "ThemeSetting") {
   const rows = await prisma.$queryRawUnsafe<Array<{ table_schema: string; table_name: string }>>(
     'SELECT table_schema, table_name FROM information_schema.tables WHERE table_name = $1 ORDER BY CASE WHEN table_schema = current_schema() THEN 0 ELSE 1 END LIMIT 1',
-    "ThemeSetting"
+    name
   );
   const table = rows[0];
 
   if (!table) {
-    return '"ThemeSetting"';
+    return `"${name}"`;
   }
 
   return `"${table.table_schema.replace(/"/g, '""')}"."${table.table_name.replace(/"/g, '""')}"`;

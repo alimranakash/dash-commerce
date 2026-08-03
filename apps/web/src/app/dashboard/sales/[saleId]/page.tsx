@@ -125,7 +125,7 @@ export default async function SaleDetailsPage({ params, searchParams }: SaleDeta
           <section className="rounded-xl border border-[#ececf5] bg-white p-5 shadow-[0_8px_24px_rgba(62,54,114,0.04)]">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#f3f0ff] text-[#7c3aed]"><PackageCheck className="h-5 w-5" /></span>
             <h2 className="mb-0 mt-4 text-base font-semibold">Inventory</h2>
-            <p className="mt-2 text-sm leading-6 text-[#777985]">Stock is deducted once when the sale first becomes completed. Returns will restore stock in the future returns module.</p>
+            <p className="mt-2 text-sm leading-6 text-[#777985]">Stock is deducted while the sale is completed, and restored automatically when the sale is voided or moved out of completed status.</p>
           </section>
         </div>
       </section>

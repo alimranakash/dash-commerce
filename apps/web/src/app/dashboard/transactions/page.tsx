@@ -15,12 +15,15 @@ export default async function TransactionsPage({ searchParams }: TransactionsPag
   const params = await searchParams;
   const activeFilter = parseTransactionFilter(singleValue(params.type));
   const search = singleValue(params.search).trim();
-  const rows = summary.rows.filter((row) => matchesTransactionFilter(row, activeFilter) && matchesTransactionSearch(row, search));
+  const dateFrom = singleValue(params.dateFrom).trim();
+  const dateTo = singleValue(params.dateTo).trim();
+  const scopedRows = summary.rows.filter((row) => matchesTransactionSearch(row, search) && matchesTransactionDateRange(row, dateFrom, dateTo));
+  const rows = scopedRows.filter((row) => matchesTransactionFilter(row, activeFilter));
   const counts: Record<TransactionFilterKey, number> = {
-    adjustment: summary.rows.filter((row) => row.type === "ADJUSTMENT").length,
-    all: summary.rows.length,
-    payment: summary.rows.filter((row) => row.type === "PAYMENT").length,
-    refund: summary.rows.filter((row) => row.type === "REFUND").length
+    adjustment: scopedRows.filter((row) => row.type === "ADJUSTMENT").length,
+    all: scopedRows.length,
+    payment: scopedRows.filter((row) => row.type === "PAYMENT").length,
+    refund: scopedRows.filter((row) => row.type === "REFUND").length
   };
 
   return (
@@ -30,7 +33,8 @@ export default async function TransactionsPage({ searchParams }: TransactionsPag
         <TransactionListControls
           activeFilter={activeFilter}
           counts={counts}
-          dateRange={singleValue(params.dateRange).trim()}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
           search={search}
         />
         <TransactionDashboard currency={summary.rows[0]?.currency ?? store.currency} metrics={summary.metrics} rows={rows} />
@@ -47,6 +51,17 @@ function matchesTransactionSearch(row: TransactionRow, search: string) {
   if (!search) return true;
   const query = search.toLowerCase();
   return [row.id, row.orderNumber, row.customer, row.status, row.type].some((value) => value.toLowerCase().includes(query));
+}
+
+function matchesTransactionDateRange(row: TransactionRow, dateFrom: string, dateTo: string) {
+  const createdAt = row.createdAt.getTime();
+  const from = dateFrom ? new Date(`${dateFrom}T00:00:00`) : null;
+  const to = dateTo ? new Date(`${dateTo}T23:59:59.999`) : null;
+
+  if (from && !Number.isNaN(from.getTime()) && createdAt < from.getTime()) return false;
+  if (to && !Number.isNaN(to.getTime()) && createdAt > to.getTime()) return false;
+
+  return true;
 }
 
 function parseTransactionFilter(value: string): TransactionFilterKey {

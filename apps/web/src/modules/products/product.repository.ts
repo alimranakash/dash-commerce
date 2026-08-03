@@ -10,11 +10,11 @@ type ProductWriteData = {
   lowStockThreshold: number;
   status: ProductStatus;
   visibility: ProductVisibility;
-  description?: string;
-  shortDescription?: string;
-  sku?: string;
-  compareAtPrice?: string;
-  costPrice?: string;
+  description?: string | null;
+  shortDescription?: string | null;
+  sku?: string | null;
+  compareAtPrice?: string | null;
+  costPrice?: string | null;
   categoryId?: string | null;
 };
 

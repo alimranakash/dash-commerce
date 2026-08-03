@@ -2,12 +2,13 @@ import { Search } from "lucide-react";
 import Link from "next/link";
 import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 
-export type OrderFilterKey = "all" | "pending" | "processing" | "completed" | "cancelled" | "on-hold" | "partially-refunded" | "refunded";
+export type OrderFilterKey = "all" | "pending" | "processing" | "completed" | "cancelled" | "refunded";
 
 type OrderListControlsProps = {
   activeFilter: OrderFilterKey;
   counts: Record<OrderFilterKey, number>;
-  dateRange: string;
+  dateFrom: string;
+  dateTo: string;
   search: string;
 };
 
@@ -17,12 +18,10 @@ const tabs: Array<{ badgeClass: string; key: OrderFilterKey; label: string }> = 
   { badgeClass: "bg-[#e7f3ff] text-[#1683ed]", key: "processing", label: "Processing" },
   { badgeClass: "bg-[#e6f7e8] text-[#159447]", key: "completed", label: "Completed" },
   { badgeClass: "bg-[#ffe8ef] text-[#ef4774]", key: "cancelled", label: "Cancelled" },
-  { badgeClass: "bg-[#eeeeff] text-[#6868ef]", key: "on-hold", label: "On Hold" },
-  { badgeClass: "bg-[#fff0e2] text-[#ee8a2d]", key: "partially-refunded", label: "Partially Refunded" },
   { badgeClass: "bg-[#ffe8e8] text-[#ef5050]", key: "refunded", label: "Refunded" }
 ];
 
-export function OrderListControls({ activeFilter, counts, dateRange, search }: OrderListControlsProps) {
+export function OrderListControls({ activeFilter, counts, dateFrom, dateTo, search }: OrderListControlsProps) {
   return (
     <section className="rounded-xl border border-[#ececf5] bg-white px-5 py-5 shadow-[0_8px_24px_rgba(62,54,114,0.04)]">
       <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
@@ -31,7 +30,8 @@ export function OrderListControls({ activeFilter, counts, dateRange, search }: O
             const params = new URLSearchParams();
             if (tab.key !== "all") params.set("status", tab.key);
             if (search) params.set("search", search);
-            if (dateRange) params.set("dateRange", dateRange);
+            if (dateFrom) params.set("dateFrom", dateFrom);
+            if (dateTo) params.set("dateTo", dateTo);
             const href = params.size ? `/dashboard/orders?${params.toString()}` : "/dashboard/orders";
             const active = activeFilter === tab.key;
 
@@ -62,12 +62,20 @@ export function OrderListControls({ activeFilter, counts, dateRange, search }: O
             type="search"
           />
           <input
-            aria-label="Order date range"
-            className="h-11 min-w-0 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none placeholder:text-[#a2a3b0] focus:border-[#8b5cf6] sm:w-56"
-            defaultValue={dateRange}
-            name="dateRange"
-            placeholder="eg. 12 Sep - 28 Oct 2025"
-            type="text"
+            aria-label="Orders from date"
+            className="h-11 min-w-0 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none focus:border-[#8b5cf6] sm:w-40"
+            defaultValue={dateFrom}
+            name="dateFrom"
+            title="Date from"
+            type="date"
+          />
+          <input
+            aria-label="Orders to date"
+            className="h-11 min-w-0 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none focus:border-[#8b5cf6] sm:w-40"
+            defaultValue={dateTo}
+            name="dateTo"
+            title="Date to"
+            type="date"
           />
           <button aria-label="Search orders" className="grid h-11 w-full shrink-0 place-items-center rounded-lg bg-[#7548f5] text-white transition hover:bg-[#6436e8] sm:w-11" type="submit">
             <Search aria-hidden="true" className="h-4 w-4" />

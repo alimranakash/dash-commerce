@@ -3,12 +3,14 @@
 import { Button } from "@dash/ui";
 import { useActionState, type ReactNode } from "react";
 import type { SettingsActionState } from "../settings.actions";
+import type { SocialProfileLinksInput } from "../settings.schema";
 import type { StoreSettingsFormValue } from "./store-settings-form";
 
 const initialState: SettingsActionState = { status: "idle" };
 
-export function StoreSocialProfilesForm({ action, settings }: {
+export function StoreSocialProfilesForm({ action, links, settings }: {
   action: (state: SettingsActionState, formData: FormData) => Promise<SettingsActionState>;
+  links: SocialProfileLinksInput;
   settings: StoreSettingsFormValue;
 }) {
   const [state, formAction, isPending] = useActionState(action, initialState);
@@ -20,13 +22,12 @@ export function StoreSocialProfilesForm({ action, settings }: {
       <div className="form-grid">
         <FieldError errors={state.fieldErrors} name="facebookUrl"><label>Facebook Page URL<input defaultValue={settings.facebookUrl ?? ""} name="facebookUrl" placeholder="https://facebook.com/your-store" type="url" /></label></FieldError>
         <FieldError errors={state.fieldErrors} name="instagramUrl"><label>Instagram URL<input defaultValue={settings.instagramUrl ?? ""} name="instagramUrl" placeholder="https://instagram.com/your-store" type="url" /></label></FieldError>
-        <label>X / Twitter URL<input name="twitterUrl" placeholder="https://x.com/your-store" type="url" /></label>
-        <label>YouTube URL<input name="youtubeUrl" placeholder="https://youtube.com/@your-store" type="url" /></label>
-        <label>TikTok URL<input name="tiktokUrl" placeholder="https://tiktok.com/@your-store" type="url" /></label>
-        <label>LinkedIn URL<input name="linkedinUrl" placeholder="https://linkedin.com/company/your-store" type="url" /></label>
+        <FieldError errors={state.fieldErrors} name="twitterUrl"><label>X / Twitter URL<input defaultValue={links.twitterUrl ?? ""} name="twitterUrl" placeholder="https://x.com/your-store" type="url" /></label></FieldError>
+        <FieldError errors={state.fieldErrors} name="youtubeUrl"><label>YouTube URL<input defaultValue={links.youtubeUrl ?? ""} name="youtubeUrl" placeholder="https://youtube.com/@your-store" type="url" /></label></FieldError>
+        <FieldError errors={state.fieldErrors} name="tiktokUrl"><label>TikTok URL<input defaultValue={links.tiktokUrl ?? ""} name="tiktokUrl" placeholder="https://tiktok.com/@your-store" type="url" /></label></FieldError>
+        <FieldError errors={state.fieldErrors} name="linkedinUrl"><label>LinkedIn URL<input defaultValue={links.linkedinUrl ?? ""} name="linkedinUrl" placeholder="https://linkedin.com/company/your-store" type="url" /></label></FieldError>
         <FieldError errors={state.fieldErrors} name="whatsappNumber"><label>WhatsApp Number<input defaultValue={settings.whatsappNumber ?? ""} name="whatsappNumber" placeholder="+880 1XXX-XXXXXX" type="tel" /></label></FieldError>
       </div>
-      <p className="m-0 text-xs text-[#858691]">Facebook, Instagram, and WhatsApp use the current store settings record. Additional profile fields are ready for future secure persistence.</p>
       <div className="form-actions"><Button className="primary action-button" disabled={isPending} type="submit">{isPending ? "Saving..." : "Save social profiles"}</Button></div>
     </form>
   );

@@ -9,6 +9,10 @@ import {
 } from "../../../../../modules/expenses/expense.service";
 import { requireStore } from "../../../../../modules/stores/queries";
 
+function toDateInputValue(value: Date) {
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+}
+
 type EditExpensePageProps = {
   params: Promise<{
     expenseId: string;
@@ -49,7 +53,7 @@ export default async function EditExpensePage({ params }: EditExpensePageProps) 
               amount: expense.amount.toString(),
               attachmentUrl: expense.attachmentUrl,
               categoryId: expense.categoryId,
-              expenseDate: expense.expenseDate.toISOString().slice(0, 10),
+              expenseDate: toDateInputValue(expense.expenseDate),
               notes: expense.notes,
               paymentMethod: expense.paymentMethod,
               reference: expense.reference,

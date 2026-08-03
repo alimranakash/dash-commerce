@@ -8,6 +8,10 @@ import { getPurchaseByIdForStore } from "../../../../../modules/purchases/purcha
 import { getSuppliersForOrganization } from "../../../../../modules/suppliers/supplier.service";
 import { requireStore } from "../../../../../modules/stores/queries";
 
+function toDateInputValue(value: Date) {
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+}
+
 type EditPurchasePageProps = {
   params: Promise<{
     purchaseId: string;
@@ -63,7 +67,7 @@ export default async function EditPurchasePage({ params }: EditPurchasePageProps
               })),
               notes: purchase.notes,
               paidAmount: purchase.paidAmount.toString(),
-              purchaseDate: purchase.purchaseDate.toISOString().slice(0, 10),
+              purchaseDate: toDateInputValue(purchase.purchaseDate),
               status: purchase.status,
               supplierId: purchase.supplierId,
               taxAmount: purchase.taxAmount.toString()

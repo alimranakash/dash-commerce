@@ -63,7 +63,11 @@ export async function getDashboardMetricsRecord(storeId: string) {
     prisma.product.count({
       where: {
         storeId,
+        lowStockThreshold: {
+          gt: 0
+        },
         stockQuantity: {
+          gt: 0,
           lte: prisma.product.fields.lowStockThreshold
         }
       }
@@ -153,7 +157,11 @@ export async function getLowStockProductsRecord(storeId: string, take = 6) {
   return prisma.product.findMany({
     where: {
       storeId,
+      lowStockThreshold: {
+        gt: 0
+      },
       stockQuantity: {
+        gt: 0,
         lte: prisma.product.fields.lowStockThreshold
       }
     },

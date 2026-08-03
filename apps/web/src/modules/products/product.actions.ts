@@ -179,12 +179,12 @@ async function productPayloadFromFormData(storeId: string, formData: FormData): 
     input: {
       title: getValue(formData, "title"),
       slug: optionalValue(formData, "slug"),
-      shortDescription: optionalValue(formData, "shortDescription"),
-      description: optionalValue(formData, "description"),
-      sku: optionalValue(formData, "sku"),
+      shortDescription: nullableValue(formData, "shortDescription"),
+      description: nullableValue(formData, "description"),
+      sku: nullableValue(formData, "sku"),
       price: getValue(formData, "price"),
-      compareAtPrice: optionalValue(formData, "compareAtPrice"),
-      costPrice: optionalValue(formData, "costPrice"),
+      compareAtPrice: nullableValue(formData, "compareAtPrice"),
+      costPrice: nullableValue(formData, "costPrice"),
       stockQuantity: Number(getValue(formData, "stockQuantity") || 0),
       lowStockThreshold: Number(getValue(formData, "lowStockThreshold") || 0),
       categoryId: categoryIds[0] ?? null,
@@ -367,6 +367,10 @@ function optionalValue(formData: FormData, key: string) {
   return value || undefined;
 }
 
+function nullableValue(formData: FormData, key: string) {
+  return getValue(formData, key) || null;
+}
+
 function getValues(formData: FormData, key: string) {
   return Array.from(new Set(formData.getAll(key).map((value) => String(value).trim()).filter(Boolean)));
 }
@@ -413,9 +417,10 @@ export async function quickCreateProductCategoryAction(name: string) {
 
   try {
     const category = await createCategory(store.id, {
+      description: null,
       imageUrl: null,
       name: categoryName,
-      parentId: undefined,
+      parentId: null,
       slug: undefined
     });
 

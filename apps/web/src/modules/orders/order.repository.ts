@@ -1,5 +1,9 @@
 import { prisma } from "@dash/db";
 
+type OrderStatus = "PENDING" | "CONFIRMED" | "PROCESSING" | "COMPLETED" | "CANCELLED";
+type FulfillmentStatus = "UNFULFILLED" | "PARTIALLY_FULFILLED" | "FULFILLED" | "RETURNED";
+type PaymentStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED" | "CANCELLED";
+
 export async function getOrdersForStore(storeId: string) {
   return prisma.order.findMany({
     where: {
@@ -29,6 +33,40 @@ export async function getOrderByIdForStore(storeId: string, orderId: string) {
           createdAt: "asc"
         }
       }
+    }
+  });
+}
+
+export async function updateOrderStatusForStore(
+  storeId: string,
+  orderId: string,
+  status: OrderStatus,
+  fulfillmentStatus: FulfillmentStatus
+) {
+  return prisma.order.updateMany({
+    where: {
+      id: orderId,
+      storeId
+    },
+    data: {
+      fulfillmentStatus,
+      status
+    }
+  });
+}
+
+export async function updateOrderPaymentStatusForStore(
+  storeId: string,
+  orderId: string,
+  paymentStatus: PaymentStatus
+) {
+  return prisma.order.updateMany({
+    where: {
+      id: orderId,
+      storeId
+    },
+    data: {
+      paymentStatus
     }
   });
 }

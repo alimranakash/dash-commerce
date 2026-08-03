@@ -65,7 +65,7 @@ export default async function EditSalePage({ params }: EditSalePageProps) {
               notes: sale.notes,
               paidAmount: sale.paidAmount.toString(),
               paymentMethod: sale.paymentMethod,
-              saleDate: sale.saleDate.toISOString().slice(0, 10),
+              saleDate: toDateInputValue(sale.saleDate),
               saleType: sale.saleType,
               shipping: sale.shipping.toString(),
               status: sale.status,
@@ -76,4 +76,11 @@ export default async function EditSalePage({ params }: EditSalePageProps) {
       </section>
     </DashboardShell>
   );
+}
+
+function toDateInputValue(value: Date) {
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+
+  return `${value.getFullYear()}-${month}-${day}`;
 }

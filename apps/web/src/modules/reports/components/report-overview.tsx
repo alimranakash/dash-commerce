@@ -118,8 +118,8 @@ export function ReportOverview({ data }: { data: ReportOverviewData }) {
           <ReportLineChart
             labels={labels}
             series={[
-              { color: "#2789e8", label: "New", values: data.daily.map((point) => point.orderCount) },
-              { color: "#994fe8", label: "Returning", values: data.daily.map(() => 0) }
+              { color: "#2789e8", label: "New", values: data.daily.map((point) => point.newCustomerOrders) },
+              { color: "#994fe8", label: "Returning", values: data.daily.map((point) => point.returningCustomerOrders) }
             ]}
           />
         </ReportCard>

@@ -7,7 +7,8 @@ export type TransactionFilterKey = "all" | "payment" | "refund" | "adjustment";
 type TransactionListControlsProps = {
   activeFilter: TransactionFilterKey;
   counts: Record<TransactionFilterKey, number>;
-  dateRange: string;
+  dateFrom: string;
+  dateTo: string;
   search: string;
 };
 
@@ -18,7 +19,7 @@ const tabs: Array<{ badgeClass: string; key: TransactionFilterKey; label: string
   { badgeClass: "bg-[#eeeaff] text-[#7357e8]", key: "adjustment", label: "Adjustment" }
 ];
 
-export function TransactionListControls({ activeFilter, counts, dateRange, search }: TransactionListControlsProps) {
+export function TransactionListControls({ activeFilter, counts, dateFrom, dateTo, search }: TransactionListControlsProps) {
   return (
     <section className="rounded-xl border border-[#ececf5] bg-white px-6 py-6 shadow-[0_8px_24px_rgba(62,54,114,0.04)]">
       <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
@@ -27,7 +28,8 @@ export function TransactionListControls({ activeFilter, counts, dateRange, searc
             const params = new URLSearchParams();
             if (tab.key !== "all") params.set("type", tab.key);
             if (search) params.set("search", search);
-            if (dateRange) params.set("dateRange", dateRange);
+            if (dateFrom) params.set("dateFrom", dateFrom);
+            if (dateTo) params.set("dateTo", dateTo);
             const active = activeFilter === tab.key;
 
             return (
@@ -55,12 +57,20 @@ export function TransactionListControls({ activeFilter, counts, dateRange, searc
             type="search"
           />
           <input
-            aria-label="Transaction date range"
-            className="h-11 min-w-0 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none placeholder:text-[#a2a3b0] focus:border-[#8b5cf6] sm:w-56"
-            defaultValue={dateRange}
-            name="dateRange"
-            placeholder="eg. 22 May - 21 Jun 2026"
-            type="text"
+            aria-label="Transactions from date"
+            className="h-11 min-w-0 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none focus:border-[#8b5cf6] sm:w-40"
+            defaultValue={dateFrom}
+            name="dateFrom"
+            title="Date from"
+            type="date"
+          />
+          <input
+            aria-label="Transactions to date"
+            className="h-11 min-w-0 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none focus:border-[#8b5cf6] sm:w-40"
+            defaultValue={dateTo}
+            name="dateTo"
+            title="Date to"
+            type="date"
           />
           <button aria-label="Search transactions" className="grid h-11 w-full shrink-0 place-items-center rounded-lg bg-[#7548f5] text-white transition hover:bg-[#6436e8] sm:w-11" type="submit">
             <Search aria-hidden="true" className="h-4 w-4" />

@@ -19,7 +19,17 @@ import {
   type StorefrontProductSectionSettings,
   type StorefrontTabbedProductTab
 } from "../storefront/customization";
-import { getStoreSettings, updateStoreSettings, updateThemeSettings } from "./settings.service";
+import {
+  getStoreSettings,
+  updateCourierSettings,
+  updateInvoiceSettings,
+  updateMarketingSettings,
+  updateSocialLoginSettings,
+  updateSocialProfileLinks,
+  updateStoreSettings,
+  updateThemeSettings
+} from "./settings.service";
+import { courierProviderFields, courierProviderKeys } from "./settings.schema";
 import type { StoreSettingsInput, ThemeSettingsInput } from "./settings.schema";
 
 export type SettingsActionState = {
@@ -118,7 +128,128 @@ export async function updateBrandSettingsFormAction(_state: SettingsActionState,
 }
 
 export async function updateSocialProfilesFormAction(_state: SettingsActionState, formData: FormData) {
-  return updateStoreSettingsSection(_state, formData, ["facebookUrl", "instagramUrl", "whatsappNumber"], "/dashboard/settings/social?updated=1");
+  const store = await requireStore();
+  const current = await getStoreSettings(store.id);
+  const next: StoreSettingsInput = {
+    logoUrl: current.logoUrl ?? undefined,
+    faviconUrl: current.faviconUrl ?? undefined,
+    tagline: current.tagline ?? undefined,
+    contactEmail: current.contactEmail ?? undefined,
+    contactPhone: current.contactPhone ?? undefined,
+    supportPhone: current.supportPhone ?? undefined,
+    businessAddress: current.businessAddress ?? undefined,
+    facebookUrl: getValue(formData, "facebookUrl"),
+    instagramUrl: getValue(formData, "instagramUrl"),
+    whatsappNumber: getValue(formData, "whatsappNumber")
+  };
+
+  try {
+    await updateStoreSettings(store.id, next);
+    await updateSocialProfileLinks(store.id, {
+      linkedinUrl: getValue(formData, "linkedinUrl"),
+      tiktokUrl: getValue(formData, "tiktokUrl"),
+      twitterUrl: getValue(formData, "twitterUrl"),
+      youtubeUrl: getValue(formData, "youtubeUrl")
+    });
+  } catch (error) {
+    return settingsErrorState(error, "Please fix the highlighted social profiles.");
+  }
+
+  revalidateSettingsPaths(store.slug);
+  redirect("/dashboard/settings/social?updated=1");
+}
+
+export async function updateMarketingSettingsFormAction(_state: SettingsActionState, formData: FormData) {
+  const store = await requireStore();
+
+  try {
+    await updateMarketingSettings(store.id, {
+      facebookDomainVerification: getValue(formData, "facebookDomainVerification"),
+      facebookPixelCode: getValue(formData, "facebookPixelCode"),
+      googleBodyCode: getValue(formData, "googleBodyCode"),
+      googleDomainVerification: getValue(formData, "googleDomainVerification"),
+      googleHeaderCode: getValue(formData, "googleHeaderCode")
+    });
+  } catch (error) {
+    return settingsErrorState(error, "Please fix the highlighted marketing settings.");
+  }
+
+  revalidateSettingsPaths(store.slug);
+  return settingsSuccessState("Marketing settings saved.");
+}
+
+export async function updateCourierSettingsFormAction(_state: SettingsActionState, formData: FormData) {
+  const store = await requireStore();
+
+  try {
+    await updateCourierSettings(store.id, {
+      providers: courierProviderKeys.map((key) => ({
+        credentials: Object.fromEntries(
+          (courierProviderFields[key] ?? []).map((field) => [field, getValue(formData, `${key}.${field}`)])
+        ),
+        isEnabled: checkbox(formData, `${key}.isEnabled`),
+        key
+      }))
+    });
+  } catch (error) {
+    return settingsErrorState(error, "Please fix the highlighted courier settings.");
+  }
+
+  revalidateSettingsPaths(store.slug);
+  return settingsSuccessState("Courier settings saved.");
+}
+
+export async function updateInvoiceSettingsFormAction(_state: SettingsActionState, formData: FormData) {
+  const store = await requireStore();
+
+  try {
+    await updateInvoiceSettings(store.id, {
+      autoGenerateNumber: checkbox(formData, "autoGenerateNumber"),
+      companyLogoUrl: getValue(formData, "companyLogoUrl"),
+      companyName: getValue(formData, "companyName"),
+      contactEmail: getValue(formData, "contactEmail"),
+      contactPhone: getValue(formData, "contactPhone"),
+      footerNote: getValue(formData, "footerNote"),
+      invoiceAddressHtml: getValue(formData, "invoiceAddressHtml"),
+      invoicePrefix: getValue(formData, "invoicePrefix") || "INV",
+      showCustomerEmail: checkbox(formData, "showCustomerEmail"),
+      showCustomerPhone: checkbox(formData, "showCustomerPhone"),
+      showStoreLogo: checkbox(formData, "showStoreLogo"),
+      showTaxBreakdown: checkbox(formData, "showTaxBreakdown"),
+      startingInvoiceNumber: Number(getValue(formData, "startingInvoiceNumber") || 1),
+      taxEnabled: checkbox(formData, "taxEnabled"),
+      taxLabel: getValue(formData, "taxLabel"),
+      taxPercentage: Number(getValue(formData, "taxPercentage") || 0),
+      thankYouMessage: getValue(formData, "thankYouMessage"),
+      vatNumber: getValue(formData, "vatNumber"),
+      websiteUrl: getValue(formData, "websiteUrl")
+    });
+  } catch (error) {
+    return settingsErrorState(error, "Please fix the highlighted invoice settings.");
+  }
+
+  revalidateSettingsPaths(store.slug);
+  return settingsSuccessState("Invoice settings saved.");
+}
+
+export async function updateSocialLoginSettingsFormAction(_state: SettingsActionState, formData: FormData) {
+  const store = await requireStore();
+
+  try {
+    await updateSocialLoginSettings(store.id, {
+      facebookAppId: getValue(formData, "facebookAppId"),
+      facebookAppSecret: getValue(formData, "facebookAppSecret"),
+      facebookEnabled: checkbox(formData, "facebookEnabled"),
+      googleClientId: getValue(formData, "googleClientId"),
+      googleClientSecret: getValue(formData, "googleClientSecret"),
+      googleEnabled: checkbox(formData, "googleEnabled")
+    });
+  } catch (error) {
+    return settingsErrorState(error, "Please fix the highlighted social login settings.");
+  }
+
+  revalidateSettingsPaths(store.slug);
+  return settingsSuccessState("Social login settings saved.");
 }
 
 export async function updateThemeSettingsFormAction(
@@ -623,41 +754,6 @@ async function resolveSettingsImageUpload(
   return fallbackUrl;
 }
 
-async function updateStoreSettingsSection(
-  _state: SettingsActionState,
-  formData: FormData,
-  fields: Array<keyof StoreSettingsInput>,
-  redirectTo: string
-): Promise<SettingsActionState> {
-  const store = await requireStore();
-  const current = await getStoreSettings(store.id);
-  const next: StoreSettingsInput = {
-    logoUrl: current.logoUrl ?? undefined,
-    faviconUrl: current.faviconUrl ?? undefined,
-    tagline: current.tagline ?? undefined,
-    contactEmail: current.contactEmail ?? undefined,
-    contactPhone: current.contactPhone ?? undefined,
-    supportPhone: current.supportPhone ?? undefined,
-    businessAddress: current.businessAddress ?? undefined,
-    facebookUrl: current.facebookUrl ?? undefined,
-    instagramUrl: current.instagramUrl ?? undefined,
-    whatsappNumber: current.whatsappNumber ?? undefined
-  };
-
-  for (const field of fields) {
-    next[field] = getValue(formData, field);
-  }
-
-  try {
-    await updateStoreSettings(store.id, next);
-  } catch (error) {
-    return settingsErrorState(error, "Please fix the highlighted settings.");
-  }
-
-  revalidateSettingsPaths(store.slug);
-  redirect(redirectTo);
-}
-
 function settingsErrorState(error: unknown, fallbackMessage: string): SettingsActionState {
   if (error instanceof ZodError) {
     return {
@@ -691,6 +787,10 @@ function createToastId() {
 
 function revalidateSettingsPaths(storeSlug: string) {
   revalidatePath("/dashboard/settings");
+  revalidatePath("/dashboard/settings/courier");
+  revalidatePath("/dashboard/settings/invoice");
+  revalidatePath("/dashboard/settings/marketing");
+  revalidatePath("/dashboard/settings/social");
   revalidatePath("/dashboard/theme");
   revalidatePath("/dashboard/storefront/themes");
   revalidatePath(`/s/${storeSlug}`);

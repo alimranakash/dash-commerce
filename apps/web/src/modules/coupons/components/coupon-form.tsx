@@ -16,10 +16,11 @@ const discountOptions: Array<{ label: string; value: DiscountType }> = [
 export function CouponForm() {
   const [discountType, setDiscountType] = useState<DiscountType>("percentage");
   const [status, setStatus] = useState<CouponStatus>("active");
+  const [message, setMessage] = useState("");
 
   function submitCoupon(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    console.info("Coupon UI submission", Object.fromEntries(new FormData(event.currentTarget)));
+    setMessage("Coupons cannot be saved yet — coupon storage is not connected. Nothing was created.");
   }
 
   const amountDisabled = discountType === "shipping";
@@ -44,6 +45,8 @@ export function CouponForm() {
           </button>
         </div>
       </div>
+
+      {message ? <p className="m-0 rounded-lg border border-[#f0e3c4] bg-[#fdf8ec] px-4 py-3 text-sm text-[#8a6a1f]">{message}</p> : null}
 
       <div className="grid items-start gap-5 lg:grid-cols-2">
         <div className="grid gap-5">

@@ -47,9 +47,8 @@ export async function uploadMediaFormAction(
   redirect("/dashboard/media?uploaded=1");
 }
 
-export async function deleteMediaFormAction(formData: FormData) {
+export async function deleteMediaFormAction(assetId: string) {
   const store = await requireStore();
-  const assetId = getValue(formData, "assetId");
 
   await deleteMediaAsset(store.id, assetId);
   revalidateMediaPaths();

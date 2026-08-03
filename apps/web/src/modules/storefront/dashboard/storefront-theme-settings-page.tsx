@@ -32,10 +32,14 @@ const storefrontSections = [
   { href: "#header", label: "Header" },
   { href: "#hero-section", label: "Hero Section" },
   { href: "#colors-layout", label: "Colors & Layout" },
+  { href: "#tabbed-product-showcase", label: "Tabbed Showcase" },
   { href: "#shop-collection-page", label: "Pages" },
   { href: "#footer-social-preview", label: "Footer" },
   { href: "#cart-page", label: "Cart" },
   { href: "#mini-cart-drawer", label: "Mini Cart" },
+  { href: "#product-sections", label: "Product Sections" },
+  { href: "#fashion-homepage", label: "Fashion Homepage" },
+  { href: "#electronics-homepage", label: "Electronics Homepage" },
   { href: "#product-page", label: "Product Page" }
 ];
 

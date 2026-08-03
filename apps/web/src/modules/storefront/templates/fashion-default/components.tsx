@@ -11,7 +11,7 @@ import { toFashionProductCardData } from "./fashion-product-card-data";
 
 type FashionSectionProps = {
   actionHref?: string;
-  actionLabel?: string;
+  actionLabel?: string | undefined;
   children: ReactNode;
   eyebrow?: string;
   id: string;

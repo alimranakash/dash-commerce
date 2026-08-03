@@ -5,6 +5,7 @@ import {
   getExpenseByIdForStore,
   getExpenseCategoriesForOrganization,
   getExpenseCategoryByIdForOrganization,
+  getExpenseCategoryByNameForOrganization,
   getExpenseCountsForStore,
   getExpenseMetricsForStore,
   getExpenseNumberExists,
@@ -110,6 +111,7 @@ export async function archiveExpense(context: ExpenseContext, expenseId: string)
 export async function createExpenseCategory(organizationId: string, input: ExpenseCategoryInput) {
   const data = expenseCategorySchema.parse(input);
   await ensureDefaultExpenseCategories(organizationId);
+  await assertCategoryNameAvailable(organizationId, data.name);
 
   return prisma.expenseCategory.create({
     data: {
@@ -131,12 +133,22 @@ export async function updateExpenseCategory(
     return null;
   }
 
+  await assertCategoryNameAvailable(organizationId, data.name, categoryId);
+
   return prisma.expenseCategory.update({
     where: {
       id: categoryId
     },
     data
   });
+}
+
+async function assertCategoryNameAvailable(organizationId: string, name: string, categoryId?: string) {
+  const existing = await getExpenseCategoryByNameForOrganization(organizationId, name);
+
+  if (existing && existing.id !== categoryId) {
+    throw new Error("An expense category with this name already exists.");
+  }
 }
 
 export async function deleteExpenseCategory(organizationId: string, categoryId: string) {

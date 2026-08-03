@@ -8,12 +8,14 @@ import { requireStore } from "../../../../modules/stores/queries";
 
 type OrderDetailsPageProps = {
   params: Promise<{ orderId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
+export default async function OrderDetailsPage({ params, searchParams }: OrderDetailsPageProps) {
   const { orderId } = await params;
   const store = await requireStore();
   const order = await getOrderByIdForStore(store.id, orderId);
+  const updated = Boolean((await searchParams).updated);
 
   if (!order) notFound();
 
@@ -36,6 +38,8 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
             <OrderHeaderActions />
           </div>
         </header>
+
+        {updated ? <p className="success-message">Order updated.</p> : null}
 
         <OrderStatusCards fulfillmentStatus={order.fulfillmentStatus} orderStatus={order.status} paymentStatus={order.paymentStatus} />
 

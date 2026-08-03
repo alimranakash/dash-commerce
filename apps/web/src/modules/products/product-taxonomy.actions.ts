@@ -31,5 +31,7 @@ export async function deleteProductTaxonomyFormAction(type: ProductTaxonomyType,
 }
 
 function taxonomyPath(type: ProductTaxonomyType) {
-  return type === "TAG" ? "/dashboard/tags" : "/dashboard/brands";
+  if (type === "TAG") return "/dashboard/tags";
+
+  return type === "ATTRIBUTE" ? "/dashboard/attributes" : "/dashboard/brands";
 }

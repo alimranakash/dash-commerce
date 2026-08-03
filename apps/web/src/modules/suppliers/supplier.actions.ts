@@ -56,7 +56,12 @@ export async function updateSupplierFormAction(
 
 export async function deleteSupplierFormAction(supplierId: string) {
   const store = await requireStore();
-  await deleteSupplier(store.organizationId, supplierId);
+
+  try {
+    await deleteSupplier(store.organizationId, supplierId);
+  } catch {
+    redirect("/dashboard/suppliers?blocked=1");
+  }
 
   revalidatePath("/dashboard/suppliers");
   redirect("/dashboard/suppliers?deleted=1");

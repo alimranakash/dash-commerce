@@ -59,7 +59,7 @@ function paymentErrorState(error: unknown): PaymentSettingsActionState {
       status: "error",
       message: "Please fix the highlighted payment settings.",
       fieldErrors: Object.fromEntries(
-        error.issues.map((issue) => [issue.path.join("."), issue.message])
+        error.issues.map((issue) => [fieldErrorKey(issue.path), issue.message])
       )
     };
   }
@@ -68,4 +68,16 @@ function paymentErrorState(error: unknown): PaymentSettingsActionState {
     status: "error",
     message: error instanceof Error ? error.message : "Payment settings update failed."
   };
+}
+
+// Zod reports `methods.<index>.<field>`, while the form keys its fields by payment
+// method type (`methods.<TYPE>.<field>`).
+function fieldErrorKey(path: ReadonlyArray<PropertyKey>) {
+  const [root, index, ...rest] = path;
+
+  if (root === "methods" && typeof index === "number" && paymentMethodTypes[index]) {
+    return ["methods", paymentMethodTypes[index], ...rest.map(String)].join(".");
+  }
+
+  return path.map(String).join(".");
 }

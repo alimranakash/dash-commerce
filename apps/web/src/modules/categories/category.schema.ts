@@ -8,15 +8,15 @@ const categoryBaseSchema = z.object({
     .trim()
     .optional()
     .transform((value) => (value ? normalizeSlug(value) : undefined)),
-  description: z.string().trim().max(2000).optional(),
+  description: z
+    .union([z.string().trim().max(2000), z.null(), z.undefined()])
+    .transform((value) => value || null),
   imageUrl: z
     .union([z.string().trim(), z.null(), z.undefined()])
     .transform((value) => (value ? value : null)),
   parentId: z
-    .string()
-    .trim()
-    .optional()
-    .transform((value) => value || undefined)
+    .union([z.string().trim(), z.null(), z.undefined()])
+    .transform((value) => value || null)
 });
 
 export const createCategorySchema = categoryBaseSchema;

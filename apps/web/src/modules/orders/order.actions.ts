@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { prisma } from "@dash/db";
 import { requireStore } from "../stores/queries";
+import { updateOrderPaymentStatus, updateOrderStatus } from "./order.service";
 
 type OrderStatusUpdate = "CANCELLED" | "COMPLETED" | "PROCESSING";
 type PaymentStatusUpdate = "PAID";
@@ -11,36 +11,23 @@ type PaymentStatusUpdate = "PAID";
 export async function updateOrderStatusFormAction(orderId: string, status: OrderStatusUpdate) {
   const store = await requireStore();
 
-  await prisma.order.updateMany({
-    where: {
-      id: orderId,
-      storeId: store.id
-    },
-    data: {
-      fulfillmentStatus: status === "COMPLETED" ? "FULFILLED" : status === "CANCELLED" ? "RETURNED" : "UNFULFILLED",
-      status
-    }
-  });
+  await updateOrderStatus(store.id, orderId, status);
 
-  revalidatePath("/dashboard/orders");
-  revalidatePath(`/dashboard/orders/${orderId}`);
+  revalidateOrderPaths(orderId);
   redirect(`/dashboard/orders/${orderId}?updated=1`);
 }
 
 export async function updatePaymentStatusFormAction(orderId: string, status: PaymentStatusUpdate) {
   const store = await requireStore();
 
-  await prisma.order.updateMany({
-    where: {
-      id: orderId,
-      storeId: store.id
-    },
-    data: {
-      paymentStatus: status
-    }
-  });
+  await updateOrderPaymentStatus(store.id, orderId, status);
 
-  revalidatePath("/dashboard/orders");
-  revalidatePath(`/dashboard/orders/${orderId}`);
+  revalidateOrderPaths(orderId);
   redirect(`/dashboard/orders/${orderId}?updated=1`);
+}
+
+function revalidateOrderPaths(orderId: string) {
+  revalidatePath("/dashboard/orders");
+  revalidatePath("/dashboard/transactions");
+  revalidatePath(`/dashboard/orders/${orderId}`);
 }

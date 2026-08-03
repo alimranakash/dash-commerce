@@ -75,9 +75,9 @@ async function categoryInputFromFormData(storeId: string, formData: FormData): P
   return {
     name: getValue(formData, "name"),
     slug: optionalValue(formData, "slug"),
-    description: optionalValue(formData, "description"),
+    description: getValue(formData, "description") || null,
     imageUrl: await resolveCategoryImage(storeId, formData),
-    parentId: optionalValue(formData, "parentId")
+    parentId: getValue(formData, "parentId") || null
   };
 }
 

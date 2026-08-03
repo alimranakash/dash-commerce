@@ -34,7 +34,7 @@ export function ReportLineChart({ labels, series }: { labels: string[]; series: 
         )))}
       </svg>
       <div className="mt-1 grid grid-cols-6 text-[9px] text-[#92939d]">
-        {labelSamples(labels).map((label) => <span key={label}>{label}</span>)}
+        {labelSamples(labels).map((label, index) => <span key={`${index}-${label}`}>{label}</span>)}
       </div>
     </div>
   );

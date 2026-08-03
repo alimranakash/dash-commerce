@@ -3,6 +3,7 @@ import {
   deleteSupplierRecord,
   getSupplierByIdForOrganization,
   getSuppliersForOrganization,
+  supplierHasPurchases,
   updateSupplierRecord
 } from "./supplier.repository";
 import {
@@ -31,6 +32,10 @@ export async function updateSupplier(
 }
 
 export async function deleteSupplier(organizationId: string, supplierId: string) {
+  if (await supplierHasPurchases(organizationId, supplierId)) {
+    throw new Error("This supplier has purchases and cannot be deleted.");
+  }
+
   const result = await deleteSupplierRecord(organizationId, supplierId);
 
   return result.count > 0;

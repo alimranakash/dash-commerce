@@ -68,8 +68,27 @@ export async function updateSupplierRecord(
     where: {
       id: supplierId
     },
-    data: optionalSupplierFields(data)
+    data: {
+      ...(data.name === undefined ? {} : { name: data.name }),
+      ...(data.phone === undefined ? {} : { phone: data.phone }),
+      ...(data.status === undefined ? {} : { status: data.status }),
+      address: data.address ?? null,
+      companyName: data.companyName ?? null,
+      email: data.email ?? null,
+      notes: data.notes ?? null
+    }
   });
+}
+
+export async function supplierHasPurchases(organizationId: string, supplierId: string) {
+  const count = await prisma.purchase.count({
+    where: {
+      organizationId,
+      supplierId
+    }
+  });
+
+  return count > 0;
 }
 
 export async function deleteSupplierRecord(organizationId: string, supplierId: string) {

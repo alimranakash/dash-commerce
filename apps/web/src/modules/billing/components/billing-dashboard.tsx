@@ -89,6 +89,10 @@ export function BillingDashboard({
   const [billingCycle, setBillingCycle] = useState<"MONTHLY" | "YEARLY">(subscription.billingCycle);
   const [planId, setPlanId] = useState(subscription.planId || plans[0]?.id || "");
   const selectedPlan = useMemo(() => plans.find((plan) => plan.id === planId) ?? plans[0], [planId, plans]);
+  const currentPlan = useMemo(
+    () => plans.find((plan) => plan.id === subscription.planId) ?? selectedPlan,
+    [plans, selectedPlan, subscription.planId]
+  );
   const selectedAmount = selectedPlan ? (billingCycle === "YEARLY" ? selectedPlan.priceYearly : selectedPlan.priceMonthly) : "0.00";
 
   useEffect(() => {
@@ -122,12 +126,12 @@ export function BillingDashboard({
 
         <BillingCard icon={<CheckCircle2 className="h-5 w-5" />} title="Usage">
           <div className="grid gap-4">
-            <UsageBar label="Products" limit={selectedPlan?.productLimit ?? 0} value={usage.products} />
-            <UsageBar label="Orders" limit={selectedPlan?.orderLimit ?? 0} value={usage.orders} />
-            <UsageBar label="Staff" limit={selectedPlan?.staffLimit ?? 0} value={usage.staff} />
-            <UsageBar label="Stores" limit={selectedPlan?.storeLimit ?? 0} value={usage.stores} />
+            <UsageBar label="Products" limit={currentPlan?.productLimit ?? 0} value={usage.products} />
+            <UsageBar label="Orders" limit={currentPlan?.orderLimit ?? 0} value={usage.orders} />
+            <UsageBar label="Staff" limit={currentPlan?.staffLimit ?? 0} value={usage.staff} />
+            <UsageBar label="Stores" limit={currentPlan?.storeLimit ?? 0} value={usage.stores} />
             <UsageBar label="Storage" limit={0} suffix="MB" value={usage.storage} />
-            <UsageBar label="AI Usage" limit={selectedPlan?.aiEnabled ? 1000 : 0} value={usage.aiUsage} />
+            <UsageBar label="AI Usage" limit={currentPlan?.aiEnabled ? 1000 : 0} value={usage.aiUsage} />
           </div>
         </BillingCard>
       </section>
@@ -268,7 +272,7 @@ function BillingHistory({ invoices = false, payments, title }: { invoices?: bool
   return (
     <BillingCard icon={<FileText className="h-5 w-5" />} title={title}>
       {payments.length ? (
-        <div className="overflow-hidden rounded-xl border border-[#efeff5]">
+        <div className="overflow-x-auto rounded-xl border border-[#efeff5]">
           <table className="w-full min-w-[640px] text-left text-xs">
             <thead className="bg-[#f7f7fa] text-[#565762]">
               <tr>
@@ -288,7 +292,7 @@ function BillingHistory({ invoices = false, payments, title }: { invoices?: bool
                   <td className="p-3">{payment.currency} {formatMoney(payment.amount)}</td>
                   <td className="p-3"><StatusBadge status={payment.status} /></td>
                   <td className="p-3">{payment.createdAt}</td>
-                  {invoices ? <td className="p-3 text-right"><button className="cursor-pointer text-xs font-semibold text-[#6d3cf5]" type="button">View / Print</button></td> : null}
+                  {invoices ? <td className="p-3 text-right"><button className="cursor-pointer text-xs font-semibold text-[#6d3cf5]" onClick={() => window.print()} type="button">View / Print</button></td> : null}
                 </tr>
               ))}
             </tbody>

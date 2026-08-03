@@ -99,7 +99,7 @@ function purchaseInputFromFormData(formData: FormData): CreatePurchaseInput {
       sku: optionalValue(skus[index]),
       quantity: Number(quantities[index] || 1),
       unitCost: unitCosts[index] || "0"
-    })).filter((item) => item.productId || item.productName || item.unitCost !== "0")
+    })).filter((item) => item.productId || item.productName)
   };
 }
 
@@ -114,12 +114,14 @@ function optionalValue(value: FormDataEntryValue | string | null | undefined) {
 
 function purchaseErrorState(error: unknown): PurchaseActionState {
   if (error instanceof ZodError) {
+    const fieldErrors = Object.fromEntries(
+      error.issues.map((issue) => [issue.path.length ? String(issue.path[0]) : "form", issue.message])
+    );
+
     return {
       status: "error",
-      message: "Please fix the highlighted purchase fields.",
-      fieldErrors: Object.fromEntries(
-        error.issues.map((issue) => [issue.path.length ? String(issue.path[0]) : "form", issue.message])
-      )
+      message: fieldErrors.items ?? "Please fix the highlighted purchase fields.",
+      fieldErrors
     };
   }
 

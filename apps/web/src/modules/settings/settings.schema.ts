@@ -5,6 +5,18 @@ const optionalUrlSchema = z
   .union([z.url("Use a valid URL."), z.literal(""), z.null(), z.undefined()])
   .transform((value) => (value ? value : undefined));
 
+// Locally stored media is served from a root-relative path (`/uploads/...`) unless
+// STORAGE_PUBLIC_URL is configured, so image fields accept both forms.
+const optionalImageUrlSchema = z
+  .union([
+    z.url("Use a valid URL."),
+    z.string().trim().regex(/^\/[^\s]*$/, "Use a valid URL or upload path."),
+    z.literal(""),
+    z.null(),
+    z.undefined()
+  ])
+  .transform((value) => (value ? value : undefined));
+
 const optionalEmailSchema = z
   .union([z.email("Use a valid email address."), z.literal(""), z.null(), z.undefined()])
   .transform((value) => (value ? value : undefined));
@@ -24,8 +36,8 @@ const optionalColorSchema = z
   .transform((value) => (value ? value : undefined));
 
 export const storeSettingsSchema = z.object({
-  logoUrl: optionalUrlSchema,
-  faviconUrl: optionalUrlSchema,
+  logoUrl: optionalImageUrlSchema,
+  faviconUrl: optionalImageUrlSchema,
   tagline: optionalTextSchema(180),
   contactEmail: optionalEmailSchema,
   contactPhone: optionalTextSchema(40),
@@ -42,7 +54,7 @@ export const themeSettingsSchema = z.object({
   secondaryColor: optionalColorSchema,
   heroTitle: z.string().trim().min(2, "Hero title is required.").max(120),
   heroSubtitle: optionalTextSchema(320),
-  heroImageUrl: optionalUrlSchema,
+  heroImageUrl: optionalImageUrlSchema,
   announcementText: optionalTextSchema(180),
   featuredSectionTitle: z
     .string()
@@ -52,5 +64,171 @@ export const themeSettingsSchema = z.object({
   advancedSettings: z.custom<StorefrontAdvancedSettings>().optional()
 });
 
+export const marketingSettingsSchema = z.object({
+  facebookDomainVerification: optionalTextSchema(4000),
+  facebookPixelCode: optionalTextSchema(8000),
+  googleBodyCode: optionalTextSchema(8000),
+  googleDomainVerification: optionalTextSchema(4000),
+  googleHeaderCode: optionalTextSchema(8000)
+});
+
+export const courierProviderKeys = ["pathao", "steadfast", "redx", "paperfly", "carrybee"] as const;
+
+export const courierProviderFields: Record<CourierProviderKey, string[]> = {
+  carrybee: ["baseUrl", "clientId", "clientSecret", "clientContext"],
+  paperfly: ["baseUrl", "username", "password", "apiKey"],
+  pathao: ["baseUrl", "storeId", "clientId", "clientSecret", "clientEmail", "clientPassword"],
+  redx: ["baseUrl", "storeId", "apiToken"],
+  steadfast: ["baseUrl", "apiKey", "secretKey"]
+};
+
+export const courierSettingsSchema = z.object({
+  providers: z.array(
+    z.object({
+      credentials: z.record(z.string().trim().min(1).max(60), z.string().trim().max(400)),
+      isEnabled: z.boolean(),
+      key: z.enum(courierProviderKeys)
+    })
+  )
+});
+
+export const invoiceSettingsSchema = z.object({
+  autoGenerateNumber: z.boolean(),
+  companyLogoUrl: optionalImageUrlSchema,
+  companyName: optionalTextSchema(120),
+  contactEmail: optionalEmailSchema,
+  contactPhone: optionalTextSchema(40),
+  footerNote: optionalTextSchema(1000),
+  invoiceAddressHtml: optionalTextSchema(4000),
+  invoicePrefix: z.string().trim().max(12).default("INV"),
+  showCustomerEmail: z.boolean(),
+  showCustomerPhone: z.boolean(),
+  showStoreLogo: z.boolean(),
+  showTaxBreakdown: z.boolean(),
+  startingInvoiceNumber: z.coerce.number().int().min(0).max(1000000).default(1),
+  taxEnabled: z.boolean(),
+  taxLabel: optionalTextSchema(40),
+  taxPercentage: z.coerce.number().min(0).max(100).default(0),
+  thankYouMessage: optionalTextSchema(320),
+  vatNumber: optionalTextSchema(60),
+  websiteUrl: optionalUrlSchema
+});
+
+export const socialLoginSettingsSchema = z
+  .object({
+    facebookAppId: optionalTextSchema(200),
+    facebookAppSecret: optionalTextSchema(300),
+    facebookEnabled: z.boolean(),
+    googleClientId: optionalTextSchema(200),
+    googleClientSecret: optionalTextSchema(300),
+    googleEnabled: z.boolean()
+  })
+  .superRefine((value, ctx) => {
+    if (value.facebookEnabled && !value.facebookAppId) {
+      ctx.addIssue({ code: "custom", message: "Facebook App ID is required when login is enabled.", path: ["facebookAppId"] });
+    }
+
+    if (value.facebookEnabled && !value.facebookAppSecret) {
+      ctx.addIssue({ code: "custom", message: "Facebook App Secret is required when login is enabled.", path: ["facebookAppSecret"] });
+    }
+
+    if (value.googleEnabled && !value.googleClientId) {
+      ctx.addIssue({ code: "custom", message: "Google Client ID is required when login is enabled.", path: ["googleClientId"] });
+    }
+
+    if (value.googleEnabled && !value.googleClientSecret) {
+      ctx.addIssue({ code: "custom", message: "Google Client Secret is required when login is enabled.", path: ["googleClientSecret"] });
+    }
+  });
+
+export const socialProfileLinksSchema = z.object({
+  linkedinUrl: optionalUrlSchema,
+  tiktokUrl: optionalUrlSchema,
+  twitterUrl: optionalUrlSchema,
+  youtubeUrl: optionalUrlSchema
+});
+
+export const DEFAULT_INVOICE_SETTINGS: InvoiceSettingsInput = {
+  autoGenerateNumber: true,
+  companyLogoUrl: undefined,
+  companyName: undefined,
+  contactEmail: undefined,
+  contactPhone: undefined,
+  footerNote: undefined,
+  invoiceAddressHtml: undefined,
+  invoicePrefix: "INV",
+  showCustomerEmail: true,
+  showCustomerPhone: true,
+  showStoreLogo: true,
+  showTaxBreakdown: true,
+  startingInvoiceNumber: 1,
+  taxEnabled: false,
+  taxLabel: undefined,
+  taxPercentage: 0,
+  thankYouMessage: undefined,
+  vatNumber: undefined,
+  websiteUrl: undefined
+};
+
+export const DEFAULT_SOCIAL_LOGIN_SETTINGS: SocialLoginSettingsInput = {
+  facebookAppId: undefined,
+  facebookAppSecret: undefined,
+  facebookEnabled: false,
+  googleClientId: undefined,
+  googleClientSecret: undefined,
+  googleEnabled: false
+};
+
+export const DEFAULT_MODULE_SETTINGS: ModuleSettings = {
+  courier: { providers: [] },
+  invoice: DEFAULT_INVOICE_SETTINGS,
+  marketing: {
+    facebookDomainVerification: undefined,
+    facebookPixelCode: undefined,
+    googleBodyCode: undefined,
+    googleDomainVerification: undefined,
+    googleHeaderCode: undefined
+  },
+  socialLogin: DEFAULT_SOCIAL_LOGIN_SETTINGS,
+  socialProfiles: {
+    linkedinUrl: undefined,
+    tiktokUrl: undefined,
+    twitterUrl: undefined,
+    youtubeUrl: undefined
+  }
+};
+
+export function normalizeModuleSettings(value: unknown): ModuleSettings {
+  const source = (value ?? {}) as Record<string, unknown>;
+
+  return {
+    courier: parseSection(courierSettingsSchema, source.courier, DEFAULT_MODULE_SETTINGS.courier),
+    invoice: parseSection(invoiceSettingsSchema, source.invoice, DEFAULT_INVOICE_SETTINGS),
+    marketing: parseSection(marketingSettingsSchema, source.marketing, DEFAULT_MODULE_SETTINGS.marketing),
+    socialLogin: parseSection(socialLoginSettingsSchema, source.socialLogin, DEFAULT_SOCIAL_LOGIN_SETTINGS),
+    socialProfiles: parseSection(socialProfileLinksSchema, source.socialProfiles, DEFAULT_MODULE_SETTINGS.socialProfiles)
+  };
+}
+
+function parseSection<T>(schema: { safeParse: (input: unknown) => { success: boolean; data?: T } }, input: unknown, fallback: T): T {
+  const result = schema.safeParse(input);
+
+  return result.success && result.data ? result.data : fallback;
+}
+
+export type CourierProviderKey = (typeof courierProviderKeys)[number];
+export type CourierSettingsInput = z.infer<typeof courierSettingsSchema>;
+export type InvoiceSettingsInput = z.infer<typeof invoiceSettingsSchema>;
+export type MarketingSettingsInput = z.infer<typeof marketingSettingsSchema>;
+export type SocialLoginSettingsInput = z.infer<typeof socialLoginSettingsSchema>;
+export type SocialProfileLinksInput = z.infer<typeof socialProfileLinksSchema>;
 export type StoreSettingsInput = z.infer<typeof storeSettingsSchema>;
 export type ThemeSettingsInput = z.infer<typeof themeSettingsSchema>;
+
+export type ModuleSettings = {
+  courier: CourierSettingsInput;
+  invoice: InvoiceSettingsInput;
+  marketing: MarketingSettingsInput;
+  socialLogin: SocialLoginSettingsInput;
+  socialProfiles: SocialProfileLinksInput;
+};

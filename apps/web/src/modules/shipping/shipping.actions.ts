@@ -103,12 +103,16 @@ function getValue(formData: FormData, key: string) {
 
 function shippingErrorState(error: unknown): ShippingSettingsActionState {
   if (error instanceof ZodError) {
+    const fieldErrors = Object.fromEntries(
+      error.issues.map((issue) => [issue.path.map(String).join("."), issue.message])
+    );
+
     return {
       status: "error",
-      message: "Please fix the highlighted shipping settings.",
-      fieldErrors: Object.fromEntries(
-        error.issues.map((issue) => [issue.path.join("."), issue.message])
-      )
+      // The form renders rates dynamically, so surface the concrete messages instead
+      // of a generic "highlighted fields" prompt that highlights nothing.
+      message: [...new Set(Object.values(fieldErrors))].join(" "),
+      fieldErrors
     };
   }
 

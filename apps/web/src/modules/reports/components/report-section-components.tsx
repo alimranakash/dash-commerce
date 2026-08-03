@@ -1,11 +1,30 @@
 import { CalendarDays, Ellipsis } from "lucide-react";
+import Link from "next/link";
 import type { ComponentType, ReactNode } from "react";
+import { REPORT_COMPARISON_LABELS, REPORT_RANGE_OPTIONS, type ReportRangeKey } from "../report.types";
 
-export function DateRangeFilter() {
+export function DateRangeFilter({ basePath, comparison = false, range }: { basePath: string; comparison?: boolean; range: ReportRangeKey }) {
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs">
       <span className="grid h-9 w-9 place-items-center rounded-md border border-[#e6e4f0] bg-white text-[#7650e8]"><CalendarDays className="h-4 w-4" /></span>
-      <select aria-label="Report date range" className="h-9 rounded-md border border-[#e6e4f0] bg-white px-3 outline-none"><option>Last 30 days</option><option>Last 90 days</option><option>Last 12 months</option></select>
+      <nav aria-label="Report date range" className="flex overflow-hidden rounded-md border border-[#e6e4f0] bg-white">
+        {REPORT_RANGE_OPTIONS.map((option) => (
+          <Link
+            aria-current={option.key === range ? "page" : undefined}
+            className={`px-3 py-2 transition ${option.key === range ? "bg-[#f3f0ff] font-semibold text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+            href={option.key === "30d" ? basePath : `${basePath}?range=${option.key}`}
+            key={option.key}
+          >
+            {option.label}
+          </Link>
+        ))}
+      </nav>
+      {comparison ? (
+        <>
+          <span className="text-[#777985]">vs.</span>
+          <span className="grid h-9 place-items-center rounded-md border border-[#e6e4f0] bg-white px-3 text-[#4d4f5c]">{REPORT_COMPARISON_LABELS[range]}</span>
+        </>
+      ) : null}
     </div>
   );
 }

@@ -14,15 +14,17 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const params = await searchParams;
   const activeFilter = parseOrderFilter(singleValue(params.status));
   const search = singleValue(params.search).trim();
-  const dateRange = singleValue(params.dateRange).trim();
-  const counts = getOrderCounts(orders);
-  const visibleOrders = orders.filter((order) => matchesStatus(order, activeFilter) && matchesSearch(order, search));
+  const dateFrom = singleValue(params.dateFrom).trim();
+  const dateTo = singleValue(params.dateTo).trim();
+  const scopedOrders = orders.filter((order) => matchesSearch(order, search) && matchesDateRange(order, dateFrom, dateTo));
+  const counts = getOrderCounts(scopedOrders);
+  const visibleOrders = scopedOrders.filter((order) => matchesStatus(order, activeFilter));
 
   return (
     <DashboardShell storeSlug={store.slug}>
       <section className="resource-page">
         <div className="catalog-page-heading"><h1>Orders</h1></div>
-        <OrderListControls activeFilter={activeFilter} counts={counts} dateRange={dateRange} search={search} />
+        <OrderListControls activeFilter={activeFilter} counts={counts} dateFrom={dateFrom} dateTo={dateTo} search={search} />
         {visibleOrders.length === 0 ? (
           <div className="empty-state">
             <h2>{orders.length ? "No matching orders" : "No orders yet"}</h2>
@@ -85,10 +87,19 @@ function getOrderCounts(orders: OrderListRecord[]): Record<OrderFilterKey, numbe
     processing: orders.filter((order) => order.status === "CONFIRMED" || order.status === "PROCESSING").length,
     completed: orders.filter((order) => order.status === "COMPLETED").length,
     cancelled: orders.filter((order) => order.status === "CANCELLED").length,
-    "on-hold": 0,
-    "partially-refunded": 0,
     refunded: orders.filter((order) => order.paymentStatus === "REFUNDED").length
   };
+}
+
+function matchesDateRange(order: OrderListRecord, dateFrom: string, dateTo: string) {
+  const created = order.createdAt.getTime();
+  const from = dateFrom ? new Date(`${dateFrom}T00:00:00`) : null;
+  const to = dateTo ? new Date(`${dateTo}T23:59:59.999`) : null;
+
+  if (from && !Number.isNaN(from.getTime()) && created < from.getTime()) return false;
+  if (to && !Number.isNaN(to.getTime()) && created > to.getTime()) return false;
+
+  return true;
 }
 
 function matchesStatus(order: OrderListRecord, filter: OrderFilterKey) {
@@ -109,7 +120,7 @@ function matchesSearch(order: OrderListRecord, search: string) {
 }
 
 function parseOrderFilter(value: string): OrderFilterKey {
-  const filters: OrderFilterKey[] = ["pending", "processing", "completed", "cancelled", "on-hold", "partially-refunded", "refunded"];
+  const filters: OrderFilterKey[] = ["pending", "processing", "completed", "cancelled", "refunded"];
   return filters.includes(value as OrderFilterKey) ? value as OrderFilterKey : "all";
 }
 

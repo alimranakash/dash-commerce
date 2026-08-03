@@ -12,7 +12,7 @@ const moneySchema = z
 
 const optionalMoneySchema = z
   .union([moneySchema, z.literal(""), z.null(), z.undefined()])
-  .transform((value) => (value ? value : undefined));
+  .transform((value) => (value ? value : null));
 
 const productImageSchema = z.object({
   url: z
@@ -34,14 +34,15 @@ const productBaseSchema = z.object({
     .trim()
     .optional()
     .transform((value) => (value ? normalizeSlug(value) : undefined)),
-  description: z.string().trim().max(10000).optional(),
-  shortDescription: z.string().trim().max(320).optional(),
+  description: z
+    .union([z.string().trim().max(10000), z.null(), z.undefined()])
+    .transform((value) => value || null),
+  shortDescription: z
+    .union([z.string().trim().max(320), z.null(), z.undefined()])
+    .transform((value) => value || null),
   sku: z
-    .string()
-    .trim()
-    .max(80)
-    .optional()
-    .transform((value) => value || undefined),
+    .union([z.string().trim().max(80), z.null(), z.undefined()])
+    .transform((value) => value || null),
   price: moneySchema,
   compareAtPrice: optionalMoneySchema,
   costPrice: optionalMoneySchema,

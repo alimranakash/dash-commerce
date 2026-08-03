@@ -5,9 +5,9 @@ import { ensureCategoryImageSchema } from "./category-image-schema";
 type CategoryWriteData = {
   name: string;
   slug: string;
-  description?: string;
+  description?: string | null;
   imageUrl?: string | null;
-  parentId?: string;
+  parentId?: string | null;
 };
 
 export async function getCategoriesForStore(storeId: string) {

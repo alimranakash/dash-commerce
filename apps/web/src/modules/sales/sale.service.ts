@@ -110,7 +110,12 @@ export async function updateSale(context: SaleContext, saleId: string, input: Up
 
     const items = await prepareItems(tx, context.storeId, data.items);
     const totals = calculateTotals(items, data.discount, data.tax, data.shipping, data.paidAmount);
-    const shouldCompleteNow = data.status === "COMPLETED" && !existing.completedAt;
+    const stockWasDeducted = existing.status === "COMPLETED";
+    const shouldDeductStock = data.status === "COMPLETED";
+
+    if (stockWasDeducted) {
+      await restoreProductStock(tx, context.organizationId, context.storeId, saleId, existing.items);
+    }
 
     await tx.saleItem.deleteMany({
       where: {
@@ -123,7 +128,7 @@ export async function updateSale(context: SaleContext, saleId: string, input: Up
         id: saleId
       },
       data: {
-        completedAt: shouldCompleteNow ? new Date() : existing.completedAt,
+        completedAt: shouldDeductStock ? existing.completedAt ?? new Date() : null,
         customerId: data.customerId ?? null,
         discount: totals.discount,
         dueAmount: totals.dueAmount,
@@ -148,7 +153,7 @@ export async function updateSale(context: SaleContext, saleId: string, input: Up
       }
     });
 
-    if (shouldCompleteNow) {
+    if (shouldDeductStock) {
       await decreaseProductStock(tx, context.organizationId, context.storeId, sale.id, items);
     }
 
@@ -157,18 +162,38 @@ export async function updateSale(context: SaleContext, saleId: string, input: Up
 }
 
 export async function voidSale(context: SaleContext, saleId: string) {
-  const result = await prisma.sale.updateMany({
-    where: {
-      id: saleId,
-      organizationId: context.organizationId,
-      storeId: context.storeId
-    },
-    data: {
-      status: "CANCELLED"
-    }
-  });
+  return prisma.$transaction(async (tx) => {
+    const existing = await tx.sale.findFirst({
+      where: {
+        id: saleId,
+        organizationId: context.organizationId,
+        storeId: context.storeId
+      },
+      include: {
+        items: true
+      }
+    });
 
-  return result.count > 0;
+    if (!existing || existing.status === "CANCELLED") {
+      return false;
+    }
+
+    if (existing.status === "COMPLETED") {
+      await restoreProductStock(tx, context.organizationId, context.storeId, saleId, existing.items);
+    }
+
+    await tx.sale.update({
+      where: {
+        id: saleId
+      },
+      data: {
+        completedAt: null,
+        status: "CANCELLED"
+      }
+    });
+
+    return true;
+  });
 }
 
 async function createSaleNumber(storeId: string) {
@@ -316,6 +341,60 @@ async function decreaseProductStock(
         sourceType: "SALE",
         storeId,
         type: "STOCK_OUT"
+      }
+    });
+  }
+}
+
+async function restoreProductStock(
+  tx: TransactionClient,
+  organizationId: string,
+  storeId: string,
+  saleId: string,
+  items: Array<{ productId: string; quantity: number }>
+) {
+  for (const item of items) {
+    const product = await tx.product.findFirst({
+      where: {
+        id: item.productId,
+        storeId
+      },
+      select: {
+        id: true,
+        stockQuantity: true
+      }
+    });
+
+    if (!product) {
+      continue;
+    }
+
+    const previousQuantity = product.stockQuantity;
+    const newQuantity = previousQuantity + item.quantity;
+
+    await tx.product.update({
+      where: {
+        id: product.id
+      },
+      data: {
+        stockQuantity: newQuantity
+      }
+    });
+
+    await tx.stockMovement.create({
+      data: {
+        createdBy: null,
+        newQuantity,
+        notes: null,
+        organizationId,
+        previousQuantity,
+        productId: product.id,
+        quantityChange: item.quantity,
+        reason: "Sale stock restored",
+        sourceId: saleId,
+        sourceType: "SALE",
+        storeId,
+        type: "STOCK_IN"
       }
     });
   }

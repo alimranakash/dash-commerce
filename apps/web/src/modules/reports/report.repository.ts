@@ -1,4 +1,5 @@
 import { prisma } from "@dash/db";
+import { ensureProductVariantSchema } from "../products/product-variants.service";
 
 export async function getReportOverviewRecords(storeId: string, periodStart: Date) {
   return Promise.all([
@@ -40,8 +41,20 @@ export async function getReportOverviewRecords(storeId: string, periodStart: Dat
         createdAt: true,
         id: true
       }
-    })
+    }),
+    getProductVariantCount(storeId)
   ]);
+}
+
+export async function getProductVariantCount(storeId: string) {
+  await ensureProductVariantSchema();
+
+  const rows = await prisma.$queryRawUnsafe<Array<{ count: bigint | number }>>(
+    `SELECT COUNT(*) AS count FROM "${getDatabaseSchemaName()}"."ProductVariant" WHERE "storeId" = $1`,
+    storeId
+  );
+
+  return Number(rows[0]?.count ?? 0);
 }
 
 export async function getOrdersReportRecords(storeId: string, start: Date) {
@@ -75,7 +88,7 @@ export async function getRevenueReportRecords(storeId: string, start: Date) {
   });
 }
 
-export async function getProductsReportRecords(storeId: string) {
+export async function getProductsReportRecords(storeId: string, start: Date) {
   return Promise.all([
     prisma.product.findMany({
       where: { storeId },
@@ -91,7 +104,7 @@ export async function getProductsReportRecords(storeId: string) {
       }
     }),
     prisma.orderItem.findMany({
-      where: { order: { status: { not: "CANCELLED" }, storeId } },
+      where: { order: { createdAt: { gte: start }, status: { not: "CANCELLED" }, storeId } },
       select: {
         productId: true,
         quantity: true,
@@ -120,4 +133,21 @@ export async function getCustomersReportRecords(storeId: string) {
       }
     }
   });
+}
+
+function getDatabaseSchemaName() {
+  const fallbackSchema = "public";
+  const connectionString = process.env.DATABASE_URL;
+
+  if (!connectionString) {
+    return fallbackSchema;
+  }
+
+  try {
+    const schema = new URL(connectionString).searchParams.get("schema") ?? fallbackSchema;
+
+    return /^[A-Za-z_][A-Za-z0-9_]*$/.test(schema) ? schema : fallbackSchema;
+  } catch {
+    return fallbackSchema;
+  }
 }

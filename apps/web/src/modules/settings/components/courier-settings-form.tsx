@@ -1,9 +1,11 @@
 "use client";
 
 import { Box, Eye, EyeOff, PackageCheck, Route, Save, Send, Truck } from "lucide-react";
-import { useState, type ComponentType, type FormEvent } from "react";
+import { useActionState, useState, type ComponentType } from "react";
+import type { SettingsActionState } from "../settings.actions";
+import type { CourierProviderKey, CourierSettingsInput } from "../settings.schema";
 
-type CourierKey = "pathao" | "steadfast" | "redx" | "paperfly" | "carrybee";
+type CourierKey = CourierProviderKey;
 type CourierField = {
   label: string;
   name: string;
@@ -77,19 +79,29 @@ const providers: CourierProvider[] = [
   }
 ];
 
-export function CourierSettingsForm() {
-  const [enabled, setEnabled] = useState<Record<CourierKey, boolean>>({ carrybee: false, paperfly: false, pathao: false, redx: false, steadfast: false });
+const initialState: SettingsActionState = { status: "idle" };
+
+export function CourierSettingsForm({ action, settings }: {
+  action: (state: SettingsActionState, formData: FormData) => Promise<SettingsActionState>;
+  settings: CourierSettingsInput;
+}) {
+  const saved = new Map(settings.providers.map((provider) => [provider.key, provider]));
+  const [state, formAction, isPending] = useActionState(action, initialState);
+  const [enabled, setEnabled] = useState<Record<CourierKey, boolean>>({
+    carrybee: saved.get("carrybee")?.isEnabled ?? false,
+    paperfly: saved.get("paperfly")?.isEnabled ?? false,
+    pathao: saved.get("pathao")?.isEnabled ?? false,
+    redx: saved.get("redx")?.isEnabled ?? false,
+    steadfast: saved.get("steadfast")?.isEnabled ?? false
+  });
   const [visibleSecrets, setVisibleSecrets] = useState<Record<string, boolean>>({});
   const [message, setMessage] = useState("");
 
-  function submitSettings(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setMessage("Courier settings are ready to save when secure credential storage is connected.");
-  }
-
   return (
-    <form className="grid gap-5" onSubmit={submitSettings}>
-      {message ? <p className="m-0 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{message}</p> : null}
+    <form action={formAction} className="grid gap-5">
+      {state.status === "error" ? <p className="m-0 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">{state.message}</p> : null}
+      {state.status === "success" ? <p className="m-0 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{state.message}</p> : null}
+      {message ? <p className="m-0 rounded-lg border border-[#e5e0f7] bg-[#f7f4ff] px-4 py-3 text-sm font-medium text-[#655d78]">{message}</p> : null}
       <div className="grid items-start gap-5 xl:grid-cols-2">
         {providers.map((provider) => {
           const Icon = provider.icon;
@@ -97,7 +109,7 @@ export function CourierSettingsForm() {
             <section className="overflow-hidden rounded-xl border border-[#ececf5] bg-white shadow-[0_8px_24px_rgba(62,54,114,0.04)]" key={provider.key}>
               <header className="flex items-center justify-between gap-4 border-b border-[#ececf5] px-5 py-5">
                 <span className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-lg bg-[#f0ebff] text-[#7548f5]"><Icon className="h-5 w-5" /></span><span><strong className="block text-sm">{provider.name}</strong><span className="mt-0.5 block text-[11px] text-[#858691]">API credentials and connection</span></span></span>
-                <Toggle checked={enabled[provider.key]} label={`Enable ${provider.name}`} onChange={(checked) => setEnabled((current) => ({ ...current, [provider.key]: checked }))} />
+                <Toggle checked={enabled[provider.key]} label={`Enable ${provider.name}`} name={`${provider.key}.isEnabled`} onChange={(checked) => setEnabled((current) => ({ ...current, [provider.key]: checked }))} />
               </header>
               <div className="grid gap-4 p-5 sm:grid-cols-2">
                 {provider.fields.map((field) => {
@@ -110,6 +122,7 @@ export function CourierSettingsForm() {
                         <input
                           autoComplete={field.secret ? "new-password" : "off"}
                           className={`h-12 w-full rounded-lg border border-[#dedcea] bg-white px-3.5 text-sm font-normal text-[#292a34] outline-none placeholder:text-[#a2a3b0] focus:border-[#8b5cf6] focus:ring-2 focus:ring-[#7c3aed]/10 ${field.secret ? "pr-12" : ""}`}
+                          defaultValue={saved.get(provider.key)?.credentials[field.name] ?? ""}
                           name={inputName}
                           placeholder={field.placeholder}
                           type={field.secret ? (secretVisible ? "text" : "password") : field.type ?? "text"}
@@ -138,17 +151,17 @@ export function CourierSettingsForm() {
       </div>
 
       <div className="flex justify-end">
-        <button className="inline-flex h-11 items-center gap-2 rounded-lg bg-[#7548f5] px-5 text-sm font-semibold text-white shadow-sm hover:bg-[#6436e8]" type="submit"><Save className="h-4 w-4" />Save Courier Settings</button>
+        <button className="inline-flex h-11 items-center gap-2 rounded-lg bg-[#7548f5] px-5 text-sm font-semibold text-white shadow-sm hover:bg-[#6436e8] disabled:opacity-60" disabled={isPending} type="submit"><Save className="h-4 w-4" />{isPending ? "Saving..." : "Save Courier Settings"}</button>
       </div>
     </form>
   );
 }
 
-function Toggle({ checked, label, onChange }: { checked: boolean; label: string; onChange: (checked: boolean) => void }) {
+function Toggle({ checked, label, name, onChange }: { checked: boolean; label: string; name: string; onChange: (checked: boolean) => void }) {
   return (
     <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[#686a76]">
       <span className="hidden sm:inline">{label}</span>
-      <input checked={checked} className="peer sr-only" onChange={(event) => onChange(event.target.checked)} type="checkbox" />
+      <input checked={checked} className="peer sr-only" name={name} onChange={(event) => onChange(event.target.checked)} type="checkbox" />
       <span className="relative h-5 w-9 rounded-full bg-[#d9d7e3] transition peer-checked:bg-[#7548f5] after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow-sm after:transition peer-checked:after:translate-x-4" />
     </label>
   );

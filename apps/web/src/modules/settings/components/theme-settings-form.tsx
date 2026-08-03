@@ -579,6 +579,7 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
           <ProductSectionFields label="Featured Products" name="featured" section={advanced.productSections.featured} />
           <ProductSectionFields label="Best Sellers" name="bestSellers" section={advanced.productSections.bestSellers} />
           <ProductSectionFields label="New Arrivals" name="newArrivals" section={advanced.productSections.newArrivals} />
+          <ProductSectionFields label="Trending" name="trending" section={advanced.productSections.trending} />
           <ProductSectionFields label="Shop / Category Listing" name="listing" section={advanced.productSections.listing} />
           <ProductSectionFields label="Search Results" name="search" section={advanced.productSections.search} />
           <ProductSectionFields label="Related Products" name="related" section={advanced.productSections.related} />
@@ -617,6 +618,10 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
             <input defaultValue={advanced.fashion.editorialSplitCtaLink} name="fashionEditorialSplitCtaLink" type="text" />
           </label>
           <label>
+            Split overlay opacity
+            <input defaultValue={advanced.fashion.editorialSplitOverlayOpacity} max={80} min={0} name="fashionEditorialSplitOverlayOpacity" type="number" />
+          </label>
+          <label>
             Split left image URL
             <input defaultValue={advanced.fashion.editorialSplitLeftImageUrl} name="fashionEditorialSplitLeftImageUrl" type="text" />
           </label>
@@ -641,6 +646,14 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
             <input defaultValue={advanced.fashion.editorialBannerImageUrl} name="fashionEditorialBannerImageUrl" type="text" />
           </label>
           <label>
+            Campaign CTA text
+            <input defaultValue={advanced.fashion.editorialBannerCtaText} name="fashionEditorialBannerCtaText" type="text" />
+          </label>
+          <label>
+            Campaign CTA link
+            <input defaultValue={advanced.fashion.editorialBannerCtaLink} name="fashionEditorialBannerCtaLink" type="text" />
+          </label>
+          <label>
             Featured look title
             <input defaultValue={advanced.fashion.featuredLookTitle} name="fashionFeaturedLookTitle" type="text" />
           </label>
@@ -651,6 +664,14 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
           <label>
             Featured look image URL
             <input defaultValue={advanced.fashion.featuredLookImageUrl} name="fashionFeaturedLookImageUrl" type="text" />
+          </label>
+          <label>
+            Featured look CTA text
+            <input defaultValue={advanced.fashion.featuredLookCtaText} name="fashionFeaturedLookCtaText" type="text" />
+          </label>
+          <label>
+            Featured look CTA link
+            <input defaultValue={advanced.fashion.featuredLookCtaLink} name="fashionFeaturedLookCtaLink" type="text" />
           </label>
           <label>
             Community title
@@ -677,12 +698,24 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
             <input defaultValue={advanced.fashion.newsletterImageUrl} name="fashionNewsletterImageUrl" type="text" />
           </label>
           <label>
+            Newsletter button text
+            <input defaultValue={advanced.fashion.newsletterButtonText} name="fashionNewsletterButtonText" type="text" />
+          </label>
+          <label>
             Before image URL
             <input defaultValue={advanced.fashion.beforeAfterBeforeImageUrl} name="fashionBeforeAfterBeforeImageUrl" type="text" />
           </label>
           <label>
+            Before label
+            <input defaultValue={advanced.fashion.beforeAfterBeforeLabel} name="fashionBeforeAfterBeforeLabel" type="text" />
+          </label>
+          <label>
             After image URL
             <input defaultValue={advanced.fashion.beforeAfterAfterImageUrl} name="fashionBeforeAfterAfterImageUrl" type="text" />
+          </label>
+          <label>
+            After label
+            <input defaultValue={advanced.fashion.beforeAfterAfterLabel} name="fashionBeforeAfterAfterLabel" type="text" />
           </label>
           <label>
             Comparison position

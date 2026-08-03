@@ -1,3 +1,4 @@
+import { DeleteConfirmationButton } from "../../../components/dashboard/delete-confirmation-button";
 import type { MediaAssetListItem } from "../media.types";
 import { deleteMediaFormAction } from "../media.actions";
 import { MediaCopyButton } from "./media-copy-button";
@@ -30,10 +31,13 @@ export function MediaLibrary({ assets }: MediaLibraryProps) {
           </div>
           <div className="table-actions media-actions">
             <MediaCopyButton url={asset.url} />
-            <form action={deleteMediaFormAction}>
-              <input name="assetId" type="hidden" value={asset.id} />
-              <button type="submit">Delete</button>
-            </form>
+            <DeleteConfirmationButton
+              action={deleteMediaFormAction.bind(null, asset.id)}
+              ariaLabel={`Delete ${asset.filename}`}
+              title="Delete image"
+            >
+              Delete
+            </DeleteConfirmationButton>
           </div>
         </article>
       ))}

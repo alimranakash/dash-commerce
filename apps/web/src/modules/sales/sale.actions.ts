@@ -59,6 +59,7 @@ export async function voidSaleAction(saleId: string) {
 
   revalidatePath("/dashboard/sales");
   revalidatePath(`/dashboard/sales/${saleId}`);
+  revalidatePath("/dashboard/products");
   redirect("/dashboard/sales?voided=1");
 }
 

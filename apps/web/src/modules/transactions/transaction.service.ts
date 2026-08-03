@@ -34,13 +34,17 @@ export async function getTransactionsForStore(storeId: string): Promise<Transact
     }
   }
 
-  const payments = sum(rows.filter((row) => row.type === "PAYMENT").map((row) => row.amount));
+  const payments = sum(rows.filter((row) => row.type === "PAYMENT" && isCollected(row.status)).map((row) => row.amount));
   const refunds = sum(rows.filter((row) => row.type === "REFUND").map((row) => row.amount));
 
   return {
     metrics: { netAmount: payments - refunds, payments, refunds, total: rows.length },
     rows: rows.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
   };
+}
+
+function isCollected(status: string) {
+  return status === "PAID" || status === "REFUNDED";
 }
 
 function sum(values: number[]) {

@@ -72,7 +72,7 @@ export function StoreSettingsForm({
               name="logoUrl"
               onChange={(event) => setLogoUrl(event.target.value)}
               placeholder="Or paste logo image URL"
-              type="url"
+              type="text"
               value={logoUrl}
             />
           </label>
@@ -87,7 +87,7 @@ export function StoreSettingsForm({
               name="faviconUrl"
               onChange={(event) => setFaviconUrl(event.target.value)}
               placeholder="Or paste favicon image URL"
-              type="url"
+              type="text"
               value={faviconUrl}
             />
           </label>

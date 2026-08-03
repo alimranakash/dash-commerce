@@ -1,15 +1,35 @@
 import { getCustomersReportRecords, getOrdersReportRecords, getProductsReportRecords, getReportOverviewRecords, getRevenueReportRecords } from "./report.repository";
-import type { AbandonedCartsReportData, CustomersReportData, OrdersReportData, ProductsReportData, ReportOverviewData, ReportSeriesPoint, ReportTopCustomer, ReportTopProduct, RevenuesReportData } from "./report.types";
+import type { AbandonedCartsReportData, CustomersReportData, OrdersReportData, ProductsReportData, ReportOverviewData, ReportRangeKey, ReportSeriesPoint, ReportTopCustomer, ReportTopProduct, RevenuesReportData } from "./report.types";
 
-const PERIOD_DAYS = 30;
+type ReportWindow = {
+  length: number;
+  start: Date;
+  unit: "day" | "month";
+};
 
-export async function getReportOverview(storeId: string, fallbackCurrency: string): Promise<ReportOverviewData> {
-  const currentStart = startOfDay(daysAgo(PERIOD_DAYS - 1));
-  const previousStart = startOfDay(daysAgo(PERIOD_DAYS * 2 - 1));
-  const [orders, products, customers] = await getReportOverviewRecords(storeId, previousStart);
+function reportWindow(range: ReportRangeKey): ReportWindow {
+  if (range === "12m") {
+    return { length: 12, start: startOfMonthOffset(-11), unit: "month" };
+  }
+
+  const days = range === "90d" ? 90 : 30;
+
+  return { length: days, start: startOfDay(daysAgo(days - 1)), unit: "day" };
+}
+
+function previousWindowStart(range: ReportRangeKey, window: ReportWindow) {
+  return range === "12m" ? startOfMonthOffset(-23) : startOfDay(daysAgo(window.length * 2 - 1));
+}
+
+export async function getReportOverview(storeId: string, fallbackCurrency: string, range: ReportRangeKey = "30d"): Promise<ReportOverviewData> {
+  const window = reportWindow(range);
+  const currentStart = window.start;
+  const previousStart = previousWindowStart(range, window);
+  const [orders, products, customers, variations] = await getReportOverviewRecords(storeId, previousStart);
   const currentOrders = orders.filter((order) => order.createdAt >= currentStart);
   const previousOrders = orders.filter((order) => order.createdAt < currentStart);
-  const currentCustomers = customers.filter((customer) => customer.createdAt >= currentStart).length;
+  const newCustomerIds = new Set(customers.filter((customer) => customer.createdAt >= currentStart).map((customer) => customer.id));
+  const currentCustomers = newCustomerIds.size;
   const previousCustomers = customers.filter((customer) => customer.createdAt >= previousStart && customer.createdAt < currentStart).length;
   const current = summarizeOrders(currentOrders);
   const previous = summarizeOrders(previousOrders);
@@ -19,7 +39,7 @@ export async function getReportOverview(storeId: string, fallbackCurrency: strin
     currency,
     customers: metric(currentCustomers, previousCustomers),
     customerOverview: customerOverview(currentOrders),
-    daily: dailySeries(currentOrders, currentStart),
+    daily: dailySeries(currentOrders, window, newCustomerIds),
     netRevenue: metric(current.netRevenue, previous.netRevenue),
     orders: metric(current.orderCount, previous.orderCount),
     orderStatuses: orderStatuses(currentOrders),
@@ -28,7 +48,7 @@ export async function getReportOverview(storeId: string, fallbackCurrency: strin
       averagePrice: Number(products._avg.price ?? 0),
       inventoryCount: products._sum.stockQuantity ?? 0,
       productsInCatalog: products._count._all,
-      variations: 0
+      variations
     },
     refunds: metric(current.refunds, previous.refunds),
     sales: metric(current.sales, previous.sales),
@@ -36,16 +56,16 @@ export async function getReportOverview(storeId: string, fallbackCurrency: strin
   };
 }
 
-export async function getOrdersReport(storeId: string, fallbackCurrency: string): Promise<OrdersReportData> {
-  const start = startOfMonthOffset(-11);
-  const orders = await getOrdersReportRecords(storeId, start);
-  const currency = orders[0]?.currency ?? fallbackCurrency;
-  const recentStart = startOfDay(daysAgo(29));
-  const recent = orders.filter((order) => order.createdAt >= recentStart);
+export async function getOrdersReport(storeId: string, fallbackCurrency: string, range: ReportRangeKey = "30d"): Promise<OrdersReportData> {
+  const window = reportWindow(range);
+  const monthlyStart = startOfMonthOffset(-11);
+  const allOrders = await getOrdersReportRecords(storeId, window.start < monthlyStart ? window.start : monthlyStart);
+  const orders = allOrders.filter((order) => order.createdAt >= window.start);
+  const currency = orders[0]?.currency ?? allOrders[0]?.currency ?? fallbackCurrency;
 
   return {
     currency,
-    daily: timeSeries(30, "day", recentStart, recent, () => 1),
+    daily: timeSeries(window.length, window.unit, window.start, orders, () => 1),
     metrics: {
       total: orders.length,
       pending: orders.filter((order) => order.status === "PENDING").length,
@@ -54,34 +74,35 @@ export async function getOrdersReport(storeId: string, fallbackCurrency: string)
       cancelled: orders.filter((order) => order.status === "CANCELLED").length,
       refunded: orders.filter((order) => order.paymentStatus === "REFUNDED").length
     },
-    monthly: timeSeries(12, "month", start, orders, () => 1),
+    monthly: timeSeries(12, "month", monthlyStart, allOrders.filter((order) => order.createdAt >= monthlyStart), () => 1),
     recentOrders: [...orders].reverse().slice(0, 8).map((order) => ({ createdAt: order.createdAt, customer: order.customerName, id: order.id, orderNumber: order.orderNumber, status: order.status, total: Number(order.totalAmount) })),
     statuses: ["PENDING", "CONFIRMED", "PROCESSING", "COMPLETED", "CANCELLED"].map((status) => ({ label: titleCase(status), value: orders.filter((order) => order.status === status).length }))
   };
 }
 
-export async function getRevenuesReport(storeId: string, fallbackCurrency: string): Promise<RevenuesReportData> {
-  const start = startOfMonthOffset(-11);
-  const orders = await getRevenueReportRecords(storeId, start);
-  const currency = orders[0]?.currency ?? fallbackCurrency;
-  const valid = orders.filter((order) => order.status !== "CANCELLED");
+export async function getRevenuesReport(storeId: string, fallbackCurrency: string, range: ReportRangeKey = "30d"): Promise<RevenuesReportData> {
+  const window = reportWindow(range);
+  const monthlyStart = startOfMonthOffset(-11);
+  const allOrders = await getRevenueReportRecords(storeId, window.start < monthlyStart ? window.start : monthlyStart);
+  const currency = allOrders[0]?.currency ?? fallbackCurrency;
+  const allValid = allOrders.filter((order) => order.status !== "CANCELLED");
+  const valid = allValid.filter((order) => order.createdAt >= window.start);
   const gross = sum(valid.map((order) => Number(order.totalAmount)));
   const refunds = sum(valid.filter((order) => order.paymentStatus === "REFUNDED").map((order) => Number(order.totalAmount)));
-  const recentStart = startOfDay(daysAgo(29));
-  const recent = valid.filter((order) => order.createdAt >= recentStart);
-  const daily = timeSeries(30, "day", recentStart, recent, (order) => Number(order.totalAmount), (order) => order.paymentStatus === "REFUNDED" ? Number(order.totalAmount) : 0);
+  const daily = timeSeries(window.length, window.unit, window.start, valid, (order) => Number(order.totalAmount), (order) => order.paymentStatus === "REFUNDED" ? Number(order.totalAmount) : 0);
+  const seriesLabel = window.unit === "day" ? dayLabel : monthLabel;
 
   return {
     currency,
     daily,
     metrics: { aov: valid.length ? gross / valid.length : 0, gross, net: Math.max(0, gross - refunds), refunds },
-    monthly: timeSeries(12, "month", start, valid, (order) => Number(order.totalAmount), (order) => order.paymentStatus === "REFUNDED" ? Number(order.totalAmount) : 0),
-    topDays: daily.map((point) => ({ date: point.label, orders: recent.filter((order) => dayLabel(order.createdAt) === point.label).length, revenue: point.value })).sort((a, b) => b.revenue - a.revenue).slice(0, 7)
+    monthly: timeSeries(12, "month", monthlyStart, allValid.filter((order) => order.createdAt >= monthlyStart), (order) => Number(order.totalAmount), (order) => order.paymentStatus === "REFUNDED" ? Number(order.totalAmount) : 0),
+    topDays: daily.map((point) => ({ date: point.label, orders: valid.filter((order) => seriesLabel(order.createdAt) === point.label).length, revenue: point.value })).sort((a, b) => b.revenue - a.revenue).slice(0, 7)
   };
 }
 
-export async function getProductsReport(storeId: string, fallbackCurrency: string): Promise<ProductsReportData> {
-  const [products, items] = await getProductsReportRecords(storeId);
+export async function getProductsReport(storeId: string, fallbackCurrency: string, range: ReportRangeKey = "30d"): Promise<ProductsReportData> {
+  const [products, items] = await getProductsReportRecords(storeId, reportWindow(range).start);
   const byProduct = new Map<string, ReportTopProduct>();
   const categories = new Map<string, { category: string; quantity: number; revenue: number }>();
 
@@ -117,9 +138,10 @@ export async function getProductsReport(storeId: string, fallbackCurrency: strin
   };
 }
 
-export async function getCustomersReport(storeId: string, fallbackCurrency: string): Promise<CustomersReportData> {
+export async function getCustomersReport(storeId: string, fallbackCurrency: string, range: ReportRangeKey = "30d"): Promise<CustomersReportData> {
   const customers = await getCustomersReportRecords(storeId);
-  const recentStart = startOfDay(daysAgo(29));
+  const window = reportWindow(range);
+  const recentStart = window.start;
   const customerSummaries = customers.map((customer) => ({ name: customer.name, orders: customer.orders.length, purchased: sum(customer.orders.map((order) => Number(order.totalAmount))) }));
   const topCustomers = [...customerSummaries].sort((a, b) => b.purchased - a.purchased).slice(0, 10);
   const totalRevenue = sum(customerSummaries.map((customer) => customer.purchased));
@@ -131,7 +153,7 @@ export async function getCustomersReport(storeId: string, fallbackCurrency: stri
       { label: "2-3 Orders", value: customers.filter((customer) => customer.orders.length >= 2 && customer.orders.length <= 3).length },
       { label: "4+ Orders", value: customers.filter((customer) => customer.orders.length >= 4).length }
     ],
-    growth: timeSeries(30, "day", recentStart, customers.filter((customer) => customer.createdAt >= recentStart), () => 1),
+    growth: timeSeries(window.length, window.unit, recentStart, customers.filter((customer) => customer.createdAt >= recentStart), () => 1),
     metrics: {
       averageValue: customers.length ? totalRevenue / customers.length : 0,
       newCustomers: customers.filter((customer) => customer.createdAt >= recentStart).length,
@@ -142,15 +164,17 @@ export async function getCustomersReport(storeId: string, fallbackCurrency: stri
   };
 }
 
-export async function getAbandonedCartsReport(storeId: string, fallbackCurrency: string): Promise<AbandonedCartsReportData> {
-  // Abandoned cart persistence is not available yet. Keep the report contract
-  // store-scoped so real repository data can replace this empty source later.
+export async function getAbandonedCartsReport(storeId: string, fallbackCurrency: string, range: ReportRangeKey = "30d"): Promise<AbandonedCartsReportData> {
+  // Abandoned cart persistence is not available yet (carts live in a signed cookie,
+  // see modules/cart/cart.service.ts). Keep the report contract store-scoped and
+  // range-aware so real repository data can replace this empty source later.
   void storeId;
-  const start = startOfDay(daysAgo(29));
-  const daily = Array.from({ length: 30 }, (_, index) => {
-    const date = new Date(start);
-    date.setDate(date.getDate() + index);
-    return { abandoned: 0, label: dayLabel(date), lostRevenue: 0, recovered: 0, recoveredRevenue: 0, recoveryRate: 0 };
+  const window = reportWindow(range);
+  const daily = Array.from({ length: window.length }, (_, index) => {
+    const date = new Date(window.start);
+    if (window.unit === "day") date.setDate(date.getDate() + index);
+    else date.setMonth(date.getMonth() + index);
+    return { abandoned: 0, label: window.unit === "day" ? dayLabel(date) : monthLabel(date), lostRevenue: 0, recovered: 0, recoveredRevenue: 0, recoveryRate: 0 };
   });
 
   return {
@@ -218,26 +242,32 @@ function summarizeOrders(orders: ReportOrder[]) {
   };
 }
 
-function dailySeries(orders: ReportOrder[], start: Date) {
-  const points = Array.from({ length: PERIOD_DAYS }, (_, index) => {
-    const date = new Date(start);
-    date.setDate(date.getDate() + index);
+function dailySeries(orders: ReportOrder[], window: ReportWindow, newCustomerIds: Set<string>) {
+  const points = Array.from({ length: window.length }, (_, index) => {
+    const date = new Date(window.start);
+    if (window.unit === "day") date.setDate(date.getDate() + index);
+    else date.setMonth(date.getMonth() + index);
     return {
-      date: dateKey(date),
-      label: new Intl.DateTimeFormat("en", { day: "numeric", month: "short" }).format(date),
+      date: periodKey(date, window.unit),
+      label: window.unit === "day" ? dayLabel(date) : monthLabel(date),
       netRevenue: 0,
+      newCustomerOrders: 0,
       orderCount: 0,
       refundCount: 0,
       refunds: 0,
+      returningCustomerOrders: 0,
       sales: 0
     };
   });
   const byDate = new Map(points.map((point) => [point.date, point]));
 
   for (const order of orders) {
-    const point = byDate.get(dateKey(order.createdAt));
+    const point = byDate.get(periodKey(order.createdAt, window.unit));
     if (!point) continue;
     point.orderCount += 1;
+    // Guest orders have no customer record, so they cannot be proven returning.
+    if (!order.customerId || newCustomerIds.has(order.customerId)) point.newCustomerOrders += 1;
+    else point.returningCustomerOrders += 1;
     if (order.status === "CANCELLED") continue;
     const amount = Number(order.totalAmount);
     point.sales += amount;
@@ -322,8 +352,12 @@ function startOfDay(date: Date) {
   return result;
 }
 
-function dateKey(date: Date) {
-  return date.toISOString().slice(0, 10);
+function periodKey(date: Date, unit: "day" | "month") {
+  const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+  // Local calendar parts, not toISOString(): UTC conversion shifts orders into the
+  // wrong bucket for every store outside UTC.
+  return unit === "month" ? month : `${month}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
 function sum(values: number[]) {

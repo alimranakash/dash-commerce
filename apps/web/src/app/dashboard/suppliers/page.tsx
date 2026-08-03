@@ -31,5 +31,6 @@ function getSuppliersMessage(searchParams: Record<string, string | string[] | un
   if (searchParams.created) return "Supplier created.";
   if (searchParams.updated) return "Supplier updated.";
   if (searchParams.deleted) return "Supplier deleted.";
+  if (searchParams.blocked) return "This supplier has purchases and cannot be deleted.";
   return null;
 }

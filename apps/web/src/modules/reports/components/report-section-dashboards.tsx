@@ -1,4 +1,5 @@
 import { BadgeDollarSign, Ban, Box, CheckCircle2, CircleDollarSign, Clock3, PackageCheck, PackageOpen, Percent, ReceiptText, RefreshCcw, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, UserPlus, Users } from "lucide-react";
+import Link from "next/link";
 import type { AbandonedCartsReportData, CustomersReportData, OrdersReportData, ProductsReportData, RevenuesReportData } from "../report.types";
 import { ReportCard } from "./report-card";
 import { ReportLineChart } from "./report-line-chart";
@@ -38,7 +39,7 @@ export function OrdersReportDashboard({ data }: { data: OrdersReportData }) {
   return <div className="grid gap-4"><MetricGrid metrics={metrics.map(([icon, label, value]) => ({ icon, label, value: formatNumber(value) }))} />
     <ReportCard title="Orders Trend Chart"><SingleSeriesChart color="#7650e8" data={data.daily} label="Orders" /></ReportCard>
     <div className="grid gap-4 xl:grid-cols-2"><ReportCard title="Orders by Status"><ReportBarList items={data.statuses} /></ReportCard><ReportCard title="Monthly Orders"><SingleSeriesChart color="#2789e8" data={data.monthly} label="Monthly Orders" /></ReportCard></div>
-    <div className="grid gap-4 xl:grid-cols-2"><ReportCard title="Daily Orders"><SingleSeriesChart color="#20a66a" data={data.daily.slice(-14)} label="Daily Orders" /></ReportCard><ReportCard title="Recent Orders Table"><ReportTable emptyMessage="No recent orders in this period." headers={["Order", "Customer", "Status", "Total", "Date"]} rows={data.recentOrders.map((order) => [order.orderNumber, order.customer, titleCase(order.status), formatMoney(order.total, data.currency), formatDate(order.createdAt)])} /></ReportCard></div>
+    <div className="grid gap-4 xl:grid-cols-2"><ReportCard title="Daily Orders"><SingleSeriesChart color="#20a66a" data={data.daily.slice(-14)} label="Daily Orders" /></ReportCard><ReportCard title="Recent Orders Table"><ReportTable emptyMessage="No recent orders in this period." headers={["Order", "Customer", "Status", "Total", "Date"]} rows={data.recentOrders.map((order) => [<Link className="font-medium text-[#6d3cf5] hover:underline" href={`/dashboard/orders/${order.id}`}>{order.orderNumber}</Link>, order.customer, titleCase(order.status), formatMoney(order.total, data.currency), formatDate(order.createdAt)])} /></ReportCard></div>
   </div>;
 }
 
@@ -60,7 +61,7 @@ export function ProductsReportDashboard({ data }: { data: ProductsReportData }) 
   ]} />
     <div className="grid gap-4 xl:grid-cols-2"><ReportCard title="Top Selling Products"><ProductTable data={data} /></ReportCard><ReportCard title="Inventory Summary"><ReportBarList items={data.inventory} /></ReportCard></div>
     <div className="grid gap-4 xl:grid-cols-2"><ReportCard title="Product Performance"><ReportTable emptyMessage="No product sales data available." headers={["Product", "Units Sold", "Revenue"]} rows={data.topProducts.map((product) => [product.title, formatNumber(product.quantity), formatMoney(product.revenue, data.currency)])} /></ReportCard><ReportCard title="Category Performance"><ReportTable emptyMessage="No category sales data available." headers={["Category", "Units Sold", "Revenue"]} rows={data.categoryPerformance.map((category) => [category.category, formatNumber(category.quantity), formatMoney(category.revenue, data.currency)])} /></ReportCard></div>
-    <ReportCard title="Low Stock Table"><ReportTable emptyMessage="No low-stock products. Inventory looks healthy." headers={["Product", "Current Stock", "Low Stock Threshold"]} rows={data.lowStock.map((product) => [product.title, formatNumber(product.stock), formatNumber(product.threshold)])} /></ReportCard>
+    <ReportCard title="Low Stock Table"><ReportTable emptyMessage="No low-stock products. Inventory looks healthy." headers={["Product", "Current Stock", "Low Stock Threshold"]} rows={data.lowStock.map((product) => [<Link className="font-medium text-[#6d3cf5] hover:underline" href={`/dashboard/products/${product.id}/edit`}>{product.title}</Link>, formatNumber(product.stock), formatNumber(product.threshold)])} /></ReportCard>
   </div>;
 }
 

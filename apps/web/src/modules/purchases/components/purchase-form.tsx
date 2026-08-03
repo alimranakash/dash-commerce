@@ -249,7 +249,8 @@ function FieldError({
 }
 
 function today() {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
 function lineTotal(item: PurchaseFormItem) {
@@ -258,7 +259,8 @@ function lineTotal(item: PurchaseFormItem) {
 
 function calculateTotals(items: PurchaseFormItem[], discount: string, tax: string, paid: string) {
   const subtotal = items.reduce((total, item) => total + lineTotal(item), 0);
-  const total = Math.max(subtotal - (Number(discount) || 0) + (Number(tax) || 0), 0);
+  const discountAmount = Math.min(Number(discount) || 0, subtotal);
+  const total = Math.max(subtotal - discountAmount + (Number(tax) || 0), 0);
   const paidAmount = Math.min(Number(paid) || 0, total);
 
   return {
