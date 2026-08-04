@@ -512,6 +512,12 @@ function storefrontProductOrderBy(sort: StorefrontProductSort | undefined) {
     };
   }
 
+  if (sort === "newest") {
+    return {
+      createdAt: "desc" as const
+    };
+  }
+
   if (sort === "featured" || sort === "best-selling") {
     return {
       updatedAt: "desc" as const

@@ -81,7 +81,7 @@ export default async function StorefrontProductsPage({
     <main className="sf-page" data-storefront-template={template.id}>
       <StorefrontHeader store={store} />
       <section className="sf-shop-page-header" aria-labelledby="shop-title">
-        <p>{activeCategory ? "Collection" : shopSettings.pageTitle}</p>
+        <p>{activeCategory ? activeCategory.name : shopSettings.pageTitle}</p>
         {shopSettings.descriptionEnabled && pageDescription ? <span>{pageDescription}</span> : null}
       </section>
       <section
