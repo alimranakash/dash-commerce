@@ -103,10 +103,14 @@ export function AdminSupportManagement({
   search,
   tickets
 }: AdminSupportManagementProps) {
-  const [selectedTicket, setSelectedTicket] = useState<AdminSupportTicketListItem | null>(null);
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [closeTarget, setCloseTarget] = useState<CloseTarget | null>(null);
   const [pending, startTransition] = useTransition();
   const hasTickets = tickets.length > 0;
+  const selectedTicket = useMemo(
+    () => tickets.find((ticket) => ticket.id === selectedTicketId) ?? null,
+    [selectedTicketId, tickets]
+  );
   const filterLabel = useMemo(() => {
     const status = statusOptions.find((option) => option.value === activeStatus)?.label ?? "All statuses";
     const priority = priorityOptions.find((option) => option.value === activePriority)?.label ?? "All priorities";
@@ -190,10 +194,10 @@ export function AdminSupportManagement({
                       <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{ticket.createdAt}</td>
                       <td className="px-4 py-4">
                         <div className="flex justify-end gap-1.5">
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]" onClick={() => setSelectedTicket(ticket)} title="View ticket" type="button">
+                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]" onClick={() => setSelectedTicketId(ticket.id)} title="View ticket" type="button">
                             <Eye className="h-4 w-4" />
                           </button>
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50" onClick={() => setSelectedTicket(ticket)} title="Reply" type="button">
+                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50" onClick={() => setSelectedTicketId(ticket.id)} title="Reply" type="button">
                             <MessageCircle className="h-4 w-4" />
                           </button>
                           <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50" disabled={ticket.status === "CLOSED"} onClick={() => setCloseTarget({ id: ticket.id, subject: ticket.subject })} title="Close ticket" type="button">
@@ -212,7 +216,7 @@ export function AdminSupportManagement({
         )}
       </section>
 
-      {selectedTicket ? <TicketDetailsDrawer admins={admins} onClose={() => setSelectedTicket(null)} ticket={selectedTicket} /> : null}
+      {selectedTicket ? <TicketDetailsDrawer admins={admins} onClose={() => setSelectedTicketId(null)} ticket={selectedTicket} /> : null}
       {closeTarget ? (
         <CloseTicketModal
           disabled={pending}

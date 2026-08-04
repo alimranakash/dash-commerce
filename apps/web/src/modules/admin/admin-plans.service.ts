@@ -15,13 +15,25 @@ export { getAdminPlanMetrics, getAdminPlans };
 export async function createPlan(input: PlanInput) {
   const data = planInputSchema.parse(input);
   await assertSlugAvailable(data.slug);
-  return createAdminPlan(data);
+  const plan = await createAdminPlan(data);
+
+  if (data.isFeatured) {
+    await setAdminPlanFeatured(plan.id);
+  }
+
+  return plan;
 }
 
 export async function updatePlan(planId: string, input: PlanInput) {
   const data = planInputSchema.parse(input);
   await assertSlugAvailable(data.slug, planId);
-  return updateAdminPlan(planId, data);
+  const plan = await updateAdminPlan(planId, data);
+
+  if (data.isFeatured) {
+    await setAdminPlanFeatured(plan.id);
+  }
+
+  return plan;
 }
 
 export async function togglePlanActive(planId: string, isActive: boolean) {

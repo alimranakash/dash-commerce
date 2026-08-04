@@ -64,8 +64,20 @@ export async function markPlanFeaturedAction(planId: string) {
 
 export async function deletePlanAction(planId: string) {
   await requirePlatformAdmin();
-  await removePlan(planId);
+
+  try {
+    await removePlan(planId);
+  } catch {
+    return {
+      message: "This plan could not be deleted. Stores are still subscribed to it — deactivate the plan instead.",
+      ok: false as const
+    };
+  }
+
   revalidatePath("/admin/plans");
+  return {
+    ok: true as const
+  };
 }
 
 function planInputFromFormData(formData: FormData): PlanInput {

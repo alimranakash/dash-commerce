@@ -47,6 +47,7 @@ const initialActionState: PlanActionState = {
 export function AdminPlanManagement({ plans, search }: AdminPlanManagementProps) {
   const [activeModal, setActiveModal] = useState<{ mode: "create"; plan?: undefined } | { mode: "edit"; plan: AdminPlanListItem } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminPlanListItem | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const hasPlans = plans.length > 0;
 
@@ -57,9 +58,27 @@ export function AdminPlanManagement({ plans, search }: AdminPlanManagementProps)
     });
   }
 
+  function deletePlan(planId: string) {
+    startTransition(async () => {
+      const result = await deletePlanAction(planId);
+
+      if (result.ok) {
+        setDeleteError(null);
+        setDeleteTarget(null);
+        return;
+      }
+
+      setDeleteError(result.message);
+      setDeleteTarget(null);
+    });
+  }
+
   return (
     <>
       <section className="rounded-xl border border-[#ececf5] bg-white p-5 shadow-sm">
+        {deleteError ? (
+          <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{deleteError}</p>
+        ) : null}
         <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <h2 className="m-0 text-base font-semibold text-[#20212c]">Plans</h2>
@@ -153,7 +172,7 @@ export function AdminPlanManagement({ plans, search }: AdminPlanManagementProps)
                           <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#7c3aed] hover:bg-[#f3f0ff] disabled:cursor-not-allowed disabled:opacity-40" disabled={pending || plan.isFeatured} onClick={() => runAction(markPlanFeaturedAction, plan.id)} title="Mark featured" type="button">
                             <Sparkles className="h-4 w-4" />
                           </button>
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-red-600 hover:bg-red-50" onClick={() => setDeleteTarget(plan)} title="Delete plan" type="button">
+                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-red-600 hover:bg-red-50" onClick={() => { setDeleteError(null); setDeleteTarget(plan); }} title="Delete plan" type="button">
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -175,7 +194,7 @@ export function AdminPlanManagement({ plans, search }: AdminPlanManagementProps)
         <DeletePlanModal
           disabled={pending}
           onClose={() => setDeleteTarget(null)}
-          onConfirm={() => runAction(deletePlanAction, deleteTarget.id, () => setDeleteTarget(null))}
+          onConfirm={() => deletePlan(deleteTarget.id)}
           plan={deleteTarget}
         />
       ) : null}

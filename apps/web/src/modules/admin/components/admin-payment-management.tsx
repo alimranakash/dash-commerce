@@ -306,7 +306,7 @@ function PaymentDetailsDrawer({ onClose, payment }: { onClose: () => void; payme
           <DetailSection title="Payment Information">
             <DetailRow label="Invoice" value={payment.invoiceNumber} />
             <DetailRow label="Amount" value={`${payment.currency} ${formatMoney(payment.amount)}`} />
-            <DetailRow label="Payment Method" value={payment.paymentMethod} />
+            <DetailRow label="Payment Method" value={paymentMethodLabel(payment.paymentMethod)} />
             <DetailRow label="Payment Reference" value={payment.paymentReference} />
             <DetailRow label="Sender Number" value={payment.senderNumber} />
             <DetailRow label="Payment Note" value={payment.paymentNote} />

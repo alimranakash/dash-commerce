@@ -3,7 +3,13 @@ import { updateBillingSettingsAction } from "../../../../modules/billing/billing
 import { BillingSettingsForm } from "../../../../modules/billing/components/billing-settings-form";
 import { getBillingSettings } from "../../../../modules/billing/billing.service";
 
-export default async function AdminPaymentSettingsPage() {
+type AdminPaymentSettingsPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function AdminPaymentSettingsPage({ searchParams }: AdminPaymentSettingsPageProps) {
+  const params = await searchParams;
+  const updated = params.updated === "1";
   const settings = await getBillingSettings();
 
   return (
@@ -12,6 +18,11 @@ export default async function AdminPaymentSettingsPage() {
         description="Configure manual bKash, Nagad, Rocket, and bank transfer accounts shown to sellers."
         title="Manual Payment Settings"
       />
+      {updated ? (
+        <p className="m-0 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          Billing settings saved.
+        </p>
+      ) : null}
       <BillingSettingsForm
         action={updateBillingSettingsAction}
         settings={{
