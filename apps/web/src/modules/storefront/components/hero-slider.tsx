@@ -32,7 +32,7 @@ export function HeroSlider({
     mediaType: "image",
     subtitle: hero.subtitle,
     title: hero.title,
-    url: hero.imageUrl || fallbackImageUrl || "/demo-assets/general/hero/hero-01.webp"
+    url: hero.imageUrl || fallbackImageUrl || ""
   };
   const slides = useMemo(
     () => resolveSlides(hero, fallbackImageUrl, title, subtitle),

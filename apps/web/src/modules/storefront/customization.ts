@@ -368,7 +368,7 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     contentType: "single-image",
     enabled: true,
     height: "large",
-    imageUrl: "/demo-assets/general/hero/hero-01.webp",
+    imageUrl: "",
     layoutWidth: "full",
     overlayColor: "#000000",
     overlayOpacity: 30,
@@ -380,7 +380,7 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
         mediaType: "image",
         subtitle: "Thoughtfully selected products for everyday living",
         title: "Discover Quality Products for Every Lifestyle",
-        url: "/demo-assets/general/hero/hero-01.webp"
+        url: ""
       }
     ],
     subtitle: "Thoughtfully selected products for everyday living",
@@ -716,7 +716,7 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     autoplay: false,
     backgroundColor: "#ffffff",
     defaultActiveTab: 0,
-    description: "Footwear built around one idea: that the best shoes are the ones you stop noticing. Precise in form, deliberate in material.",
+    description: "Browse the catalogue by what people are buying now, what is on offer and what just landed.",
     enabled: true,
     fullWidth: true,
     infiniteLoop: false,
