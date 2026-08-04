@@ -1,13 +1,17 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type ProductSectionSliderControlsProps = {
+  scrollAmount?: "one" | "page";
   targetId: string;
 };
 
-export function ProductSectionSliderControls({ targetId }: ProductSectionSliderControlsProps) {
+export function ProductSectionSliderControls({
+  scrollAmount = "page",
+  targetId
+}: ProductSectionSliderControlsProps) {
   const targetRef = useRef<HTMLElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -31,14 +35,13 @@ export function ProductSectionSliderControls({ targetId }: ProductSectionSliderC
     target.addEventListener("scroll", update, { passive: true });
 
     // The row can change size without a window resize (image/font settling,
-    // container queries, a hidden panel becoming visible), so observe it too.
+    // container queries, a hidden tab panel becoming visible), so observe both
+    // the row and its cards rather than relying on window resize alone.
     const observer = new ResizeObserver(update);
     observer.observe(target);
 
-    const firstCard = target.firstElementChild;
-
-    if (firstCard) {
-      observer.observe(firstCard);
+    for (const card of Array.from(target.children)) {
+      observer.observe(card);
     }
 
     return () => {
@@ -48,18 +51,21 @@ export function ProductSectionSliderControls({ targetId }: ProductSectionSliderC
     };
   }, [targetId]);
 
-  const scroll = (direction: -1 | 1) => {
-    const target = targetRef.current ?? document.getElementById(targetId);
+  const scroll = useCallback(
+    (direction: -1 | 1) => {
+      const target = targetRef.current ?? document.getElementById(targetId);
 
-    if (!target) {
-      return;
-    }
+      if (!target) {
+        return;
+      }
 
-    target.scrollBy({
-      behavior: "smooth",
-      left: direction * scrollStep(target)
-    });
-  };
+      target.scrollBy({
+        behavior: "smooth",
+        left: direction * scrollStep(target, scrollAmount)
+      });
+    },
+    [scrollAmount, targetId]
+  );
 
   return (
     <div className="general-product-slider-controls" aria-label="Product slider controls">
@@ -84,9 +90,9 @@ export function ProductSectionSliderControls({ targetId }: ProductSectionSliderC
   );
 }
 
-// One step is a full viewport rounded down to whole cards, so the row always
-// lands on a card boundary instead of halfway through one.
-function scrollStep(target: HTMLElement) {
+// A step is either a single card or a full viewport rounded down to whole
+// cards, so the row always lands on a card boundary instead of halfway through.
+function scrollStep(target: HTMLElement, scrollAmount: "one" | "page") {
   const card = target.firstElementChild;
   const cardWidth = card ? card.getBoundingClientRect().width : 0;
 
@@ -96,6 +102,11 @@ function scrollStep(target: HTMLElement) {
 
   const gap = Number.parseFloat(window.getComputedStyle(target).columnGap) || 0;
   const stride = cardWidth + gap;
+
+  if (scrollAmount === "one") {
+    return stride;
+  }
+
   const perView = Math.max(1, Math.floor((target.clientWidth + gap) / stride));
 
   return stride * perView;

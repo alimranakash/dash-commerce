@@ -1,7 +1,8 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Children, type ReactNode, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
+import { ProductSectionSliderControls } from "./product-section-slider-controls";
 
 export type TabbedProductTabsItem = {
   label: string;
@@ -10,8 +11,12 @@ export type TabbedProductTabsItem = {
 
 type TabbedProductTabsProps = {
   arrowsVisible: boolean;
-  children: ReactNode;
   defaultActiveTab: number;
+  // Panels arrive as a prop rather than as `children` on purpose. They are
+  // server-rendered product rows, and taking them as a stable array lets React
+  // skip re-rendering every card when a tab is clicked. Running them through
+  // `Children.toArray` instead would clone and re-key each one on every render.
+  panels: ReactNode[];
   scrollAmount: "one" | "page";
   sectionId: string;
   sliderEnabled: boolean;
@@ -20,65 +25,15 @@ type TabbedProductTabsProps = {
 
 export function TabbedProductTabs({
   arrowsVisible,
-  children,
   defaultActiveTab,
+  panels,
   scrollAmount,
   sectionId,
   sliderEnabled,
   tabs
 }: TabbedProductTabsProps) {
   const [activeIndex, setActiveIndex] = useState(Math.min(defaultActiveTab, Math.max(tabs.length - 1, 0)));
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-  const childArray = Children.toArray(children);
   const activePanelId = tabs[activeIndex]?.panelId;
-
-  useEffect(() => {
-    if (!activePanelId) {
-      return;
-    }
-
-    const target = document.getElementById(activePanelId);
-
-    if (!target) {
-      return;
-    }
-
-    const update = () => {
-      const hasOverflow = target.scrollWidth > target.clientWidth + 1;
-      setCanScrollLeft(hasOverflow && target.scrollLeft > 0);
-      setCanScrollRight(hasOverflow && target.scrollLeft + target.clientWidth < target.scrollWidth - 1);
-    };
-
-    update();
-    target.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-
-    return () => {
-      target.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, [activePanelId]);
-
-  const scroll = (direction: "left" | "right") => {
-    if (!activePanelId) {
-      return;
-    }
-
-    const target = document.getElementById(activePanelId);
-
-    if (!target) {
-      return;
-    }
-
-    const productWidth = target.querySelector<HTMLElement>(".general-product-listing-card")?.offsetWidth ?? target.clientWidth;
-    const distance = scrollAmount === "one" ? productWidth : target.clientWidth * 0.9;
-
-    target.scrollBy({
-      behavior: "smooth",
-      left: direction === "left" ? -distance : distance
-    });
-  };
 
   return (
     <>
@@ -98,30 +53,16 @@ export function TabbedProductTabs({
             </button>
           ))}
         </div>
-        {sliderEnabled && arrowsVisible ? (
-          <div className="general-product-slider-controls" aria-label="Product slider controls">
-            <span aria-hidden="true" />
-            <button
-              aria-label="Scroll products left"
-              disabled={!canScrollLeft}
-              onClick={() => scroll("left")}
-              type="button"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              aria-label="Scroll products right"
-              disabled={!canScrollRight}
-              onClick={() => scroll("right")}
-              type="button"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+        {sliderEnabled && arrowsVisible && activePanelId ? (
+          <ProductSectionSliderControls
+            key={activePanelId}
+            scrollAmount={scrollAmount}
+            targetId={activePanelId}
+          />
         ) : null}
       </div>
       <div className="tabbed-product-showcase-panels">
-        {childArray.map((child, index) => (
+        {panels.map((panel, index) => (
           <div
             aria-labelledby={`${sectionId}-tab-${index}`}
             className={`tabbed-product-showcase-panel${activeIndex === index ? " is-active" : ""}`}
@@ -129,7 +70,7 @@ export function TabbedProductTabs({
             key={tabs[index]?.panelId ?? index}
             role="tabpanel"
           >
-            {child}
+            {panel}
           </div>
         ))}
       </div>

@@ -11662,11 +11662,15 @@ textarea {
 }
 
 /* Homepage product section density */
-.general-homepage .general-product-listing-grid,
-.general-homepage .tabbed-product-carousel .general-product-listing-grid,
 .fashion-homepage .fashion-product-grid,
 .beauty-homepage .beauty-product-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* General Default homepage rows all show the same count as their sliders. */
+.general-homepage .general-product-listing-grid,
+.general-homepage .tabbed-product-carousel .general-product-listing-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .electronics-homepage .electronics-product-grid {

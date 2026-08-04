@@ -62,15 +62,7 @@ export function TabbedProductSection({
         <TabbedProductTabs
           arrowsVisible={section.arrowsVisible}
           defaultActiveTab={section.defaultActiveTab}
-          scrollAmount={section.scrollAmount}
-          sectionId={sectionId}
-          sliderEnabled={section.sliderEnabled}
-          tabs={enabledTabs.map((tab, index) => ({
-            label: tab.label,
-            panelId: `${sectionId}-panel-${index}`
-          }))}
-        >
-          {enabledTabs.map((tab, index) => {
+          panels={enabledTabs.map((tab, index) => {
             const products = resolveProducts(productsBySource, tab.source).slice(0, tab.productCount || section.productsPerTab);
             const panelSection = {
               ...baseProductSection,
@@ -89,7 +81,14 @@ export function TabbedProductSection({
               </ProductCarousel>
             );
           })}
-        </TabbedProductTabs>
+          scrollAmount={section.scrollAmount}
+          sectionId={sectionId}
+          sliderEnabled={section.sliderEnabled}
+          tabs={enabledTabs.map((tab, index) => ({
+            label: tab.label,
+            panelId: `${sectionId}-panel-${index}`
+          }))}
+        />
       </div>
     </section>
   );

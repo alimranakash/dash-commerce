@@ -114,22 +114,34 @@ function uniqueProducts(products: StorefrontProduct[]) {
   });
 }
 
-function homepageProductSection(section: StorefrontProductSectionSettings): StorefrontProductSectionSettings {
-  const columns = 5 as const;
+// Every product row on this homepage is a slider showing the same number of
+// cards per view, so the arrows behave identically from section to section.
+const HOMEPAGE_PRODUCTS_PER_VIEW = 5 as const;
 
+function homepageProductSection(section: StorefrontProductSectionSettings): StorefrontProductSectionSettings {
   return {
     ...section,
-    columns,
+    columns: HOMEPAGE_PRODUCTS_PER_VIEW,
     // A slider row must render more cards than fit in one viewport, otherwise
     // there is nothing to scroll and the prev/next arrows stay disabled.
-    count: Math.max(section.count, section.mode === "slider" ? columns * 2 : columns)
+    count: Math.max(section.count, HOMEPAGE_PRODUCTS_PER_VIEW * 2),
+    mode: "slider"
   };
 }
 
 function homepageTabbedSection(section: StorefrontTabbedProductShowcaseSettings): StorefrontTabbedProductShowcaseSettings {
+  const productsPerTab = Math.max(section.productsPerTab, HOMEPAGE_PRODUCTS_PER_VIEW * 2);
+
   return {
     ...section,
-    productsPerTab: Math.max(section.productsPerTab, 5),
-    productsPerView: 5 as const
+    productsPerTab,
+    productsPerView: HOMEPAGE_PRODUCTS_PER_VIEW,
+    sliderEnabled: true,
+    // Each tab carries its own count that wins over productsPerTab, so it needs
+    // the same floor or the panel renders exactly one viewport and cannot slide.
+    tabs: section.tabs.map((tab) => ({
+      ...tab,
+      productCount: Math.max(tab.productCount, productsPerTab)
+    }))
   };
 }

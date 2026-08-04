@@ -49,7 +49,8 @@ const demoProducts = [
   { badge: "New", image: "HP", price: 59, title: "Wireless Headphones" },
   { badge: "Hot", image: "SW", price: 129, title: "Smart Watch" },
   { badge: "Daily", image: "BG", price: 49, title: "Minimal Backpack" },
-  { badge: "Deal", image: "CM", price: 89, title: "Coffee Maker" }
+  { badge: "Deal", image: "CM", price: 89, title: "Coffee Maker" },
+  { badge: "Top", image: "DS", price: 39, title: "Desk Speaker" }
 ];
 
 const collectionCards = [
@@ -213,7 +214,7 @@ export function GeneralProductSection({
         ctaHref={`/s/${storeSlug}${section.ctaLink.startsWith("/") ? section.ctaLink : `/${section.ctaLink}`}`}
         ctaText={section.ctaText}
         id={`${section.source}-products-title`}
-        sliderTargetId={gridId}
+        sliderTargetId={section.mode === "slider" ? gridId : undefined}
         subtitle={section.subtitle}
         title={section.title}
       />
