@@ -1,41 +1,55 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type ProductSectionSliderControlsProps = {
   targetId: string;
 };
 
 export function ProductSectionSliderControls({ targetId }: ProductSectionSliderControlsProps) {
+  const targetRef = useRef<HTMLElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
   useEffect(() => {
     const target = document.getElementById(targetId);
+    targetRef.current = target;
 
     if (!target) {
       return;
     }
 
     const update = () => {
-      const hasOverflow = target.scrollWidth > target.clientWidth + 1;
-      setCanScrollLeft(hasOverflow && target.scrollLeft > 0);
-      setCanScrollRight(hasOverflow && target.scrollLeft + target.clientWidth < target.scrollWidth - 1);
+      const maxScroll = target.scrollWidth - target.clientWidth;
+      const hasOverflow = maxScroll > 1;
+      setCanScrollLeft(hasOverflow && target.scrollLeft > 1);
+      setCanScrollRight(hasOverflow && target.scrollLeft < maxScroll - 1);
     };
 
     update();
     target.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
+
+    // The row can change size without a window resize (image/font settling,
+    // container queries, a hidden panel becoming visible), so observe it too.
+    const observer = new ResizeObserver(update);
+    observer.observe(target);
+
+    const firstCard = target.firstElementChild;
+
+    if (firstCard) {
+      observer.observe(firstCard);
+    }
 
     return () => {
       target.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
+      observer.disconnect();
+      targetRef.current = null;
     };
   }, [targetId]);
 
-  const scroll = (direction: "left" | "right") => {
-    const target = document.getElementById(targetId);
+  const scroll = (direction: -1 | 1) => {
+    const target = targetRef.current ?? document.getElementById(targetId);
 
     if (!target) {
       return;
@@ -43,7 +57,7 @@ export function ProductSectionSliderControls({ targetId }: ProductSectionSliderC
 
     target.scrollBy({
       behavior: "smooth",
-      left: direction === "left" ? -target.clientWidth * 0.85 : target.clientWidth * 0.85
+      left: direction * scrollStep(target)
     });
   };
 
@@ -53,7 +67,7 @@ export function ProductSectionSliderControls({ targetId }: ProductSectionSliderC
       <button
         aria-label="Scroll products left"
         disabled={!canScrollLeft}
-        onClick={() => scroll("left")}
+        onClick={() => scroll(-1)}
         type="button"
       >
         <ChevronLeft className="h-4 w-4" />
@@ -61,11 +75,28 @@ export function ProductSectionSliderControls({ targetId }: ProductSectionSliderC
       <button
         aria-label="Scroll products right"
         disabled={!canScrollRight}
-        onClick={() => scroll("right")}
+        onClick={() => scroll(1)}
         type="button"
       >
         <ChevronRight className="h-4 w-4" />
       </button>
     </div>
   );
+}
+
+// One step is a full viewport rounded down to whole cards, so the row always
+// lands on a card boundary instead of halfway through one.
+function scrollStep(target: HTMLElement) {
+  const card = target.firstElementChild;
+  const cardWidth = card ? card.getBoundingClientRect().width : 0;
+
+  if (cardWidth <= 0) {
+    return target.clientWidth * 0.85;
+  }
+
+  const gap = Number.parseFloat(window.getComputedStyle(target).columnGap) || 0;
+  const stride = cardWidth + gap;
+  const perView = Math.max(1, Math.floor((target.clientWidth + gap) / stride));
+
+  return stride * perView;
 }

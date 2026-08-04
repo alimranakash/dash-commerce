@@ -115,10 +115,14 @@ function uniqueProducts(products: StorefrontProduct[]) {
 }
 
 function homepageProductSection(section: StorefrontProductSectionSettings): StorefrontProductSectionSettings {
+  const columns = 5 as const;
+
   return {
     ...section,
-    columns: 5 as const,
-    count: Math.max(section.count, 5)
+    columns,
+    // A slider row must render more cards than fit in one viewport, otherwise
+    // there is nothing to scroll and the prev/next arrows stay disabled.
+    count: Math.max(section.count, section.mode === "slider" ? columns * 2 : columns)
   };
 }
 
