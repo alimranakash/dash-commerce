@@ -45,7 +45,7 @@ export function FashionNewArrivals({
     : `/s/${storeSlug}/products`;
 
   return (
-    <section className={styles.section} aria-labelledby="fashion-new-arrivals-title">
+    <section className={styles.section} id="fashion-new-collection" aria-labelledby="fashion-new-arrivals-title">
       <header className={styles.header}>
         <div className={styles.intro}>
           <h2 id="fashion-new-arrivals-title">{title}</h2>

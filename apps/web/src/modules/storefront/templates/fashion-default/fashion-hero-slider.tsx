@@ -37,9 +37,7 @@ export function FashionHeroSlider({
     "--fashion-hero-overlay-opacity": String((hero.overlayOpacity || 28) / 100),
     "--fashion-hero-text": hero.textColor || "#ffffff"
   } as CSSProperties;
-  const primaryButtonText = hero.button1Text && hero.button1Text !== "Shop Now"
-    ? hero.button1Text
-    : "SHOP SWIMWEAR";
+  const primaryButtonText = hero.button1Text || "Shop Now";
 
   useEffect(() => {
     if (!isSlider || !hero.autoplay) {
@@ -160,14 +158,14 @@ function resolveSlides(
         subtitle: slide.subtitle || fallbackSubtitle,
         title: slide.title || fallbackTitle,
         url: slide.url.includes("/demo-assets/general/hero/")
-          ? configuredImageUrl || fallbackImageUrl || "/demo-assets/fashion/hero/hero-01.webp"
+          ? configuredImageUrl || fallbackImageUrl || ""
           : slide.url
       }))
       : [{
         mediaType: "image",
         subtitle: fallbackSubtitle,
         title: fallbackTitle,
-        url: configuredImageUrl || fallbackImageUrl || "/demo-assets/fashion/hero/hero-01.webp"
+        url: configuredImageUrl || fallbackImageUrl || ""
       }];
   }
 
@@ -175,7 +173,7 @@ function resolveSlides(
     mediaType: "image",
     subtitle: fallbackSubtitle,
     title: fallbackTitle,
-    url: configuredImageUrl || fallbackImageUrl || "/demo-assets/fashion/hero/hero-01.webp"
+    url: configuredImageUrl || fallbackImageUrl || ""
   }];
 }
 

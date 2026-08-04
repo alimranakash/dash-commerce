@@ -4544,6 +4544,28 @@ textarea {
   color: #111111;
 }
 
+.sf-page:not(:has(.fashion-hero)) .fashion-header-shell,
+.sf-page:not(:has(.fashion-hero)) .fashion-header-shell:not(.fashion-header-shell-has-announcement) {
+  height: auto;
+}
+
+.sf-page:not(:has(.fashion-hero)) .fashion-header {
+  background: #ffffff;
+  border-bottom-color: rgba(17, 17, 17, 0.08);
+  color: #111111;
+  position: static;
+  top: auto;
+}
+
+.sf-page:not(:has(.fashion-hero))
+  .fashion-header-shell-overlay
+  .fashion-header-actions
+  .sf-cart-icon-action
+  span {
+  background: currentColor;
+  color: #ffffff;
+}
+
 .fashion-header-nav,
 .fashion-header-actions {
   align-items: center;
@@ -5158,6 +5180,10 @@ textarea {
   padding-inline: clamp(20px, 2.6vw, 50px);
 }
 
+.fashion-homepage [id] {
+  scroll-margin-top: 140px;
+}
+
 .fashion-section-heading {
   align-items: end;
   display: flex;
@@ -5539,6 +5565,7 @@ textarea {
   color: var(--electronics-ink);
   display: grid;
   gap: clamp(36px, 5vw, 72px);
+  grid-template-columns: minmax(0, 1fr);
   overflow-x: clip;
   padding: 0 0 72px;
 }
@@ -5557,6 +5584,7 @@ textarea {
 .electronics-section-inner {
   display: grid;
   gap: 22px;
+  grid-template-columns: minmax(0, 1fr);
   margin-inline: auto;
   max-width: 1820px;
   padding-inline: 50px;

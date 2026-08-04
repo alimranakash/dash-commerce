@@ -292,7 +292,7 @@ export function FashionFeaturedLook({
   title?: string | null | undefined;
 }) {
   return (
-    <section className={editorialStyles.lookbook} aria-labelledby="fashion-lookbook-title">
+    <section className={editorialStyles.lookbook} id="fashion-featured-look" aria-labelledby="fashion-lookbook-title">
       <div className={editorialStyles.lookbookMedia}>
         <StorefrontImage alt="" fallback="Featured look" src={imageUrl} />
       </div>

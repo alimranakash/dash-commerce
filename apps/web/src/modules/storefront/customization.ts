@@ -505,11 +505,11 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     flashDealEyebrow: "Flash Deals",
     flashDealTitle: "Limited-time tech offers",
     footerCollectionLinks: [
-      { label: "Headphones", url: "/products?search=headphones" },
-      { label: "Smartwatches", url: "/products?search=smartwatch" },
-      { label: "Speakers", url: "/products?search=speakers" },
-      { label: "Desk lamps", url: "/products?search=desk%20lamp" },
-      { label: "Power banks", url: "/products?search=power%20bank" }
+      { label: "Headphones", url: "/search?q=headphones" },
+      { label: "Smartwatches", url: "/search?q=smartwatch" },
+      { label: "Speakers", url: "/search?q=speakers" },
+      { label: "Desk lamps", url: "/search?q=desk%20lamp" },
+      { label: "Power banks", url: "/search?q=power%20bank" }
     ],
     footerInformationLinks: [
       { label: "FAQs", url: "#faqs" },
@@ -539,7 +539,7 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
       {
         backgroundColor: "#ecefdb",
         badge: "Smart Watches",
-        ctaLink: "/products?search=watch",
+        ctaLink: "/search?q=watch",
         ctaText: "Shop now",
         description: "",
         imageUrl: "",
@@ -553,7 +553,7 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
       {
         backgroundColor: "#373e66",
         badge: "45% OFF",
-        ctaLink: "/products?search=electric%20cooker",
+        ctaLink: "/search?q=electric%20cooker",
         ctaText: "Shop now",
         description: "Let technology do the cooking - now 45% off!",
         imageUrl: "",
@@ -562,7 +562,7 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
       {
         backgroundColor: "#a9c2e2",
         badge: "35% OFF",
-        ctaLink: "/products?search=coffee",
+        ctaLink: "/search?q=coffee",
         ctaText: "Shop now",
         description: "Experience bold flavor - 35% off today!",
         imageUrl: "",
@@ -571,7 +571,7 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
       {
         backgroundColor: "#e7edff",
         badge: "",
-        ctaLink: "/products?search=display",
+        ctaLink: "/search?q=display",
         ctaText: "Shop now",
         description: "",
         imageUrl: "",
@@ -580,7 +580,7 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
       {
         backgroundColor: "#d6edf5",
         badge: "",
-        ctaLink: "/products?search=air%20fryer",
+        ctaLink: "/search?q=air%20fryer",
         ctaText: "Shop now",
         description: "",
         imageUrl: "",
@@ -589,7 +589,7 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
       {
         backgroundColor: "#131b5b",
         badge: "",
-        ctaLink: "/products?search=humidifier",
+        ctaLink: "/search?q=humidifier",
         ctaText: "Shop now",
         description: "Breathe easier and sleep better with cleaner, fresher air.",
         imageUrl: "",

@@ -143,7 +143,7 @@ export function ElectronicsHero({
             badge={watchCard?.badge || "Smart Watches"}
             className={styles.watchCard}
             fallback="Watch"
-            href={resolveStorefrontHref(homeHref, watchCard?.ctaLink || "/products?search=watch")}
+            href={resolveStorefrontHref(homeHref, watchCard?.ctaLink || "/search?q=watch")}
             imageUrl={watchCard?.imageUrl || watchImage}
             title={watchCard?.title || "Smart features, long battery life"}
           />
@@ -199,7 +199,7 @@ export function ElectronicsCategoryGrid({
     }))
     : fallbackCategories.map((category, index) => ({
       fallback: category.icon,
-      href: `/s/${storeSlug}/products?search=${encodeURIComponent(category.name)}`,
+      href: `/s/${storeSlug}/search?q=${encodeURIComponent(category.name)}`,
       imageUrl: products[index]?.images[0]?.url ?? null,
       label: category.name
     }));
@@ -216,7 +216,7 @@ export function ElectronicsBrandGrid({
 }) {
   const items = brandCards.map((brand, index) => ({
     fallback: brand.slice(0, 2).toUpperCase(),
-    href: `/s/${storeSlug}/products?search=${encodeURIComponent(brand)}`,
+    href: `/s/${storeSlug}/search?q=${encodeURIComponent(brand)}`,
     imageUrl: products[index]?.images[0]?.url ?? null,
     label: brand
   }));
@@ -372,7 +372,7 @@ export function ElectronicsTechnologyBanner({
       backgroundColor: "#373e66",
       badge: "45% OFF",
       className: "electronics-promo-card-cooker",
-      ctaLink: "/products?search=electric%20cooker",
+      ctaLink: "/search?q=electric%20cooker",
       ctaText: "Shop now",
       description: "Let technology do the cooking - now 45% off!",
       fallback: "EC",
@@ -383,7 +383,7 @@ export function ElectronicsTechnologyBanner({
       backgroundColor: "#a9c2e2",
       badge: "35% OFF",
       className: "electronics-promo-card-coffee",
-      ctaLink: "/products?search=coffee",
+      ctaLink: "/search?q=coffee",
       ctaText: "Shop now",
       description: "Experience bold flavor - 35% off today!",
       fallback: "CM",
@@ -394,7 +394,7 @@ export function ElectronicsTechnologyBanner({
       backgroundColor: "#e7edff",
       badge: "",
       className: "electronics-promo-card-display",
-      ctaLink: "/products?search=display",
+      ctaLink: "/search?q=display",
       ctaText: "Shop now",
       description: "",
       fallback: "TV",
@@ -405,7 +405,7 @@ export function ElectronicsTechnologyBanner({
       backgroundColor: "#d6edf5",
       badge: "",
       className: "electronics-promo-card-fryer",
-      ctaLink: "/products?search=air%20fryer",
+      ctaLink: "/search?q=air%20fryer",
       ctaText: "Shop now",
       description: "",
       fallback: "AF",
@@ -416,7 +416,7 @@ export function ElectronicsTechnologyBanner({
       backgroundColor: "#131b5b",
       badge: "",
       className: "electronics-promo-card-humidifier",
-      ctaLink: "/products?search=humidifier",
+      ctaLink: "/search?q=humidifier",
       ctaText: "Shop now",
       description: "Breathe easier and sleep better with cleaner, fresher air.",
       fallback: "HU",

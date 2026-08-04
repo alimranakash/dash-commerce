@@ -181,8 +181,12 @@ function isDefaultMenu(items: StorefrontAdvancedSettings["header"]["menuItems"])
 }
 
 function resolveStorefrontHref(homeHref: string, url: string) {
-  if (url.startsWith("http") || url.startsWith("mailto:") || url.startsWith("tel:") || url.startsWith("#")) {
+  if (url.startsWith("http") || url.startsWith("mailto:") || url.startsWith("tel:")) {
     return url;
+  }
+
+  if (url.startsWith("#")) {
+    return `${homeHref}${url}`;
   }
 
   if (url === homeHref || url.startsWith(`${homeHref}/`)) {

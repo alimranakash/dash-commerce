@@ -44,7 +44,7 @@ const electronicsMenuItems = [
   { label: "Laptops", url: "/categories/laptops" },
   { label: "Headphones", url: "/categories/audio" },
   { label: "Speakers", url: "/categories/audio" },
-  { label: "Smart Watches", url: "/products?search=watch" },
+  { label: "Smart Watches", url: "/search?q=watch" },
   { label: "Gaming", url: "/categories/gaming" }
 ];
 
