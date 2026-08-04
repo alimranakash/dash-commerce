@@ -146,7 +146,7 @@ export function BeautyProductGrid({
   products: StorefrontProduct[];
   storeSlug: string;
 }) {
-  const items = products.length > 0 ? products.slice(0, 5) : fallbackProducts;
+  const items = products.length > 0 ? products.slice(0, 4) : fallbackProducts.slice(0, 4);
 
   return (
     <div className="beauty-product-grid">

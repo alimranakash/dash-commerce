@@ -6623,8 +6623,8 @@ textarea {
 }
 
 .beauty-hero h1 {
-  font-size: clamp(3.3rem, 7vw, 7.6rem);
-  max-width: 760px;
+  font-size: clamp(2.6rem, 4.6vw, 5rem);
+  max-width: 100%;
 }
 
 .beauty-hero-copy > span {
@@ -6816,6 +6816,7 @@ textarea {
   border-radius: 28px;
   box-shadow: 0 18px 54px rgba(190, 24, 93, 0.07);
   display: grid;
+  grid-template-rows: auto 1fr;
   overflow: hidden;
   text-decoration: none;
   transition:
@@ -6832,6 +6833,8 @@ textarea {
   color: var(--beauty-muted);
   display: grid;
   font-weight: 900;
+  min-height: 0;
+  overflow: hidden;
   place-items: center;
   position: relative;
   text-decoration: none;
@@ -6862,9 +6865,14 @@ textarea {
 }
 
 .beauty-product-card-body {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
   padding: 18px;
+}
+
+.beauty-product-card-body form {
+  margin-top: auto;
 }
 
 .beauty-product-card-body p {
@@ -6919,13 +6927,14 @@ textarea {
 .beauty-collection-card {
   align-content: end;
   background:
-    linear-gradient(180deg, transparent 24%, rgba(45, 23, 33, 0.72)),
+    linear-gradient(180deg, transparent 22%, rgba(45, 23, 33, 0.45) 58%, rgba(45, 23, 33, 0.86) 100%),
     radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.66), transparent 26%),
     linear-gradient(135deg, #fce7f3, #fff8f2);
   border: 1px solid var(--beauty-border);
   border-radius: 32px;
   color: #ffffff;
   display: grid;
+  gap: 10px;
   min-height: 360px;
   overflow: hidden;
   padding: 28px;
@@ -6943,10 +6952,10 @@ textarea {
 .beauty-collection-card div {
   background: rgba(255, 255, 255, 0.42);
   border-radius: 999px 999px 80px 80px;
-  height: 58%;
+  height: 42%;
   position: absolute;
   right: 12%;
-  top: 10%;
+  top: 8%;
   width: 36%;
 }
 
@@ -6990,9 +6999,14 @@ textarea {
 }
 
 .beauty-guide {
+  align-items: start;
   display: grid;
   gap: 34px;
   grid-template-columns: 0.8fr 1.2fr;
+}
+
+.beauty-guide h2 {
+  font-size: clamp(1.7rem, 2.7vw, 3rem);
 }
 
 .beauty-guide > div:last-child {
