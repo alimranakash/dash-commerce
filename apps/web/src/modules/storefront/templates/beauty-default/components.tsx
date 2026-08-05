@@ -1,8 +1,20 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ProductPrice } from "../../components/product-card";
+import {
+  ProductGrid,
+  ProductImage,
+  ProductPrice as ListingProductPrice,
+  SectionHeader
+} from "../../components/product-listing";
 import { StorefrontImage } from "../../components/storefront-image";
+import {
+  DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
+  type StorefrontAdvancedSettings,
+  type StorefrontProductSectionSettings
+} from "../../customization";
 import type { StorefrontProduct } from "../../storefront.types";
+import { FashionHeroSlider } from "../fashion-default/fashion-hero-slider";
 
 type BeautySectionProps = {
   actionHref?: string;
@@ -78,36 +90,42 @@ export function BeautySection({
   );
 }
 
+// Beauty Default reuses the Fashion Default hero slider so both templates share the
+// same full-bleed media/overlay/dots implementation. The eyebrow slot is a short
+// label by design — the long `heroSubtitle` paragraph has no place in this layout.
+const beautyHeroEyebrow = "BEAUTY ESSENTIALS";
+const beautyHeroTitle = "Soft rituals for\nradiant everyday beauty";
+
 export function BeautyHero({
+  advancedSettings,
+  heroImageUrl,
   storeName,
   storeSlug,
-  subtitle,
   title
 }: {
+  advancedSettings?: StorefrontAdvancedSettings | null | undefined;
+  heroImageUrl?: string | null | undefined;
   storeName: string;
   storeSlug: string;
-  subtitle?: string | null;
   title?: string | null;
 }) {
+  void storeName;
+
+  const heroSubtitle = advancedSettings?.hero.subtitle;
+  // The shipped default is a general-store sentence; only a seller-authored value
+  // belongs in the eyebrow, otherwise beauty falls back to its own short label.
+  const eyebrow = heroSubtitle && heroSubtitle !== DEFAULT_STOREFRONT_ADVANCED_SETTINGS.hero.subtitle
+    ? heroSubtitle
+    : beautyHeroEyebrow;
+
   return (
-    <section className="beauty-hero" aria-labelledby="beauty-hero-title">
-      <div className="beauty-hero-copy">
-        <div className="beauty-hero-badges">
-          <span>New Collection</span>
-          <span>Best Sellers</span>
-          <span>Limited Edition</span>
-        </div>
-        <p>{storeName}</p>
-        <h1 id="beauty-hero-title">{title || "Soft rituals for radiant everyday beauty"}</h1>
-        <span>{subtitle || "Discover skincare, makeup, fragrance, and body care curated for a more luminous routine."}</span>
-        <Link href={`/s/${storeSlug}/products`}>Shop Beauty</Link>
-      </div>
-      <div className="beauty-hero-visual" aria-hidden="true">
-        <div className="beauty-hero-bottle tall" />
-        <div className="beauty-hero-bottle round" />
-        <div className="beauty-hero-flower" />
-      </div>
-    </section>
+    <FashionHeroSlider
+      fallbackImageUrl={heroImageUrl}
+      settings={advancedSettings}
+      storeSlug={storeSlug}
+      subtitle={eyebrow}
+      title={title || beautyHeroTitle}
+    />
   );
 }
 
@@ -137,38 +155,80 @@ export function BeautyCategoryGrid({
   );
 }
 
-export function BeautyProductGrid({
+// The homepage product rows are the General Default rows: same shared `SectionHeader`
+// (title / subtitle / CTA / slider arrows) above the same `ProductGrid`, so the cards,
+// the 5-per-view sizing, and the arrow behaviour are identical across both templates.
+export function BeautyProductSection({
   currency,
+  id,
   products,
+  section,
   storeSlug
 }: {
   currency: string;
+  id: string;
   products: StorefrontProduct[];
+  section: StorefrontProductSectionSettings;
   storeSlug: string;
 }) {
-  const items = products.length > 0 ? products.slice(0, 4) : fallbackProducts.slice(0, 4);
+  const gridId = `${id}-grid`;
 
   return (
-    <div className="beauty-product-grid">
-      {items.map((product, index) => {
-        if ("id" in product) {
-          return <BeautyProductCard currency={currency} key={product.id} product={product} storeSlug={storeSlug} />;
-        }
+    <section className="general-home-section general-product-section" id={id} aria-labelledby={`${id}-title`}>
+      <SectionHeader
+        ctaHref={`/s/${storeSlug}${section.ctaLink.startsWith("/") ? section.ctaLink : `/${section.ctaLink}`}`}
+        ctaText={section.ctaText}
+        id={`${id}-title`}
+        sliderTargetId={section.mode === "slider" ? gridId : undefined}
+        subtitle={section.subtitle}
+        title={section.title}
+      />
+      <BeautyProductGrid
+        currency={currency}
+        gridId={gridId}
+        products={products}
+        section={section}
+        storeSlug={storeSlug}
+      />
+    </section>
+  );
+}
 
-        return (
-          <Link className="beauty-product-card beauty-product-card-demo" href={`/s/${storeSlug}/products`} key={`${product.title}-${index}`}>
-            <div className="beauty-product-card-media">
-              <span>{product.label}</span>
-            </div>
-            <div className="beauty-product-card-body">
-              <p>{product.brand}</p>
+export function BeautyProductGrid({
+  currency,
+  gridId,
+  products,
+  section,
+  storeSlug
+}: {
+  currency: string;
+  gridId?: string;
+  products: StorefrontProduct[];
+  section: StorefrontProductSectionSettings;
+  storeSlug: string;
+}) {
+  if (products.length > 0) {
+    return <ProductGrid currency={currency} gridId={gridId} products={products} section={section} storeSlug={storeSlug} />;
+  }
+
+  return (
+    <div id={gridId} className={`general-product-listing-grid general-product-listing-grid-${section.columns} general-product-listing-${section.mode}`}>
+      {fallbackProducts.slice(0, section.count).map((product, index) => (
+        <Link className="general-product-listing-card" href={`/s/${storeSlug}/products`} key={`${product.title}-${index}`}>
+          <ProductImage alt={product.title} fallback={product.label} />
+          <div className="general-product-listing-meta">
+            <div>
               <h3>{product.title}</h3>
-              <small>4.9 rating - All skin types</small>
-              <ProductPrice currency={currency} price={String(product.price)} />
+              <ListingProductPrice currency={currency} price={String(product.price)} />
             </div>
-          </Link>
-        );
-      })}
+            {section.enableBadges ? (
+              <div className="general-product-listing-flags">
+                <em className="general-product-listing-badge">{product.brand.toUpperCase()}</em>
+              </div>
+            ) : null}
+          </div>
+        </Link>
+      ))}
     </div>
   );
 }

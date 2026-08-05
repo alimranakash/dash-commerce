@@ -1,5 +1,6 @@
 import type { StorefrontStore } from "../storefront.types";
 import { getCart } from "../../cart/cart.service";
+import { BeautyStorefrontHeader } from "../templates/beauty-default/beauty-header";
 import { ElectronicsStorefrontHeader } from "../templates/electronics-default/electronics-header";
 import { getElectronicsHeaderData } from "../templates/electronics-default/electronics-header-data";
 import { FashionStorefrontHeader } from "../templates/fashion-default/fashion-header";
@@ -31,6 +32,21 @@ export async function StorefrontHeader({ store }: StorefrontHeaderProps) {
         storeName={store.name}
         storeSlug={store.slug}
         templateId={store.activeTemplate}
+      />
+    );
+  }
+
+  if (store.activeTemplate === "beauty-default") {
+    return (
+      <BeautyStorefrontHeader
+        announcementText={settings.announcementText}
+        advancedSettings={settings.advancedSettings}
+        cart={cart}
+        currency={store.currency}
+        logoUrl={settings.logoUrl}
+        storeId={store.id}
+        storeName={store.name}
+        storeSlug={store.slug}
       />
     );
   }

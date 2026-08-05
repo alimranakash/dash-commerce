@@ -5189,7 +5189,9 @@ textarea {
   padding-inline: clamp(20px, 2.6vw, 50px);
 }
 
-.fashion-homepage [id] {
+/* Both templates share the fixed header, so anchors need the same clearance. */
+.fashion-homepage [id],
+.beauty-homepage [id] {
   scroll-margin-top: 140px;
 }
 
@@ -6570,10 +6572,10 @@ textarea {
   display: grid;
   gap: clamp(54px, 7vw, 104px);
   overflow: hidden;
-  padding: 18px 0 clamp(60px, 8vw, 112px);
+  /* No top padding: the shared header overlays the full-bleed hero. */
+  padding: 0 0 clamp(60px, 8vw, 112px);
 }
 
-.beauty-hero,
 .beauty-home-section,
 .beauty-guide,
 .beauty-reviews,
@@ -6584,58 +6586,6 @@ textarea {
   width: calc(100% - 48px);
 }
 
-.beauty-hero {
-  align-items: center;
-  background:
-    radial-gradient(circle at 76% 24%, rgba(255, 255, 255, 0.7), transparent 30%),
-    linear-gradient(135deg, #fff8f2 0%, #ffe8f1 54%, #f8d6e8 100%);
-  border: 1px solid var(--beauty-border);
-  border-radius: 38px;
-  box-shadow: 0 32px 90px rgba(190, 24, 93, 0.12);
-  display: grid;
-  gap: clamp(28px, 5vw, 72px);
-  grid-template-columns: minmax(0, 0.94fr) minmax(360px, 1.06fr);
-  min-height: clamp(580px, 76vh, 760px);
-  overflow: hidden;
-  padding: clamp(34px, 6vw, 78px);
-  position: relative;
-}
-
-.beauty-hero::before {
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.4), transparent),
-    repeating-linear-gradient(90deg, rgba(190, 24, 93, 0.055) 0 1px, transparent 1px 88px);
-  content: "";
-  inset: 0;
-  pointer-events: none;
-  position: absolute;
-}
-
-.beauty-hero-copy {
-  display: grid;
-  gap: 22px;
-  position: relative;
-  z-index: 1;
-}
-
-.beauty-hero-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.beauty-hero-badges span {
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(190, 24, 93, 0.14);
-  border-radius: 999px;
-  color: var(--beauty-rose);
-  font-size: 0.72rem;
-  font-weight: 900;
-  padding: 8px 12px;
-  text-transform: uppercase;
-}
-
-.beauty-hero-copy > p,
 .beauty-section-heading p,
 .beauty-guide > div:first-child p,
 .beauty-story p,
@@ -6648,7 +6598,6 @@ textarea {
   text-transform: uppercase;
 }
 
-.beauty-hero h1,
 .beauty-section-heading h2,
 .beauty-guide h2,
 .beauty-reviews h2,
@@ -6659,19 +6608,6 @@ textarea {
   margin: 0;
 }
 
-.beauty-hero h1 {
-  font-size: clamp(2.6rem, 4.6vw, 5rem);
-  max-width: 100%;
-}
-
-.beauty-hero-copy > span {
-  color: var(--beauty-muted);
-  font-size: clamp(1rem, 1.45vw, 1.22rem);
-  line-height: 1.8;
-  max-width: 560px;
-}
-
-.beauty-hero-copy > a,
 .beauty-story a,
 .beauty-newsletter button {
   align-items: center;
@@ -6689,69 +6625,9 @@ textarea {
   width: fit-content;
 }
 
-.beauty-hero-copy > a:hover,
 .beauty-story a:hover,
 .beauty-newsletter button:hover {
   background: var(--beauty-rose);
-}
-
-.beauty-hero-visual {
-  align-items: end;
-  display: flex;
-  justify-content: center;
-  min-height: 460px;
-  position: relative;
-  z-index: 1;
-}
-
-.beauty-hero-bottle {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(252, 231, 243, 0.95)),
-    #ffffff;
-  border: 1px solid rgba(190, 24, 93, 0.16);
-  box-shadow: 0 30px 70px rgba(190, 24, 93, 0.16);
-  position: absolute;
-}
-
-.beauty-hero-bottle.tall {
-  border-radius: 42px 42px 22px 22px;
-  height: min(76%, 420px);
-  width: min(34vw, 250px);
-}
-
-.beauty-hero-bottle.tall::before {
-  background: var(--beauty-rose);
-  border-radius: 999px 999px 0 0;
-  content: "";
-  height: 60px;
-  left: 50%;
-  position: absolute;
-  top: -54px;
-  transform: translateX(-50%);
-  width: 70px;
-}
-
-.beauty-hero-bottle.round {
-  border-radius: 999px 999px 40px 40px;
-  height: 260px;
-  right: 4%;
-  transform: rotate(7deg);
-  width: 190px;
-}
-
-.beauty-hero-flower {
-  background:
-    radial-gradient(circle at center, #be185d 0 7px, transparent 8px),
-    radial-gradient(circle at 22% 42%, #fff 0 24px, transparent 25px),
-    radial-gradient(circle at 48% 18%, #fff 0 28px, transparent 29px),
-    radial-gradient(circle at 74% 42%, #fff 0 24px, transparent 25px),
-    radial-gradient(circle at 48% 72%, #fff 0 30px, transparent 31px);
-  height: 170px;
-  left: 2%;
-  opacity: 0.88;
-  position: absolute;
-  top: 10%;
-  width: 170px;
 }
 
 .beauty-section-heading {
@@ -6839,12 +6715,6 @@ textarea {
   font-size: clamp(1.25rem, 2vw, 2rem);
   position: relative;
   z-index: 1;
-}
-
-.beauty-product-grid {
-  display: grid;
-  gap: 22px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .beauty-product-card {
@@ -10828,7 +10698,6 @@ textarea {
   .electronics-flash-deals,
   .electronics-promo-deals,
   .electronics-newsletter,
-  .beauty-hero,
   .beauty-guide,
   .beauty-reviews,
   .beauty-story,
@@ -10983,7 +10852,6 @@ textarea {
     gap: 54px;
   }
 
-  .beauty-hero,
   .beauty-home-section,
   .beauty-guide,
   .beauty-reviews,
@@ -10992,18 +10860,9 @@ textarea {
     width: calc(100% - 32px);
   }
 
-  .beauty-hero,
   .beauty-guide,
   .beauty-story {
     grid-template-columns: 1fr;
-  }
-
-  .beauty-hero {
-    min-height: auto;
-  }
-
-  .beauty-hero-visual {
-    min-height: 340px;
   }
 
   .beauty-section-heading {
@@ -11011,7 +10870,6 @@ textarea {
   }
 
   .beauty-category-grid,
-  .beauty-product-grid,
   .beauty-collection-grid,
   .beauty-concern-grid,
   .beauty-reviews > div:last-child {
@@ -11472,24 +11330,7 @@ textarea {
     width: 160px;
   }
 
-  .beauty-hero {
-    padding: 24px;
-  }
-
-  .beauty-hero h1 {
-    font-size: 3.05rem;
-  }
-
-  .beauty-hero-badges {
-    gap: 8px;
-  }
-
-  .beauty-hero-visual {
-    min-height: 280px;
-  }
-
   .beauty-category-grid,
-  .beauty-product-grid,
   .beauty-collection-grid,
   .beauty-concern-grid,
   .beauty-reviews > div:last-child,
@@ -11671,14 +11512,15 @@ textarea {
 }
 
 /* Homepage product section density */
-.fashion-homepage .fashion-product-grid,
-.beauty-homepage .beauty-product-grid {
+.fashion-homepage .fashion-product-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-/* General Default homepage rows all show the same count as their sliders. */
+/* General Default homepage rows all show the same count as their sliders.
+   Beauty Default reuses the same rows, so it shares the sizing. */
 .general-homepage .general-product-listing-grid,
-.general-homepage .tabbed-product-carousel .general-product-listing-grid {
+.general-homepage .tabbed-product-carousel .general-product-listing-grid,
+.beauty-homepage .general-product-listing-grid {
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
@@ -11687,7 +11529,8 @@ textarea {
 }
 
 .general-homepage .general-product-listing-slider,
-.general-homepage .tabbed-product-carousel .general-product-listing-slider {
+.general-homepage .tabbed-product-carousel .general-product-listing-slider,
+.beauty-homepage .general-product-listing-slider {
   grid-auto-columns: calc((100% - (var(--product-grid-gap) * 4)) / 5);
   grid-template-columns: none;
 }
@@ -11702,7 +11545,7 @@ textarea {
   .general-homepage .general-product-listing-grid,
   .general-homepage .tabbed-product-carousel .general-product-listing-grid,
   .fashion-homepage .fashion-product-grid,
-  .beauty-homepage .beauty-product-grid {
+  .beauty-homepage .general-product-listing-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
@@ -11711,7 +11554,8 @@ textarea {
   }
 
   .general-homepage .general-product-listing-slider,
-  .general-homepage .tabbed-product-carousel .general-product-listing-slider {
+  .general-homepage .tabbed-product-carousel .general-product-listing-slider,
+  .beauty-homepage .general-product-listing-slider {
     grid-auto-columns: calc((100% - (var(--product-grid-gap) * 2)) / 3);
     grid-template-columns: none;
   }
@@ -11721,7 +11565,7 @@ textarea {
   .general-homepage .general-product-listing-grid,
   .general-homepage .tabbed-product-carousel .general-product-listing-grid,
   .fashion-homepage .fashion-product-grid,
-  .beauty-homepage .beauty-product-grid {
+  .beauty-homepage .general-product-listing-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -11730,7 +11574,8 @@ textarea {
   }
 
   .general-homepage .general-product-listing-slider,
-  .general-homepage .tabbed-product-carousel .general-product-listing-slider {
+  .general-homepage .tabbed-product-carousel .general-product-listing-slider,
+  .beauty-homepage .general-product-listing-slider {
     grid-auto-columns: calc((100% - var(--product-grid-gap)) / 2);
     grid-template-columns: none;
   }
@@ -11740,12 +11585,13 @@ textarea {
   .general-homepage .general-product-listing-grid,
   .general-homepage .tabbed-product-carousel .general-product-listing-grid,
   .fashion-homepage .fashion-product-grid,
-  .beauty-homepage .beauty-product-grid {
+  .beauty-homepage .general-product-listing-grid {
     grid-template-columns: 1fr;
   }
 
   .general-homepage .general-product-listing-slider,
-  .general-homepage .tabbed-product-carousel .general-product-listing-slider {
+  .general-homepage .tabbed-product-carousel .general-product-listing-slider,
+  .beauty-homepage .general-product-listing-slider {
     grid-auto-columns: minmax(86%, 1fr);
     grid-template-columns: none;
   }
@@ -11783,6 +11629,30 @@ textarea {
 
 .sf-page[data-storefront-template="general-default"] .general-product-listing-card {
   gap: var(--general-grid-gap);
+}
+
+/* Beauty Default homepage product rows borrow the General Default grid rhythm.
+   Scoped to `.beauty-homepage` so beauty's shop/search listings keep their own. */
+.sf-page[data-storefront-template="beauty-default"] .beauty-homepage {
+  --general-grid-gap: 4px;
+}
+
+.sf-page[data-storefront-template="beauty-default"] .beauty-homepage :is(
+  .general-product-listing-grid,
+  .general-product-listing-slider
+) {
+  --product-grid-gap: var(--general-grid-gap);
+  column-gap: var(--general-grid-gap);
+  gap: var(--general-grid-gap);
+  row-gap: var(--general-grid-gap);
+}
+
+.sf-page[data-storefront-template="beauty-default"] .beauty-homepage .general-product-listing-card {
+  gap: var(--general-grid-gap);
+}
+
+.sf-page[data-storefront-template="beauty-default"] .beauty-homepage .general-product-section-header {
+  margin-bottom: clamp(18px, 2.5vw, 34px);
 }
 
 /* General Default homepage section rhythm */
