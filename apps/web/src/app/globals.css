@@ -874,12 +874,15 @@
 }
 
 .storefront-settings-sidebar {
+  align-self: start;
   background: #ffffff;
   border: 1px solid #ece9fb;
   border-radius: 18px;
   box-shadow: 0 18px 48px rgb(76 50 140 / 0.05);
   display: grid;
   gap: 12px;
+  grid-template-rows: auto minmax(0, 1fr);
+  max-height: calc(100vh - 102px);
   padding: 16px;
   position: sticky;
   top: 86px;
@@ -895,6 +898,9 @@
 .storefront-settings-sidebar nav {
   display: grid;
   gap: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 
 .storefront-settings-sidebar a {
@@ -1115,6 +1121,8 @@
   }
 
   .storefront-settings-sidebar {
+    grid-template-rows: none;
+    max-height: none;
     position: static;
   }
 
@@ -1122,6 +1130,7 @@
     display: flex;
     gap: 8px;
     overflow-x: auto;
+    overflow-y: hidden;
     padding-bottom: 2px;
   }
 
@@ -11834,8 +11843,16 @@ textarea {
 }
 
 /* QA responsive containment */
+/* `clip` (not `hidden`) — `hidden` makes this a scroll container and breaks
+   `position: sticky` on descendants such as .storefront-settings-sidebar. */
 .dash-dashboard {
-  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+/* The storefront settings page owns a sticky sidebar, so no clip/scroll
+   context may sit above it on the ancestor chain. */
+.dash-dashboard:has(.storefront-settings-layout) {
+  overflow-x: visible;
 }
 
 .dash-dashboard .resource-page,
