@@ -287,8 +287,8 @@ export function BeautyCollections({ storeSlug }: { storeSlug: string }) {
       {collectionCards.map((collection) => (
         <Link className="beauty-collection-card" href={`/s/${storeSlug}/products`} key={collection.title}>
           <div aria-hidden="true" />
-          <span>{collection.text}</span>
           <strong>{collection.title}</strong>
+          <span>{collection.text}</span>
         </Link>
       ))}
     </div>
@@ -307,17 +307,39 @@ export function BeautyConcernGrid({ storeSlug }: { storeSlug: string }) {
   );
 }
 
+// Shared heading for the full-width bands, so the eyebrow/title pairing keeps one
+// typographic hierarchy across the guide, reviews, story, and newsletter sections.
+function BeautyBandHeading({
+  align = "start",
+  eyebrow,
+  id,
+  title
+}: {
+  align?: "center" | "start";
+  eyebrow: string;
+  id: string;
+  title: string;
+}) {
+  return (
+    <div className={`beauty-band-heading beauty-band-heading-${align}`}>
+      <p>{eyebrow}</p>
+      <h2 id={id}>{title}</h2>
+    </div>
+  );
+}
+
 export function BeautyTipsGuide() {
   return (
-    <section className="beauty-guide" aria-labelledby="beauty-guide-title">
-      <div>
-        <p>Beauty Tips</p>
-        <h2 id="beauty-guide-title">Guides for rituals, shades, and skin confidence.</h2>
-      </div>
-      <div>
+    <section className="beauty-band beauty-guide" aria-labelledby="beauty-guide-title">
+      <BeautyBandHeading
+        eyebrow="Beauty Tips"
+        id="beauty-guide-title"
+        title="Guides for rituals, shades, and skin confidence."
+      />
+      <div className="beauty-guide-grid">
         {beautyTips.map(([title, text]) => (
           <article key={title}>
-            <span />
+            <span aria-hidden="true" />
             <h3>{title}</h3>
             <p>{text}</p>
           </article>
@@ -329,19 +351,21 @@ export function BeautyTipsGuide() {
 
 export function BeautyReviews() {
   return (
-    <section className="beauty-reviews" aria-labelledby="beauty-reviews-title">
-      <div className="beauty-section-heading">
-        <div>
-          <p>Customer Reviews</p>
-          <h2 id="beauty-reviews-title">Loved by beauty shoppers</h2>
-        </div>
-      </div>
-      <div>
+    <section className="beauty-band beauty-reviews" aria-labelledby="beauty-reviews-title">
+      <BeautyBandHeading
+        align="center"
+        eyebrow="Customer Reviews"
+        id="beauty-reviews-title"
+        title="Loved by beauty shoppers"
+      />
+      <div className="beauty-reviews-grid">
         {reviews.map(([initial, text]) => (
           <article key={text}>
-            <span>{initial}</span>
             <p>"{text}"</p>
-            <strong>Verified customer</strong>
+            <footer>
+              <span aria-hidden="true">{initial}</span>
+              <strong>Verified customer</strong>
+            </footer>
           </article>
         ))}
       </div>
@@ -351,9 +375,9 @@ export function BeautyReviews() {
 
 export function BeautyBrandStory({ storeName, storeSlug }: { storeName: string; storeSlug: string }) {
   return (
-    <section className="beauty-story" aria-labelledby="beauty-story-title">
+    <section className="beauty-band beauty-story" aria-labelledby="beauty-story-title">
       <div className="beauty-story-image" aria-hidden="true" />
-      <div>
+      <div className="beauty-story-copy">
         <p>Brand Story</p>
         <h2 id="beauty-story-title">A softer way to discover beauty.</h2>
         <span>
@@ -367,13 +391,15 @@ export function BeautyBrandStory({ storeName, storeSlug }: { storeName: string; 
 
 export function BeautyNewsletter() {
   return (
-    <section className="beauty-newsletter" aria-labelledby="beauty-newsletter-title">
-      <p>Newsletter</p>
-      <h2 id="beauty-newsletter-title">Receive beauty rituals and new launches.</h2>
-      <form>
-        <input aria-label="Email address" placeholder="Email address" type="email" />
-        <button type="button">Subscribe</button>
-      </form>
+    <section className="beauty-band beauty-newsletter" aria-labelledby="beauty-newsletter-title">
+      <div className="beauty-newsletter-inner">
+        <p>Newsletter</p>
+        <h2 id="beauty-newsletter-title">Receive beauty rituals and new launches.</h2>
+        <form>
+          <input aria-label="Email address" placeholder="Email address" type="email" />
+          <button type="button">Subscribe</button>
+        </form>
+      </div>
     </section>
   );
 }
