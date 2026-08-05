@@ -325,6 +325,15 @@ export type StorefrontAdvancedSettings = {
   tabbedProductShowcase: StorefrontTabbedProductShowcaseSettings;
 };
 
+// Homepage rows ship as five-up sliders carrying two viewports of cards, so the
+// prev/next arrows have something to scroll out of the box. Sellers can change
+// any of it from Product Sections.
+const HOMEPAGE_ROW_DEFAULTS = {
+  columns: 5,
+  count: 10,
+  mode: "slider"
+} satisfies Partial<StorefrontProductSectionSettings>;
+
 export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = {
   announcement: {
     backgroundColor: "#4b2267",
@@ -333,7 +342,7 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     messages: [
       { text: "Easy returns for 365 days" },
       { text: "Secure payment methods" },
-      { text: "Free shipping for orders above $100" }
+      { text: "Free delivery on orders above ৳2,000" }
     ],
     scrollSpeed: "normal",
     textColor: "#ffffff"
@@ -440,15 +449,15 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
   },
   productSections: {
     bestSellers: productSectionDefault({
+      ...HOMEPAGE_ROW_DEFAULTS,
       ctaText: "View all",
-      mode: "slider",
       source: "best-sellers",
       subtitle: "Customer favorites selected from the public catalog.",
       title: "Best Sellers"
     }),
     featured: productSectionDefault({
+      ...HOMEPAGE_ROW_DEFAULTS,
       ctaText: "Shop Now",
-      mode: "slider",
       source: "featured",
       subtitle: "Pieces made for repeat use - versatile in size, dependable in design, and easy to carry.",
       title: "The Daily Edit"
@@ -461,8 +470,8 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
       title: "All Products"
     }),
     newArrivals: productSectionDefault({
+      ...HOMEPAGE_ROW_DEFAULTS,
       ctaText: "View all",
-      mode: "slider",
       source: "new-arrivals",
       subtitle: "Freshly added products from the latest catalog update.",
       title: "New Arrivals"
@@ -491,8 +500,8 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
       title: "Search Results"
     }),
     trending: productSectionDefault({
+      ...HOMEPAGE_ROW_DEFAULTS,
       ctaText: "View all",
-      mode: "slider",
       source: "trending",
       subtitle: "A refined selection of products getting attention now.",
       title: "Trending Products"

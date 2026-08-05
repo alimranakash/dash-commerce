@@ -1,13 +1,26 @@
 import Link from "next/link";
+import type { CSSProperties, ReactNode } from "react";
 import type { StorefrontProductSectionSettings } from "../customization";
-import type { StorefrontProduct } from "../storefront.types";
 import { ProductSectionSliderControls } from "./product-section-slider-controls";
 import { StorefrontImage } from "./storefront-image";
+
+// The card only ever reads these fields, so a plain client-side snapshot (the
+// recently viewed rail) renders through the same component as a Prisma row.
+export type ProductCardProduct = {
+  compareAtPrice?: { toString(): string } | null | undefined;
+  createdAt: Date | string;
+  id: string;
+  images: Array<{ alt?: string | null | undefined; url: string }>;
+  price: { toString(): string };
+  slug: string;
+  stockQuantity: number;
+  title: string;
+};
 
 export type ProductGridProps = {
   currency: string;
   gridId?: string | undefined;
-  products: StorefrontProduct[];
+  products: ProductCardProduct[];
   section: StorefrontProductSectionSettings;
   storeSlug: string;
 };
@@ -52,6 +65,10 @@ export function ProductGrid({ currency, gridId, products, section, storeSlug }: 
     <div
       id={gridId}
       className={`general-product-listing-grid general-product-listing-grid-${section.columns} general-product-listing-${section.mode}`}
+      // Page-scoped stylesheet rules used to pin the column count per surface,
+      // which outranked the class above; the inline variable is what the
+      // Columns setting actually drives now.
+      style={{ "--product-grid-columns": section.columns } as CSSProperties}
     >
       {products.slice(0, section.count).map((product) => (
         <ProductCard
@@ -73,7 +90,7 @@ export function ProductCard({
   storeSlug
 }: {
   currency: string;
-  product: StorefrontProduct;
+  product: ProductCardProduct;
   section: StorefrontProductSectionSettings;
   storeSlug: string;
 }) {
@@ -88,7 +105,6 @@ export function ProductCard({
     <Link className="general-product-listing-card" href={`/s/${storeSlug}/products/${product.slug}`}>
       <ProductImage
         alt={primaryImage?.alt ?? product.title}
-        fallback={product.title}
         hoverSrc={hoverImage?.url}
         src={primaryImage?.url}
       />
@@ -117,19 +133,35 @@ export function ProductImage({
   src
 }: {
   alt: string;
-  fallback: string;
+  fallback?: ReactNode;
   hoverSrc?: string | null | undefined;
   src?: string | null | undefined;
 }) {
+  // Without an explicit label the card falls back to a neutral image glyph
+  // rather than stamping the product title over an empty frame.
+  const placeholder = fallback ?? <ProductImagePlaceholder />;
+
   return (
     <div className="general-product-listing-image">
-      <StorefrontImage alt={alt} fallback={fallback} src={src} />
+      <StorefrontImage alt={alt} fallback={placeholder} src={src} />
       {hoverSrc ? (
         <span className="general-product-listing-hover-image">
-          <StorefrontImage alt={alt} fallback={fallback} src={hoverSrc} />
+          <StorefrontImage alt={alt} fallback={placeholder} src={hoverSrc} />
         </span>
       ) : null}
     </div>
+  );
+}
+
+export function ProductImagePlaceholder() {
+  return (
+    <span aria-hidden="true" className="general-product-listing-image-placeholder">
+      <svg fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+        <rect height="16" rx="2" width="20" x="2" y="4" />
+        <circle cx="8.5" cy="9.5" r="1.5" />
+        <path d="m2 16 5.5-5 4.5 4 3.5-3L22 17" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </span>
   );
 }
 
@@ -163,7 +195,7 @@ function formatMoney(value: string, currency: string) {
   }).format(Number(value));
 }
 
-function productBadge(product: StorefrontProduct) {
+function productBadge(product: ProductCardProduct) {
   if (product.stockQuantity <= 0) {
     return "LIMITED";
   }
@@ -172,7 +204,7 @@ function productBadge(product: StorefrontProduct) {
     return "SALE";
   }
 
-  if (Date.now() - product.createdAt.getTime() < 1000 * 60 * 60 * 24 * 30) {
+  if (Date.now() - new Date(product.createdAt).getTime() < 1000 * 60 * 60 * 24 * 30) {
     return "NEW";
   }
 

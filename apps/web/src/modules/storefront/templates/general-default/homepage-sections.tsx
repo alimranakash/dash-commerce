@@ -1,14 +1,16 @@
 import type { StorefrontTemplateHomepageProps } from "../types";
 import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
-  type StorefrontProductSectionSettings,
   type StorefrontTabbedProductShowcaseSettings
 } from "../../customization";
+import {
+  resolveProductSectionProducts,
+  type StorefrontProductPools
+} from "../../product-sections";
 import { TabbedProductSection } from "../../components/tabbed-product-section";
 import type { StorefrontProduct } from "../../storefront.types";
 import {
   GeneralCategoryStrip,
-  GeneralCollections,
   GeneralHero,
   GeneralNewsletter,
   GeneralProductSection,
@@ -24,12 +26,12 @@ export function GeneralHomepageSections({
 }: StorefrontTemplateHomepageProps) {
   const productSections = settings?.advancedSettings.productSections ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections;
   const featuredSection = {
-    ...homepageProductSection(productSections.featured),
+    ...productSections.featured,
     title: store.themeSetting?.featuredSectionTitle || productSections.featured.title || "The Daily Edit"
   };
-  const bestSellerSection = homepageProductSection(productSections.bestSellers);
-  const newArrivalsSection = homepageProductSection(productSections.newArrivals);
-  const trendingSection = homepageProductSection(productSections.trending);
+  const bestSellerSection = productSections.bestSellers;
+  const newArrivalsSection = productSections.newArrivals;
+  const trendingSection = productSections.trending;
   const tabbedProductShowcase = homepageTabbedSection(settings?.advancedSettings.tabbedProductShowcase ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.tabbedProductShowcase);
   const allProducts = uniqueProducts([
     ...homeData.featuredProducts,
@@ -38,6 +40,12 @@ export function GeneralHomepageSections({
   ]);
   const bestSellers = homeData.bestSellers.length > 0 ? homeData.bestSellers : homeData.featuredProducts;
   const onSaleProducts = allProducts.filter((product) => Boolean(product.compareAtPrice));
+  const pools: StorefrontProductPools = {
+    "best-sellers": homeData.bestSellers,
+    featured: homeData.featuredProducts,
+    "new-arrivals": homeData.newArrivals,
+    trending: homeData.trending
+  };
 
   return (
     <div className="general-homepage">
@@ -70,30 +78,31 @@ export function GeneralHomepageSections({
       />
       <GeneralProductSection
         currency={store.currency}
-        products={homeData.featuredProducts}
+        id="general-featured"
+        products={resolveProductSectionProducts(featuredSection, pools)}
         section={featuredSection}
         storeSlug={store.slug}
       />
-      <GeneralProductSection
-        currency={store.currency}
-        products={bestSellers}
-        section={trendingSection}
-        storeSlug={store.slug}
-      />
-      <GeneralSectionWrapper actionHref={`/s/${store.slug}/products`} id="general-collections" title="Explore Collections">
-        <GeneralCollections storeSlug={store.slug} />
-      </GeneralSectionWrapper>
       <GeneralPromoBanner storeSlug={store.slug} />
       <GeneralProductSection
         currency={store.currency}
-        products={bestSellers}
+        id="general-best-sellers"
+        products={resolveProductSectionProducts(bestSellerSection, { ...pools, "best-sellers": bestSellers })}
         section={bestSellerSection}
         storeSlug={store.slug}
       />
       <GeneralProductSection
         currency={store.currency}
-        products={homeData.newArrivals}
+        id="general-new-arrivals"
+        products={resolveProductSectionProducts(newArrivalsSection, pools)}
         section={newArrivalsSection}
+        storeSlug={store.slug}
+      />
+      <GeneralProductSection
+        currency={store.currency}
+        id="general-trending"
+        products={resolveProductSectionProducts(trendingSection, pools)}
+        section={trendingSection}
         storeSlug={store.slug}
       />
       <GeneralNewsletter />
@@ -114,20 +123,10 @@ function uniqueProducts(products: StorefrontProduct[]) {
   });
 }
 
-// Every product row on this homepage is a slider showing the same number of
-// cards per view, so the arrows behave identically from section to section.
+// The tabbed showcase keeps its own fixed per-view sizing; the product section
+// rows below it follow their own Columns / Products shown / Display mode
+// settings instead.
 const HOMEPAGE_PRODUCTS_PER_VIEW = 5 as const;
-
-function homepageProductSection(section: StorefrontProductSectionSettings): StorefrontProductSectionSettings {
-  return {
-    ...section,
-    columns: HOMEPAGE_PRODUCTS_PER_VIEW,
-    // A slider row must render more cards than fit in one viewport, otherwise
-    // there is nothing to scroll and the prev/next arrows stay disabled.
-    count: Math.max(section.count, HOMEPAGE_PRODUCTS_PER_VIEW * 2),
-    mode: "slider"
-  };
-}
 
 function homepageTabbedSection(section: StorefrontTabbedProductShowcaseSettings): StorefrontTabbedProductShowcaseSettings {
   const productsPerTab = Math.max(section.productsPerTab, HOMEPAGE_PRODUCTS_PER_VIEW * 2);

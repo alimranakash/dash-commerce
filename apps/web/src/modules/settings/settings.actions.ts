@@ -603,18 +603,24 @@ function productSectionFromFormData(
   key: keyof typeof DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections
 ): StorefrontProductSectionSettings {
   const fallback = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections[key];
+  // A section that does not offer a control (product source on the shop grid,
+  // for example) submits no field for it, which must keep the default rather
+  // than parse an empty string into 0.
+  const columns = getValue(formData, `productSection_${key}_columns`);
+  const count = getValue(formData, `productSection_${key}_count`);
 
   return {
-    columns: Number(getValue(formData, `productSection_${key}_columns`)) as 2 | 3 | 4 | 5,
-    count: Number(getValue(formData, `productSection_${key}_count`)),
+    columns: columns ? (Number(columns) as 2 | 3 | 4 | 5) : fallback.columns,
+    count: count ? Number(count) : fallback.count,
     ctaLink: getValue(formData, `productSection_${key}_ctaLink`) || fallback.ctaLink,
     ctaText: getValue(formData, `productSection_${key}_ctaText`) || fallback.ctaText,
     enableBadges: checkbox(formData, `productSection_${key}_enableBadges`),
     enableComparePrice: checkbox(formData, `productSection_${key}_enableComparePrice`),
     enableHoverImage: checkbox(formData, `productSection_${key}_enableHoverImage`),
     enableVariants: checkbox(formData, `productSection_${key}_enableVariants`),
-    mode: getValue(formData, `productSection_${key}_mode`) as StorefrontProductSectionSettings["mode"],
-    source: getValue(formData, `productSection_${key}_source`) as StorefrontProductSectionSettings["source"],
+    mode: (getValue(formData, `productSection_${key}_mode`) || fallback.mode) as StorefrontProductSectionSettings["mode"],
+    source: (getValue(formData, `productSection_${key}_source`) ||
+      fallback.source) as StorefrontProductSectionSettings["source"],
     subtitle: getValue(formData, `productSection_${key}_subtitle`) || fallback.subtitle,
     title: getValue(formData, `productSection_${key}_title`) || fallback.title
   };

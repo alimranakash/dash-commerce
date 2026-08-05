@@ -144,11 +144,17 @@ export async function getStorefrontByDomain(domain: string) {
   return refreshedStore ? withStoreActiveTemplate(refreshedStore) : null;
 }
 
-export async function getStorefrontHomeData(storeId: string) {
+// Homepage rows used to be capped at 8 cards, which silently truncated a
+// "Products shown" setting above that. The caller passes the largest count any
+// product section asks for.
+const DEFAULT_HOME_PRODUCTS_TAKE = 8;
+
+export async function getStorefrontHomeData(storeId: string, take = DEFAULT_HOME_PRODUCTS_TAKE) {
   await ensureCategoryImageSchema();
 
-  const [products, categories, newArrivals, bestSellers] = await Promise.all([
-    getStorefrontProducts(storeId, 8),
+  const productsTake = Math.max(DEFAULT_HOME_PRODUCTS_TAKE, Math.round(take));
+  const [products, categories, newArrivals, bestSellers, trending] = await Promise.all([
+    getStorefrontProducts(storeId, productsTake),
     prisma.category.findMany({
       where: {
         storeId,
@@ -166,16 +172,18 @@ export async function getStorefrontHomeData(storeId: string) {
     }),
     getStorefrontProducts(storeId, {
       sort: "newest",
-      take: 8
+      take: productsTake
     }),
-    getBestSellingStorefrontProducts(storeId, 8)
+    getBestSellingStorefrontProducts(storeId, productsTake),
+    getTrendingStorefrontProducts(storeId, productsTake)
   ]);
 
   return {
     featuredProducts: products,
     categories,
     newArrivals,
-    bestSellers
+    bestSellers,
+    trending
   };
 }
 
@@ -331,6 +339,7 @@ export async function getRelatedStorefrontProducts(input: {
   categoryId: string | null;
   productId: string;
   storeId: string;
+  take?: number | undefined;
 }) {
   await ensureCategoryImageSchema();
 
@@ -357,11 +366,20 @@ export async function getRelatedStorefrontProducts(input: {
     orderBy: {
       updatedAt: "desc"
     },
-    take: 4
+    take: Math.max(1, Math.round(input.take ?? 4))
   });
 }
 
-async function getBestSellingStorefrontProducts(storeId: string, take: number) {
+// "Trending" is order volume over the last 30 days, so it can differ from the
+// all-time best sellers. Stores with no recent orders get an empty pool and the
+// section falls back to its featured products.
+export async function getTrendingStorefrontProducts(storeId: string, take: number) {
+  const since = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
+
+  return getBestSellingStorefrontProducts(storeId, take, since);
+}
+
+export async function getBestSellingStorefrontProducts(storeId: string, take: number, since?: Date) {
   const bestSellingGroups = await prisma.orderItem.groupBy({
     by: ["productId"],
     _sum: {
@@ -381,7 +399,8 @@ async function getBestSellingStorefrontProducts(storeId: string, take: number) {
         storeId,
         status: {
           not: "CANCELLED"
-        }
+        },
+        ...(since ? { createdAt: { gte: since } } : {})
       }
     }
   });

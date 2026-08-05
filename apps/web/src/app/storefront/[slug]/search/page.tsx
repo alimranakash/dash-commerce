@@ -3,6 +3,7 @@ import {
   SectionHeader
 } from "../../../../modules/storefront/components/product-listing";
 import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../../../modules/storefront/customization";
+import { storefrontSectionHref } from "../../../../modules/storefront/product-sections";
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../modules/storefront/components/storefront-header";
 import {
@@ -32,18 +33,13 @@ export default async function StorefrontSearchPage({
   const query = q.trim();
   const template = getStorefrontTemplateForStore(store);
   const settings = await getStorefrontThemeSettings(store.id);
+  const searchSection = settings.advancedSettings.productSections?.search ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.search;
   const products = query
     ? await getStorefrontProducts(store.id, {
-        search: query
+        search: query,
+        take: Math.round(searchSection.count)
       })
     : [];
-
-  const searchDefaults = settings.advancedSettings.productSections?.search ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.search;
-  const searchSection = {
-    ...searchDefaults,
-    subtitle: query ? `Products matching "${query}".` : searchDefaults.subtitle,
-    title: query ? `Results for "${query}"` : searchDefaults.title
-  };
   const gridId = "storefront-search-product-grid";
 
   return (
@@ -68,10 +64,10 @@ export default async function StorefrontSearchPage({
           <button type="submit">Search</button>
         </form>
         <SectionHeader
-          ctaHref={`/s/${store.slug}/products`}
-          ctaText="Shop all"
+          ctaHref={storefrontSectionHref(store.slug, searchSection.ctaLink)}
+          ctaText={searchSection.ctaText}
           id="search-results"
-          sliderTargetId={query ? gridId : undefined}
+          sliderTargetId={query && searchSection.mode === "slider" ? gridId : undefined}
           subtitle={searchSection.subtitle}
           title={searchSection.title}
         />

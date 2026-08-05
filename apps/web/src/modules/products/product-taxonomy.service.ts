@@ -6,6 +6,8 @@ export type ProductTaxonomyType = "TAG" | "BRAND" | "ATTRIBUTE";
 
 export type ProductTaxonomyItem = {
   id: string;
+  /** Logo for BRAND items; null for tags and attributes. */
+  imageUrl: string | null;
   name: string;
   slug: string;
 };
@@ -20,7 +22,7 @@ export async function getProductTaxonomyItems(storeId: string, type: ProductTaxo
 
   return prisma.$queryRawUnsafe<ProductTaxonomyItem[]>(
     `
-    SELECT "id", "name", "slug"
+    SELECT "id", "imageUrl", "name", "slug"
     FROM ${taxonomyTable}
     WHERE "storeId" = $1 AND "type" = $2
     ORDER BY "name" ASC
@@ -48,7 +50,7 @@ export async function createProductTaxonomyItem(storeId: string, type: ProductTa
     VALUES ($1, $2, $3, $4, $5)
     ON CONFLICT ("storeId", "type", "slug")
     DO UPDATE SET "name" = EXCLUDED."name", "updatedAt" = CURRENT_TIMESTAMP
-    RETURNING "id", "name", "slug"
+    RETURNING "id", "imageUrl", "name", "slug"
   `,
     randomUUID(),
     storeId,
@@ -277,11 +279,18 @@ async function createProductTaxonomySchema(db: ProductTaxonomyClient) {
       "type" TEXT NOT NULL,
       "name" TEXT NOT NULL,
       "slug" TEXT NOT NULL,
+      "imageUrl" TEXT,
+      "isDemoContent" BOOLEAN NOT NULL DEFAULT FALSE,
+      "demoPackId" TEXT,
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       CONSTRAINT "ProductTaxonomy_storeId_fkey" FOREIGN KEY ("storeId") REFERENCES "${schema}"."Store"("id") ON DELETE CASCADE
     )
   `);
+  // Databases created before brand logos and demo tracking existed.
+  await db.$executeRawUnsafe(`ALTER TABLE "${schema}"."ProductTaxonomy" ADD COLUMN IF NOT EXISTS "imageUrl" TEXT`);
+  await db.$executeRawUnsafe(`ALTER TABLE "${schema}"."ProductTaxonomy" ADD COLUMN IF NOT EXISTS "isDemoContent" BOOLEAN NOT NULL DEFAULT FALSE`);
+  await db.$executeRawUnsafe(`ALTER TABLE "${schema}"."ProductTaxonomy" ADD COLUMN IF NOT EXISTS "demoPackId" TEXT`);
   await db.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "ProductTaxonomy_store_type_slug_key" ON "${schema}"."ProductTaxonomy" ("storeId", "type", "slug")`);
   await db.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "ProductTaxonomy_store_type_idx" ON "${schema}"."ProductTaxonomy" ("storeId", "type")`);
 

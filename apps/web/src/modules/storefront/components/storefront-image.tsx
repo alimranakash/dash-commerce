@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 type StorefrontImageProps = {
   alt: string;
-  fallback: string;
+  fallback: ReactNode;
   loading?: "eager" | "lazy";
   src?: string | null | undefined;
 };
@@ -28,13 +28,17 @@ export function StorefrontImage({ alt, fallback, loading = "lazy", src }: Storef
     }
   }, []);
 
+  // String fallbacks keep their historic <span> wrapper (the styled label pill);
+  // element fallbacks bring their own markup and are rendered as-is.
+  const fallbackNode = typeof fallback === "string" ? <span>{fallback}</span> : fallback;
+
   if (!src || failed) {
-    return <span>{fallback}</span>;
+    return fallbackNode;
   }
 
   return (
     <>
-      {!loaded ? <span>{fallback}</span> : null}
+      {!loaded ? fallbackNode : null}
       <img
         alt={alt}
         decoding="async"

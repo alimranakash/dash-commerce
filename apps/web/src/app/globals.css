@@ -3142,11 +3142,6 @@ textarea {
 
 .sf-shop-page .general-product-listing-grid {
   --product-grid-gap: var(--shop-grid-gap, 4px);
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-
-.sf-search-products .general-product-listing-grid {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .sf-shop-toolbar {
@@ -3864,31 +3859,20 @@ textarea {
   opacity: 0.28;
 }
 
+/* --product-grid-columns is set inline from the Columns setting of the
+   product section that renders the row, so it wins over page-scoped rules. */
 .general-product-listing-grid {
+  --product-grid-columns: 4;
   --product-grid-gap: clamp(14px, 1.4vw, 22px);
   display: grid;
   gap: var(--product-grid-gap);
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.general-product-listing-grid-2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.general-product-listing-grid-3 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.general-product-listing-grid-4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.general-product-listing-grid-5 {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--product-grid-columns), minmax(0, 1fr));
 }
 
 .general-product-listing-slider {
-  grid-auto-columns: calc((100% - (var(--product-grid-gap) * 3)) / 4);
+  grid-auto-columns: calc(
+    (100% - (var(--product-grid-gap) * (var(--product-grid-columns) - 1))) / var(--product-grid-columns)
+  );
   grid-auto-flow: column;
   grid-template-columns: none;
   overflow-x: auto;
@@ -3931,7 +3915,23 @@ textarea {
   width: 100%;
 }
 
-.general-product-listing-image > span:not(.general-product-listing-hover-image) {
+.general-product-listing-image-placeholder {
+  align-items: center;
+  background: #f2f2f2;
+  color: #b9b9b9;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  width: 100%;
+}
+
+.general-product-listing-image-placeholder svg {
+  height: 38px;
+  width: 38px;
+}
+
+.general-product-listing-image
+  > span:not(.general-product-listing-hover-image):not(.general-product-listing-image-placeholder) {
   align-items: center;
   background: #ffffff;
   border: 1px solid #e3e3e3;
@@ -11667,23 +11667,10 @@ textarea {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-/* General Default homepage rows all show the same count as their sliders.
-   Beauty Default reuses the same rows, so it shares the sizing. */
-.general-homepage .general-product-listing-grid,
-.general-homepage .tabbed-product-carousel .general-product-listing-grid,
-.beauty-homepage .general-product-listing-grid {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-
+/* Homepage rows size themselves from the Columns setting of each product
+   section (see --product-grid-columns), so no fixed count is pinned here. */
 .electronics-homepage .electronics-product-grid {
   grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-
-.general-homepage .general-product-listing-slider,
-.general-homepage .tabbed-product-carousel .general-product-listing-slider,
-.beauty-homepage .general-product-listing-slider {
-  grid-auto-columns: calc((100% - (var(--product-grid-gap) * 4)) / 5);
-  grid-template-columns: none;
 }
 
 @media (max-width: 1380px) {

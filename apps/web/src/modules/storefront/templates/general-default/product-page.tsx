@@ -6,10 +6,15 @@ import {
   SectionHeader
 } from "../../components/product-listing";
 import { ProductPurchasePanel } from "../../components/product-purchase-panel";
+import {
+  RecentlyViewedSection,
+  type RecentlyViewedProduct
+} from "../../components/recently-viewed-section";
 import type {
   StorefrontProductPageSettings,
   StorefrontProductSectionSettings
 } from "../../customization";
+import { storefrontSectionHref } from "../../product-sections";
 import type {
   StorefrontTemplateProductDetailExtrasProps
 } from "../types";
@@ -27,6 +32,7 @@ type GeneralProductPageProps = {
   product: StorefrontProductDetails;
   ProductDetailExtras?: ComponentType<StorefrontTemplateProductDetailExtrasProps> | undefined;
   productPage: StorefrontProductPageSettings;
+  recentlyViewedSection: StorefrontProductSectionSettings;
   relatedProducts: StorefrontProduct[];
   relatedSection: StorefrontProductSectionSettings;
   store: StorefrontStore;
@@ -37,6 +43,7 @@ export function GeneralProductPage({
   product,
   ProductDetailExtras,
   productPage,
+  recentlyViewedSection,
   relatedProducts,
   relatedSection,
   store
@@ -142,10 +149,10 @@ export function GeneralProductPage({
       {relatedProducts.length > 0 ? (
         <section className="general-product-related general-product-section" aria-labelledby="related-products">
           <SectionHeader
-            ctaHref={`/s/${store.slug}/products`}
+            ctaHref={storefrontSectionHref(store.slug, relatedSection.ctaLink)}
             ctaText={relatedSection.ctaText}
             id="related-products"
-            sliderTargetId={relatedGridId}
+            sliderTargetId={relatedSection.mode === "slider" ? relatedGridId : undefined}
             subtitle={relatedSection.subtitle}
             title={relatedSection.title || "You May Also Like"}
           />
@@ -153,17 +160,38 @@ export function GeneralProductPage({
             currency={store.currency}
             gridId={relatedGridId}
             products={relatedProducts}
-            section={{ ...relatedSection, count: 4, mode: "slider" }}
+            section={relatedSection}
             storeSlug={store.slug}
           />
         </section>
       ) : null}
+
+      <RecentlyViewedSection
+        currency={store.currency}
+        currentProduct={recentlyViewedSnapshot(product)}
+        section={recentlyViewedSection}
+        storeSlug={store.slug}
+      />
 
       {productPage.promoBlocksEnabled ? (
         <GeneralProductPromoBlocks product={product} relatedProducts={relatedProducts} store={store} />
       ) : null}
     </>
   );
+}
+
+function recentlyViewedSnapshot(product: StorefrontProductDetails): RecentlyViewedProduct {
+  return {
+    compareAtPrice: product.compareAtPrice ? product.compareAtPrice.toString() : null,
+    createdAt: product.createdAt.toISOString(),
+    hoverImageUrl: product.images[1]?.url ?? null,
+    id: product.id,
+    imageUrl: product.images[0]?.url ?? null,
+    price: product.price.toString(),
+    slug: product.slug,
+    stockQuantity: product.stockQuantity,
+    title: product.title
+  };
 }
 
 function GeneralProductBreadcrumb({

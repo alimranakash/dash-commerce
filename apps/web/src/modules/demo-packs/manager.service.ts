@@ -1,4 +1,5 @@
 import { prisma, type Prisma } from "@dash/db";
+import { ensureProductTaxonomySchema } from "../products/product-taxonomy.service";
 import { ensureDemoContentSchema, getDatabaseSchemaName } from "./demo-schema";
 import { getDemoPackById, getDemoPackIdForBusinessType, getDemoPackIdForTemplate } from "./registry";
 import { seedDemoPack } from "./seeder";
@@ -172,6 +173,15 @@ async function removeAllDemoContent(tx: Prisma.TransactionClient, storeId: strin
       }
     });
   }
+
+  // Brands and tags seeded by a pack. Their assignment rows are removed by the
+  // ON DELETE CASCADE on ProductTaxonomyAssignment, as are the assignments of
+  // the demo products deleted above.
+  await ensureProductTaxonomySchema(tx);
+  await tx.$executeRawUnsafe(
+    `DELETE FROM "${getDatabaseSchemaName()}"."ProductTaxonomy" WHERE "storeId" = $1 AND "isDemoContent" = TRUE`,
+    storeId
+  );
 }
 
 async function getSettingsSnapshot(tx: Prisma.TransactionClient, storeId: string): Promise<DemoSettingsSnapshot> {

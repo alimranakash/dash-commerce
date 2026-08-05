@@ -25,7 +25,6 @@ export const generalDefaultTemplate: StorefrontTemplateConfig = {
     "hero",
     "featured-categories",
     "featured-products",
-    "collections",
     "promotional-banner",
     "best-sellers",
     "recently-added",

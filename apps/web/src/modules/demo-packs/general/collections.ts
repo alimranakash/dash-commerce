@@ -1,17 +1,7 @@
-export const generalDemoCollections = [
-  {
-    description: "Everyday essentials across home, office, kitchen, and accessories.",
-    slug: "daily-essentials",
-    title: "Daily Essentials"
-  },
-  {
-    description: "Compact electronics and practical tools for modern living.",
-    slug: "smart-living",
-    title: "Smart Living"
-  },
-  {
-    description: "Starter picks for a fresh, useful demo storefront.",
-    slug: "new-arrivals",
-    title: "New Arrivals"
-  }
-];
+/**
+ * The General pack ships no collections. Collections are not a seeded entity in
+ * this codebase - nothing reads `content.collections` beyond the demo-content
+ * overview counter - so listing them here would advertise content that importing
+ * never creates. Products are grouped by category and brand instead.
+ */
+export const generalDemoCollections = [];

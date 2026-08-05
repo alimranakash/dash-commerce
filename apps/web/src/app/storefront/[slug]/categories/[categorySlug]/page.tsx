@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import { ProductGrid } from "../../../../../modules/storefront/components/product-listing";
 import { ShopToolbar } from "../../../../../modules/storefront/components/shop-toolbar";
 import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../../../../modules/storefront/customization";
+import { storefrontSectionHref } from "../../../../../modules/storefront/product-sections";
 import { StorefrontFooter } from "../../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../../modules/storefront/components/storefront-header";
 import {
@@ -69,15 +70,12 @@ export default async function StorefrontCategoryProductsPage({
   ]);
   const totalPages = Math.max(1, Math.ceil(totalProducts / productsPerPage));
   const listingDefaults = settings.advancedSettings.productSections?.listing ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.listing;
+  // Same split as the shop page: Product Sections -> Shop / Category Listing
+  // owns the grid and card presentation, the Shop Page panel owns page size,
+  // filters, sorting and spacing. Only the copy is category-specific.
   const listingSection = {
     ...listingDefaults,
-    columns: shopSettings.productsPerRow,
     count: productsPerPage,
-    enableBadges: shopSettings.enableProductBadges,
-    enableComparePrice: shopSettings.enableComparePrice,
-    enableHoverImage: shopSettings.enableHoverImage,
-    enableVariants: shopSettings.enableProductColorCount,
-    mode: "grid" as const,
     subtitle: category.description ?? `Shop products from ${category.name}.`,
     title: `${category.name} products`
   };
@@ -91,7 +89,10 @@ export default async function StorefrontCategoryProductsPage({
           <img alt="" className="sf-shop-page-header-image" loading="lazy" src={category.imageUrl} />
         ) : null}
         <p>Collection</p>
-        {shopSettings.descriptionEnabled ? <span>{category.description ?? `Shop products from ${category.name}.`}</span> : null}
+        {shopSettings.descriptionEnabled ? <span>{listingSection.subtitle}</span> : null}
+        {listingSection.ctaText ? (
+          <Link href={storefrontSectionHref(store.slug, listingSection.ctaLink)}>{listingSection.ctaText}</Link>
+        ) : null}
       </section>
       <section
         className={`sf-shop-page sf-shop-page-${shopSettings.widthMode}`}

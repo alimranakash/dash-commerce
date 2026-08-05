@@ -1,16 +1,12 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { HeroSlider } from "../../components/hero-slider";
-import {
-  ProductGrid,
-  ProductImage,
-  ProductPrice,
-  SectionHeader
-} from "../../components/product-listing";
+import { ProductGrid, SectionHeader } from "../../components/product-listing";
 import type {
   StorefrontAdvancedSettings,
   StorefrontProductSectionSettings
 } from "../../customization";
+import { storefrontSectionHref } from "../../product-sections";
 import type { StorefrontProduct } from "../../storefront.types";
 
 type GeneralSectionWrapperProps = {
@@ -36,47 +32,6 @@ type GeneralCategory = {
   name: string;
   slug: string;
 };
-
-const demoCategories = [
-  { icon: "Laptop", name: "Electronics", slug: "electronics" },
-  { icon: "Sofa", name: "Home & Living", slug: "home-living" },
-  { icon: "Jacket", name: "Fashion", slug: "fashion" },
-  { icon: "Serum", name: "Beauty", slug: "beauty" },
-  { icon: "Toy", name: "Toys", slug: "toys" }
-];
-
-const demoProducts = [
-  { badge: "New", image: "HP", price: 59, title: "Wireless Headphones" },
-  { badge: "Hot", image: "SW", price: 129, title: "Smart Watch" },
-  { badge: "Daily", image: "BG", price: 49, title: "Minimal Backpack" },
-  { badge: "Deal", image: "CM", price: 89, title: "Coffee Maker" },
-  { badge: "Top", image: "DS", price: 39, title: "Desk Speaker" }
-];
-
-const collectionCards = [
-  {
-    count: "30+ Products",
-    image: "Modern Living",
-    title: "Modern Living"
-  },
-  {
-    count: "25+ Products",
-    image: "Summer Essentials",
-    title: "Summer Essentials"
-  },
-  {
-    count: "20+ Products",
-    image: "Workspace Setup",
-    title: "Workspace Setup"
-  }
-];
-
-const recentlyAddedFallback = [
-  { image: "DL", price: 29, title: "Desk Lamp" },
-  { image: "WB", price: 19, title: "Water Bottle" },
-  { image: "TP", price: 24, title: "Throw Pillow" },
-  { image: "YM", price: 39, title: "Yoga Mat" }
-];
 
 export function GeneralSectionWrapper({
   actionHref,
@@ -137,14 +92,18 @@ export function GeneralCategoryStrip({
   categories: GeneralCategory[];
   storeSlug: string;
 }) {
-  const visibleCategories: Array<{ icon: string; imageUrl?: string | null; name: string; slug: string }> = categories.length > 0
-    ? categories.slice(0, 6).map((category) => ({
-      icon: category.name.trim().slice(0, 2),
-      imageUrl: category.imageUrl,
-      name: category.name.trim(),
-      slug: category.slug
-    }))
-    : demoCategories;
+  // A store with no categories shows nothing here rather than a strip of
+  // placeholder names that link to pages which do not exist.
+  if (categories.length === 0) {
+    return null;
+  }
+
+  const visibleCategories = categories.slice(0, 6).map((category) => ({
+    icon: category.name.trim().slice(0, 2),
+    imageUrl: category.imageUrl,
+    name: category.name.trim(),
+    slug: category.slug
+  }));
 
   return (
     <div className="general-category-strip">
@@ -167,53 +126,38 @@ export function GeneralProductGrid({
   section,
   storeSlug
 }: GeneralProductGridProps) {
-  const hasProducts = products.length > 0;
-
-  if (hasProducts) {
-    return <ProductGrid currency={currency} gridId={gridId} products={products} section={section} storeSlug={storeSlug} />;
-  }
-
-  return (
-    <div id={gridId} className={`general-product-listing-grid general-product-listing-grid-${section.columns} general-product-listing-${section.mode}`}>
-      {demoProducts.slice(0, section.count).map((product, index) => (
-        <Link className="general-product-listing-card" href={`/s/${storeSlug}/products`} key={`${product.title}-${index}`}>
-          <ProductImage fallback={product.image} alt={product.title} />
-          <div className="general-product-listing-meta">
-            <div>
-              <h3>{product.title}</h3>
-              <ProductPrice currency={currency} price={String(product.price)} />
-            </div>
-            {section.enableBadges && product.badge ? (
-              <div className="general-product-listing-flags">
-                <em className="general-product-listing-badge">{product.badge.toUpperCase()}</em>
-              </div>
-            ) : null}
-          </div>
-        </Link>
-      ))}
-    </div>
-  );
+  return <ProductGrid currency={currency} gridId={gridId} products={products} section={section} storeSlug={storeSlug} />;
 }
 
 export function GeneralProductSection({
   currency,
+  id,
   products,
   section,
   storeSlug
 }: {
   currency: string;
+  id: string;
   products: StorefrontProduct[];
   section: StorefrontProductSectionSettings;
   storeSlug: string;
 }) {
-  const gridId = `general-product-grid-${section.source}`;
+  // A product row with nothing in it is a heading over empty space, so the
+  // whole section drops out instead of rendering stand-in cards.
+  if (products.length === 0) {
+    return null;
+  }
+
+  // Two sections can now point at the same product source, so the row id comes
+  // from the section slot rather than the source it renders.
+  const gridId = `general-product-grid-${id}`;
 
   return (
-    <section className="general-home-section general-product-section" aria-labelledby={`${section.source}-products-title`}>
+    <section className="general-home-section general-product-section" id={id} aria-labelledby={`${id}-products-title`}>
       <SectionHeader
-        ctaHref={`/s/${storeSlug}${section.ctaLink.startsWith("/") ? section.ctaLink : `/${section.ctaLink}`}`}
+        ctaHref={storefrontSectionHref(storeSlug, section.ctaLink)}
         ctaText={section.ctaText}
-        id={`${section.source}-products-title`}
+        id={`${id}-products-title`}
         sliderTargetId={section.mode === "slider" ? gridId : undefined}
         subtitle={section.subtitle}
         title={section.title}
@@ -229,29 +173,15 @@ export function GeneralProductSection({
   );
 }
 
-export function GeneralCollections({ storeSlug }: { storeSlug: string }) {
-  return (
-    <div className="general-collection-grid">
-      {collectionCards.map((collection) => (
-        <Link className="general-collection-card" href={`/s/${storeSlug}/products`} key={collection.title}>
-          <div aria-hidden="true">{collection.image}</div>
-          <strong>{collection.title}</strong>
-          <span>{collection.count}</span>
-        </Link>
-      ))}
-    </div>
-  );
-}
-
 export function GeneralPromoBanner({ storeSlug }: { storeSlug: string }) {
   return (
     <section className="general-promo-banner" aria-labelledby="general-promo-title">
       <div>
-        <p>Summer Sale</p>
-        <h2 id="general-promo-title">Up to 40% Off</h2>
-        <span>Limited time offer on selected items.</span>
+        <p>The full catalogue</p>
+        <h2 id="general-promo-title">Everything in one place</h2>
+        <span>Filter by category, price or availability.</span>
         <Link className="general-dark-button" href={`/s/${storeSlug}/products`}>
-          Shop Now
+          Browse all products
         </Link>
       </div>
       <div className="general-promo-visual" aria-hidden="true">
@@ -259,32 +189,6 @@ export function GeneralPromoBanner({ storeSlug }: { storeSlug: string }) {
         <span />
       </div>
     </section>
-  );
-}
-
-export function GeneralRecentlyAddedFallback({
-  currency,
-  section,
-  storeSlug
-}: {
-  currency: string;
-  section: StorefrontProductSectionSettings;
-  storeSlug: string;
-}) {
-  return (
-    <div className={`general-product-listing-grid general-product-listing-grid-${section.columns} general-product-listing-${section.mode}`}>
-      {recentlyAddedFallback.map((product) => (
-        <Link className="general-product-listing-card" href={`/s/${storeSlug}/products`} key={product.title}>
-          <ProductImage fallback={product.image} alt={product.title} />
-          <div className="general-product-listing-meta">
-            <div>
-              <h3>{product.title}</h3>
-              <ProductPrice currency={currency} price={String(product.price)} />
-            </div>
-          </div>
-        </Link>
-      ))}
-    </div>
   );
 }
 

@@ -1,5 +1,6 @@
 import { StorefrontFooter } from "../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../modules/storefront/components/storefront-header";
+import type { StorefrontAdvancedSettings } from "../../../modules/storefront/customization";
 import {
   getStorefrontHomeData,
   requireStorefrontBySlug
@@ -17,8 +18,10 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
   const { slug } = await params;
   const store = await requireStorefrontBySlug(slug);
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
-  const homeData = await getStorefrontHomeData(store.id);
   const settings = await getStorefrontThemeSettings(store.id);
+  // Each homepage row shows its own "Products shown" count, so the pools have
+  // to be fetched deep enough for the largest of them.
+  const homeData = await getStorefrontHomeData(store.id, homeProductsTake(settings.advancedSettings));
   const template = getStorefrontTemplateForStore(store);
   const HomepageSections = template.components.HomepageSections;
 
@@ -28,5 +31,19 @@ export default async function StorefrontPage({ params }: StorefrontPageProps) {
       <HomepageSections homeData={homeData} primaryDomain={primaryDomain?.domain} settings={settings} store={store} />
       <StorefrontFooter primaryDomain={primaryDomain?.domain} store={store} />
     </main>
+  );
+}
+
+function homeProductsTake(advancedSettings: StorefrontAdvancedSettings) {
+  const sections = advancedSettings.productSections;
+  const tabbed = advancedSettings.tabbedProductShowcase;
+
+  return Math.max(
+    sections.featured.count,
+    sections.bestSellers.count,
+    sections.newArrivals.count,
+    sections.trending.count,
+    tabbed.productsPerTab,
+    ...tabbed.tabs.map((tab) => tab.productCount)
   );
 }

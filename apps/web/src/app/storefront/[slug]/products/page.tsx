@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { ProductGrid } from "../../../../modules/storefront/components/product-listing";
 import { ShopToolbar } from "../../../../modules/storefront/components/shop-toolbar";
 import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../../../modules/storefront/customization";
+import { storefrontSectionHref } from "../../../../modules/storefront/product-sections";
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../modules/storefront/components/storefront-header";
 import {
@@ -62,27 +63,31 @@ export default async function StorefrontProductsPage({
   ]);
   const activeCategory = categories.find((category) => category.slug === filters.category);
   const totalPages = Math.max(1, Math.ceil(totalProducts / productsPerPage));
+  // Product Sections -> Shop / Category Listing owns the grid and card
+  // presentation; the Shop Page panel owns page-level concerns (page size,
+  // filters, sorting, width, spacing, page header copy).
   const listingSection = {
     ...(settings.advancedSettings.productSections?.listing ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.listing),
-    columns: shopSettings.productsPerRow,
     count: productsPerPage,
-    enableBadges: shopSettings.enableProductBadges,
-    enableComparePrice: shopSettings.enableComparePrice,
-    enableHoverImage: shopSettings.enableHoverImage,
-    enableVariants: shopSettings.enableProductColorCount,
-    mode: "grid" as const,
-    subtitle: activeCategory?.description ?? shopSettings.description,
-    title: activeCategory ? activeCategory.name : shopSettings.pageTitle
+    ...(activeCategory
+      ? {
+          subtitle: activeCategory.description ?? "",
+          title: activeCategory.name
+        }
+      : {})
   };
   const gridId = "storefront-shop-product-grid";
-  const pageDescription = activeCategory?.description ?? shopSettings.description;
+  const pageDescription = listingSection.subtitle;
 
   return (
     <main className="sf-page" data-storefront-template={template.id}>
       <StorefrontHeader store={store} />
       <section className="sf-shop-page-header" aria-labelledby="shop-title">
-        <p>{activeCategory ? activeCategory.name : shopSettings.pageTitle}</p>
+        <p>{listingSection.title}</p>
         {shopSettings.descriptionEnabled && pageDescription ? <span>{pageDescription}</span> : null}
+        {listingSection.ctaText ? (
+          <Link href={storefrontSectionHref(store.slug, listingSection.ctaLink)}>{listingSection.ctaText}</Link>
+        ) : null}
       </section>
       <section
         className={`sf-shop-page sf-shop-page-${shopSettings.widthMode}`}

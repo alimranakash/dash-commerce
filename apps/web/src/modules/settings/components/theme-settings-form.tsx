@@ -997,6 +997,35 @@ function RepeaterTextarea({
   );
 }
 
+type ProductSectionSourceOption = {
+  label: string;
+  value: StorefrontProductSectionSettings["source"];
+};
+
+// Sections whose product set is fixed by the page they render on (the shop
+// grid, the search results, the recently viewed rail) have no source to pick,
+// so the control is not offered rather than saved and ignored.
+const CATALOG_SOURCE_OPTIONS: ProductSectionSourceOption[] = [
+  { label: "Featured", value: "featured" },
+  { label: "Best sellers", value: "best-sellers" },
+  { label: "New arrivals", value: "new-arrivals" },
+  { label: "Trending", value: "trending" }
+];
+
+const PRODUCT_SECTION_SOURCE_OPTIONS: Record<
+  keyof StorefrontAdvancedSettings["productSections"],
+  ProductSectionSourceOption[]
+> = {
+  bestSellers: CATALOG_SOURCE_OPTIONS,
+  featured: CATALOG_SOURCE_OPTIONS,
+  listing: [],
+  newArrivals: CATALOG_SOURCE_OPTIONS,
+  recentlyViewed: [],
+  related: [{ label: "Same category", value: "related" }, ...CATALOG_SOURCE_OPTIONS],
+  search: [],
+  trending: CATALOG_SOURCE_OPTIONS
+};
+
 function ProductSectionFields({
   label,
   name,
@@ -1006,6 +1035,8 @@ function ProductSectionFields({
   name: keyof StorefrontAdvancedSettings["productSections"];
   section: StorefrontProductSectionSettings;
 }) {
+  const sourceOptions = PRODUCT_SECTION_SOURCE_OPTIONS[name];
+
   return (
     <details className="theme-product-section-panel" open={name === "featured"}>
       <summary>{label}</summary>
@@ -1026,10 +1057,12 @@ function ProductSectionFields({
           CTA link
           <input defaultValue={section.ctaLink} name={`productSection_${name}_ctaLink`} type="text" />
         </label>
-        <label>
-          Products shown
-          <input defaultValue={section.count} max={24} min={1} name={`productSection_${name}_count`} type="number" />
-        </label>
+        {name === "listing" ? null : (
+          <label>
+            Products shown
+            <input defaultValue={section.count} max={24} min={1} name={`productSection_${name}_count`} type="number" />
+          </label>
+        )}
         <label>
           Columns
           <select defaultValue={section.columns} name={`productSection_${name}_columns`}>
@@ -1046,19 +1079,18 @@ function ProductSectionFields({
             <option value="slider">Slider-ready</option>
           </select>
         </label>
-        <label>
-          Product source
-          <select defaultValue={section.source} name={`productSection_${name}_source`}>
-            <option value="featured">Featured</option>
-            <option value="best-sellers">Best sellers</option>
-            <option value="new-arrivals">New arrivals</option>
-            <option value="trending">Trending</option>
-            <option value="related">Related</option>
-            <option value="search">Search</option>
-            <option value="recently-viewed">Recently viewed</option>
-            <option value="manual">Manual</option>
-          </select>
-        </label>
+        {sourceOptions.length > 0 ? (
+          <label>
+            Product source
+            <select defaultValue={section.source} name={`productSection_${name}_source`}>
+              {sourceOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
       </div>
       <div className="theme-settings-grid four compact">
         <ToggleField label="Show badges" name={`productSection_${name}_enableBadges`} value={section.enableBadges} />
