@@ -1,29 +1,35 @@
 import Link from "next/link";
+import { formatStorefrontMoney } from "../../storefront/format";
 import type { StorefrontCartPageSettings } from "../../storefront/customization";
 import type { Cart } from "../cart.types";
+import { CartNoteField } from "./cart-note-field";
 
 type CartSummaryProps = {
   cart: Cart;
   checkoutHref: string;
   currency: string;
   settings: StorefrontCartPageSettings;
+  storeSlug: string;
 };
 
-export function CartSummary({ cart, checkoutHref, currency, settings }: CartSummaryProps) {
+export function CartSummary({ cart, checkoutHref, currency, settings, storeSlug }: CartSummaryProps) {
   const subtotal = Number(cart.totals.subtotal);
 
   return (
     <section className="general-cart-summary" aria-label="Cart summary">
       {settings.orderNotesEnabled ? (
-        <details className="general-cart-notes">
-          <summary>Order Notes</summary>
-          <textarea aria-label="Order notes" placeholder="Add a note for your order" rows={4} />
-        </details>
+        <CartNoteField
+          className="general-cart-notes"
+          note={cart.note}
+          rows={4}
+          storeId={cart.storeId}
+          storeSlug={storeSlug}
+        />
       ) : null}
       <div className="general-cart-summary-lines">
         <div>
           <span>Subtotal</span>
-          <strong>{formatMoney(subtotal, currency)}</strong>
+          <strong>{formatStorefrontMoney(subtotal, currency)}</strong>
         </div>
         <div>
           <span>Delivery Charges</span>
@@ -37,7 +43,7 @@ export function CartSummary({ cart, checkoutHref, currency, settings }: CartSumm
         ) : null}
         <div className="general-cart-estimated-total">
           <span>Estimated Total</span>
-          <strong>{formatMoney(subtotal, currency)}</strong>
+          <strong>{formatStorefrontMoney(subtotal, currency)}</strong>
         </div>
       </div>
       <Link
@@ -53,11 +59,4 @@ export function CartSummary({ cart, checkoutHref, currency, settings }: CartSumm
       </Link>
     </section>
   );
-}
-
-function formatMoney(value: number, currency: string) {
-  return new Intl.NumberFormat("en", {
-    currency,
-    style: "currency"
-  }).format(value);
 }

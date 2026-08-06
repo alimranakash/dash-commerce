@@ -5,8 +5,10 @@ import { useActionState } from "react";
 import type { MediaPickerAsset } from "../../media/media.types";
 import { StorefrontSettingsToast } from "../../storefront/dashboard/storefront-settings-toast";
 import {
+  FOOTER_COLUMN_SLOTS,
   normalizeAdvancedSettings,
   type StorefrontAdvancedSettings,
+  type StorefrontFooterColumnSetting,
   type StorefrontHeroSlide,
   type StorefrontProductSectionSettings
 } from "../../storefront/customization";
@@ -403,26 +405,64 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
           <ToggleField label="Show filter button" name="shopEnableFilters" value={advanced.shopPage.enableFilters} />
           <ToggleField label="Show sorting" name="shopEnableSorting" value={advanced.shopPage.enableSorting} />
           <ToggleField label="Show result counter" name="shopEnableResultCounter" value={advanced.shopPage.enableResultCounter} />
-          <ToggleField label="Collections filter" name="shopEnableCollectionFilter" value={advanced.shopPage.enableCollectionFilter} />
           <ToggleField label="Categories filter" name="shopEnableCategoryFilter" value={advanced.shopPage.enableCategoryFilter} />
           <ToggleField label="Brand filter" name="shopEnableBrandFilter" value={advanced.shopPage.enableBrandFilter} />
           <ToggleField label="Price filter" name="shopEnablePriceFilter" value={advanced.shopPage.enablePriceFilter} />
           <ToggleField label="Availability filter" name="shopEnableAvailabilityFilter" value={advanced.shopPage.enableAvailabilityFilter} />
           <ToggleField label="Tags filter" name="shopEnableTagFilter" value={advanced.shopPage.enableTagFilter} />
-          <ToggleField label="Colors filter" name="shopEnableColorFilter" value={advanced.shopPage.enableColorFilter} />
-          <ToggleField label="Sizes filter" name="shopEnableSizeFilter" value={advanced.shopPage.enableSizeFilter} />
-          <ToggleField label="Show product brand" name="shopEnableProductBrand" value={advanced.shopPage.enableProductBrand} />
           <ToggleField label="Show compare price" name="shopEnableComparePrice" value={advanced.shopPage.enableComparePrice} />
           <ToggleField label="Show badges" name="shopEnableProductBadges" value={advanced.shopPage.enableProductBadges} />
-          <ToggleField label="Show color count" name="shopEnableProductColorCount" value={advanced.shopPage.enableProductColorCount} />
           <ToggleField label="Hover image" name="shopEnableHoverImage" value={advanced.shopPage.enableHoverImage} />
-          <ToggleField label="Quick view placeholder" name="shopEnableQuickView" value={advanced.shopPage.enableQuickView} />
         </div>
         <RepeaterTextarea
           helper="One option per line. Supported values: featured, newest, best-selling, price-asc, price-desc, alpha-asc, alpha-desc."
           label="Available sorting options"
           name="shopSortOptions"
           value={advanced.shopPage.sortOptions.join("\n")}
+        />
+      </SettingsCard>
+
+      <SettingsCard
+        id="footer"
+        title="Footer"
+        description="Control footer columns and links, social icons, payment icons, description, and copyright text."
+      >
+        <div className="theme-settings-grid three">
+          <ToggleField label="Enable footer" name="footerEnabled" value={advanced.footer.enabled} />
+          <ToggleField label="Show social icons" name="footerShowSocialIcons" value={advanced.footer.showSocialIcons} />
+          <ToggleField label="Show payment icons" name="footerPaymentIconsEnabled" value={advanced.footer.paymentIconsEnabled} />
+          <label>
+            Copyright text
+            <input defaultValue={advanced.footer.copyrightText} name="footerCopyrightText" type="text" />
+            <span className="theme-field-helper">Supports {"{year}"} and {"{store}"}.</span>
+          </label>
+        </div>
+        <label className="theme-repeater-field">
+          Footer description
+          <textarea defaultValue={advanced.footer.description} name="footerDescription" rows={3} />
+          <span>Leave empty to fall back to the store tagline from General Settings.</span>
+        </label>
+        <div className="theme-settings-grid three">
+          {footerColumnSlots(advanced.footer.columns).map((column, index) => (
+            <div key={index}>
+              <label>
+                Column {index + 1} title
+                <input defaultValue={column.title} name={`footerColumnTitle${index}`} placeholder="Leave empty to hide" type="text" />
+              </label>
+              <RepeaterTextarea
+                helper="One link per line. Format: Label | /path."
+                label={`Column ${index + 1} links`}
+                name={`footerColumnLinks${index}`}
+                value={column.links.map((link) => `${link.label} | ${link.url}`).join("\n")}
+              />
+            </div>
+          ))}
+        </div>
+        <RepeaterTextarea
+          helper="One payment label per line, e.g. Visa, Mastercard, bKash, Nagad."
+          label="Payment icons"
+          name="footerPaymentIcons"
+          value={advanced.footer.paymentIcons.join("\n")}
         />
       </SettingsCard>
 
@@ -1100,6 +1140,16 @@ function ProductSectionFields({
       </div>
     </details>
   );
+}
+
+function footerColumnSlots(columns: StorefrontFooterColumnSetting[]) {
+  const slots = [...columns].slice(0, FOOTER_COLUMN_SLOTS);
+
+  while (slots.length < FOOTER_COLUMN_SLOTS) {
+    slots.push({ links: [], title: "" });
+  }
+
+  return slots;
 }
 
 function normalizeSlides(slides: StorefrontHeroSlide[]) {

@@ -2,31 +2,33 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import type { StorefrontStore } from "../../storefront.types";
 import { normalizeAdvancedSettings, type StorefrontAdvancedSettings } from "../../customization";
+import { resolveStorefrontCopyright, resolveStorefrontHref } from "../../footer-content";
+import type { StorefrontSocialLink } from "../../social-links";
 import styles from "./electronics-footer.module.css";
 
 type ElectronicsFooterProps = {
   advancedSettings?: StorefrontAdvancedSettings;
   primaryDomain: string | undefined;
+  socialLinks: StorefrontSocialLink[];
   store: StorefrontStore;
   templateId: string;
 };
 
-const paymentBadges = ["Visa", "MC", "Amex", "Pay", "Diners", "Disc"];
-
 export function ElectronicsStorefrontFooter({
   advancedSettings,
   primaryDomain,
+  socialLinks,
   store,
   templateId
 }: ElectronicsFooterProps) {
   const settings = store.setting;
   const advanced = normalizeAdvancedSettings(advancedSettings);
   const electronics = advanced.electronics;
+  const footer = advanced.footer;
   const homeHref = `/s/${store.slug}`;
-  const currentYear = new Date().getFullYear();
   const brandName = store.name.trim() || "Atlas";
-  const description = settings?.tagline?.trim() || "Your destination for modern tech built for everyday living.";
-  const socialLinks = resolveSocialLinks(settings);
+  const description = footer.description || settings?.tagline?.trim() || "Your destination for modern tech built for everyday living.";
+  const paymentIcons = footer.paymentIconsEnabled ? footer.paymentIcons : [];
 
   return (
     <footer className={styles.footer} data-storefront-footer-template={templateId}>
@@ -36,19 +38,21 @@ export function ElectronicsStorefrontFooter({
             {settings?.logoUrl ? <img alt={`${brandName} logo`} src={settings.logoUrl} /> : brandName}
           </Link>
           <p className={styles.description}>{description}</p>
-          <nav className={styles.socials} aria-label="Social links">
-            {socialLinks.map((link) => (
-              <a href={link.href} key={link.label} rel={link.external ? "noreferrer" : undefined} target={link.external ? "_blank" : undefined}>
-                {link.shortLabel}
-                <span className="sr-only">{link.label}</span>
-              </a>
-            ))}
-          </nav>
+          {socialLinks.length > 0 ? (
+            <nav className={styles.socials} aria-label="Social links">
+              {socialLinks.map((link) => (
+                <a href={link.href} key={link.label} rel="noreferrer" target="_blank">
+                  {link.shortLabel}
+                  <span className="sr-only">{link.label}</span>
+                </a>
+              ))}
+            </nav>
+          ) : null}
         </section>
 
         <ElectronicsFooterColumn title="Collections">
           {electronics.footerCollectionLinks.map((link) => (
-            <Link href={resolveFooterHref(homeHref, link.url)} key={link.label}>
+            <Link href={resolveStorefrontHref(homeHref, link.url)} key={link.label}>
               {link.label}
             </Link>
           ))}
@@ -56,7 +60,7 @@ export function ElectronicsStorefrontFooter({
 
         <ElectronicsFooterColumn title="Information">
           {electronics.footerInformationLinks.map((link) => (
-            <Link href={resolveFooterHref(homeHref, link.url)} key={link.label}>
+            <Link href={resolveStorefrontHref(homeHref, link.url)} key={link.label}>
               {link.label}
             </Link>
           ))}
@@ -74,13 +78,16 @@ export function ElectronicsStorefrontFooter({
 
       <div className={styles.bottom}>
         <div className={styles.bottomInner}>
-          <div className={styles.payments} aria-label="Payment methods">
-            {paymentBadges.map((badge) => (
-              <span key={badge}>{badge}</span>
-            ))}
-          </div>
+          {paymentIcons.length > 0 ? (
+            <div className={styles.payments} aria-label="Payment methods">
+              {paymentIcons.map((badge) => (
+                <span key={badge}>{badge}</span>
+              ))}
+            </div>
+          ) : null}
           <p className={styles.copyright}>
-            &copy; {currentYear} {brandName} {primaryDomain ? ` | ${primaryDomain}` : ""} | Powered by Dash Commerce OS
+            {resolveStorefrontCopyright(footer.copyrightText, brandName)}
+            {primaryDomain ? ` | ${primaryDomain}` : ""}
           </p>
         </div>
       </div>
@@ -97,43 +104,3 @@ function ElectronicsFooterColumn({ children, title }: { children: ReactNode; tit
   );
 }
 
-function resolveSocialLinks(settings: StorefrontStore["setting"]) {
-  return [
-    settings?.facebookUrl ? {
-      external: true,
-      href: settings.facebookUrl,
-      label: "Facebook",
-      shortLabel: "f"
-    } : {
-      external: false,
-      href: "#facebook",
-      label: "Facebook",
-      shortLabel: "f"
-    },
-    settings?.instagramUrl ? {
-      external: true,
-      href: settings.instagramUrl,
-      label: "Instagram",
-      shortLabel: "ig"
-    } : {
-      external: false,
-      href: "#instagram",
-      label: "Instagram",
-      shortLabel: "ig"
-    },
-    {
-      external: false,
-      href: "#youtube",
-      label: "YouTube",
-      shortLabel: "yt"
-    }
-  ];
-}
-
-function resolveFooterHref(homeHref: string, url: string) {
-  if (url.startsWith("http") || url.startsWith("mailto:") || url.startsWith("tel:") || url.startsWith("#")) {
-    return url;
-  }
-
-  return `${homeHref}${url === "/" ? "" : url.startsWith("/") ? url : `/${url}`}`;
-}

@@ -650,7 +650,8 @@
   display: none;
 }
 
-.theme-repeater-field span {
+.theme-repeater-field span,
+.theme-field-helper {
   color: #777d97;
   font-size: 0.8rem;
   font-weight: 600;
@@ -7804,8 +7805,22 @@ textarea {
   min-width: 0;
 }
 
+/* Gallery Layout from the Product Page panel. The markup is always one main
+   image plus a thumbnail strip, so the layout decides where that strip sits. */
 .general-product-gallery-two-column {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  grid-template-columns: 88px minmax(0, 1fr);
+}
+
+.general-product-gallery-two-column .general-product-gallery-main {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.general-product-gallery-two-column .general-product-gallery-thumbs {
+  grid-column: 1;
+  grid-row: 1;
+  grid-template-columns: 1fr;
 }
 
 .general-product-gallery-vertical {
@@ -7813,7 +7828,11 @@ textarea {
 }
 
 .general-product-gallery-horizontal {
-  grid-auto-columns: minmax(52%, 1fr);
+  grid-template-columns: 1fr;
+}
+
+.general-product-gallery-horizontal .general-product-gallery-thumbs {
+  grid-auto-columns: minmax(96px, 1fr);
   grid-auto-flow: column;
   grid-template-columns: none;
   overflow-x: auto;
@@ -7821,8 +7840,12 @@ textarea {
   scrollbar-width: none;
 }
 
-.general-product-gallery-horizontal::-webkit-scrollbar {
+.general-product-gallery-horizontal .general-product-gallery-thumbs::-webkit-scrollbar {
   display: none;
+}
+
+.general-product-gallery-horizontal .general-product-gallery-thumbs button {
+  scroll-snap-align: start;
 }
 
 .general-product-gallery-item {
@@ -7856,10 +7879,6 @@ textarea {
   min-height: auto;
 }
 
-.general-product-gallery-horizontal .general-product-gallery-item {
-  scroll-snap-align: start;
-}
-
 .general-product-gallery-item:disabled {
   cursor: default;
 }
@@ -7889,11 +7908,7 @@ textarea {
   text-transform: uppercase;
 }
 
-.general-product-gallery-focused {
-  grid-template-columns: 1fr;
-}
-
-.general-product-gallery-focused .general-product-gallery-main {
+.general-product-gallery-main {
   width: 100%;
 }
 
@@ -8673,7 +8688,9 @@ textarea {
 .sf-footer-grid {
   display: grid;
   gap: 32px;
-  grid-template-columns: minmax(240px, 1.35fr) repeat(3, minmax(150px, 0.75fr));
+  /* The seller controls how many link columns exist, so the track list grows
+     with them instead of assuming three. */
+  grid-template-columns: minmax(240px, 1.35fr) repeat(auto-fit, minmax(150px, 0.75fr));
   margin: 0 auto;
   max-width: 1240px;
   width: 100%;
@@ -8771,6 +8788,24 @@ textarea {
   flex-wrap: wrap;
   gap: 14px;
   justify-content: flex-end;
+}
+
+.sf-footer-payments {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sf-footer-payments span {
+  background: #ffffff;
+  border: 1px solid rgba(23, 23, 23, 0.14);
+  border-radius: 4px;
+  color: #444444;
+  font-size: 0.72rem;
+  font-weight: 640;
+  letter-spacing: 0.02em;
+  padding: 5px 10px;
 }
 
 .form-section-heading {
@@ -11519,22 +11554,21 @@ textarea {
     position: static;
   }
 
-  .general-product-gallery-two-column:not(.general-product-gallery-focused) {
-    grid-auto-columns: minmax(78%, 1fr);
-    grid-auto-flow: column;
-    grid-template-columns: none;
-    overflow-x: auto;
-    scroll-snap-type: x proximity;
-    scrollbar-width: none;
+  /* The side thumbnail rail has no room on a phone, so it drops under the
+     main image the same way the vertical layout does. */
+  .general-product-gallery-two-column {
+    grid-template-columns: 1fr;
   }
 
-  .general-product-gallery-two-column:not(.general-product-gallery-focused)::-webkit-scrollbar {
-    display: none;
+  .general-product-gallery-two-column .general-product-gallery-main {
+    grid-column: 1;
+    grid-row: 1;
   }
 
-  .general-product-gallery-two-column:not(.general-product-gallery-focused) .general-product-gallery-item {
-    min-height: min(680px, 108vw);
-    scroll-snap-align: start;
+  .general-product-gallery-two-column .general-product-gallery-thumbs {
+    grid-column: 1;
+    grid-row: 2;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .general-product-promo-grid {
@@ -11745,17 +11779,30 @@ textarea {
   .general-collection-grid,
   .general-product-grid,
   .general-product-listing-grid,
-  .sf-shop-page .general-product-listing-grid,
   .sf-search-products .general-product-listing-grid,
   .tabbed-product-carousel .general-product-listing-grid,
-  .general-product-gallery,
   .general-product-promo-grid
 ) {
   --product-grid-gap: var(--general-grid-gap);
-  --product-gallery-gap: var(--general-grid-gap);
   column-gap: var(--general-grid-gap);
   gap: var(--general-grid-gap);
   row-gap: var(--general-grid-gap);
+}
+
+/* The shop grid and the product gallery carry seller-set spacing (Pages ->
+   Grid spacing, Product Page -> Gallery spacing), so the template rhythm above
+   is only their fallback rather than a hard override. */
+.sf-page[data-storefront-template="general-default"] .sf-shop-page .general-product-listing-grid {
+  --product-grid-gap: var(--shop-grid-gap, var(--general-grid-gap));
+  column-gap: var(--product-grid-gap);
+  gap: var(--product-grid-gap);
+  row-gap: var(--product-grid-gap);
+}
+
+.sf-page[data-storefront-template="general-default"] .general-product-gallery {
+  column-gap: var(--product-gallery-gap, var(--general-grid-gap));
+  gap: var(--product-gallery-gap, var(--general-grid-gap));
+  row-gap: var(--product-gallery-gap, var(--general-grid-gap));
 }
 
 .sf-page[data-storefront-template="general-default"] :is(
@@ -12467,6 +12514,17 @@ textarea {
   background: #050505;
   border-color: #050505;
   color: #fff;
+}
+
+.general-product-variant-select {
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 0;
+  color: #1e1e1e;
+  font-size: .82rem;
+  min-height: 44px;
+  padding: 0 12px;
+  width: 100%;
 }
 
 @media (max-width: 760px) {

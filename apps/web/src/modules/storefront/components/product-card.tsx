@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatStorefrontMoney } from "../format";
 import type { StorefrontProduct } from "../storefront.types";
 import { StorefrontImage } from "./storefront-image";
 
@@ -44,8 +45,8 @@ export function ProductPrice({
 }) {
   return (
     <div className="sf-price">
-      <strong>{formatMoney(price, currency)}</strong>
-      {compareAtPrice ? <span>{formatMoney(compareAtPrice, currency)}</span> : null}
+      <strong>{formatStorefrontMoney(price, currency)}</strong>
+      {compareAtPrice ? <span>{formatStorefrontMoney(compareAtPrice, currency)}</span> : null}
     </div>
   );
 }
@@ -56,11 +57,4 @@ export function StockStatus({ stockQuantity }: { stockQuantity: number }) {
       {stockQuantity > 0 ? `${stockQuantity} in stock` : "Out of stock"}
     </p>
   );
-}
-
-function formatMoney(value: string, currency: string) {
-  return new Intl.NumberFormat("en", {
-    style: "currency",
-    currency
-  }).format(Number(value));
 }

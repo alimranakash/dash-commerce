@@ -32,6 +32,51 @@ export async function getProductTaxonomyItems(storeId: string, type: ProductTaxo
   );
 }
 
+/** Taxonomy items that at least one publicly visible product carries. */
+export async function getPublicProductTaxonomyItems(storeId: string, type: ProductTaxonomyType) {
+  await ensureProductTaxonomySchema();
+
+  return prisma.$queryRawUnsafe<ProductTaxonomyItem[]>(
+    `
+    SELECT DISTINCT taxonomy."id", taxonomy."imageUrl", taxonomy."name", taxonomy."slug"
+    FROM ${tableName("ProductTaxonomy")} taxonomy
+    INNER JOIN ${tableName("ProductTaxonomyAssignment")} assignment
+      ON assignment."taxonomyId" = taxonomy."id" AND assignment."type" = taxonomy."type"
+    INNER JOIN ${tableName("Product")} product ON product."id" = assignment."productId"
+    WHERE taxonomy."storeId" = $1
+      AND taxonomy."type" = $2
+      AND product."status" = 'ACTIVE'
+      AND product."visibility" = 'PUBLIC'
+    ORDER BY taxonomy."name" ASC
+  `,
+    storeId,
+    type
+  );
+}
+
+/** Product ids carrying the given taxonomy slug, for storefront filtering. */
+export async function getProductIdsByTaxonomySlug(
+  storeId: string,
+  type: ProductTaxonomyType,
+  slug: string
+) {
+  await ensureProductTaxonomySchema();
+
+  const rows = await prisma.$queryRawUnsafe<Array<{ productId: string }>>(
+    `
+    SELECT assignment."productId"
+    FROM ${tableName("ProductTaxonomyAssignment")} assignment
+    INNER JOIN ${tableName("ProductTaxonomy")} taxonomy ON taxonomy."id" = assignment."taxonomyId"
+    WHERE assignment."storeId" = $1 AND assignment."type" = $2 AND taxonomy."slug" = $3
+  `,
+    storeId,
+    type,
+    slug
+  );
+
+  return rows.map((row) => row.productId);
+}
+
 export async function createProductTaxonomyItem(storeId: string, type: ProductTaxonomyType, name: string) {
   await ensureProductTaxonomySchema();
 

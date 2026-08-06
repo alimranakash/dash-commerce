@@ -46,13 +46,7 @@ export function ProductPurchasePanel({
     setQuantity(Math.min(Math.max(nextQuantity, 1), safeMax));
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (isUnavailable || isSubmitting) {
-      return;
-    }
-
+  async function addCurrentSelection() {
     setError("");
     setIsSubmitting(true);
 
@@ -70,11 +64,35 @@ export function ProductPurchasePanel({
 
     if (!result.ok) {
       setError(result.message);
+      return false;
+    }
+
+    return true;
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (isUnavailable || isSubmitting) {
       return;
     }
 
-    notifyCartUpdated();
-    router.refresh();
+    if (await addCurrentSelection()) {
+      notifyCartUpdated();
+      router.refresh();
+    }
+  }
+
+  // Buy Now is the same add, then straight to checkout instead of opening the
+  // mini cart.
+  async function handleBuyNow() {
+    if (isUnavailable || isSubmitting) {
+      return;
+    }
+
+    if (await addCurrentSelection()) {
+      router.push(`/s/${storeSlug}/checkout`);
+    }
   }
 
   return (
@@ -122,7 +140,12 @@ export function ProductPurchasePanel({
             {isSubmitting ? "Adding..." : addToCartText}
           </button>
           {buyNowEnabled ? (
-            <button className="sf-buy-now" disabled={isUnavailable} type="button">
+            <button
+              className="sf-buy-now"
+              disabled={isUnavailable || isSubmitting}
+              onClick={handleBuyNow}
+              type="button"
+            >
               Buy Now
             </button>
           ) : null}

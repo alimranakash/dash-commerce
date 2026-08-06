@@ -1,11 +1,14 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { StorefrontAdvancedSettings } from "../../customization";
+import { resolveStorefrontCopyright, resolveStorefrontHref } from "../../footer-content";
+import type { StorefrontSocialLink } from "../../social-links";
 import type { StorefrontStore } from "../../storefront.types";
 
 type FashionFooterProps = {
   advancedSettings?: StorefrontAdvancedSettings | null | undefined;
   primaryDomain: string | undefined;
+  socialLinks: StorefrontSocialLink[];
   store: StorefrontStore;
   templateId: string;
 };
@@ -13,16 +16,17 @@ type FashionFooterProps = {
 export function FashionStorefrontFooter({
   advancedSettings,
   primaryDomain,
+  socialLinks,
   store,
   templateId
 }: FashionFooterProps) {
   const settings = store.setting;
   const fashion = advancedSettings?.fashion;
+  const footer = advancedSettings?.footer;
   const homeHref = `/s/${store.slug}`;
-  const currentYear = new Date().getFullYear();
   const brandText = store.name.trim() || "Symmetry";
-  const description = settings?.tagline?.trim() || fashion?.footerDescription || "Best Swimwear is a bikini boutique, in sunny Hermosa Beach, California. A warm environment where instead of feeling self-conscious she feels secure in her own body, not limited by age, size or shape, wearing swimwear that fits and feels good.";
-  const socialLinks = resolveSocialLinks(settings);
+  const description = footer?.description || settings?.tagline?.trim() || fashion?.footerDescription || "Best Swimwear is a bikini boutique, in sunny Hermosa Beach, California. A warm environment where instead of feeling self-conscious she feels secure in her own body, not limited by age, size or shape, wearing swimwear that fits and feels good.";
+  const paymentIcons = footer?.paymentIconsEnabled ? footer.paymentIcons : [];
   const aboutLinks = fashion?.footerAboutLinks ?? [];
   const shopLinks = fashion?.footerShopLinks ?? [];
   const legalLinks = fashion?.footerLegalLinks ?? [];
@@ -51,18 +55,21 @@ export function FashionStorefrontFooter({
             {settings?.logoUrl ? <img alt={`${brandText} logo`} src={settings.logoUrl} /> : null}
             <span>{brandText}</span>
           </Link>
-          <nav className="fashion-footer-socials" aria-label="Social links">
-            {socialLinks.map((link) => (
-              <a href={link.href} key={link.label} rel={link.external ? "noreferrer" : undefined} target={link.external ? "_blank" : undefined}>
-                {link.shortLabel}
-              </a>
-            ))}
-          </nav>
+          {socialLinks.length > 0 ? (
+            <nav className="fashion-footer-socials" aria-label="Social links">
+              {socialLinks.map((link) => (
+                <a href={link.href} key={link.label} rel="noreferrer" target="_blank">
+                  {link.shortLabel}
+                  <span className="sr-only">{link.label}</span>
+                </a>
+              ))}
+            </nav>
+          ) : null}
         </section>
 
         <FashionFooterColumn title="About">
           {aboutLinks.map((link) => (
-            <Link href={resolveFooterHref(homeHref, link.url)} key={link.label}>
+            <Link href={resolveStorefrontHref(homeHref, link.url)} key={link.label}>
               {link.label}
             </Link>
           ))}
@@ -70,7 +77,7 @@ export function FashionStorefrontFooter({
 
         <FashionFooterColumn title="Shop">
           {shopLinks.map((link) => (
-            <Link href={resolveFooterHref(homeHref, link.url)} key={link.label}>
+            <Link href={resolveStorefrontHref(homeHref, link.url)} key={link.label}>
               {link.label}
             </Link>
           ))}
@@ -89,20 +96,22 @@ export function FashionStorefrontFooter({
       <div className="fashion-footer-bottom">
         <div className="fashion-footer-copyright">
           <p>
-            &copy; {currentYear} {brandText}. Powered by Dash Commerce OS.
+            {resolveStorefrontCopyright(footer?.copyrightText ?? "© {year} {store}.", brandText)}
             {primaryDomain ? ` ${primaryDomain}` : ""}
           </p>
         </div>
 
         <div className="fashion-footer-legal">
-          <div className="fashion-footer-payments" aria-label="Payment methods">
-            {["Visa", "MC", "Amex", "Pay", "Disc"].map((badge) => (
-              <span key={badge}>{badge}</span>
-            ))}
-          </div>
+          {paymentIcons.length > 0 ? (
+            <div className="fashion-footer-payments" aria-label="Payment methods">
+              {paymentIcons.map((badge) => (
+                <span key={badge}>{badge}</span>
+              ))}
+            </div>
+          ) : null}
           <nav aria-label="Legal links">
             {legalLinks.map((link) => (
-              <Link href={resolveFooterHref(homeHref, link.url)} key={link.label}>
+              <Link href={resolveStorefrontHref(homeHref, link.url)} key={link.label}>
                 {link.label}
               </Link>
             ))}
@@ -126,29 +135,3 @@ function FashionFooterColumn({ children, title }: { children: ReactNode; title: 
   );
 }
 
-function resolveSocialLinks(settings: StorefrontStore["setting"]) {
-  const whatsappHref = getWhatsAppHref(settings?.whatsappNumber);
-  const links = [
-    settings?.facebookUrl ? { external: true, href: settings.facebookUrl, label: "Facebook", shortLabel: "f" } : null,
-    { external: false, href: "#youtube", label: "YouTube", shortLabel: "yt" },
-    settings?.instagramUrl ? { external: true, href: settings.instagramUrl, label: "Instagram", shortLabel: "ig" } : null,
-    { external: false, href: "#tiktok", label: "TikTok", shortLabel: "tk" },
-    whatsappHref ? { external: true, href: whatsappHref, label: "WhatsApp", shortLabel: "wa" } : { external: false, href: "#x", label: "X", shortLabel: "x" }
-  ];
-
-  return links.filter((link): link is { external: boolean; href: string; label: string; shortLabel: string } => Boolean(link));
-}
-
-function getWhatsAppHref(value: string | null | undefined) {
-  const digits = value?.replace(/\D/g, "");
-
-  return digits ? `https://wa.me/${digits}` : null;
-}
-
-function resolveFooterHref(homeHref: string, url: string) {
-  if (url.startsWith("http") || url.startsWith("mailto:") || url.startsWith("tel:") || url.startsWith("#")) {
-    return url;
-  }
-
-  return `${homeHref}${url === "/" ? "" : url.startsWith("/") ? url : `/${url}`}`;
-}

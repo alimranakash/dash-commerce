@@ -89,6 +89,24 @@ export type StorefrontLinkSetting = {
   url: string;
 };
 
+// Fixed number of footer column slots the theme settings form renders.
+export const FOOTER_COLUMN_SLOTS = 3;
+
+export type StorefrontFooterColumnSetting = {
+  links: StorefrontLinkSetting[];
+  title: string;
+};
+
+export type StorefrontFooterSettings = {
+  columns: StorefrontFooterColumnSetting[];
+  copyrightText: string;
+  description: string;
+  enabled: boolean;
+  paymentIcons: string[];
+  paymentIconsEnabled: boolean;
+  showSocialIcons: boolean;
+};
+
 export type StorefrontElectronicsPromoCardSettings = {
   backgroundColor: string;
   badge: string;
@@ -179,17 +197,11 @@ export type StorefrontShopPageSettings = {
   enableAvailabilityFilter: boolean;
   enableBrandFilter: boolean;
   enableCategoryFilter: boolean;
-  enableColorFilter: boolean;
-  enableCollectionFilter: boolean;
   enableComparePrice: boolean;
   enableFilters: boolean;
   enableHoverImage: boolean;
   enableProductBadges: boolean;
-  enableProductBrand: boolean;
-  enableProductColorCount: boolean;
   enablePriceFilter: boolean;
-  enableQuickView: boolean;
-  enableSizeFilter: boolean;
   enableSorting: boolean;
   enableTagFilter: boolean;
   enableResultCounter: boolean;
@@ -301,6 +313,7 @@ export type StorefrontAdvancedSettings = {
     youtubeUrl?: string | undefined;
   };
   cartPage: StorefrontCartPageSettings;
+  footer: StorefrontFooterSettings;
   miniCart: StorefrontMiniCartSettings;
   layout: {
     boxedMaxWidth: number;
@@ -415,6 +428,35 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     showVariant: true,
     taxesEnabled: false,
     widthMode: "full"
+  },
+  footer: {
+    // Every default link resolves to a real storefront route, so a seller who
+    // never opens the panel still ships a footer where nothing dead-ends.
+    columns: [
+      {
+        links: [
+          { label: "Home", url: "/" },
+          { label: "Shop", url: "/products" },
+          { label: "Categories", url: "/categories" },
+          { label: "Search", url: "/search" }
+        ],
+        title: "Quick Links"
+      },
+      {
+        links: [
+          { label: "Track Order", url: "/orders" },
+          { label: "My Account", url: "/account" },
+          { label: "Cart", url: "/cart" }
+        ],
+        title: "Customer Support"
+      }
+    ],
+    copyrightText: "© {year} {store}. Powered by Dash Commerce OS.",
+    description: "",
+    enabled: true,
+    paymentIcons: ["Visa", "Mastercard", "Amex", "bKash", "Nagad"],
+    paymentIconsEnabled: true,
+    showSocialIcons: true
   },
   miniCart: {
     autoOpenAfterAdd: true,
@@ -697,17 +739,11 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     enableAvailabilityFilter: true,
     enableBrandFilter: true,
     enableCategoryFilter: true,
-    enableColorFilter: true,
-    enableCollectionFilter: true,
     enableComparePrice: true,
     enableFilters: true,
     enableHoverImage: true,
     enableProductBadges: true,
-    enableProductBrand: true,
-    enableProductColorCount: true,
     enablePriceFilter: true,
-    enableQuickView: false,
-    enableSizeFilter: true,
     enableSorting: true,
     enableTagFilter: true,
     enableResultCounter: true,
@@ -752,6 +788,7 @@ export function normalizeAdvancedSettings(value: unknown): StorefrontAdvancedSet
   const header = isRecord(input.header) ? input.header : {};
   const hero = isRecord(input.hero) ? input.hero : {};
   const cartPage = isRecord(input.cartPage) ? input.cartPage : {};
+  const footer = isRecord(input.footer) ? input.footer : {};
   const miniCart = isRecord(input.miniCart) ? input.miniCart : {};
   const layout = isRecord(input.layout) ? input.layout : {};
   const productPage = isRecord(input.productPage) ? input.productPage : {};
@@ -814,6 +851,7 @@ export function normalizeAdvancedSettings(value: unknown): StorefrontAdvancedSet
       youtubeUrl: text(hero.youtubeUrl)
     },
     cartPage: cartPageSettings(cartPage),
+    footer: footerSettings(footer),
     miniCart: miniCartSettings(miniCart),
     layout: {
       ...DEFAULT_STOREFRONT_ADVANCED_SETTINGS.layout,
@@ -1034,6 +1072,60 @@ function trustItems(value: unknown, defaults: StorefrontElectronicsHomepageSetti
     .filter((item): item is StorefrontElectronicsHomepageSettings["trustItems"][number] => Boolean(item));
 
   return items.length > 0 ? items.slice(0, 6) : defaults;
+}
+
+function footerSettings(input: Record<string, unknown>): StorefrontFooterSettings {
+  const defaults = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.footer;
+
+  return {
+    columns: footerColumns(input.columns, defaults.columns),
+    copyrightText: text(input.copyrightText, defaults.copyrightText),
+    description: text(input.description, defaults.description),
+    enabled: bool(input.enabled, defaults.enabled),
+    paymentIcons: paymentIconList(input.paymentIcons, defaults.paymentIcons),
+    paymentIconsEnabled: bool(input.paymentIconsEnabled, defaults.paymentIconsEnabled),
+    showSocialIcons: bool(input.showSocialIcons, defaults.showSocialIcons)
+  };
+}
+
+// A seller who clears every column means "no columns", so an explicitly empty
+// list is preserved instead of snapping back to the defaults.
+function footerColumns(value: unknown, defaults: StorefrontFooterColumnSetting[]) {
+  if (!Array.isArray(value)) {
+    return defaults;
+  }
+
+  return value
+    .map((item): StorefrontFooterColumnSetting | null => {
+      if (!isRecord(item)) {
+        return null;
+      }
+
+      const title = text(item.title);
+
+      if (!title) {
+        return null;
+      }
+
+      return {
+        links: Array.isArray(item.links) ? linkSettings(item.links, []) : [],
+        title
+      };
+    })
+    .filter((item): item is StorefrontFooterColumnSetting => Boolean(item))
+    .slice(0, 4);
+}
+
+function paymentIconList(value: unknown, defaults: string[]) {
+  if (!Array.isArray(value)) {
+    return defaults;
+  }
+
+  return value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 10);
 }
 
 function miniCartSettings(input: Record<string, unknown>): StorefrontMiniCartSettings {
@@ -1332,17 +1424,11 @@ function shopPageSettings(input: Record<string, unknown>): StorefrontShopPageSet
     enableAvailabilityFilter: bool(input.enableAvailabilityFilter, defaults.enableAvailabilityFilter),
     enableBrandFilter: bool(input.enableBrandFilter, defaults.enableBrandFilter),
     enableCategoryFilter: bool(input.enableCategoryFilter, defaults.enableCategoryFilter),
-    enableColorFilter: bool(input.enableColorFilter, defaults.enableColorFilter),
-    enableCollectionFilter: bool(input.enableCollectionFilter, defaults.enableCollectionFilter),
     enableComparePrice: bool(input.enableComparePrice, defaults.enableComparePrice),
     enableFilters: bool(input.enableFilters, defaults.enableFilters),
     enableHoverImage: bool(input.enableHoverImage, defaults.enableHoverImage),
     enableProductBadges: bool(input.enableProductBadges, defaults.enableProductBadges),
-    enableProductBrand: bool(input.enableProductBrand, defaults.enableProductBrand),
-    enableProductColorCount: bool(input.enableProductColorCount, defaults.enableProductColorCount),
     enablePriceFilter: bool(input.enablePriceFilter, defaults.enablePriceFilter),
-    enableQuickView: bool(input.enableQuickView, defaults.enableQuickView),
-    enableSizeFilter: bool(input.enableSizeFilter, defaults.enableSizeFilter),
     enableSorting: bool(input.enableSorting, defaults.enableSorting),
     enableTagFilter: bool(input.enableTagFilter, defaults.enableTagFilter),
     enableResultCounter: bool(input.enableResultCounter, defaults.enableResultCounter),

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
+import { getPublicProductTaxonomyItems } from "../../../../../modules/products/product-taxonomy.service";
 import { ProductGrid } from "../../../../../modules/storefront/components/product-listing";
 import { ShopToolbar } from "../../../../../modules/storefront/components/shop-toolbar";
 import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../../../../modules/storefront/customization";
@@ -25,10 +26,12 @@ type StorefrontCategoryProductsPageProps = {
   }>;
   searchParams: Promise<{
     availability?: string;
+    brand?: string;
     maxPrice?: string;
     minPrice?: string;
     page?: string;
     sort?: string;
+    tag?: string;
   }>;
 };
 
@@ -54,13 +57,17 @@ export default async function StorefrontCategoryProductsPage({
   const productsPerPage = Math.round(shopSettings.productsPerPage);
   const query = {
     availability: parseAvailability(filters.availability),
+    brandSlug: shopSettings.enableBrandFilter ? filters.brand : undefined,
     categorySlug: category.slug,
     maxPrice: parsePrice(filters.maxPrice),
     minPrice: parsePrice(filters.minPrice),
-    sort
+    sort,
+    tagSlug: shopSettings.enableTagFilter ? filters.tag : undefined
   };
-  const [categories, products, totalProducts] = await Promise.all([
+  const [categories, brands, tags, products, totalProducts] = await Promise.all([
     getStorefrontCategories(store.id),
+    shopSettings.enableBrandFilter ? getPublicProductTaxonomyItems(store.id, "BRAND") : Promise.resolve([]),
+    shopSettings.enableTagFilter ? getPublicProductTaxonomyItems(store.id, "TAG") : Promise.resolve([]),
     getStorefrontProducts(store.id, {
       ...query,
       skip: (currentPage - 1) * productsPerPage,
@@ -71,11 +78,15 @@ export default async function StorefrontCategoryProductsPage({
   const totalPages = Math.max(1, Math.ceil(totalProducts / productsPerPage));
   const listingDefaults = settings.advancedSettings.productSections?.listing ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.listing;
   // Same split as the shop page: Product Sections -> Shop / Category Listing
-  // owns the grid and card presentation, the Shop Page panel owns page size,
-  // filters, sorting and spacing. Only the copy is category-specific.
+  // supplies the CTA defaults, the Pages panel owns columns, card flags, page
+  // size, filters, sorting and spacing. Only the copy is category-specific.
   const listingSection = {
     ...listingDefaults,
+    columns: shopSettings.productsPerRow,
     count: productsPerPage,
+    enableBadges: shopSettings.enableProductBadges,
+    enableComparePrice: shopSettings.enableComparePrice,
+    enableHoverImage: shopSettings.enableHoverImage,
     subtitle: category.description ?? `Shop products from ${category.name}.`,
     title: `${category.name} products`
   };
@@ -104,10 +115,11 @@ export default async function StorefrontCategoryProductsPage({
       >
         <h1 className="sr-only" id="category-title">{listingSection.title}</h1>
         <ShopToolbar
+          brands={brands}
           categories={categories}
           productCount={totalProducts}
           settings={shopSettings}
-          storeName={store.name}
+          tags={tags}
         />
         {products.length === 0 ? (
           <div className="sf-shop-empty">
@@ -175,9 +187,11 @@ function buildCategoryHref(
   categorySlug: string,
   filters: {
     availability?: string;
+    brand?: string;
     maxPrice?: string;
     minPrice?: string;
     sort?: string;
+    tag?: string;
   },
   page: number
 ) {
@@ -185,6 +199,14 @@ function buildCategoryHref(
 
   if (filters.availability) {
     params.set("availability", filters.availability);
+  }
+
+  if (filters.brand) {
+    params.set("brand", filters.brand);
+  }
+
+  if (filters.tag) {
+    params.set("tag", filters.tag);
   }
 
   if (filters.minPrice) {

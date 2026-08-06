@@ -28,6 +28,7 @@ type CheckoutShippingRate = {
 type CheckoutFormProps = {
   checkoutError: string | undefined;
   currency: string;
+  notes: string;
   paymentMethods: CheckoutPaymentMethod[];
   selectedShippingId: string;
   shippingRates: CheckoutShippingRate[];
@@ -38,6 +39,7 @@ type CheckoutFormProps = {
 export function CheckoutForm({
   checkoutError,
   currency,
+  notes,
   paymentMethods,
   selectedShippingId,
   shippingRates,
@@ -60,7 +62,7 @@ export function CheckoutForm({
       <input name="addressLine2" type="hidden" value="" />
       <input name="postalCode" type="hidden" value="" />
       <input name="email" type="hidden" value="" />
-      <input name="notes" type="hidden" value="" />
+      <input name="notes" type="hidden" value={notes} />
       {!needsPaymentReference ? <input name="paymentReference" type="hidden" value="" /> : null}
       <input name="paymentNote" type="hidden" value="" />
       <input name="district" type="hidden" value={selectedShippingRate?.district ?? selectedShippingRate?.name ?? ""} />

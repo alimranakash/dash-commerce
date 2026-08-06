@@ -19,6 +19,7 @@ export type CartTotals = {
 export type Cart = {
   storeId: string;
   items: CartItem[];
+  note: string;
   totals: CartTotals;
 };
 
@@ -27,4 +28,5 @@ export type StoredCartItem = Omit<CartItem, "lineTotal">;
 export type StoredCart = {
   storeId: string;
   items: StoredCartItem[];
+  note: string;
 };

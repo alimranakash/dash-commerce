@@ -7,6 +7,7 @@ import type { Cart, StoredCart, StoredCartItem } from "./cart.types";
 const CART_COOKIE_PREFIX = "dash_cart";
 const CART_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 const CART_VERSION = 1;
+const CART_NOTE_MAX_LENGTH = 1000;
 
 type CartCookiePayload = StoredCart & {
   version: number;
@@ -15,7 +16,16 @@ type CartCookiePayload = StoredCart & {
 export async function getCart(storeId: string): Promise<Cart> {
   const cart = await readStoredCart(storeId);
 
-  return buildCart(storeId, cart.items);
+  return buildCart(storeId, cart.items, cart.note);
+}
+
+/** Order note from the cart page or mini cart drawer; carried into checkout. */
+export async function setCartNote(storeId: string, note: string) {
+  const currentCart = await readStoredCart(storeId);
+
+  await writeStoredCart(storeId, currentCart.items, note);
+
+  return getCart(storeId);
 }
 
 export async function addToCart(storeId: string, productId: string, quantity: number, variantId?: string | null) {
@@ -43,7 +53,7 @@ export async function addToCart(storeId: string, productId: string, quantity: nu
     quantity: nextQuantity
   };
 
-  await writeStoredCart(storeId, upsertItem(currentCart.items, nextItem));
+  await writeStoredCart(storeId, upsertItem(currentCart.items, nextItem), currentCart.note);
 
   return getCart(storeId);
 }
@@ -71,7 +81,7 @@ export async function updateCartItemQuantity(
     item.lineId === currentItem.lineId ? { ...item, quantity: nextQuantity } : item
   );
 
-  await writeStoredCart(storeId, nextItems);
+  await writeStoredCart(storeId, nextItems, currentCart.note);
 
   return getCart(storeId);
 }
@@ -80,7 +90,7 @@ export async function removeCartItem(storeId: string, lineId: string) {
   const currentCart = await readStoredCart(storeId);
   const nextItems = currentCart.items.filter((item) => item.lineId !== lineId && item.productId !== lineId);
 
-  await writeStoredCart(storeId, nextItems);
+  await writeStoredCart(storeId, nextItems, currentCart.note);
 
   return getCart(storeId);
 }
@@ -90,7 +100,7 @@ export async function clearCart(storeId: string) {
 
   cookieStore.delete(cookieName(storeId));
 
-  return buildCart(storeId, []);
+  return buildCart(storeId, [], "");
 }
 
 export function calculateCartTotals(items: StoredCartItem[]) {
@@ -103,7 +113,7 @@ export function calculateCartTotals(items: StoredCartItem[]) {
   };
 }
 
-function buildCart(storeId: string, items: StoredCartItem[]): Cart {
+function buildCart(storeId: string, items: StoredCartItem[], note: string): Cart {
   const normalizedItems = items.map((item) => ({
     ...item,
     lineId: item.lineId ?? cartLineId(item.productId, item.variantId),
@@ -113,6 +123,7 @@ function buildCart(storeId: string, items: StoredCartItem[]): Cart {
   return {
     storeId,
     items: normalizedItems,
+    note,
     totals: calculateCartTotals(items)
   };
 }
@@ -150,7 +161,8 @@ async function readStoredCart(storeId: string): Promise<StoredCart> {
   if (!payload || payload.storeId !== storeId) {
     return {
       storeId,
-      items: []
+      items: [],
+      note: ""
     };
   }
 
@@ -158,16 +170,18 @@ async function readStoredCart(storeId: string): Promise<StoredCart> {
     storeId,
     items: payload.items
       .map(normalizeStoredItem)
-      .filter((item): item is StoredCartItem => Boolean(item))
+      .filter((item): item is StoredCartItem => Boolean(item)),
+    note: normalizeNote(payload.note)
   };
 }
 
-async function writeStoredCart(storeId: string, items: StoredCartItem[]) {
+async function writeStoredCart(storeId: string, items: StoredCartItem[], note: string) {
   const cookieStore = await cookies();
   const payload: CartCookiePayload = {
     version: CART_VERSION,
     storeId,
-    items: items.slice(0, 50)
+    items: items.slice(0, 50),
+    note: normalizeNote(note)
   };
 
   cookieStore.set(cookieName(storeId), encodeCartCookie(payload), {
@@ -219,6 +233,10 @@ async function getActiveCartVariant(storeId: string, productId: string, variantI
 
 function cartLineId(productId: string, variantId?: string | null) {
   return variantId ? `${productId}:${variantId}` : productId;
+}
+
+function normalizeNote(value: unknown) {
+  return typeof value === "string" ? value.trim().slice(0, CART_NOTE_MAX_LENGTH) : "";
 }
 
 function normalizeQuantity(quantity: number) {

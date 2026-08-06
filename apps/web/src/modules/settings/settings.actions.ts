@@ -8,7 +8,9 @@ import { uploadMediaAsset } from "../media/media.service";
 import { requireStore } from "../stores/queries";
 import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
+  FOOTER_COLUMN_SLOTS,
   normalizeAdvancedSettings,
+  type StorefrontFooterColumnSetting,
   type StorefrontHeroSlide,
   type StorefrontLinkSetting,
   type StorefrontMenuItem,
@@ -384,6 +386,15 @@ async function advancedSettingsFromFormData(storeId: string, formData: FormData,
       taxesEnabled: checkbox(formData, "cartTaxesEnabled"),
       widthMode: getValue(formData, "cartWidthMode")
     },
+    footer: {
+      columns: parseFooterColumns(formData),
+      copyrightText: getValue(formData, "footerCopyrightText"),
+      description: getValue(formData, "footerDescription"),
+      enabled: checkbox(formData, "footerEnabled"),
+      paymentIcons: parseTextList(getValue(formData, "footerPaymentIcons")),
+      paymentIconsEnabled: checkbox(formData, "footerPaymentIconsEnabled"),
+      showSocialIcons: checkbox(formData, "footerShowSocialIcons")
+    },
     miniCart: {
       autoOpenAfterAdd: checkbox(formData, "miniCartAutoOpenAfterAdd"),
       checkoutButtonBackgroundColor: getValue(formData, "miniCartCheckoutButtonBackgroundColor"),
@@ -503,17 +514,11 @@ async function advancedSettingsFromFormData(storeId: string, formData: FormData,
       enableAvailabilityFilter: checkbox(formData, "shopEnableAvailabilityFilter"),
       enableBrandFilter: checkbox(formData, "shopEnableBrandFilter"),
       enableCategoryFilter: checkbox(formData, "shopEnableCategoryFilter"),
-      enableColorFilter: checkbox(formData, "shopEnableColorFilter"),
-      enableCollectionFilter: checkbox(formData, "shopEnableCollectionFilter"),
       enableComparePrice: checkbox(formData, "shopEnableComparePrice"),
       enableFilters: checkbox(formData, "shopEnableFilters"),
       enableHoverImage: checkbox(formData, "shopEnableHoverImage"),
       enableProductBadges: checkbox(formData, "shopEnableProductBadges"),
-      enableProductBrand: checkbox(formData, "shopEnableProductBrand"),
-      enableProductColorCount: checkbox(formData, "shopEnableProductColorCount"),
       enablePriceFilter: checkbox(formData, "shopEnablePriceFilter"),
-      enableQuickView: checkbox(formData, "shopEnableQuickView"),
-      enableSizeFilter: checkbox(formData, "shopEnableSizeFilter"),
       enableSorting: checkbox(formData, "shopEnableSorting"),
       enableTagFilter: checkbox(formData, "shopEnableTagFilter"),
       enableResultCounter: checkbox(formData, "shopEnableResultCounter"),
@@ -544,6 +549,27 @@ async function advancedSettingsFromFormData(storeId: string, formData: FormData,
       title: getValue(formData, "tabbedShowcaseTitle")
     }
   });
+}
+
+// Each footer column is a title input plus one "Label | /path" textarea, so a
+// column with no title is simply dropped rather than saved empty.
+function parseFooterColumns(formData: FormData): StorefrontFooterColumnSetting[] {
+  const columns: StorefrontFooterColumnSetting[] = [];
+
+  for (let index = 0; index < FOOTER_COLUMN_SLOTS; index += 1) {
+    const title = getValue(formData, `footerColumnTitle${index}`);
+
+    if (!title) {
+      continue;
+    }
+
+    columns.push({
+      links: parseLinks(getValue(formData, `footerColumnLinks${index}`)),
+      title
+    });
+  }
+
+  return columns;
 }
 
 function parseLinks(value: string): StorefrontLinkSetting[] {

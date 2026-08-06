@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatStorefrontMoney } from "../../storefront/format";
 
 type ShippingProgressProps = {
   amount: number;
@@ -22,7 +23,7 @@ export function ShippingProgress({
   const progress = amount > 0 ? Math.min(100, (subtotalValue / amount) * 100) : 100;
   const message = remaining <= 0
     ? "You qualify for free shipping."
-    : text.replace("{amount}", formatMoney(remaining, currency));
+    : text.replace("{amount}", formatStorefrontMoney(remaining, currency));
 
   return (
     <div className="general-cart-shipping">
@@ -35,11 +36,4 @@ export function ShippingProgress({
       </div>
     </div>
   );
-}
-
-function formatMoney(value: number, currency: string) {
-  return new Intl.NumberFormat("en", {
-    currency,
-    style: "currency"
-  }).format(value);
 }

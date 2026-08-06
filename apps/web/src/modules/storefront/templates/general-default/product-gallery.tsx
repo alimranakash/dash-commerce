@@ -89,7 +89,6 @@ export function GeneralProductGallery({ images: productImages, settings, title }
           "general-product-gallery",
           `general-product-gallery-${settings.galleryLayout}`,
           `general-product-gallery-${settings.imageRatio}`,
-          "general-product-gallery-focused",
           settings.zoomEnabled ? "is-zoomable" : ""
         ].join(" ")}
         style={{ "--product-gallery-gap": `${settings.gallerySpacing}px` } as CSSProperties}

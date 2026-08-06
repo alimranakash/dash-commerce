@@ -9,17 +9,18 @@ import type {
   StorefrontShopPageSortOption
 } from "../customization";
 
-type ShopToolbarCategory = {
+type ShopToolbarFacet = {
   id: string;
   name: string;
   slug: string;
 };
 
 type ShopToolbarProps = {
-  categories: ShopToolbarCategory[];
+  brands: ShopToolbarFacet[];
+  categories: ShopToolbarFacet[];
   productCount: number;
   settings: StorefrontShopPageSettings;
-  storeName: string;
+  tags: ShopToolbarFacet[];
 };
 
 const sortLabels: Record<StorefrontShopPageSortOption, string> = {
@@ -32,7 +33,7 @@ const sortLabels: Record<StorefrontShopPageSortOption, string> = {
   "price-desc": "Price High -> Low"
 };
 
-export function ShopToolbar({ categories, productCount, settings, storeName }: ShopToolbarProps) {
+export function ShopToolbar({ brands, categories, productCount, settings, tags }: ShopToolbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const rawSearchParams = useSearchParams();
@@ -42,6 +43,8 @@ export function ShopToolbar({ categories, productCount, settings, storeName }: S
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") ?? "");
   const activeCategory = searchParams.get("category") ?? "";
   const activeAvailability = searchParams.get("availability") ?? "";
+  const activeBrand = searchParams.get("brand") ?? "";
+  const activeTag = searchParams.get("tag") ?? "";
   const activeSort = (searchParams.get("sort") || settings.defaultSort) as StorefrontShopPageSortOption;
 
   const enabledSortOptions = useMemo(
@@ -67,7 +70,7 @@ export function ShopToolbar({ categories, productCount, settings, storeName }: S
 
   const resetFilters = () => {
     const params = new URLSearchParams(searchParams.toString());
-    ["availability", "category", "maxPrice", "minPrice", "page"].forEach((key) => params.delete(key));
+    ["availability", "brand", "category", "maxPrice", "minPrice", "page", "tag"].forEach((key) => params.delete(key));
     setMinPrice("");
     setMaxPrice("");
     const query = params.toString();
@@ -128,14 +131,6 @@ export function ShopToolbar({ categories, productCount, settings, storeName }: S
                 <X className="h-4 w-4" />
               </button>
             </div>
-
-            {settings.enableCollectionFilter ? (
-              <FilterGroup title="Collections">
-                <button className="active" type="button">All products</button>
-                <button type="button">Seasonal edit</button>
-                <button type="button">Daily essentials</button>
-              </FilterGroup>
-            ) : null}
 
             {settings.enableCategoryFilter ? (
               <FilterGroup title="Categories">
@@ -216,15 +211,23 @@ export function ShopToolbar({ categories, productCount, settings, storeName }: S
               </FilterGroup>
             ) : null}
 
-            {settings.enableBrandFilter ? (
-              <FilterGroup title="Brand">
-                <button className="active" type="button">{storeName}</button>
-              </FilterGroup>
+            {settings.enableBrandFilter && brands.length > 0 ? (
+              <FacetFilter
+                activeSlug={activeBrand}
+                items={brands}
+                onSelect={(slug) => updateQuery({ brand: slug })}
+                title="Brand"
+              />
             ) : null}
 
-            {settings.enableColorFilter ? <FutureFilter title="Color" values={["Black", "White", "Natural"]} /> : null}
-            {settings.enableSizeFilter ? <FutureFilter title="Size" values={["Small", "Medium", "Large"]} /> : null}
-            {settings.enableTagFilter ? <FutureFilter title="Tags" values={["New", "Sale", "Essential"]} /> : null}
+            {settings.enableTagFilter && tags.length > 0 ? (
+              <FacetFilter
+                activeSlug={activeTag}
+                items={tags}
+                onSelect={(slug) => updateQuery({ tag: slug })}
+                title="Tags"
+              />
+            ) : null}
 
             <div className="sf-filter-drawer-actions">
               <button onClick={resetFilters} type="button">Reset Filters</button>
@@ -246,12 +249,30 @@ function FilterGroup({ children, title }: { children: ReactNode; title: string }
   );
 }
 
-function FutureFilter({ title, values }: { title: string; values: string[] }) {
+function FacetFilter({
+  activeSlug,
+  items,
+  onSelect,
+  title
+}: {
+  activeSlug: string;
+  items: ShopToolbarFacet[];
+  onSelect: (slug: string | null) => void;
+  title: string;
+}) {
   return (
     <FilterGroup title={title}>
-      {values.map((value) => (
-        <button disabled key={value} type="button">
-          {value}
+      <button className={activeSlug ? "" : "active"} onClick={() => onSelect(null)} type="button">
+        All
+      </button>
+      {items.map((item) => (
+        <button
+          className={activeSlug === item.slug ? "active" : ""}
+          key={item.id}
+          onClick={() => onSelect(activeSlug === item.slug ? null : item.slug)}
+          type="button"
+        >
+          {item.name}
         </button>
       ))}
     </FilterGroup>

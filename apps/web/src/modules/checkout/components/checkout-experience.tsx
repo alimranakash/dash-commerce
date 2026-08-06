@@ -55,6 +55,7 @@ export function CheckoutExperience({
       <CheckoutForm
         checkoutError={checkoutError}
         currency={currency}
+        notes={cart.note}
         paymentMethods={paymentMethods}
         selectedShippingId={selectedShippingRate?.id ?? ""}
         shippingRates={shippingRates}

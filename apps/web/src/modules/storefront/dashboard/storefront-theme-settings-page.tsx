@@ -33,7 +33,7 @@ const storefrontSections = [
   { href: "#colors-layout", label: "Colors & Layout" },
   { href: "#tabbed-product-showcase", label: "Tabbed Showcase" },
   { href: "#shop-collection-page", label: "Pages" },
-  { href: "#footer-social-preview", label: "Footer" },
+  { href: "#footer", label: "Footer" },
   { href: "#cart-page", label: "Cart" },
   { href: "#mini-cart-drawer", label: "Mini Cart" },
   { href: "#product-sections", label: "Product Sections" },
@@ -139,10 +139,10 @@ export async function StorefrontThemeSettingsPage({
           <section id="footer-social-preview" className="storefront-settings-info-card storefront-settings-section">
             <div>
               <p className="eyebrow">Footer</p>
-              <h2>Footer & social preview</h2>
+              <h2>Footer contact & social sources</h2>
               <p>
-                Footer content continues to use your existing store branding, contact details, social profile links, and media assets.
-                Update those from the existing Settings pages when needed.
+                Footer columns, payment icons, description, and copyright live in the Footer panel above. The contact block and the
+                social icon targets come from your store branding, contact details, and social profile links.
               </p>
             </div>
             <div className="storefront-settings-info-links">

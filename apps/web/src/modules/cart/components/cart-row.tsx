@@ -4,6 +4,7 @@ import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { StorefrontImage } from "../../storefront/components/storefront-image";
+import { formatStorefrontMoney } from "../../storefront/format";
 import type { CartItem } from "../cart.types";
 import { submitCartAction } from "./cart-client-actions";
 import { QuantitySelector } from "./quantity-selector";
@@ -94,13 +95,13 @@ export function CartRow({
         </div>
       </div>
       <div className="general-cart-price-cell" data-label="Price">
-        {formatMoney(item.price, currency)}
+        {formatStorefrontMoney(item.price, currency)}
       </div>
       <div className="general-cart-quantity-cell" data-label="Quantity">
         <QuantitySelector disabled={isPending} onChange={updateQuantity} quantity={quantity} />
       </div>
       <div className="general-cart-total-cell" data-label="Total">
-        {formatMoney(Number(item.price) * quantity, currency)}
+        {formatStorefrontMoney(Number(item.price) * quantity, currency)}
       </div>
       <div className="general-cart-remove-cell">
         {showRemoveButton ? (
@@ -117,11 +118,4 @@ export function CartRow({
       </div>
     </div>
   );
-}
-
-function formatMoney(value: number | string, currency: string) {
-  return new Intl.NumberFormat("en", {
-    currency,
-    style: "currency"
-  }).format(Number(value));
 }

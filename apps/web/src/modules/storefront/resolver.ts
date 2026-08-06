@@ -1,6 +1,7 @@
 import { prisma } from "@dash/db";
 import { notFound } from "next/navigation";
 import { ensureCategoryImageSchema } from "../categories/category-image-schema";
+import { getProductIdsByTaxonomySlug } from "../products/product-taxonomy.service";
 import { getProductVariantConfiguration } from "../products/product-variants.service";
 import { ensureDefaultSettingsForStore } from "../settings/settings.service";
 import { withStoreActiveTemplate } from "./templates/template-store";
@@ -16,12 +17,14 @@ export type StorefrontProductSort =
 
 type StorefrontProductQuery = {
   availability?: "in-stock" | "out-of-stock" | undefined;
+  brandSlug?: string | undefined;
   categorySlug?: string | undefined;
   maxPrice?: number | undefined;
   minPrice?: number | undefined;
   search?: string | undefined;
   skip?: number | undefined;
   sort?: StorefrontProductSort | undefined;
+  tagSlug?: string | undefined;
   take?: number | undefined;
 };
 
@@ -195,10 +198,12 @@ export async function getStorefrontProducts(
 
   const input = typeof inputOrTake === "number" ? { take: inputOrTake } : (inputOrTake ?? {});
   const search = input.search?.trim();
+  const taxonomyWhere = await taxonomyProductWhere(storeId, input);
 
   return prisma.product.findMany({
     where: {
       ...publicProductWhere(storeId),
+      ...taxonomyWhere,
       ...(input.categorySlug
         ? {
             category: {
@@ -243,10 +248,12 @@ export async function getStorefrontProducts(
 
 export async function getStorefrontProductCount(storeId: string, input?: StorefrontProductQuery) {
   const search = input?.search?.trim();
+  const taxonomyWhere = await taxonomyProductWhere(storeId, input ?? {});
 
   return prisma.product.count({
     where: {
       ...publicProductWhere(storeId),
+      ...taxonomyWhere,
       ...(input?.categorySlug
         ? {
             category: {
@@ -459,6 +466,33 @@ export function getPrimaryStorefrontDomain(
   store: NonNullable<Awaited<ReturnType<typeof getStorefrontBySlug>>>
 ) {
   return store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
+}
+
+// Brands and tags live in the raw-SQL taxonomy tables the generated Prisma
+// client does not know about, so they narrow the query by product id.
+async function taxonomyProductWhere(storeId: string, input: StorefrontProductQuery) {
+  const brandSlug = input.brandSlug?.trim();
+  const tagSlug = input.tagSlug?.trim();
+
+  if (!brandSlug && !tagSlug) {
+    return {};
+  }
+
+  const [brandIds, tagIds] = await Promise.all([
+    brandSlug ? getProductIdsByTaxonomySlug(storeId, "BRAND", brandSlug) : Promise.resolve(null),
+    tagSlug ? getProductIdsByTaxonomySlug(storeId, "TAG", tagSlug) : Promise.resolve(null)
+  ]);
+  const matched = [brandIds, tagIds].filter((ids): ids is string[] => Array.isArray(ids));
+  const productIds = matched.reduce<string[]>(
+    (current, ids, index) => (index === 0 ? ids : current.filter((id) => ids.includes(id))),
+    []
+  );
+
+  return {
+    id: {
+      in: productIds
+    }
+  };
 }
 
 function publicProductWhere(storeId: string) {

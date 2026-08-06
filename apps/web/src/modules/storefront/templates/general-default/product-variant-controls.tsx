@@ -20,6 +20,8 @@ type ProductVariantControlsProps = {
   storeId: string;
   storeSlug: string;
   variantConfiguration: ProductVariantConfiguration;
+  variantEnabled: boolean;
+  variantStyle: "buttons" | "dropdown";
 };
 
 export function ProductVariantControls({
@@ -36,7 +38,9 @@ export function ProductVariantControls({
   productSlug,
   storeId,
   storeSlug,
-  variantConfiguration
+  variantConfiguration,
+  variantEnabled,
+  variantStyle
 }: ProductVariantControlsProps) {
   const activeVariants = useMemo(() => variantConfiguration.variants.filter((variant) => variant.status !== "INACTIVE"), [variantConfiguration.variants]);
   const [selectedSignature, setSelectedSignature] = useState(activeVariants[0]?.optionSignature ?? "");
@@ -62,21 +66,36 @@ export function ProductVariantControls({
     <div className="general-product-dynamic-stack">
       <ProductPrice compareAtPrice={compareAtPrice ? String(compareAtPrice) : undefined} currency={currency} price={String(price)} />
       {sku ? <p className="general-product-sku">SKU: {sku}</p> : null}
-      {activeVariants.length > 0 ? (
+      {variantEnabled && activeVariants.length > 0 ? (
         <div className="general-product-variant-matrix" aria-label="Product variants">
           <span>Options</span>
-          <div>
-            {activeVariants.map((variant) => (
-              <button
-                aria-pressed={variant.optionSignature === selectedSignature}
-                key={variant.optionSignature}
-                onClick={() => selectVariant(variant.optionSignature)}
-                type="button"
-              >
-                {variant.title}
-              </button>
-            ))}
-          </div>
+          {variantStyle === "dropdown" ? (
+            <select
+              aria-label="Product options"
+              className="general-product-variant-select"
+              onChange={(event) => selectVariant(event.target.value)}
+              value={selectedSignature}
+            >
+              {activeVariants.map((variant) => (
+                <option key={variant.optionSignature} value={variant.optionSignature}>
+                  {variant.title}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div>
+              {activeVariants.map((variant) => (
+                <button
+                  aria-pressed={variant.optionSignature === selectedSignature}
+                  key={variant.optionSignature}
+                  onClick={() => selectVariant(variant.optionSignature)}
+                  type="button"
+                >
+                  {variant.title}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       ) : null}
       <p className="general-product-stock">

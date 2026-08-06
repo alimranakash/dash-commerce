@@ -80,7 +80,13 @@ export function CartPage({ cart, currency, feedback, settings, store }: CartPage
               storeName={store.name}
               storeSlug={store.slug}
             />
-            <CartSummary cart={cart} checkoutHref={checkoutHref} currency={currency} settings={settings} />
+            <CartSummary
+              cart={cart}
+              checkoutHref={checkoutHref}
+              currency={currency}
+              settings={settings}
+              storeSlug={store.slug}
+            />
           </>
         )}
       </div>

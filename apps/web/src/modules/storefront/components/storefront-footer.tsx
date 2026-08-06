@@ -1,9 +1,12 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { getModuleSettings } from "../../settings/settings.service";
 import { DEFAULT_STOREFRONT_TEMPLATE_ID } from "../templates/template-mapping";
 import { ElectronicsStorefrontFooter } from "../templates/electronics-default/electronics-footer";
 import { FashionStorefrontFooter } from "../templates/fashion-default/fashion-footer";
 import { getStorefrontThemeSettings } from "../themes/theme.service";
+import { resolveStorefrontSocialLinks } from "../social-links";
+import { resolveStorefrontHref, resolveStorefrontCopyright } from "../footer-content";
 import type { StorefrontStore } from "../storefront.types";
 
 type StorefrontFooterProps = {
@@ -14,22 +17,26 @@ type StorefrontFooterProps = {
 export async function StorefrontFooter({ primaryDomain, store }: StorefrontFooterProps) {
   const settings = store.setting;
   const homeHref = `/s/${store.slug}`;
-  const currentYear = new Date().getFullYear();
   const templateId = store.activeTemplate || DEFAULT_STOREFRONT_TEMPLATE_ID;
-  const whatsappHref = getWhatsAppHref(settings?.whatsappNumber);
-  const socialLinks = [
-    settings?.facebookUrl ? { href: settings.facebookUrl, label: "Facebook" } : null,
-    settings?.instagramUrl ? { href: settings.instagramUrl, label: "Instagram" } : null,
-    whatsappHref ? { href: whatsappHref, label: "WhatsApp" } : null
-  ].filter((link): link is { href: string; label: string } => Boolean(link));
+  const [themeSettings, moduleSettings] = await Promise.all([
+    getStorefrontThemeSettings(store.id),
+    getModuleSettings(store.id)
+  ]);
+  const footer = themeSettings.advancedSettings.footer;
+  const socialLinks = footer.showSocialIcons
+    ? resolveStorefrontSocialLinks(settings, moduleSettings.socialProfiles)
+    : [];
+
+  if (!footer.enabled) {
+    return null;
+  }
 
   if (templateId === "fashion-default") {
-    const themeSettings = await getStorefrontThemeSettings(store.id);
-
     return (
       <FashionStorefrontFooter
         advancedSettings={themeSettings.advancedSettings}
         primaryDomain={primaryDomain}
+        socialLinks={socialLinks}
         store={store}
         templateId={templateId}
       />
@@ -37,17 +44,21 @@ export async function StorefrontFooter({ primaryDomain, store }: StorefrontFoote
   }
 
   if (templateId === "electronics-default") {
-    const themeSettings = await getStorefrontThemeSettings(store.id);
-
     return (
       <ElectronicsStorefrontFooter
         advancedSettings={themeSettings.advancedSettings}
         primaryDomain={primaryDomain}
+        socialLinks={socialLinks}
         store={store}
         templateId={templateId}
       />
     );
   }
+
+  const description =
+    footer.description ||
+    settings?.tagline?.trim() ||
+    "A curated online store powered by Dash Commerce OS, built for smooth shopping and modern customer service.";
 
   return (
     <footer className="sf-footer" data-storefront-footer-template={templateId}>
@@ -63,30 +74,19 @@ export async function StorefrontFooter({ primaryDomain, store }: StorefrontFoote
             </span>
             <strong>{store.name}</strong>
           </Link>
-          <p>
-            A curated online store powered by Dash Commerce OS, built for smooth shopping and modern
-            customer service.
-          </p>
+          <p>{description}</p>
           <small>{primaryDomain ?? `${store.slug}.dash.com`}</small>
         </section>
 
-        <FooterColumn title="Quick Links">
-          <Link href={homeHref}>Home</Link>
-          <Link href={`${homeHref}/products`}>Shop</Link>
-          <Link href={`${homeHref}/categories`}>Categories</Link>
-          {settings?.contactEmail ? (
-            <a href={`mailto:${settings.contactEmail}`}>Contact</a>
-          ) : (
-            <a href="#contact">Contact</a>
-          )}
-        </FooterColumn>
-
-        <FooterColumn title="Customer Support">
-          <Link href={`${homeHref}/orders`}>Track Order</Link>
-          <a href="#return-policy">Return Policy</a>
-          <a href="#shipping-info">Shipping Info</a>
-          <a href="#privacy-policy">Privacy Policy</a>
-        </FooterColumn>
+        {footer.columns.map((column) => (
+          <FooterColumn key={column.title} title={column.title}>
+            {column.links.map((item) => (
+              <Link href={resolveStorefrontHref(homeHref, item.url)} key={`${item.label}-${item.url}`}>
+                {item.label}
+              </Link>
+            ))}
+          </FooterColumn>
+        ))}
 
         <FooterColumn title="Contact Info">
           {settings?.contactEmail ? (
@@ -103,9 +103,14 @@ export async function StorefrontFooter({ primaryDomain, store }: StorefrontFoote
       </div>
 
       <div className="sf-footer-bottom">
-        <p>
-          © {currentYear} {store.name}. Powered by Dash Commerce OS.
-        </p>
+        <p>{resolveStorefrontCopyright(footer.copyrightText, store.name)}</p>
+        {footer.paymentIconsEnabled && footer.paymentIcons.length > 0 ? (
+          <div className="sf-footer-payments" aria-label="Payment methods">
+            {footer.paymentIcons.map((icon) => (
+              <span key={icon}>{icon}</span>
+            ))}
+          </div>
+        ) : null}
         {socialLinks.length > 0 ? (
           <nav className="sf-footer-socials" aria-label="Social links">
             {socialLinks.map((link) => (
@@ -132,10 +137,4 @@ function FooterColumn({ children, title }: { children: ReactNode; title: string 
       <div>{children}</div>
     </section>
   );
-}
-
-function getWhatsAppHref(value: string | null | undefined) {
-  const digits = value?.replace(/\D/g, "");
-
-  return digits ? `https://wa.me/${digits}` : null;
 }

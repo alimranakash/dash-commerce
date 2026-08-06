@@ -4,6 +4,7 @@ import {
   addToCart,
   clearCart,
   removeCartItem,
+  setCartNote,
   updateCartItemQuantity
 } from "../../../modules/cart/cart.service";
 
@@ -50,6 +51,17 @@ export async function POST(request: NextRequest) {
       }
 
       return redirectTo(request, `/s/${storeSlug}/cart?removed=1`);
+    }
+
+    if (cartAction === "note") {
+      await setCartNote(storeId, String(formData.get("note") ?? ""));
+      revalidateStorefrontCart(storeSlug);
+
+      if (wantsJson) {
+        return NextResponse.json({ ok: true });
+      }
+
+      return redirectTo(request, `/s/${storeSlug}/cart?updated=1`);
     }
 
     if (cartAction === "clear") {

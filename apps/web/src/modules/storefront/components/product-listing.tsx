@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import type { StorefrontProductSectionSettings } from "../customization";
+import { formatStorefrontMoney } from "../format";
 import { ProductSectionSliderControls } from "./product-section-slider-controls";
 import { StorefrontImage } from "./storefront-image";
 
@@ -180,19 +181,12 @@ export function ProductPrice({
 }) {
   return (
     <p className="general-product-listing-price">
-      <strong>{formatMoney(price, currency)}</strong>
+      <strong>{formatStorefrontMoney(price, currency)}</strong>
       {compareAtPrice && Number(compareAtPrice) > Number(price) ? (
-        <span>{formatMoney(compareAtPrice, currency)}</span>
+        <span>{formatStorefrontMoney(compareAtPrice, currency)}</span>
       ) : null}
     </p>
   );
-}
-
-function formatMoney(value: string, currency: string) {
-  return new Intl.NumberFormat("en", {
-    currency,
-    style: "currency"
-  }).format(Number(value));
 }
 
 function productBadge(product: ProductCardProduct) {

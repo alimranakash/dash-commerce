@@ -98,6 +98,8 @@ export function GeneralProductPage({
               storeId={store.id}
               storeSlug={store.slug}
               variantConfiguration={variantConfiguration}
+              variantEnabled={productPage.variantEnabled}
+              variantStyle={productPage.variantStyle}
             />
           ) : (
             <>

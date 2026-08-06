@@ -7,8 +7,10 @@ import { useEffect, useState, useTransition, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { StorefrontImage } from "../../storefront/components/storefront-image";
 import type { StorefrontMiniCartSettings } from "../../storefront/customization";
+import { formatStorefrontMoney } from "../../storefront/format";
 import type { Cart, CartItem } from "../cart.types";
 import { submitCartAction } from "./cart-client-actions";
+import { CartNoteField } from "./cart-note-field";
 import { QuantitySelector } from "./quantity-selector";
 import { ShippingProgress } from "./shipping-progress";
 
@@ -147,6 +149,8 @@ export function MiniCartDrawer({
               checkoutHref={checkoutHref}
               currency={currency}
               settings={settings}
+              storeId={store.id}
+              storeSlug={store.slug}
               viewCartHref={viewCartHref}
               onNavigate={() => setOpen(false)}
             />
@@ -248,7 +252,7 @@ function MiniCartItem({
         {settings.showBrand ? <p>{storeName}</p> : null}
         <h3>{item.title}</h3>
         {settings.showVariant ? <span>{item.variantTitle ?? "Standard"}</span> : null}
-        <strong>{formatMoney(item.price, currency)}</strong>
+        <strong>{formatStorefrontMoney(item.price, currency)}</strong>
         {error ? <small className="mini-cart-error">{error}</small> : null}
       </div>
       <div className="mini-cart-item-actions">
@@ -277,6 +281,8 @@ function MiniCartSummary({
   currency,
   onNavigate,
   settings,
+  storeId,
+  storeSlug,
   viewCartHref
 }: {
   cart: Cart;
@@ -284,6 +290,8 @@ function MiniCartSummary({
   currency: string;
   onNavigate: () => void;
   settings: StorefrontMiniCartSettings;
+  storeId: string;
+  storeSlug: string;
   viewCartHref: string;
 }) {
   const subtotal = Number(cart.totals.subtotal);
@@ -291,15 +299,18 @@ function MiniCartSummary({
   return (
     <footer className="mini-cart-footer">
       {settings.orderNotesEnabled ? (
-        <details className="mini-cart-notes">
-          <summary>Order Notes</summary>
-          <textarea aria-label="Order notes" placeholder="Add a note for your order" rows={3} />
-        </details>
+        <CartNoteField
+          className="mini-cart-notes"
+          note={cart.note}
+          rows={3}
+          storeId={storeId}
+          storeSlug={storeSlug}
+        />
       ) : null}
       <div className="mini-cart-summary-lines">
         <div>
           <span>Subtotal</span>
-          <strong>{formatMoney(subtotal, currency)}</strong>
+          <strong>{formatStorefrontMoney(subtotal, currency)}</strong>
         </div>
         <div>
           <span>Delivery Charges</span>
@@ -308,7 +319,7 @@ function MiniCartSummary({
         <p>Shipping, taxes and discount codes calculated at checkout</p>
         <div>
           <span>Estimated Total</span>
-          <strong>{formatMoney(subtotal, currency)}</strong>
+          <strong>{formatStorefrontMoney(subtotal, currency)}</strong>
         </div>
       </div>
       {settings.checkoutButtonEnabled ? (
@@ -358,11 +369,4 @@ function storefrontHref(storeSlug: string, value: string) {
   }
 
   return `/s/${storeSlug}${value.startsWith("/") ? value : `/${value}`}`;
-}
-
-function formatMoney(value: number | string, currency: string) {
-  return new Intl.NumberFormat("en", {
-    currency,
-    style: "currency"
-  }).format(Number(value));
 }
