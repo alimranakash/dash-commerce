@@ -11,7 +11,9 @@ export type TabbedProductTabsItem = {
 
 type TabbedProductTabsProps = {
   arrowsVisible: boolean;
+  autoplay: boolean;
   defaultActiveTab: number;
+  infiniteLoop: boolean;
   // Panels arrive as a prop rather than as `children` on purpose. They are
   // server-rendered product rows, and taking them as a stable array lets React
   // skip re-rendering every card when a tab is clicked. Running them through
@@ -25,7 +27,9 @@ type TabbedProductTabsProps = {
 
 export function TabbedProductTabs({
   arrowsVisible,
+  autoplay,
   defaultActiveTab,
+  infiniteLoop,
   panels,
   scrollAmount,
   sectionId,
@@ -53,10 +57,15 @@ export function TabbedProductTabs({
             </button>
           ))}
         </div>
-        {sliderEnabled && arrowsVisible && activePanelId ? (
+        {/* Autoplay and infinite loop live in the controls, so they mount
+            whenever the slider is on - even with the arrows hidden. */}
+        {sliderEnabled && activePanelId ? (
           <ProductSectionSliderControls
+            autoplay={autoplay}
+            infiniteLoop={infiniteLoop}
             key={activePanelId}
             scrollAmount={scrollAmount}
+            showArrows={arrowsVisible}
             targetId={activePanelId}
           />
         ) : null}

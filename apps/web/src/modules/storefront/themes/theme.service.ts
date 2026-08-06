@@ -91,7 +91,7 @@ export function createStorefrontThemeContext(input: {
   return {
     branding,
     colors: {
-      background: STORE_BG,
+      background: settings.advancedSettings.layout.pageBackgroundColor || STORE_BG,
       primary: input.settings.primaryColor,
       secondary: input.settings.secondaryColor,
       text: STORE_TEXT

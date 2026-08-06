@@ -61,7 +61,9 @@ export function TabbedProductSection({
         </div>
         <TabbedProductTabs
           arrowsVisible={section.arrowsVisible}
+          autoplay={section.autoplay}
           defaultActiveTab={section.defaultActiveTab}
+          infiniteLoop={section.infiniteLoop}
           panels={enabledTabs.map((tab, index) => {
             const products = resolveProducts(productsBySource, tab.source).slice(0, tab.productCount || section.productsPerTab);
             const panelSection = {

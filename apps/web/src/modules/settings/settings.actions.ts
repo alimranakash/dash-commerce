@@ -710,7 +710,9 @@ async function parseSlides(storeId: string, formData: FormData): Promise<Storefr
 
     const slideUrl = mediaType === "youtube" ? youtubeUrl : mediaType === "video" ? videoUrl : url;
 
-    if (!slideUrl) {
+    // A slide is empty only when the seller filled in nothing at all. Copy
+    // without media is still a slide - the hero renders its own backdrop.
+    if (!slideUrl && !title && !subtitle) {
       continue;
     }
 

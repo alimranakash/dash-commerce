@@ -363,7 +363,7 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     showCurrency: true,
     showSearch: true,
     spacing: 48,
-    sticky: false,
+    sticky: true,
     textColor: "#171717"
   },
   hero: {
@@ -729,16 +729,18 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     enabled: true,
     fullWidth: true,
     infiniteLoop: false,
-    productsPerTab: 5,
+    // Two viewports of cards by default, so the slider arrows have somewhere to
+    // scroll before a seller touches anything.
+    productsPerTab: 10,
     productsPerView: 5,
     scrollAmount: "page",
     sectionSpacing: 84,
     sliderEnabled: true,
     tabs: [
-      { enabled: true, label: "All", productCount: 5, source: "all" },
-      { enabled: true, label: "Bestsellers", productCount: 5, source: "best-sellers" },
-      { enabled: true, label: "On Sale", productCount: 5, source: "on-sale" },
-      { enabled: true, label: "New In", productCount: 5, source: "new-arrivals" }
+      { enabled: true, label: "All", productCount: 10, source: "all" },
+      { enabled: true, label: "Bestsellers", productCount: 10, source: "best-sellers" },
+      { enabled: true, label: "On Sale", productCount: 10, source: "on-sale" },
+      { enabled: true, label: "New In", productCount: 10, source: "new-arrivals" }
     ],
     title: ""
   }
@@ -1186,8 +1188,10 @@ function slideList(value: unknown) {
       }
 
       const url = text(item.url);
+      const slideTitle = text(item.title);
+      const slideSubtitle = text(item.subtitle);
 
-      if (!url) {
+      if (!url && !slideTitle && !slideSubtitle) {
         return null;
       }
 
@@ -1195,9 +1199,6 @@ function slideList(value: unknown) {
         mediaType: oneOf(item.mediaType, ["image", "video", "youtube"], "image"),
         url
       };
-
-      const slideTitle = text(item.title);
-      const slideSubtitle = text(item.subtitle);
 
       if (slideTitle) {
         slide.title = slideTitle;

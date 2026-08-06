@@ -12673,3 +12673,205 @@ textarea {
     animation-play-state: paused;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Storefront settings overrides
+
+   Announcement Bar / Header / Hero / Colors & Layout write their values as CSS
+   variables from the theme settings panel. Earlier blocks in this file redeclare
+   the same properties with hard-coded values and, being later in the cascade,
+   used to win - which is why those panels saved but never changed anything.
+   This block is last on purpose: it is the layer the settings actually reach.
+   --------------------------------------------------------------------------- */
+
+/* Colors & Layout ---------------------------------------------------------- */
+
+.sf-theme-scope {
+  background: var(--sf-page-bg, #ffffff);
+}
+
+.sf-page,
+.sf-page[data-storefront-template] {
+  background: var(--sf-page-bg, #ffffff);
+}
+
+.sf-theme-scope[data-storefront-width="boxed"] > .sf-page,
+.sf-theme-scope[data-storefront-width="boxed"] .sf-foundation-layout {
+  margin-inline: auto;
+  max-width: var(--sf-boxed-max-width, 1440px);
+  width: 100%;
+}
+
+@media (min-width: 761px) {
+  .sf-page[data-storefront-template] .general-homepage,
+  .sf-page[data-storefront-template] .beauty-homepage,
+  .sf-page[data-storefront-template] .fashion-homepage {
+    --general-section-padding-block: var(--sf-section-padding, clamp(48px, 6vw, 88px));
+    --general-section-gap: var(--sf-section-padding, clamp(34px, 4.8vw, 72px));
+  }
+}
+
+/* Announcement Bar --------------------------------------------------------- */
+
+.sf-announcement-bar {
+  background: var(--sf-announcement-bg, #4b2267);
+  color: var(--sf-announcement-color, #ffffff);
+  font-size: var(--sf-announcement-font-size, 13px);
+  font-weight: 500;
+  overflow: hidden;
+  padding: 0;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* Header ------------------------------------------------------------------- */
+
+.sf-header-shell {
+  background: var(--sf-header-bg, #ffffff);
+  color: var(--sf-header-color, #171717);
+  position: relative;
+  top: auto;
+}
+
+.sf-header-shell.sf-header-shell-sticky {
+  position: sticky;
+  top: 0;
+}
+
+.sf-header {
+  background: var(--sf-header-bg, #ffffff);
+  backdrop-filter: none;
+  color: var(--sf-header-color, #171717);
+  min-height: var(--sf-header-height, 92px);
+}
+
+.sf-header .sf-brand,
+.sf-header .sf-nav,
+.sf-header .sf-nav a {
+  color: inherit;
+}
+
+.sf-header .sf-nav {
+  gap: clamp(16px, 3vw, var(--sf-header-spacing, 48px));
+}
+
+/* Fashion / Beauty share one header shell. */
+.fashion-header-shell:not(.fashion-header-shell-overlay) .fashion-header,
+.sf-page:not(:has(.fashion-hero)) .fashion-header {
+  background: var(--fashion-header-bg, #ffffff);
+  color: var(--fashion-header-color, #111111);
+}
+
+.fashion-header-shell.fashion-header-shell-static {
+  position: relative;
+}
+
+.fashion-header-shell.fashion-header-shell-static .fashion-header {
+  position: absolute;
+}
+
+/* Hero --------------------------------------------------------------------- */
+
+.general-hero.general-hero-small {
+  min-height: 420px;
+}
+
+.general-hero.general-hero-medium {
+  min-height: 560px;
+}
+
+.general-hero.general-hero-large {
+  min-height: min(760px, calc(100vh - 122px));
+}
+
+.general-hero.general-hero-custom {
+  min-height: var(--sf-hero-custom-height, 720px);
+}
+
+.fashion-hero.fashion-hero-h-small {
+  min-height: clamp(380px, 46vh, 480px);
+}
+
+.fashion-hero.fashion-hero-h-medium {
+  min-height: clamp(480px, 62vh, 640px);
+}
+
+.fashion-hero.fashion-hero-h-custom {
+  min-height: var(--fashion-hero-custom-height, 720px);
+}
+
+.fashion-hero.fashion-hero-w-boxed,
+.fashion-hero.fashion-hero-w-custom {
+  margin-inline: auto;
+  max-width: var(--fashion-hero-custom-width, 1440px);
+  width: calc(100% - 48px);
+}
+
+.fashion-hero-align-center .fashion-hero-copy {
+  justify-items: center;
+  left: 50%;
+  max-width: min(760px, calc(100% - 48px));
+  text-align: center;
+  transform: translate(-50%, -38%);
+}
+
+.fashion-hero-align-right .fashion-hero-copy {
+  justify-items: end;
+  left: auto;
+  right: clamp(36px, 3.6vw, 70px);
+  text-align: right;
+}
+
+.fashion-hero-align-center .fashion-hero-actions {
+  justify-content: center;
+}
+
+.fashion-hero-align-right .fashion-hero-actions {
+  justify-content: flex-end;
+}
+
+.fashion-hero-actions-filled a {
+  background: #111111;
+  border-color: #111111;
+  color: #ffffff;
+}
+
+.fashion-hero-actions-outline a {
+  background: transparent;
+  border-color: currentColor;
+  color: inherit;
+}
+
+.fashion-hero-arrows {
+  display: flex;
+  gap: 10px;
+  inset-inline: clamp(16px, 3vw, 42px);
+  justify-content: space-between;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+}
+
+.fashion-hero-arrows button {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.82);
+  border: 0;
+  border-radius: 999px;
+  color: #111111;
+  cursor: pointer;
+  display: inline-flex;
+  height: 44px;
+  justify-content: center;
+  pointer-events: auto;
+  width: 44px;
+}
+
+.fashion-hero-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}

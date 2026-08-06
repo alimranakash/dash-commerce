@@ -81,7 +81,11 @@ export function ElectronicsStorefrontHeader({
   const shellStyle = {
     "--electronics-announcement-bg": settings.announcement.backgroundColor,
     "--electronics-announcement-color": settings.announcement.textColor,
-    "--electronics-announcement-font-size": `${settings.announcement.fontSize}px`
+    "--electronics-announcement-font-size": `${settings.announcement.fontSize}px`,
+    "--electronics-header-bg": settings.header.backgroundColor,
+    "--electronics-header-color": settings.header.textColor,
+    "--electronics-header-height": `${settings.header.height}px`,
+    "--electronics-nav-gap": `${settings.header.spacing}px`
   } as CSSProperties;
 
   useEffect(() => {
@@ -238,6 +242,9 @@ export function ElectronicsStorefrontHeader({
           ) : <span />}
 
           <div className={styles.utilities}>
+            {settings.header.showCurrency ? (
+              <span className={styles.currencyLabel}>{currency || "BDT"} - EN</span>
+            ) : null}
             <div className={styles.actions}>
               {settings.header.showAccount ? (
                 <Link aria-label="Account" className={styles.iconLink} href={`${homeHref}/account`}>

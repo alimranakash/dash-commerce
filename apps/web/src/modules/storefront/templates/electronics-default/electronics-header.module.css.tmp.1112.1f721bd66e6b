@@ -264,20 +264,12 @@
   min-width: max-content;
 }
 
-.currencyLabel {
-  color: inherit;
-  font-size: 0.82rem;
-  font-weight: 650;
-  margin-right: 10px;
-  white-space: nowrap;
-}
-
 .iconLink,
 .mobileButton {
   align-items: center;
   background: transparent;
   border: 0;
-  color: inherit;
+  color: #0b0d12;
   cursor: pointer;
   display: inline-flex;
   height: 36px;
@@ -331,7 +323,7 @@
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: clamp(14px, 2vw, var(--electronics-nav-gap, 30px));
+  gap: clamp(12px, 2vw, var(--electronics-nav-gap, 30px));
 }
 
 .nav a,
@@ -339,7 +331,7 @@
   align-items: center;
   background: transparent;
   border: 0;
-  color: inherit;
+  color: #0b0d12;
   cursor: pointer;
   display: inline-flex;
   font: inherit;

@@ -300,3 +300,26 @@
     padding: 22px;
   }
 }
+
+.ctaRow {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ctaSecondary {
+  align-items: center;
+  background: transparent;
+  border: 1px solid rgba(11, 13, 18, 0.22);
+  border-radius: 5px;
+  color: inherit;
+  display: inline-flex;
+  font-size: 0.88rem;
+  font-weight: 800;
+  justify-content: center;
+  min-height: 45px;
+  padding: 0 26px;
+  text-decoration: none;
+  width: fit-content;
+}

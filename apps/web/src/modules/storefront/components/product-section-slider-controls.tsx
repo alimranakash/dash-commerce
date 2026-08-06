@@ -4,17 +4,28 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type ProductSectionSliderControlsProps = {
+  autoplay?: boolean;
+  infiniteLoop?: boolean;
   scrollAmount?: "one" | "page";
+  showArrows?: boolean;
   targetId: string;
 };
 
+// Autoplay has no seller-facing interval of its own, so it reuses one step of
+// the configured scroll amount on a steady beat.
+const AUTOPLAY_INTERVAL_MS = 4000;
+
 export function ProductSectionSliderControls({
+  autoplay = false,
+  infiniteLoop = false,
   scrollAmount = "page",
+  showArrows = true,
   targetId
 }: ProductSectionSliderControlsProps) {
   const targetRef = useRef<HTMLElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [hasOverflow, setHasOverflow] = useState(false);
 
   useEffect(() => {
     const target = document.getElementById(targetId);
@@ -26,9 +37,10 @@ export function ProductSectionSliderControls({
 
     const update = () => {
       const maxScroll = target.scrollWidth - target.clientWidth;
-      const hasOverflow = maxScroll > 1;
-      setCanScrollLeft(hasOverflow && target.scrollLeft > 1);
-      setCanScrollRight(hasOverflow && target.scrollLeft < maxScroll - 1);
+      const overflowing = maxScroll > 1;
+      setHasOverflow(overflowing);
+      setCanScrollLeft(overflowing && target.scrollLeft > 1);
+      setCanScrollRight(overflowing && target.scrollLeft < maxScroll - 1);
     };
 
     update();
@@ -59,20 +71,50 @@ export function ProductSectionSliderControls({
         return;
       }
 
+      const maxScroll = target.scrollWidth - target.clientWidth;
+
+      // Infinite loop wraps at the ends instead of stopping there, so autoplay
+      // and the arrows both keep going in one direction forever.
+      if (infiniteLoop && maxScroll > 1) {
+        if (direction === 1 && target.scrollLeft >= maxScroll - 1) {
+          target.scrollTo({ behavior: "smooth", left: 0 });
+          return;
+        }
+
+        if (direction === -1 && target.scrollLeft <= 1) {
+          target.scrollTo({ behavior: "smooth", left: maxScroll });
+          return;
+        }
+      }
+
       target.scrollBy({
         behavior: "smooth",
         left: direction * scrollStep(target, scrollAmount)
       });
     },
-    [scrollAmount, targetId]
+    [infiniteLoop, scrollAmount, targetId]
   );
+
+  useEffect(() => {
+    if (!autoplay || !hasOverflow) {
+      return;
+    }
+
+    const timer = window.setInterval(() => scroll(1), AUTOPLAY_INTERVAL_MS);
+
+    return () => window.clearInterval(timer);
+  }, [autoplay, hasOverflow, scroll]);
+
+  if (!showArrows) {
+    return null;
+  }
 
   return (
     <div className="general-product-slider-controls" aria-label="Product slider controls">
       <span aria-hidden="true" />
       <button
         aria-label="Scroll products left"
-        disabled={!canScrollLeft}
+        disabled={!(infiniteLoop ? hasOverflow : canScrollLeft)}
         onClick={() => scroll(-1)}
         type="button"
       >
@@ -80,7 +122,7 @@ export function ProductSectionSliderControls({
       </button>
       <button
         aria-label="Scroll products right"
-        disabled={!canScrollRight}
+        disabled={!(infiniteLoop ? hasOverflow : canScrollRight)}
         onClick={() => scroll(1)}
         type="button"
       >

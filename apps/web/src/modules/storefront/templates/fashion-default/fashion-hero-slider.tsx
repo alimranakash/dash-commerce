@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import {
@@ -33,6 +34,8 @@ export function FashionHeroSlider({
   const isSlider = slides.length > 1 && hero.contentType.includes("slider");
   const currentSlide = slides[activeIndex] ?? slides[0];
   const heroStyle = {
+    "--fashion-hero-custom-height": `${hero.customHeight ?? 720}px`,
+    "--fashion-hero-custom-width": `${hero.customWidth ?? 1440}px`,
     "--fashion-hero-overlay": hexToRgb(hero.overlayColor || "#000000"),
     "--fashion-hero-overlay-opacity": String((hero.overlayOpacity || 28) / 100),
     "--fashion-hero-text": hero.textColor || "#ffffff"
@@ -56,15 +59,42 @@ export function FashionHeroSlider({
   }
 
   return (
-    <section className="fashion-hero" style={heroStyle} aria-labelledby="fashion-hero-title">
+    <section
+      className={`fashion-hero fashion-hero-h-${hero.height} fashion-hero-w-${hero.layoutWidth} fashion-hero-align-${hero.align}`}
+      style={heroStyle}
+      aria-labelledby="fashion-hero-title"
+    >
       <FashionHeroMedia slide={currentSlide} />
       <div className="fashion-hero-overlay" />
       <div className="fashion-hero-copy">
         <p>{currentSlide.subtitle || "THAT FEEL GOOD FIT"}</p>
         <h1 id="fashion-hero-title">{currentSlide.title || "Iconic style,\nmaximum heat."}</h1>
-        <Link href={resolveHeroHref(storeSlug, hero.button1Link)}>{primaryButtonText}</Link>
+        <div className={`fashion-hero-actions fashion-hero-actions-${hero.buttonStyle}`}>
+          <Link href={resolveHeroHref(storeSlug, hero.button1Link)}>{primaryButtonText}</Link>
+          {hero.button2Text ? (
+            <Link href={resolveHeroHref(storeSlug, hero.button2Link)}>{hero.button2Text}</Link>
+          ) : null}
+        </div>
       </div>
-      {hero.showDots && (isSlider || slides.length > 1) ? (
+      {slides.length > 1 && hero.showArrows ? (
+        <div className="fashion-hero-arrows">
+          <button
+            aria-label="Previous hero slide"
+            onClick={() => setActiveIndex((index) => (index - 1 + slides.length) % slides.length)}
+            type="button"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            aria-label="Next hero slide"
+            onClick={() => setActiveIndex((index) => (index + 1) % slides.length)}
+            type="button"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+      ) : null}
+      {hero.showDots && slides.length > 1 ? (
         <div className="fashion-hero-dots" aria-label="Hero slide navigation">
           {slides.map((slide, index) => (
             <button
@@ -76,13 +106,7 @@ export function FashionHeroSlider({
             />
           ))}
         </div>
-      ) : (
-        <div className="fashion-hero-dots" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
-      )}
+      ) : null}
     </section>
   );
 }

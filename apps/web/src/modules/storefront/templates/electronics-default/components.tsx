@@ -104,6 +104,12 @@ export function ElectronicsHero({
   const [gamingCard, headphonesCard, watchCard] = electronicsSettings?.heroPromoCards ?? [];
   const homeHref = `/s/${storeSlug}`;
 
+  // "Enable hero" is a plain on/off in the Hero Section panel, so it has to turn
+  // this banner off the same way it turns the other templates' heroes off.
+  if (heroSettings && !heroSettings.enabled) {
+    return null;
+  }
+
   return (
     <section className={styles.section} aria-labelledby="electronics-hero-title">
       <div className={styles.grid}>
@@ -112,9 +118,19 @@ export function ElectronicsHero({
             <span className={styles.status}>In stock now</span>
             <h1 id="electronics-hero-title">{title || "High-Output Mobile Devices"}</h1>
             <p>{subtitle || heroSettings?.subtitle || "Find your perfect phone - sleek and stylish or budget-friendly."}</p>
-            <Link className={styles.cta} href={resolveStorefrontHref(homeHref, heroSettings?.button1Link || "/products")}>
-              {heroSettings?.button1Text || "Shop Now"}
-            </Link>
+            <div className={styles.ctaRow}>
+              <Link className={styles.cta} href={resolveStorefrontHref(homeHref, heroSettings?.button1Link || "/products")}>
+                {heroSettings?.button1Text || "Shop Now"}
+              </Link>
+              {heroSettings?.button2Text ? (
+                <Link
+                  className={styles.ctaSecondary}
+                  href={resolveStorefrontHref(homeHref, heroSettings.button2Link || "/categories")}
+                >
+                  {heroSettings.button2Text}
+                </Link>
+              ) : null}
+            </div>
           </div>
           <div className={styles.mainMedia}>
             <StorefrontImage alt="" fallback="Mobile" loading="eager" src={heroImage} />

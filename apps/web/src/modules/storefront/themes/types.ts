@@ -72,5 +72,8 @@ export type StorefrontThemeStyle = CSSProperties & {
   "--store-primary": string;
   "--store-secondary": string;
   "--store-text": string;
+  "--sf-boxed-max-width": string;
+  "--sf-page-bg": string;
   "--sf-primary": string;
+  "--sf-section-padding": string;
 };

@@ -1,8 +1,5 @@
 import type { StorefrontTemplateHomepageProps } from "../types";
-import {
-  DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
-  type StorefrontTabbedProductShowcaseSettings
-} from "../../customization";
+import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../customization";
 import {
   resolveProductSectionProducts,
   type StorefrontProductPools
@@ -32,7 +29,7 @@ export function GeneralHomepageSections({
   const bestSellerSection = productSections.bestSellers;
   const newArrivalsSection = productSections.newArrivals;
   const trendingSection = productSections.trending;
-  const tabbedProductShowcase = homepageTabbedSection(settings?.advancedSettings.tabbedProductShowcase ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.tabbedProductShowcase);
+  const tabbedProductShowcase = settings?.advancedSettings.tabbedProductShowcase ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.tabbedProductShowcase;
   const allProducts = uniqueProducts([
     ...homeData.featuredProducts,
     ...homeData.bestSellers,
@@ -121,26 +118,4 @@ function uniqueProducts(products: StorefrontProduct[]) {
     seen.add(product.id);
     return true;
   });
-}
-
-// The tabbed showcase keeps its own fixed per-view sizing; the product section
-// rows below it follow their own Columns / Products shown / Display mode
-// settings instead.
-const HOMEPAGE_PRODUCTS_PER_VIEW = 5 as const;
-
-function homepageTabbedSection(section: StorefrontTabbedProductShowcaseSettings): StorefrontTabbedProductShowcaseSettings {
-  const productsPerTab = Math.max(section.productsPerTab, HOMEPAGE_PRODUCTS_PER_VIEW * 2);
-
-  return {
-    ...section,
-    productsPerTab,
-    productsPerView: HOMEPAGE_PRODUCTS_PER_VIEW,
-    sliderEnabled: true,
-    // Each tab carries its own count that wins over productsPerTab, so it needs
-    // the same floor or the panel renders exactly one viewport and cannot slide.
-    tabs: section.tabs.map((tab) => ({
-      ...tab,
-      productCount: Math.max(tab.productCount, productsPerTab)
-    }))
-  };
 }
