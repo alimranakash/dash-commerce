@@ -3526,8 +3526,7 @@ textarea {
   z-index: 2;
 }
 
-.general-hero-copy p,
-.general-promo-banner p {
+.general-hero-copy p {
   color: #171717;
   font-size: 0.76rem;
   font-weight: 800;
@@ -3548,7 +3547,6 @@ textarea {
 }
 
 .general-hero-copy span,
-.general-promo-banner span,
 .general-newsletter p {
   color: inherit;
   font-size: 0.96rem;
@@ -3696,8 +3694,7 @@ textarea {
 }
 
 .general-section-heading h2,
-.general-newsletter h2,
-.general-promo-banner h2 {
+.general-newsletter h2 {
   color: #171717;
   font-size: clamp(1.25rem, 2.2vw, 1.8rem);
   line-height: 1.15;
@@ -4278,54 +4275,174 @@ textarea {
   padding: clamp(28px, 4vw, 48px);
 }
 
-.general-promo-banner > div:first-child,
 .general-newsletter > div:first-child {
   display: grid;
   gap: 12px;
   max-width: 480px;
 }
 
-.general-promo-visual,
+/* Promo banner: the copy column stays flush with the surrounding full-bleed
+   sections while the visual panel stretches across the rest of the row, so no
+   dead space opens up between them on wide viewports. */
+.general-promo-banner {
+  column-gap: clamp(32px, 5vw, 72px);
+  grid-template-columns: minmax(0, 0.95fr) minmax(300px, 1.05fr);
+  position: relative;
+  row-gap: clamp(28px, 4vw, 40px);
+}
+
+.general-promo-banner::before {
+  background:
+    radial-gradient(ellipse at 88% 12%, rgba(120, 138, 85, 0.14), transparent 58%),
+    radial-gradient(ellipse at 4% 96%, rgba(199, 179, 150, 0.28), transparent 52%);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.general-promo-banner > * {
+  position: relative;
+  z-index: 1;
+}
+
+.general-promo-copy {
+  display: grid;
+  gap: 0;
+  justify-items: start;
+  max-width: 620px;
+}
+
+.general-promo-banner p {
+  color: #6b6455;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  margin: 0 0 14px;
+  text-transform: uppercase;
+}
+
+.general-promo-banner h2 {
+  color: #171717;
+  font-size: clamp(1.9rem, 3.2vw, 3rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.06;
+  margin: 0;
+  max-width: 14ch;
+}
+
+.general-promo-banner span {
+  color: #55503f;
+  font-size: clamp(0.95rem, 1vw, 1.05rem);
+  line-height: 1.6;
+  margin-top: 14px;
+  max-width: 44ch;
+}
+
+.general-promo-cta {
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(23, 23, 23, 0.16);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin-top: 28px;
+  min-height: 50px;
+  padding: 0 28px;
+  transition:
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.general-promo-cta:hover {
+  box-shadow: 0 14px 30px rgba(23, 23, 23, 0.22);
+  transform: translateY(-2px);
+}
+
+.general-promo-cta:active {
+  box-shadow: 0 6px 16px rgba(23, 23, 23, 0.18);
+  transform: translateY(0);
+}
+
+.general-promo-cta:focus-visible {
+  outline: 2px solid #171717;
+  outline-offset: 3px;
+}
+
 .general-newsletter-visual {
   align-self: stretch;
+  background:
+    radial-gradient(ellipse at 50% 32%, #788a55 0 34%, transparent 36%),
+    radial-gradient(ellipse at 30% 48%, #546f42 0 28%, transparent 30%);
   min-height: 190px;
   position: relative;
 }
 
-.general-promo-visual div {
-  background: #c7b396;
-  border-radius: 36px 36px 18px 18px;
-  bottom: 28px;
-  height: 84px;
-  position: absolute;
-  right: 70px;
-  width: 210px;
+/* The illustration sits inside a translucent panel that fills its column, so
+   it reads as part of the banner rather than a shape floating in the corner. */
+.general-promo-visual {
+  align-self: stretch;
+  display: grid;
+  min-height: 200px;
 }
 
-.general-promo-visual div::before {
+.general-promo-visual-card {
+  background:
+    radial-gradient(circle at 22% 22%, rgba(255, 255, 255, 0.55), transparent 45%),
+    linear-gradient(150deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.16));
+  border: 1px solid rgba(23, 23, 23, 0.07);
+  border-radius: 22px;
+  box-shadow: 0 18px 44px rgba(88, 74, 52, 0.12);
+  overflow: hidden;
+  position: relative;
+}
+
+.general-promo-visual-card::before {
+  background-image: radial-gradient(rgba(23, 23, 23, 0.14) 1px, transparent 1px);
+  background-size: 14px 14px;
+  content: "";
+  inset: 0;
+  -webkit-mask-image: linear-gradient(160deg, rgba(0, 0, 0, 0.55), transparent 62%);
+  mask-image: linear-gradient(160deg, rgba(0, 0, 0, 0.55), transparent 62%);
+  opacity: 0.5;
+  position: absolute;
+}
+
+/* Both shapes are anchored to the card's centre line rather than its edges so
+   the pair keeps its composition however wide the column gets. */
+.general-promo-visual-stack {
+  background: #c7b396;
+  border-radius: 36px 36px 18px 18px;
+  bottom: 24%;
+  height: clamp(58px, 7vw, 84px);
+  left: 50%;
+  position: absolute;
+  transform: translateX(-62%);
+  width: min(58%, 210px);
+}
+
+.general-promo-visual-stack::before {
   background: #d9c7aa;
   border-radius: 24px;
   content: "";
-  height: 70px;
-  left: 20px;
+  height: 84%;
+  left: 10%;
   position: absolute;
-  top: -28px;
-  width: 170px;
+  top: -34%;
+  width: 80%;
 }
 
-.general-promo-visual span,
-.general-newsletter-visual {
+.general-promo-visual-leaf {
   background:
     radial-gradient(ellipse at 50% 32%, #788a55 0 34%, transparent 36%),
     radial-gradient(ellipse at 30% 48%, #546f42 0 28%, transparent 30%);
-}
-
-.general-promo-visual span {
-  bottom: 34px;
-  height: 150px;
+  bottom: 24%;
+  height: clamp(104px, 13vw, 152px);
+  left: 50%;
   position: absolute;
-  right: 14px;
-  width: 86px;
+  transform: translateX(50%);
+  width: clamp(60px, 7vw, 88px);
 }
 
 .general-newsletter {
@@ -11934,6 +12051,46 @@ textarea {
 .sf-page[data-storefront-template="general-default"] .general-homepage .general-promo-banner,
 .sf-page[data-storefront-template="general-default"] .general-homepage .general-newsletter {
   min-height: clamp(280px, 28vw, 420px);
+}
+
+/* The promo banner carries less copy than the sections around it, so it runs
+   shorter instead of padding out a tall, mostly empty band. */
+.sf-page[data-storefront-template="general-default"] .general-homepage > .general-promo-banner {
+  padding-block: clamp(40px, 4.4vw, 64px);
+}
+
+.sf-page[data-storefront-template="general-default"] .general-homepage .general-promo-banner {
+  min-height: clamp(250px, 20vw, 330px);
+}
+
+@media (max-width: 900px) {
+  .general-promo-banner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .general-promo-copy {
+    max-width: none;
+  }
+
+  .general-promo-banner h2 {
+    max-width: 18ch;
+  }
+
+  .general-promo-visual {
+    min-height: 190px;
+  }
+}
+
+@media (max-width: 560px) {
+  .general-promo-cta {
+    justify-self: stretch;
+    margin-top: 24px;
+    width: 100%;
+  }
+
+  .general-promo-visual {
+    min-height: 168px;
+  }
 }
 
 @media (max-width: 760px) {

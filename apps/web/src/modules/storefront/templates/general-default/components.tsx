@@ -176,17 +176,19 @@ export function GeneralProductSection({
 export function GeneralPromoBanner({ storeSlug }: { storeSlug: string }) {
   return (
     <section className="general-promo-banner" aria-labelledby="general-promo-title">
-      <div>
+      <div className="general-promo-copy">
         <p>The full catalogue</p>
         <h2 id="general-promo-title">Everything in one place</h2>
         <span>Filter by category, price or availability.</span>
-        <Link className="general-dark-button" href={`/s/${storeSlug}/products`}>
+        <Link className="general-dark-button general-promo-cta" href={`/s/${storeSlug}/products`}>
           Browse all products
         </Link>
       </div>
       <div className="general-promo-visual" aria-hidden="true">
-        <div />
-        <span />
+        <div className="general-promo-visual-card">
+          <span className="general-promo-visual-stack" />
+          <span className="general-promo-visual-leaf" />
+        </div>
       </div>
     </section>
   );
