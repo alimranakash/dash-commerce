@@ -200,7 +200,53 @@ async function seedCatalogDemoPack(
     }
   });
 
+  await seedMediaLibrary(tx, context.storeId, demoPack);
   await seedAdvancedSettings(tx, context.storeId, demoPack);
+}
+
+/**
+ * Puts every image the pack references into the Media Library, so a freshly
+ * imported store can pick demo art from the picker instead of re-uploading it.
+ * Dimensions and byte sizes come from the pack manifest - nothing is read off
+ * disk or pushed through the storage driver while the import runs.
+ */
+async function seedMediaLibrary(tx: Prisma.TransactionClient, storeId: string, demoPack: DemoPack) {
+  const schema = getDatabaseSchemaName();
+
+  for (const asset of demoPack.content.media) {
+    await tx.$executeRawUnsafe(
+      `
+      INSERT INTO "${schema}"."MediaAsset"
+        ("id", "storeId", "url", "key", "filename", "mimeType", "size", "width", "height", "alt", "usageType", "isDemoContent", "demoPackId", "updatedAt")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, TRUE, $12, CURRENT_TIMESTAMP)
+      ON CONFLICT ("storeId", "key")
+      DO UPDATE SET
+        "url" = EXCLUDED."url",
+        "filename" = EXCLUDED."filename",
+        "mimeType" = EXCLUDED."mimeType",
+        "size" = EXCLUDED."size",
+        "width" = EXCLUDED."width",
+        "height" = EXCLUDED."height",
+        "alt" = EXCLUDED."alt",
+        "usageType" = EXCLUDED."usageType",
+        "isDemoContent" = TRUE,
+        "demoPackId" = EXCLUDED."demoPackId",
+        "updatedAt" = CURRENT_TIMESTAMP
+    `,
+      randomUUID(),
+      storeId,
+      asset.url,
+      asset.key,
+      asset.filename,
+      asset.mimeType,
+      asset.size,
+      asset.width,
+      asset.height,
+      asset.alt,
+      asset.usageType,
+      demoPack.id
+    );
+  }
 }
 
 /**

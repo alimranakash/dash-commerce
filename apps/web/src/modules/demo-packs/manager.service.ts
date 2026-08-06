@@ -57,24 +57,31 @@ export type DemoContentOverview = {
   targetDemoPackId: string;
   targetDemoPackName: string;
   targetDemoPackVersion: string;
+  // Every total is counted from the database rather than from the pack
+  // definition, so the panel reports what the store actually holds.
   totals: {
+    brands: number;
     categories: number;
-    collections: number;
-    pages: number;
+    media: number;
     products: number;
+    tags: number;
   };
 };
 
 export async function getDemoContentOverview(storeId: string): Promise<DemoContentOverview> {
   await ensureDemoContentSchema(prisma);
+  await ensureProductTaxonomySchema(prisma);
   const storeDemo = await getStoreDemoState(storeId);
   const installedDemoPackId = resolveInstalledDemoPackId(storeDemo);
   const targetDemoPackId = resolveDemoPackIdForActiveTemplate(storeDemo);
   const demoPack = getDemoPackById(installedDemoPackId);
   const targetDemoPack = getDemoPackById(targetDemoPackId);
-  const [products, categories] = await Promise.all([
+  const [products, categories, brands, tags, media] = await Promise.all([
     countDemoProducts(storeId, demoPack.id),
-    countDemoCategories(storeId, demoPack.id)
+    countDemoCategories(storeId, demoPack.id),
+    countDemoTaxonomy(storeId, demoPack.id, "BRAND"),
+    countDemoTaxonomy(storeId, demoPack.id, "TAG"),
+    countDemoMedia(storeId, demoPack.id)
   ]);
 
   return {
@@ -90,10 +97,11 @@ export async function getDemoContentOverview(storeId: string): Promise<DemoConte
     targetDemoPackName: targetDemoPack.name,
     targetDemoPackVersion: targetDemoPack.version,
     totals: {
+      brands,
       categories,
-      collections: demoPack.content.collections.length,
-      pages: demoPack.content.pages.length,
-      products
+      media,
+      products,
+      tags
     }
   };
 }
@@ -180,6 +188,13 @@ async function removeAllDemoContent(tx: Prisma.TransactionClient, storeId: strin
   await ensureProductTaxonomySchema(tx);
   await tx.$executeRawUnsafe(
     `DELETE FROM "${getDatabaseSchemaName()}"."ProductTaxonomy" WHERE "storeId" = $1 AND "isDemoContent" = TRUE`,
+    storeId
+  );
+
+  // Demo media rows only ever point at files committed under public/, so there
+  // is nothing in storage to clean up alongside them.
+  await tx.$executeRawUnsafe(
+    `DELETE FROM "${getDatabaseSchemaName()}"."MediaAsset" WHERE "storeId" = $1 AND "isDemoContent" = TRUE`,
     storeId
   );
 }
@@ -280,6 +295,27 @@ async function countDemoProducts(storeId: string, demoPackId: string) {
 async function countDemoCategories(storeId: string, demoPackId: string) {
   const rows = await prisma.$queryRawUnsafe<CountRow[]>(
     `SELECT COUNT(*) AS count FROM "${getDatabaseSchemaName()}"."Category" WHERE "storeId" = $1 AND "isDemoContent" = TRUE AND "demoPackId" = $2`,
+    storeId,
+    demoPackId
+  );
+
+  return normalizeCount(rows[0]?.count);
+}
+
+async function countDemoTaxonomy(storeId: string, demoPackId: string, type: "BRAND" | "TAG") {
+  const rows = await prisma.$queryRawUnsafe<CountRow[]>(
+    `SELECT COUNT(*) AS count FROM "${getDatabaseSchemaName()}"."ProductTaxonomy" WHERE "storeId" = $1 AND "isDemoContent" = TRUE AND "demoPackId" = $2 AND "type" = $3`,
+    storeId,
+    demoPackId,
+    type
+  );
+
+  return normalizeCount(rows[0]?.count);
+}
+
+async function countDemoMedia(storeId: string, demoPackId: string) {
+  const rows = await prisma.$queryRawUnsafe<CountRow[]>(
+    `SELECT COUNT(*) AS count FROM "${getDatabaseSchemaName()}"."MediaAsset" WHERE "storeId" = $1 AND "isDemoContent" = TRUE AND "demoPackId" = $2`,
     storeId,
     demoPackId
   );

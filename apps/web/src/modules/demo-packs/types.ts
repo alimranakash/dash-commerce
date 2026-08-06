@@ -42,6 +42,24 @@ export type DemoPackProductImage = {
   url: string;
 };
 
+/**
+ * A Media Library row shipped with the pack. Every field the MediaAsset table
+ * needs is authored here, so importing writes the library from static data
+ * without reading the filesystem or contacting the storage driver.
+ */
+export type DemoPackMediaAsset = {
+  alt: string;
+  filename: string;
+  height: number;
+  /** Unique per store; the public asset path without its leading slash. */
+  key: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  usageType: "CATEGORY" | "GENERAL" | "HERO" | "PRODUCT";
+  width: number;
+};
+
 export type DemoPackProduct = {
   /** Slug of a brand in the same pack, seeded as a BRAND taxonomy item. */
   brandSlug?: string | undefined;
@@ -104,7 +122,7 @@ export type DemoPackContent = {
   categories: DemoPackCategory[];
   collections: unknown[];
   homepage: DemoPackHomepage;
-  media: unknown[];
+  media: DemoPackMediaAsset[];
   navigation: DemoPackNavigationItem[];
   pages: unknown[];
   products: DemoPackProduct[];

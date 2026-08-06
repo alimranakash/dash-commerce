@@ -37,6 +37,11 @@ export function GeneralHomepageSections({
   ]);
   const bestSellers = homeData.bestSellers.length > 0 ? homeData.bestSellers : homeData.featuredProducts;
   const onSaleProducts = allProducts.filter((product) => Boolean(product.compareAtPrice));
+  // The promo banner borrows real catalogue art rather than shipping its own
+  // image, so it stays truthful for any store rather than only a demo one.
+  const promoImageUrl =
+    homeData.categories.find((category) => Boolean(category.imageUrl))?.imageUrl ??
+    allProducts.flatMap((product) => product.images)[0]?.url;
   const pools: StorefrontProductPools = {
     "best-sellers": homeData.bestSellers,
     featured: homeData.featuredProducts,
@@ -80,7 +85,7 @@ export function GeneralHomepageSections({
         section={featuredSection}
         storeSlug={store.slug}
       />
-      <GeneralPromoBanner storeSlug={store.slug} />
+      <GeneralPromoBanner imageUrl={promoImageUrl} storeSlug={store.slug} />
       <GeneralProductSection
         currency={store.currency}
         id="general-best-sellers"

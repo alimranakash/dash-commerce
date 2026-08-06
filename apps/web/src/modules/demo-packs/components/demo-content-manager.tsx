@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Boxes, FileText, Layers3, Package, RefreshCcw, RotateCcw, Trash2 } from "lucide-react";
+import { AlertTriangle, Boxes, Images, Package, RefreshCcw, RotateCcw, Tag, Tags, Trash2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import type { DemoContentOverview } from "../manager.service";
 
@@ -83,8 +83,9 @@ export function DemoContentManager({
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <Metric icon={<Package className="h-5 w-5" />} label="Demo Products" value={overview.totals.products} />
             <Metric icon={<Boxes className="h-5 w-5" />} label="Demo Categories" value={overview.totals.categories} />
-            <Metric icon={<Layers3 className="h-5 w-5" />} label="Demo Collections" value={overview.totals.collections} />
-            <Metric icon={<FileText className="h-5 w-5" />} label="Demo Pages" value={overview.totals.pages} />
+            <Metric icon={<Tag className="h-5 w-5" />} label="Demo Brands" value={overview.totals.brands} />
+            <Metric icon={<Tags className="h-5 w-5" />} label="Demo Tags" value={overview.totals.tags} />
+            <Metric icon={<Images className="h-5 w-5" />} label="Demo Media" value={overview.totals.media} />
           </div>
         </section>
       </div>
@@ -94,7 +95,7 @@ export function DemoContentManager({
           <div>
             <h2 className="text-lg font-semibold text-[#171821]">Demo Content Actions</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[#737582]">
-              These actions only target content imported by the demo pack. Orders, customers, billing, uploaded media, and user-created products are not removed.
+              These actions only target content imported by the demo pack, including the demo images it added to your media library. Orders, customers, billing, media you uploaded yourself, and user-created products are not removed.
             </p>
           </div>
         </div>

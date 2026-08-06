@@ -142,7 +142,7 @@ export function GeneralProductPage({
       </article>
 
       <section className="general-product-description-block" aria-labelledby="product-description-title">
-        <h2 id="product-description-title">Designed for everyday use.</h2>
+        <h2 id="product-description-title">About {product.title}</h2>
         {descriptionParagraphs.map((paragraph, index) => (
           <p key={`${paragraph}-${index}`}>{paragraph}</p>
         ))}
@@ -218,6 +218,12 @@ function GeneralProductBreadcrumb({
   );
 }
 
+/**
+ * Three navigation cards under the product: its category, then the two nearest
+ * products from that category. Every title, image and link comes from a real
+ * catalogue record - there are no invented collection names here, so a card
+ * always leads somewhere that exists.
+ */
 function GeneralProductPromoBlocks({
   product,
   relatedProducts,
@@ -227,31 +233,47 @@ function GeneralProductPromoBlocks({
   relatedProducts: StorefrontProduct[];
   store: StorefrontStore;
 }) {
-  const visuals = [
-    product.images[1]?.url ?? product.images[0]?.url,
-    relatedProducts[0]?.images[0]?.url ?? product.images[0]?.url,
-    relatedProducts[1]?.images[0]?.url ?? product.images[0]?.url
-  ];
+  const category = product.category;
+  const neighbours = relatedProducts.slice(0, 2);
+
+  // Without a category or a single neighbour there is nothing truthful left to
+  // link to, so the block drops out rather than filling itself with stand-ins.
+  if (!category && neighbours.length === 0) {
+    return null;
+  }
+
+  const categoryBlock = category
+    ? {
+        href: `/s/${store.slug}/categories/${category.slug}`,
+        imageUrl: neighbours[0]?.images[0]?.url ?? product.images[1]?.url ?? product.images[0]?.url,
+        subtitle: `Browse everything in ${category.name}`,
+        title: category.name
+      }
+    : {
+        href: `/s/${store.slug}/products`,
+        imageUrl: product.images[1]?.url ?? product.images[0]?.url,
+        subtitle: `Browse the full catalogue at ${store.name}`,
+        title: "All products"
+      };
 
   return (
-    <section className="general-product-promo-grid" aria-label="Product stories">
+    <section className="general-product-promo-grid" aria-label="More to explore">
       <PromoBlock
-        imageUrl={visuals[0]}
-        title="Built for Daily Rituals"
-        subtitle={`Explore more from ${product.category?.name ?? store.name}`}
+        href={categoryBlock.href}
+        imageUrl={categoryBlock.imageUrl}
+        subtitle={categoryBlock.subtitle}
+        title={categoryBlock.title}
       />
       <div>
-        <PromoBlock
-          imageUrl={visuals[1]}
-          title="Selected With Care"
-          subtitle="Simple details, dependable quality."
-        />
-        <PromoBlock
-          imageUrl={visuals[2]}
-          title="Discover the Collection"
-          subtitle="Shop more pieces made for your routine."
-          href={`/s/${store.slug}/products`}
-        />
+        {neighbours.map((neighbour) => (
+          <PromoBlock
+            href={`/s/${store.slug}/products/${neighbour.slug}`}
+            imageUrl={neighbour.images[0]?.url}
+            key={neighbour.id}
+            subtitle={neighbour.shortDescription || `Also in ${category?.name ?? store.name}`}
+            title={neighbour.title}
+          />
+        ))}
       </div>
     </section>
   );

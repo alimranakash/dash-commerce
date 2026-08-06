@@ -173,7 +173,13 @@ export function GeneralProductSection({
   );
 }
 
-export function GeneralPromoBanner({ storeSlug }: { storeSlug: string }) {
+export function GeneralPromoBanner({
+  imageUrl,
+  storeSlug
+}: {
+  imageUrl?: string | null | undefined;
+  storeSlug: string;
+}) {
   return (
     <section className="general-promo-banner" aria-labelledby="general-promo-title">
       <div className="general-promo-copy">
@@ -185,10 +191,16 @@ export function GeneralPromoBanner({ storeSlug }: { storeSlug: string }) {
         </Link>
       </div>
       <div className="general-promo-visual" aria-hidden="true">
-        <div className="general-promo-visual-card">
-          <span className="general-promo-visual-stack" />
-          <span className="general-promo-visual-leaf" />
-        </div>
+        {/* Real catalogue art when the store has any; the CSS shapes are the
+            fallback for a store whose products carry no images yet. */}
+        {imageUrl ? (
+          <img alt="" className="general-promo-visual-image" loading="lazy" src={imageUrl} />
+        ) : (
+          <div className="general-promo-visual-card">
+            <span className="general-promo-visual-stack" />
+            <span className="general-promo-visual-leaf" />
+          </div>
+        )}
       </div>
     </section>
   );
