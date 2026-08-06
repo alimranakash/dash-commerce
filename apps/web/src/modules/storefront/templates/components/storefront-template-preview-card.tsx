@@ -1,19 +1,21 @@
 import Link from "next/link";
-import { DEFAULT_STOREFRONT_TEMPLATE_ID } from "../template-mapping";
 import { getStorefrontTemplateById } from "../registry";
 
 type StorefrontTemplatePreviewCardProps = {
   activeTemplate?: string | null;
   businessType?: string | null;
+  // Resolved by the caller with the same helper the storefront uses, so this
+  // card always names the template the public store actually renders.
+  resolvedTemplateId: string;
   storeSlug: string;
 };
 
 export function StorefrontTemplatePreviewCard({
   activeTemplate,
   businessType,
+  resolvedTemplateId,
   storeSlug
 }: StorefrontTemplatePreviewCardProps) {
-  const resolvedTemplateId = activeTemplate || DEFAULT_STOREFRONT_TEMPLATE_ID;
   const template = getStorefrontTemplateById(resolvedTemplateId);
   const previewUrl = `/s/${storeSlug}`;
 
@@ -39,7 +41,7 @@ export function StorefrontTemplatePreviewCard({
 
       {!activeTemplate ? (
         <p className="mt-4 rounded-xl border border-[#DDD6FE] bg-[#F5F3FF] px-4 py-3 text-sm font-medium text-[#6D28D9]">
-          Using default template: {DEFAULT_STOREFRONT_TEMPLATE_ID}
+          No template has been applied yet, so the storefront falls back to: {resolvedTemplateId}
         </p>
       ) : null}
 

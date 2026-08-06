@@ -11,6 +11,9 @@ import type { UploadMediaFileInput } from "./media.types";
 const maxUploadSize = 5 * 1024 * 1024;
 const rasterMimeTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const svgMimeType = "image/svg+xml";
+// Browsers report .ico under either name depending on the platform, and the
+// branding favicon picker offers .ico, so both have to be accepted there.
+const iconMimeTypes = new Set(["image/vnd.microsoft.icon", "image/x-icon"]);
 
 export async function getMediaAssetsForStore(storeId: string) {
   return getMediaAssetsForStoreRecord(storeId);
@@ -80,7 +83,13 @@ async function validateUpload(file: File, usageType: MediaUsageType) {
     return;
   }
 
-  throw new Error("Use JPG, PNG, or WebP images. SVG is only allowed for logo or favicon uploads.");
+  if (iconMimeTypes.has(file.type) && usageType === "FAVICON") {
+    return;
+  }
+
+  throw new Error(
+    "Use JPG, PNG, or WebP images. SVG is only allowed for logo or favicon uploads, and ICO only for favicons."
+  );
 }
 
 async function validateSvg(file: File) {

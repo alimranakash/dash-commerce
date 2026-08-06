@@ -129,6 +129,13 @@ export function UploadField({
 export function ColorPickerField({ label, name, value }: { label: string; name: string; value: string }) {
   const [color, setColor] = useState(value);
 
+  // The picker is controlled, so without this it keeps showing the value it
+  // mounted with after the saved settings change under it (a template apply,
+  // a router refresh) and a later save would write the stale color back.
+  useEffect(() => {
+    setColor(value);
+  }, [value]);
+
   return (
     <label className="theme-color-field">
       {label}

@@ -5,18 +5,30 @@ import {
   getStorefrontHomeData,
   requireStorefrontBySlug
 } from "../../../modules/storefront/resolver";
-import { getStorefrontTemplateForStore } from "../../../modules/storefront/templates/registry";
+import {
+  getStorefrontTemplateForStore,
+  resolveStorefrontPreviewTemplateId
+} from "../../../modules/storefront/templates/registry";
 import { getStorefrontThemeSettings } from "../../../modules/storefront/themes/theme.service";
 
 type StorefrontPageProps = {
   params: Promise<{
     slug: string;
   }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function StorefrontPage({ params }: StorefrontPageProps) {
-  const { slug } = await params;
-  const store = await requireStorefrontBySlug(slug);
+export default async function StorefrontPage({ params, searchParams }: StorefrontPageProps) {
+  const [{ slug }, query] = await Promise.all([params, searchParams]);
+  const resolvedStore = await requireStorefrontBySlug(slug);
+  const previewTemplateId = resolveStorefrontPreviewTemplateId(query.previewTemplate);
+  // The dashboard template library previews a template without applying it, so
+  // the override is swapped in on the loaded store. Header, homepage sections,
+  // and footer all read the template off the store, which keeps one override
+  // point for the whole page.
+  const store = previewTemplateId
+    ? { ...resolvedStore, activeTemplate: previewTemplateId }
+    : resolvedStore;
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
   const settings = await getStorefrontThemeSettings(store.id);
   // Each homepage row shows its own "Products shown" count, so the pools have

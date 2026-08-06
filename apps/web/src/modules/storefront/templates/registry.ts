@@ -32,3 +32,13 @@ export function getStorefrontTemplateForStore(store: {
 export function getAvailableStorefrontTemplates() {
   return Object.values(storefrontTemplateRegistry);
 }
+
+// The template library previews a template by rendering the real storefront with
+// `?previewTemplate=<id>` instead of the store's saved template. Only ids that
+// exist in the registry are honoured, so the parameter can never resolve to
+// anything the seller could not also apply.
+export function resolveStorefrontPreviewTemplateId(value: string | string[] | undefined) {
+  const templateId = Array.isArray(value) ? value[0] : value;
+
+  return templateId && templateId in storefrontTemplateRegistry ? templateId : null;
+}

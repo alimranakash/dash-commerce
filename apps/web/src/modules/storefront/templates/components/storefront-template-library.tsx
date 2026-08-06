@@ -8,10 +8,17 @@ import { applyStorefrontTemplateAction } from "../template.actions";
 
 export type TemplateLibraryItem = {
   businessType: string;
+  colors: {
+    background: string;
+    primary: string;
+    secondary: string;
+    surface: string;
+    text: string;
+  };
   description: string;
   id: string;
   name: string;
-  previewImage: string;
+  sections: string[];
 };
 
 type StorefrontTemplateLibraryProps = {
@@ -41,6 +48,9 @@ export function StorefrontTemplateLibrary({
       const result = await applyStorefrontTemplateAction(confirmTemplate.id);
 
       if (!result.ok) {
+        // The error banner sits behind the confirm dialog, so the dialog has to
+        // close for the failure to be readable.
+        setConfirmTemplate(null);
         setError(result.error);
         return;
       }
@@ -85,11 +95,8 @@ export function StorefrontTemplateLibrary({
               }`}
               key={template.id}
             >
-              <div className="relative grid h-32 place-items-center overflow-hidden bg-[#F5F3FF]">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(124,58,237,0.22),transparent_32%),radial-gradient(circle_at_80%_70%,rgba(59,130,246,0.16),transparent_30%)]" />
-                <span className="relative rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-semibold text-[#6D28D9]">
-                  {template.previewImage || "Preview image"}
-                </span>
+              <div className="relative h-32 overflow-hidden">
+                <TemplateThumbnail template={template} />
                 {isActive ? (
                   <span className="absolute right-3 top-3 rounded-full bg-[#7C3AED] px-3 py-1 text-xs font-semibold text-white">
                     Current active
@@ -153,6 +160,42 @@ export function StorefrontTemplateLibrary({
   );
 }
 
+// The card thumbnail is drawn from the template's own default palette and the
+// section list it actually renders, so each card looks like the template it
+// applies rather than a shared placeholder graphic.
+function TemplateThumbnail({ template }: { template: TemplateLibraryItem }) {
+  const { colors } = template;
+
+  return (
+    <div className="h-full w-full p-2" style={{ background: colors.background }}>
+      <div className="flex h-full w-full flex-col gap-1.5 overflow-hidden rounded-lg" style={{ background: colors.surface }}>
+        <div className="flex items-center justify-between px-2 py-1" style={{ background: colors.primary }}>
+          <span className="h-1.5 w-8 rounded-full" style={{ background: colors.surface }} />
+          <span className="flex gap-1">
+            <span className="h-1.5 w-4 rounded-full opacity-70" style={{ background: colors.surface }} />
+            <span className="h-1.5 w-4 rounded-full opacity-70" style={{ background: colors.surface }} />
+            <span className="h-1.5 w-4 rounded-full opacity-70" style={{ background: colors.surface }} />
+          </span>
+        </div>
+        <div className="mx-2 flex flex-1 flex-col justify-center gap-1 rounded px-2" style={{ background: colors.secondary }}>
+          <span className="h-1.5 w-1/2 rounded-full" style={{ background: colors.text, opacity: 0.75 }} />
+          <span className="h-1 w-2/3 rounded-full" style={{ background: colors.text, opacity: 0.4 }} />
+          <span className="mt-1 h-2.5 w-12 rounded-full" style={{ background: colors.primary }} />
+        </div>
+        <div className="mx-2 mb-2 grid grid-cols-4 gap-1">
+          {[0, 1, 2, 3].map((index) => (
+            <span
+              className="h-6 rounded"
+              key={index}
+              style={{ background: colors.secondary, border: `1px solid ${colors.primary}33` }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TemplatePreviewModal({
   onClose,
   storefrontPreviewUrl,
@@ -162,28 +205,46 @@ function TemplatePreviewModal({
   storefrontPreviewUrl: string;
   template: TemplateLibraryItem;
 }) {
+  // `previewTemplate` renders the seller's real storefront with this template
+  // applied, without saving it, so "Preview" shows the same output "Apply" would.
+  const previewUrl = `${storefrontPreviewUrl}?previewTemplate=${encodeURIComponent(template.id)}`;
+
   return (
     <div
       aria-modal="true"
-      className="fixed inset-0 z-[100] grid place-items-center bg-[#20212a]/45 p-4"
+      className="fixed inset-0 z-100 grid place-items-center bg-[#20212a]/45 p-4"
       onMouseDown={(event) => event.target === event.currentTarget && onClose()}
       role="dialog"
     >
-      <section className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
-        <p className="eyebrow">Template Preview</p>
-        <h2 className="mt-1 text-xl font-bold text-slate-950">{template.name}</h2>
-        <div className="mt-5 grid min-h-48 place-items-center rounded-2xl border border-[#DDD6FE] bg-[#F5F3FF] text-center">
+      <section className="flex h-[90vh] w-full max-w-5xl flex-col rounded-2xl bg-white p-6 shadow-2xl">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-[#6D28D9]">{template.id}</p>
-            <p className="mt-2 text-sm text-slate-600">Full interactive template preview will be available soon.</p>
+            <p className="eyebrow">Template Preview</p>
+            <h2 className="mt-1 text-xl font-bold text-slate-950">{template.name}</h2>
+            <p className="mt-1 text-sm text-slate-600">{template.description}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {template.sections.slice(0, 4).map((section) => (
+              <span
+                className="rounded-full border border-[#DDD6FE] bg-[#F5F3FF] px-3 py-1 text-xs font-semibold text-[#6D28D9]"
+                key={section}
+              >
+                {section}
+              </span>
+            ))}
           </div>
         </div>
+        <iframe
+          className="mt-5 min-h-0 flex-1 w-full rounded-2xl border border-slate-200 bg-white"
+          src={previewUrl}
+          title={`${template.name} storefront preview`}
+        />
         <div className="mt-6 flex flex-wrap justify-end gap-3">
           <button className="h-11 cursor-pointer rounded-xl border border-slate-200 px-5 text-sm font-semibold text-slate-700" onClick={onClose} type="button">
             Close
           </button>
-          <Link className="inline-flex h-11 items-center rounded-xl bg-[#7C3AED] px-5 text-sm font-semibold text-white" href={storefrontPreviewUrl} rel="noreferrer" target="_blank">
-            Open Storefront
+          <Link className="inline-flex h-11 items-center rounded-xl bg-[#7C3AED] px-5 text-sm font-semibold text-white" href={previewUrl} rel="noreferrer" target="_blank">
+            Open in new tab
           </Link>
         </div>
       </section>
@@ -205,7 +266,7 @@ function ApplyTemplateModal({
   return (
     <div
       aria-modal="true"
-      className="fixed inset-0 z-[110] grid place-items-center bg-[#20212a]/45 p-4"
+      className="fixed inset-0 z-110 grid place-items-center bg-[#20212a]/45 p-4"
       onMouseDown={(event) => event.target === event.currentTarget && !disabled && onClose()}
       role="dialog"
     >

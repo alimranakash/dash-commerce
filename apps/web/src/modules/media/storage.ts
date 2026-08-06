@@ -71,7 +71,9 @@ function extensionFor(filename: string, mimeType: string) {
     "image/jpeg": ".jpg",
     "image/png": ".png",
     "image/svg+xml": ".svg",
-    "image/webp": ".webp"
+    "image/vnd.microsoft.icon": ".ico",
+    "image/webp": ".webp",
+    "image/x-icon": ".ico"
   };
 
   return mimeExtensions[mimeType] ?? "";

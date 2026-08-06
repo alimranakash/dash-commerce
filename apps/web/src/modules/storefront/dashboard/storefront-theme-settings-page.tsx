@@ -9,8 +9,7 @@ import {
 import { getStoreSettings, getThemeSettings } from "../../settings/settings.service";
 import { StorefrontTemplateLibrary } from "../templates/components/storefront-template-library";
 import { StorefrontTemplatePreviewCard } from "../templates/components/storefront-template-preview-card";
-import { getAvailableStorefrontTemplates } from "../templates/registry";
-import { DEFAULT_STOREFRONT_TEMPLATE_ID } from "../templates/template-mapping";
+import { getAvailableStorefrontTemplates, getStorefrontTemplateForStore } from "../templates/registry";
 import { getStoreActiveTemplate } from "../templates/template-store";
 import { StorefrontSettingsToast } from "./storefront-settings-toast";
 
@@ -63,13 +62,19 @@ export async function StorefrontThemeSettingsPage({
   const message = updated ? "Theme settings updated." : brandingUpdated ? "Store branding updated." : null;
   const messageKey = toastId ?? updated ?? brandingUpdated ?? null;
   const storefrontPreviewUrl = `/s/${store.slug}`;
-  const activeTemplateId = activeTemplate || DEFAULT_STOREFRONT_TEMPLATE_ID;
+  // Both panels resolve the active template exactly the way the storefront does,
+  // so "Current active" in the dashboard can never disagree with what renders.
+  const activeTemplateId = getStorefrontTemplateForStore({
+    activeTemplate,
+    businessType: store.businessType ?? null
+  }).id;
   const templates = getAvailableStorefrontTemplates().map((template) => ({
     businessType: template.businessType,
+    colors: template.defaultColors,
     description: template.description,
     id: template.id,
     name: template.name,
-    previewImage: template.previewImage
+    sections: template.homepageSections as string[]
   }));
 
   return (
@@ -106,6 +111,7 @@ export async function StorefrontThemeSettingsPage({
             <StorefrontTemplatePreviewCard
               activeTemplate={activeTemplate}
               businessType={store.businessType ?? null}
+              resolvedTemplateId={activeTemplateId}
               storeSlug={store.slug}
             />
           </div>

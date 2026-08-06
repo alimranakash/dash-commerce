@@ -37,7 +37,7 @@ export function BrandAssetsForm({ action, mediaAssets, settings }: {
             value={settings.logoUrl}
           />
           <UploadField
-            accept="image/jpeg,image/png,image/webp,image/svg+xml,image/x-icon"
+            accept="image/jpeg,image/png,image/webp,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,.ico"
             assets={mediaAssets}
             fileName="faviconFile"
             label="Favicon"
