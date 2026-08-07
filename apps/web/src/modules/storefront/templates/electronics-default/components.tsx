@@ -99,6 +99,7 @@ export function ElectronicsHero({
     .map((category) => category.imageUrl)
     .filter((url): url is string => Boolean(url));
   const heroImage = heroSettings?.imageUrl || heroSettings?.slides[0]?.url || productImages[0] || categoryImages[0];
+  const heroImageMobile = mobileHeroVariant(heroImage);
   const gamingImage = productImages[1] || categoryImages.find((url) => /gaming/i.test(url)) || productImages[0] || heroImage;
   const headphonesImage = productImages[2] || categoryImages.find((url) => /audio|headphone/i.test(url)) || productImages[1] || heroImage;
   const watchImage = productImages[3] || categoryImages.find((url) => /watch/i.test(url)) || productImages[2] || heroImage;
@@ -115,6 +116,16 @@ export function ElectronicsHero({
     <section className={styles.section} aria-labelledby="electronics-hero-title">
       <div className={styles.grid}>
         <article className={`${styles.card} ${styles.mainCard}`}>
+          <div className={styles.mainMedia}>
+            {heroImage ? (
+              <picture>
+                {heroImageMobile ? <source media="(max-width: 820px)" srcSet={heroImageMobile} /> : null}
+                <img alt="" decoding="async" loading="eager" src={heroImage} />
+              </picture>
+            ) : (
+              <span className={styles.deviceFallback} />
+            )}
+          </div>
           <div className={styles.mainCopy}>
             <span className={styles.status}>In stock now</span>
             <h1 id="electronics-hero-title">{title || "High-Output Mobile Devices"}</h1>
@@ -132,9 +143,6 @@ export function ElectronicsHero({
                 </Link>
               ) : null}
             </div>
-          </div>
-          <div className={styles.mainMedia}>
-            <StorefrontImage alt="" fallback="Mobile" loading="eager" src={heroImage} />
           </div>
         </article>
 
@@ -586,6 +594,18 @@ export function ElectronicsWhyChooseUs({
       ))}
     </section>
   );
+}
+
+// Only these demo packs ship a portrait crop next to the wide hero banner. A
+// `<source>` that 404s has no fallback, so anything else keeps the desktop art.
+const heroPacksWithMobileArt = /^\/demo-assets\/(electronics|general)\/hero\/hero-0\d\.webp$/;
+
+function mobileHeroVariant(src: string | undefined) {
+  if (!src || !heroPacksWithMobileArt.test(src)) {
+    return undefined;
+  }
+
+  return src.replace(/hero-0\d\.webp$/, "hero-mobile.webp");
 }
 
 function resolveStorefrontHref(homeHref: string, url: string) {
