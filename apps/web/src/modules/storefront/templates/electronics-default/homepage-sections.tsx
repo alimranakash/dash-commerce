@@ -56,6 +56,7 @@ export function ElectronicsHomepageSections({
         <ElectronicsProductGrid
           count={featuredSection?.count}
           currency={store.currency}
+          enableHoverImage={featuredSection?.enableHoverImage}
           products={homeData.featuredProducts}
           storeSlug={store.slug}
         />
@@ -64,6 +65,7 @@ export function ElectronicsHomepageSections({
         count={flashSection?.count}
         currency={store.currency}
         electronicsSettings={electronics}
+        enableHoverImage={flashSection?.enableHoverImage}
         products={homeData.bestSellers.length > 0 ? homeData.bestSellers : homeData.featuredProducts}
         storeSlug={store.slug}
       />
@@ -71,6 +73,7 @@ export function ElectronicsHomepageSections({
         <ElectronicsProductGrid
           count={newArrivalsSection?.count}
           currency={store.currency}
+          enableHoverImage={newArrivalsSection?.enableHoverImage}
           products={homeData.newArrivals}
           storeSlug={store.slug}
         />
@@ -84,6 +87,7 @@ export function ElectronicsHomepageSections({
         categories={homeData.categories}
         currency={store.currency}
         electronicsSettings={electronics}
+        enableHoverImage={featuredSection?.enableHoverImage}
         products={allProducts}
         storeSlug={store.slug}
       />

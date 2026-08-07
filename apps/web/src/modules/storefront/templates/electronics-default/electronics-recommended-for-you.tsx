@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { ProductPrice } from "../../components/product-card";
+import { ProductHoverImage } from "../../components/product-listing";
 import { StorefrontImage } from "../../components/storefront-image";
 
 export type ElectronicsRecommendedCategory = {
@@ -14,6 +15,10 @@ export type ElectronicsRecommendedCategory = {
 export type ElectronicsRecommendedProduct = {
   category: ElectronicsRecommendedCategory | null;
   compareAtPrice: string | null;
+  hoverImage: {
+    alt: string | null;
+    url: string;
+  } | null;
   id: string;
   image: {
     alt: string | null;
@@ -144,14 +149,23 @@ function ElectronicsRecommendedProductCard({
   product: ElectronicsRecommendedProduct;
   storeSlug: string;
 }) {
+  const imageFallback = product.category?.name.slice(0, 2).toUpperCase() ?? "TX";
+
   return (
     <Link className="electronics-recommended-card" href={`/s/${storeSlug}/products/${product.slug}`}>
       <span className="electronics-recommended-media">
         <StorefrontImage
           alt={product.image?.alt ?? product.title}
-          fallback={product.category?.name.slice(0, 2).toUpperCase() ?? "TX"}
+          fallback={imageFallback}
           src={product.image?.url}
         />
+        {product.hoverImage ? (
+          <ProductHoverImage
+            alt={product.hoverImage.alt ?? product.title}
+            fallback={imageFallback}
+            src={product.hoverImage.url}
+          />
+        ) : null}
       </span>
       <span className="electronics-recommended-info">
         <small>{product.category?.name ?? "Uncategorized"}</small>

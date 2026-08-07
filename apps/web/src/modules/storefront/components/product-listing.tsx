@@ -145,12 +145,26 @@ export function ProductImage({
   return (
     <div className="general-product-listing-image">
       <StorefrontImage alt={alt} fallback={placeholder} src={src} />
-      {hoverSrc ? (
-        <span className="general-product-listing-hover-image">
-          <StorefrontImage alt={alt} fallback={placeholder} src={hoverSrc} />
-        </span>
-      ) : null}
+      {hoverSrc ? <ProductHoverImage alt={alt} fallback={placeholder} src={hoverSrc} /> : null}
     </div>
+  );
+}
+
+// Template cards keep their own media frame but reuse this overlay, so the
+// second-image swap stays one implementation instead of one per template.
+export function ProductHoverImage({
+  alt,
+  fallback,
+  src
+}: {
+  alt: string;
+  fallback: ReactNode;
+  src: string;
+}) {
+  return (
+    <span className="general-product-listing-hover-image">
+      <StorefrontImage alt={alt} fallback={fallback} src={src} />
+    </span>
   );
 }
 

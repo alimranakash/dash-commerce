@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import { ProductPrice } from "../../components/product-card";
+import { ProductHoverImage } from "../../components/product-listing";
 import { StorefrontImage } from "../../components/storefront-image";
 import type { StorefrontProduct } from "../../storefront.types";
 import type {
@@ -253,12 +254,14 @@ function productImageForCategory(products: StorefrontProduct[], category: Electr
 export function ElectronicsProductGrid({
   count = 5,
   currency,
+  enableHoverImage = true,
   products,
   storeSlug,
   variant = "standard"
 }: {
   count?: number | undefined;
   currency: string;
+  enableHoverImage?: boolean | undefined;
   products: StorefrontProduct[];
   storeSlug: string;
   variant?: "deal" | "standard";
@@ -270,7 +273,7 @@ export function ElectronicsProductGrid({
       {items.map((product, index) => {
         if ("id" in product) {
           return (
-            <ElectronicsProductCard currency={currency} key={product.id} product={product} storeSlug={storeSlug} variant={variant} />
+            <ElectronicsProductCard currency={currency} enableHoverImage={enableHoverImage} key={product.id} product={product} storeSlug={storeSlug} variant={variant} />
           );
         }
 
@@ -296,23 +299,30 @@ export function ElectronicsProductGrid({
 
 export function ElectronicsProductCard({
   currency,
+  enableHoverImage = true,
   product,
   storeSlug,
   variant = "standard"
 }: {
   currency: string;
+  enableHoverImage?: boolean | undefined;
   product: StorefrontProduct;
   storeSlug: string;
   variant?: "deal" | "standard";
 }) {
   const image = product.images[0];
+  const hoverImage = enableHoverImage ? product.images[1] : undefined;
+  const imageFallback = product.category?.name?.slice(0, 2).toUpperCase() ?? "TX";
   const isSale = product.compareAtPrice && Number(product.compareAtPrice) > Number(product.price);
   const isUnavailable = product.stockQuantity < 1;
 
   return (
     <article className="electronics-product-card">
       <Link className="electronics-product-card-media" href={`/s/${storeSlug}/products/${product.slug}`}>
-        <StorefrontImage alt={image?.alt ?? product.title} fallback={product.category?.name?.slice(0, 2).toUpperCase() ?? "TX"} src={image?.url} />
+        <StorefrontImage alt={image?.alt ?? product.title} fallback={imageFallback} src={image?.url} />
+        {hoverImage ? (
+          <ProductHoverImage alt={hoverImage.alt ?? product.title} fallback={imageFallback} src={hoverImage.url} />
+        ) : null}
         {isSale || variant === "deal" ? <strong>{variant === "deal" ? "Flash Deal" : "Deal"}</strong> : null}
       </Link>
       <div className="electronics-product-card-body">
@@ -347,12 +357,14 @@ export function ElectronicsFlashDeals({
   count,
   currency,
   electronicsSettings,
+  enableHoverImage,
   products,
   storeSlug
 }: {
   count?: number | undefined;
   currency: string;
   electronicsSettings?: StorefrontElectronicsHomepageSettings | undefined;
+  enableHoverImage?: boolean | undefined;
   products: StorefrontProduct[];
   storeSlug: string;
 }) {
@@ -369,7 +381,7 @@ export function ElectronicsFlashDeals({
           <span>44</span>
         </div>
       </div>
-      <ElectronicsProductGrid count={count} currency={currency} products={products} storeSlug={storeSlug} variant="deal" />
+      <ElectronicsProductGrid count={count} currency={currency} enableHoverImage={enableHoverImage} products={products} storeSlug={storeSlug} variant="deal" />
     </section>
   );
 }
@@ -484,12 +496,14 @@ export function ElectronicsRecommendedForYou({
   categories = [],
   currency,
   electronicsSettings,
+  enableHoverImage = true,
   products = [],
   storeSlug
 }: {
   categories?: ElectronicsCategory[];
   currency: string;
   electronicsSettings?: StorefrontElectronicsHomepageSettings | undefined;
+  enableHoverImage?: boolean | undefined;
   products?: StorefrontProduct[];
   storeSlug: string;
 }) {
@@ -508,6 +522,13 @@ export function ElectronicsRecommendedForYou({
         }
       : null,
     compareAtPrice: product.compareAtPrice?.toString() ?? null,
+    hoverImage:
+      enableHoverImage && product.images[1]
+        ? {
+            alt: product.images[1].alt,
+            url: product.images[1].url
+          }
+        : null,
     id: product.id,
     image: product.images[0]
       ? {

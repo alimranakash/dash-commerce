@@ -6008,8 +6008,15 @@ textarea {
   width: 100%;
 }
 
-.electronics-product-card:hover .electronics-product-card-media img {
-  transform: scale(1.04);
+/* The shared hover overlay brings its own fade; the card only has to opt out of
+   the fallback-label styling that the media span rule below would apply to it. */
+.electronics-product-card-media .general-product-listing-hover-image {
+  background: transparent;
+  border-radius: 0;
+}
+
+.electronics-product-card:hover .general-product-listing-hover-image {
+  opacity: 1;
 }
 
 .electronics-product-card-media strong {
@@ -6481,7 +6488,12 @@ textarea {
   justify-items: center;
   min-width: 0;
   place-items: center;
+  position: relative;
   text-align: center;
+}
+
+.electronics-recommended-card:hover .general-product-listing-hover-image {
+  opacity: 1;
 }
 
 .electronics-recommended-media img {
