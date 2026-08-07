@@ -40,8 +40,8 @@ type ElectronicsHeaderProps = {
 
 const electronicsMenuItems = [
   { label: "Features", url: "/products" },
-  { label: "Phones", url: "/categories/smartphones" },
-  { label: "Laptops", url: "/categories/laptops" },
+  { label: "Phones", url: "/categories/mobile-accessories" },
+  { label: "Laptops", url: "/categories/computing" },
   { label: "Headphones", url: "/categories/audio" },
   { label: "Speakers", url: "/categories/audio" },
   { label: "Smart Watches", url: "/search?q=watch" },

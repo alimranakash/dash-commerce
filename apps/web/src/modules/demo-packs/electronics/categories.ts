@@ -2,44 +2,45 @@ import type { DemoPackCategory } from "../types";
 
 export const electronicsDemoCategories = [
   {
-    description: "Fictional mobile devices and everyday smartphone essentials.",
-    imageAlt: "Smartphones demo category image",
-    imageUrl: "/demo-assets/electronics/categories/phones.webp",
-    name: "Smartphones",
-    slug: "smartphones"
+    description: "Earbuds, speakers, headphones and TV sound for everyday listening.",
+    imageAlt: "Audio demo category image",
+    imageUrl: "/demo-assets/electronics/categories/audio.webp",
+    name: "Audio",
+    slug: "audio"
   },
   {
-    description: "Fictional laptops for work, study, and entertainment.",
-    imageAlt: "Laptops demo category image",
-    imageUrl: "/demo-assets/electronics/categories/laptops.webp",
-    name: "Laptops",
-    slug: "laptops"
+    description: "Cases, cables, power banks and chargers that keep a phone running.",
+    imageAlt: "Mobile accessories demo category image",
+    imageUrl: "/demo-assets/electronics/categories/mobile-accessories.webp",
+    name: "Mobile Accessories",
+    slug: "mobile-accessories"
   },
   {
-    description: "Fictional tech add-ons, chargers, cases, and productivity extras.",
-    imageAlt: "Electronics accessories demo category image",
-    imageUrl: "/demo-assets/electronics/categories/watches.webp",
-    name: "Accessories",
-    slug: "accessories"
+    description: "Laptops, monitors and desk peripherals for work and study.",
+    imageAlt: "Computing demo category image",
+    imageUrl: "/demo-assets/electronics/categories/computing.webp",
+    name: "Computing",
+    slug: "computing"
   },
   {
-    description: "Fictional connected devices for modern homes.",
-    imageAlt: "Smart home demo category image",
-    name: "Smart Home",
-    slug: "smart-home"
+    description: "Smartwatches, fitness bands and the straps that go with them.",
+    imageAlt: "Wearables demo category image",
+    imageUrl: "/demo-assets/electronics/categories/wearables.webp",
+    name: "Wearables",
+    slug: "wearables"
   },
   {
-    description: "Fictional gaming gear for immersive play.",
+    description: "Connected bulbs, plugs, cameras and networking for the home.",
+    imageAlt: "Home tech demo category image",
+    imageUrl: "/demo-assets/electronics/categories/home-tech.webp",
+    name: "Home Tech",
+    slug: "home-tech"
+  },
+  {
+    description: "Headsets, controllers, keyboards and mice built for play.",
     imageAlt: "Gaming demo category image",
     imageUrl: "/demo-assets/electronics/categories/gaming.webp",
     name: "Gaming",
     slug: "gaming"
-  },
-  {
-    description: "Fictional headphones, speakers, and audio devices.",
-    imageAlt: "Audio demo category image",
-    imageUrl: "/demo-assets/electronics/categories/speakers.webp",
-    name: "Audio",
-    slug: "audio"
   }
 ] satisfies DemoPackCategory[];

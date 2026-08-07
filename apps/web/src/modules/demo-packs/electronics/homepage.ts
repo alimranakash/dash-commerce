@@ -1,15 +1,15 @@
 import type { DemoPackHomepage } from "../types";
 
 export const electronicsDemoHomepage = {
-  bannerImageUrl: "/demo-assets/electronics/banners/banner-01.webp",
-  ctaText: "Shop devices",
-  featuredBrandsTitle: "Featured tech makers",
+  bannerImageUrl: "/demo-assets/electronics/banners/promo-primary.webp",
+  ctaText: "Shop all products",
+  featuredBrandsTitle: "Featured brands",
   featuredGadgetsTitle: "Featured gadgets",
-  featuredSectionTitle: "Featured electronics",
+  featuredSectionTitle: "Featured products",
   flashDealsTitle: "Flash deals",
   heroImageUrl: "/demo-assets/electronics/hero/hero-01.webp",
-  heroSubtitle: "Browse fictional smartphones, laptops, gaming gear, smart home devices, and audio essentials.",
-  heroTitle: "Upgrade your everyday technology",
-  newsletterText: "Get updates on new devices, deals, and smart tech arrivals.",
-  promoBannerText: "Launch offers on selected fictional devices and accessories."
+  heroSubtitle: "Twenty-four products across six categories, ready to browse.",
+  heroTitle: "New season electronics",
+  newsletterText: "Get updates on new devices, deals and restocks.",
+  promoBannerText: "Browse the full catalogue across six categories."
 } satisfies DemoPackHomepage;

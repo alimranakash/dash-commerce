@@ -6,20 +6,12 @@ export const electronicsDemoNavigation = [
     label: "Home"
   },
   {
-    href: "/categories/smartphones",
-    label: "Smartphones"
+    href: "/products",
+    label: "Shop"
   },
   {
-    href: "/categories/laptops",
-    label: "Laptops"
-  },
-  {
-    href: "/categories/gaming",
-    label: "Gaming"
-  },
-  {
-    href: "/categories/accessories",
-    label: "Accessories"
+    href: "/categories",
+    label: "Categories"
   },
   {
     href: "/contact",
