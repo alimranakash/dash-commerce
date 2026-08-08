@@ -41,12 +41,6 @@ const fallbackCategories = [
 
 const concernCards = ["Dry Skin", "Oily Skin", "Sensitive Skin", "Anti-Aging", "Acne Care"];
 
-const collectionCards = [
-  { title: "Daily Essentials", text: "Gentle formulas for everyday glow." },
-  { title: "Luxury Collection", text: "Premium textures and refined rituals." },
-  { title: "Organic Beauty", text: "Clean-feeling care for mindful routines." }
-];
-
 const fallbackProducts = [
   { brand: "Luma", label: "Glow", price: 42, title: "Hydrating Face Serum" },
   { brand: "Rose", label: "Tint", price: 28, title: "Soft Matte Lip Tint" },
@@ -266,20 +260,6 @@ export function BeautyProductCard({
       storeId={product.storeId}
       storeSlug={storeSlug}
     />
-  );
-}
-
-export function BeautyCollections({ storeSlug }: { storeSlug: string }) {
-  return (
-    <div className="beauty-collection-grid">
-      {collectionCards.map((collection) => (
-        <Link className="beauty-collection-card" href={`/s/${storeSlug}/products`} key={collection.title}>
-          <div aria-hidden="true" />
-          <strong>{collection.title}</strong>
-          <span>{collection.text}</span>
-        </Link>
-      ))}
-    </div>
   );
 }
 

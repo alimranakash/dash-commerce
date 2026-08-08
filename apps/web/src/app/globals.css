@@ -6885,8 +6885,7 @@ textarea {
 }
 
 .beauty-category-card:hover,
-.beauty-concern-grid a:hover,
-.beauty-collection-card:hover {
+.beauty-concern-grid a:hover {
   border-color: rgba(190, 24, 93, 0.28);
   box-shadow: 0 24px 60px rgba(190, 24, 93, 0.13);
   transform: translateY(-4px);
@@ -7115,59 +7114,196 @@ textarea {
   text-decoration: line-through;
 }
 
-.beauty-collection-grid {
+/* --- Curated for you: promo card + category-tabbed product grid ----------- */
+
+.beauty-curated-layout {
+  align-items: stretch;
   display: grid;
-  gap: var(--beauty-card-gap);
-  grid-template-columns: 1.25fr 0.875fr 0.875fr;
+  gap: clamp(18px, 2.2vw, 34px);
+  grid-template-columns: minmax(0, 0.38fr) minmax(0, 1fr);
 }
 
-.beauty-collection-card {
-  align-content: end;
+.beauty-curated-promo {
+  align-content: space-between;
   background:
-    linear-gradient(180deg, transparent 28%, rgba(45, 23, 33, 0.5) 62%, rgba(45, 23, 33, 0.88) 100%),
-    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.62), transparent 28%),
-    linear-gradient(140deg, #fce7f3, #fff4ec);
+    radial-gradient(circle at 30% 18%, rgba(255, 255, 255, 0.6), transparent 34%),
+    linear-gradient(150deg, #fce7f3, #fff4ec);
   border: 1px solid var(--beauty-border);
   border-radius: 26px;
   color: #ffffff;
   display: grid;
-  gap: 8px;
-  /* One height for every card: the old taller first card broke the row baseline. */
-  min-height: 380px;
+  gap: 18px;
+  isolation: isolate;
+  min-height: 420px;
   overflow: hidden;
-  padding: clamp(24px, 2vw, 32px);
+  padding: clamp(22px, 2vw, 32px);
   position: relative;
+}
+
+.beauty-curated-promo::after {
+  background: linear-gradient(180deg, rgba(45, 23, 33, 0.42) 0%, rgba(45, 23, 33, 0.06) 42%, rgba(45, 23, 33, 0.58) 100%);
+  content: "";
+  inset: 0;
+  position: absolute;
+  z-index: -1;
+}
+
+.beauty-curated-promo-image {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+  z-index: -2;
+}
+
+.beauty-curated-promo-body {
+  display: grid;
+  gap: 10px;
+  position: relative;
+  text-align: center;
+}
+
+.beauty-curated-promo-eyebrow {
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.beauty-curated-promo-title {
+  font-size: clamp(1.6rem, 2.1vw, 2.4rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.beauty-curated-promo-footer {
+  align-self: end;
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  position: relative;
+}
+
+.beauty-curated-promo-cta {
+  background: #ffffff;
+  border-radius: 14px;
+  color: var(--beauty-ink);
+  font-size: 0.98rem;
+  font-weight: 700;
+  padding: 15px 24px;
+  text-align: center;
   text-decoration: none;
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease,
     transform 0.2s ease;
+  width: 100%;
 }
 
-.beauty-collection-card > div {
-  background: rgba(255, 255, 255, 0.4);
-  border-radius: 999px 999px 74px 74px;
-  height: 40%;
-  position: absolute;
-  right: 12%;
-  top: 10%;
-  width: 34%;
+.beauty-curated-promo-cta:hover {
+  background: var(--beauty-blush);
+  color: var(--beauty-rose);
+  transform: translateY(-2px);
 }
 
-.beauty-collection-card strong {
-  font-size: clamp(1.3rem, 1.8vw, 1.95rem);
+.beauty-curated-promo-dots {
+  display: flex;
+  gap: 7px;
+}
+
+.beauty-curated-promo-dots button {
+  background: rgba(255, 255, 255, 0.55);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  height: 6px;
+  padding: 0;
+  transition:
+    background 0.2s ease,
+    width 0.2s ease;
+  width: 6px;
+}
+
+.beauty-curated-promo-dots button.is-active {
+  background: #ffffff;
+  width: 34px;
+}
+
+.beauty-curated-main {
+  display: grid;
+  /* The grid row takes the leftover height so the promo card stretches to the
+     same height as the product rows beside it. */
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+}
+
+.beauty-curated-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+  justify-content: space-between;
+  margin-bottom: clamp(18px, 2.2vw, 28px);
+}
+
+.beauty-curated-title {
+  color: var(--beauty-ink);
+  font-size: clamp(1.7rem, 2.6vw, 2.7rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.beauty-curated-tablist {
+  background: #ffffff;
+  border: 1px solid var(--beauty-border);
+  border-radius: 999px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 5px;
+}
+
+.beauty-curated-tab {
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: var(--beauty-muted);
+  cursor: pointer;
+  font-size: 0.88rem;
   font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.12;
-  position: relative;
+  padding: 9px 18px;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+  white-space: nowrap;
 }
 
-.beauty-collection-card span {
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 0.94rem;
-  line-height: 1.6;
-  max-width: 40ch;
-  position: relative;
+.beauty-curated-tab:hover {
+  color: var(--beauty-ink);
+}
+
+.beauty-curated-tab.is-active {
+  background: var(--beauty-ink);
+  color: #ffffff;
+}
+
+.beauty-curated-panels {
+  min-width: 0;
+}
+
+.beauty-curated-panel {
+  min-width: 0;
+}
+
+.beauty-curated-panel .general-product-listing-grid {
+  --product-grid-columns: 3;
 }
 
 .beauty-concern-grid {
@@ -11767,8 +11903,8 @@ textarea {
     min-height: 96px;
   }
 
-  .beauty-collection-card {
-    min-height: 280px;
+  .beauty-curated-promo {
+    min-height: 300px;
   }
 }
 
@@ -12098,10 +12234,19 @@ textarea {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .beauty-collection-grid,
   .beauty-guide-grid,
   .beauty-reviews-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Below the two-column breakpoint the promo stacks above the grid, which then
+     drops to two cards per row. */
+  .beauty-curated-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .beauty-curated-panel .general-product-listing-grid {
+    --product-grid-columns: 2;
   }
 
   .beauty-story {
@@ -12119,10 +12264,19 @@ textarea {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .beauty-collection-grid,
   .beauty-guide-grid,
   .beauty-reviews-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .beauty-curated-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .beauty-curated-tablist {
+    max-width: 100%;
+    overflow-x: auto;
   }
 
   .beauty-band-heading {

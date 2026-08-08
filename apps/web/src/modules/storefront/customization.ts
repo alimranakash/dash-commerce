@@ -139,6 +139,20 @@ export type StorefrontElectronicsHomepageSettings = {
   newArrivalsTitle: string;
 };
 
+// Beauty Default's "Curated for you" band: a promo card on the left and a
+// category-tabbed product grid on the right. Image lists are empty by default and
+// fall back to the store hero image at render time, same as the fashion blocks.
+export type StorefrontBeautyHomepageSettings = {
+  curatedPromoCtaLink: string;
+  curatedPromoCtaText: string;
+  curatedPromoEyebrow: string;
+  curatedPromoImageUrls: string[];
+  curatedPromoTitle: string;
+  curatedTabCount: number;
+  curatedTitle: string;
+  curatedProductsPerTab: number;
+};
+
 export type StorefrontFashionHomepageSettings = {
   beforeAfterAfterImageUrl: string;
   beforeAfterAfterLabel: string;
@@ -331,6 +345,7 @@ export type StorefrontAdvancedSettings = {
     search: StorefrontProductSectionSettings;
     trending: StorefrontProductSectionSettings;
   };
+  beauty: StorefrontBeautyHomepageSettings;
   electronics: StorefrontElectronicsHomepageSettings;
   fashion: StorefrontFashionHomepageSettings;
   productPage: StorefrontProductPageSettings;
@@ -548,6 +563,16 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
       subtitle: "A refined selection of products getting attention now.",
       title: "Trending Products"
     })
+  },
+  beauty: {
+    curatedProductsPerTab: 6,
+    curatedPromoCtaLink: "/products",
+    curatedPromoCtaText: "Shop Now",
+    curatedPromoEyebrow: "Crystal Dust",
+    curatedPromoImageUrls: [],
+    curatedPromoTitle: "Glow Above All",
+    curatedTabCount: 4,
+    curatedTitle: "Curated for you"
   },
   electronics: {
     brandSectionTitle: "Featured brands",
@@ -794,6 +819,7 @@ export function normalizeAdvancedSettings(value: unknown): StorefrontAdvancedSet
   const productPage = isRecord(input.productPage) ? input.productPage : {};
   const shopPage = isRecord(input.shopPage) ? input.shopPage : {};
   const tabbedProductShowcase = isRecord(input.tabbedProductShowcase) ? input.tabbedProductShowcase : {};
+  const beauty = isRecord(input.beauty) ? input.beauty : {};
   const electronics = isRecord(input.electronics) ? input.electronics : {};
   const fashion = isRecord(input.fashion) ? input.fashion : {};
 
@@ -870,6 +896,7 @@ export function normalizeAdvancedSettings(value: unknown): StorefrontAdvancedSet
       search: productSection(input.productSections, "search"),
       trending: productSection(input.productSections, "trending")
     },
+    beauty: beautySettings(beauty),
     electronics: electronicsSettings(electronics),
     fashion: fashionSettings(fashion),
     productPage: productPageSettings(productPage),
@@ -959,6 +986,21 @@ function electronicsPromoCards(
     .filter((item): item is StorefrontElectronicsPromoCardSettings => Boolean(item));
 
   return cards.length > 0 ? cards.slice(0, max) : defaults;
+}
+
+function beautySettings(input: Record<string, unknown>): StorefrontBeautyHomepageSettings {
+  const defaults = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.beauty;
+
+  return {
+    curatedProductsPerTab: numberInRange(input.curatedProductsPerTab, 3, 12, defaults.curatedProductsPerTab),
+    curatedPromoCtaLink: path(input.curatedPromoCtaLink, defaults.curatedPromoCtaLink),
+    curatedPromoCtaText: text(input.curatedPromoCtaText, defaults.curatedPromoCtaText),
+    curatedPromoEyebrow: text(input.curatedPromoEyebrow, defaults.curatedPromoEyebrow),
+    curatedPromoImageUrls: textList(input.curatedPromoImageUrls, defaults.curatedPromoImageUrls, 5),
+    curatedPromoTitle: text(input.curatedPromoTitle, defaults.curatedPromoTitle),
+    curatedTabCount: numberInRange(input.curatedTabCount, 2, 6, defaults.curatedTabCount),
+    curatedTitle: text(input.curatedTitle, defaults.curatedTitle)
+  };
 }
 
 function fashionSettings(input: Record<string, unknown>): StorefrontFashionHomepageSettings {

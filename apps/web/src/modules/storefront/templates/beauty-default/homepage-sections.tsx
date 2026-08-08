@@ -4,10 +4,10 @@ import {
   resolveProductSectionProducts,
   type StorefrontProductPools
 } from "../../product-sections";
+import { BeautyCuratedSection } from "./beauty-curated";
 import {
   BeautyBrandStory,
   BeautyCategoryGrid,
-  BeautyCollections,
   BeautyConcernGrid,
   BeautyHero,
   BeautyNewsletter,
@@ -58,9 +58,15 @@ export function BeautyHomepageSections({
         storeId={store.id}
         storeSlug={store.slug}
       />
-      <BeautySection actionHref={`/s/${store.slug}/products`} eyebrow="Collections" id="beauty-collections" title="Featured collections">
-        <BeautyCollections storeSlug={store.slug} />
-      </BeautySection>
+      <BeautyCuratedSection
+        advancedSettings={settings?.advancedSettings}
+        categories={homeData.categories}
+        currency={store.currency}
+        fallbackImageUrl={settings?.heroImageUrl ?? store.themeSetting?.heroImageUrl}
+        products={homeData.featuredProducts}
+        storeId={store.id}
+        storeSlug={store.slug}
+      />
       <BeautySection actionHref={`/s/${store.slug}/products`} eyebrow="Concerns" id="beauty-concerns" title="Shop by concern">
         <BeautyConcernGrid storeSlug={store.slug} />
       </BeautySection>
