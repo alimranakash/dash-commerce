@@ -55,6 +55,7 @@ export function BeautyHomepageSections({
         id="beauty-best-sellers"
         products={resolveProductSectionProducts(bestSellerSection, pools)}
         section={bestSellerSection}
+        storeId={store.id}
         storeSlug={store.slug}
       />
       <BeautySection actionHref={`/s/${store.slug}/products`} eyebrow="Collections" id="beauty-collections" title="Featured collections">
@@ -68,6 +69,7 @@ export function BeautyHomepageSections({
         id="beauty-new-arrivals"
         products={resolveProductSectionProducts(newArrivalsSection, pools)}
         section={newArrivalsSection}
+        storeId={store.id}
         storeSlug={store.slug}
       />
       <BeautyTipsGuide />

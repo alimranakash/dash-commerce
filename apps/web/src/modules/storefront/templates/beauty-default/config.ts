@@ -1,4 +1,5 @@
 import type { StorefrontTemplateConfig } from "../types";
+import { BEAUTY_PRODUCT_CARD_VARIANT } from "./beauty-listing-card";
 import { BeautyCategoryLayoutPlaceholder } from "./category-layout";
 import { BeautyHomepageSections } from "./homepage-sections";
 import { BeautyProductCard } from "./product-card";
@@ -38,6 +39,6 @@ export const beautyDefaultTemplate: StorefrontTemplateConfig = {
   id: "beauty-default",
   name: "Beauty Default",
   previewImage: "/template-previews/beauty-default.png",
-  productCardVariant: "beauty-soft-card",
+  productCardVariant: BEAUTY_PRODUCT_CARD_VARIANT,
   productPageVariant: "beauty-product-detail"
 };

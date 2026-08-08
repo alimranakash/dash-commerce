@@ -20,18 +20,22 @@ export type RecentlyViewedProduct = {
 };
 
 type RecentlyViewedSectionProps = {
+  cardVariant?: string | undefined;
   currency: string;
   currentProduct: RecentlyViewedProduct;
   section: StorefrontProductSectionSettings;
+  storeId?: string | undefined;
   storeSlug: string;
 };
 
 const MAX_STORED_PRODUCTS = 24;
 
 export function RecentlyViewedSection({
+  cardVariant,
   currency,
   currentProduct,
   section,
+  storeId,
   storeSlug
 }: RecentlyViewedSectionProps) {
   const [products, setProducts] = useState<RecentlyViewedProduct[]>([]);
@@ -73,10 +77,12 @@ export function RecentlyViewedSection({
         title={section.title}
       />
       <ProductGrid
+        cardVariant={cardVariant}
         currency={currency}
         gridId={gridId}
         products={products.slice(0, section.count).map(toProductCardProduct)}
         section={section}
+        storeId={storeId}
         storeSlug={storeSlug}
       />
     </section>

@@ -2,6 +2,10 @@ import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import type { StorefrontProductSectionSettings } from "../customization";
 import { formatStorefrontMoney } from "../format";
+import {
+  BEAUTY_PRODUCT_CARD_VARIANT,
+  BeautyListingCard
+} from "../templates/beauty-default/beauty-listing-card";
 import { ProductSectionSliderControls } from "./product-section-slider-controls";
 import { StorefrontImage } from "./storefront-image";
 
@@ -19,10 +23,15 @@ export type ProductCardProduct = {
 };
 
 export type ProductGridProps = {
+  // The active template's `productCardVariant`. Only variants this module knows
+  // about swap the card; anything else keeps the shared card below.
+  cardVariant?: string | undefined;
   currency: string;
   gridId?: string | undefined;
   products: ProductCardProduct[];
   section: StorefrontProductSectionSettings;
+  // Only needed by cards that add to the cart from the grid.
+  storeId?: string | undefined;
   storeSlug: string;
 };
 
@@ -61,7 +70,15 @@ export function SectionHeader({
   );
 }
 
-export function ProductGrid({ currency, gridId, products, section, storeSlug }: ProductGridProps) {
+export function ProductGrid({
+  cardVariant,
+  currency,
+  gridId,
+  products,
+  section,
+  storeId,
+  storeSlug
+}: ProductGridProps) {
   return (
     <div
       id={gridId}
@@ -71,15 +88,26 @@ export function ProductGrid({ currency, gridId, products, section, storeSlug }: 
       // Columns setting actually drives now.
       style={{ "--product-grid-columns": section.columns } as CSSProperties}
     >
-      {products.slice(0, section.count).map((product) => (
-        <ProductCard
-          currency={currency}
-          key={product.id}
-          product={product}
-          section={section}
-          storeSlug={storeSlug}
-        />
-      ))}
+      {products.slice(0, section.count).map((product) =>
+        cardVariant === BEAUTY_PRODUCT_CARD_VARIANT ? (
+          <BeautyListingCard
+            currency={currency}
+            key={product.id}
+            product={product}
+            section={section}
+            storeId={storeId}
+            storeSlug={storeSlug}
+          />
+        ) : (
+          <ProductCard
+            currency={currency}
+            key={product.id}
+            product={product}
+            section={section}
+            storeSlug={storeSlug}
+          />
+        )
+      )}
     </div>
   );
 }

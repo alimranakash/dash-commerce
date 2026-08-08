@@ -125,10 +125,12 @@ export default async function StorefrontProductsPage({
         ) : (
           <>
             <ProductGrid
+              cardVariant={template.productCardVariant}
               currency={store.currency}
               gridId={gridId}
               products={products}
               section={listingSection}
+              storeId={store.id}
               storeSlug={store.slug}
             />
             <div className="sf-pagination" aria-label="Product pagination">

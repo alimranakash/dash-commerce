@@ -83,10 +83,12 @@ export default async function StorefrontSearchPage({
           </div>
         ) : (
           <ProductGrid
+            cardVariant={template.productCardVariant}
             currency={store.currency}
             gridId={gridId}
             products={products}
             section={searchSection}
+            storeId={store.id}
             storeSlug={store.slug}
           />
         )}

@@ -71,6 +71,7 @@ export default async function StorefrontProductPage({
     <main className="sf-page" data-storefront-template={template.id}>
       <StorefrontHeader store={store} />
       <GeneralProductPage
+        cardVariant={template.productCardVariant}
         cartError={cartError}
         product={product}
         ProductDetailExtras={ProductDetailExtras}

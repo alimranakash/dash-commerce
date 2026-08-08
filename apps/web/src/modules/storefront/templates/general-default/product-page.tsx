@@ -28,6 +28,9 @@ import { GeneralProductGallery } from "./product-gallery";
 import { ProductVariantControls } from "./product-variant-controls";
 
 type GeneralProductPageProps = {
+  // Forwarded to the related and recently viewed grids so those rows use the same
+  // card as the rest of the active template.
+  cardVariant?: string | undefined;
   cartError?: string | undefined;
   product: StorefrontProductDetails;
   ProductDetailExtras?: ComponentType<StorefrontTemplateProductDetailExtrasProps> | undefined;
@@ -39,6 +42,7 @@ type GeneralProductPageProps = {
 };
 
 export function GeneralProductPage({
+  cardVariant,
   cartError,
   product,
   ProductDetailExtras,
@@ -159,19 +163,23 @@ export function GeneralProductPage({
             title={relatedSection.title || "You May Also Like"}
           />
           <ProductGrid
+            cardVariant={cardVariant}
             currency={store.currency}
             gridId={relatedGridId}
             products={relatedProducts}
             section={relatedSection}
+            storeId={store.id}
             storeSlug={store.slug}
           />
         </section>
       ) : null}
 
       <RecentlyViewedSection
+        cardVariant={cardVariant}
         currency={store.currency}
         currentProduct={recentlyViewedSnapshot(product)}
         section={recentlyViewedSection}
+        storeId={store.id}
         storeSlug={store.slug}
       />
 

@@ -1,13 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ProductPrice } from "../../components/product-card";
 import {
   ProductGrid,
   ProductImage,
   ProductPrice as ListingProductPrice,
   SectionHeader
 } from "../../components/product-listing";
-import { StorefrontImage } from "../../components/storefront-image";
 import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
   type StorefrontAdvancedSettings,
@@ -15,6 +13,7 @@ import {
 } from "../../customization";
 import type { StorefrontProduct } from "../../storefront.types";
 import { FashionHeroSlider } from "../fashion-default/fashion-hero-slider";
+import { BEAUTY_PRODUCT_CARD_VARIANT, BeautyListingCard } from "./beauty-listing-card";
 
 type BeautySectionProps = {
   actionHref?: string;
@@ -163,12 +162,14 @@ export function BeautyProductSection({
   id,
   products,
   section,
+  storeId,
   storeSlug
 }: {
   currency: string;
   id: string;
   products: StorefrontProduct[];
   section: StorefrontProductSectionSettings;
+  storeId: string;
   storeSlug: string;
 }) {
   const gridId = `${id}-grid`;
@@ -188,6 +189,7 @@ export function BeautyProductSection({
         gridId={gridId}
         products={products}
         section={section}
+        storeId={storeId}
         storeSlug={storeSlug}
       />
     </section>
@@ -199,16 +201,28 @@ export function BeautyProductGrid({
   gridId,
   products,
   section,
+  storeId,
   storeSlug
 }: {
   currency: string;
   gridId?: string;
   products: StorefrontProduct[];
   section: StorefrontProductSectionSettings;
+  storeId: string;
   storeSlug: string;
 }) {
   if (products.length > 0) {
-    return <ProductGrid currency={currency} gridId={gridId} products={products} section={section} storeSlug={storeSlug} />;
+    return (
+      <ProductGrid
+        cardVariant={BEAUTY_PRODUCT_CARD_VARIANT}
+        currency={currency}
+        gridId={gridId}
+        products={products}
+        section={section}
+        storeId={storeId}
+        storeSlug={storeSlug}
+      />
+    );
   }
 
   return (
@@ -233,6 +247,8 @@ export function BeautyProductGrid({
   );
 }
 
+// The template config's card slot renders the same card the grids do, so a single
+// implementation covers every place a Beauty Default product appears.
 export function BeautyProductCard({
   currency,
   product,
@@ -242,42 +258,14 @@ export function BeautyProductCard({
   product: StorefrontProduct;
   storeSlug: string;
 }) {
-  const image = product.images[0];
-  const isSale = product.compareAtPrice && Number(product.compareAtPrice) > Number(product.price);
-  const isUnavailable = product.stockQuantity < 1;
-
   return (
-    <article className="beauty-product-card">
-      <Link className="beauty-product-card-media" href={`/s/${storeSlug}/products/${product.slug}`}>
-        <StorefrontImage alt={image?.alt ?? product.title} fallback={product.category?.name?.slice(0, 6) ?? "Glow"} src={image?.url} />
-        {isSale ? <strong>Sale</strong> : null}
-      </Link>
-      <div className="beauty-product-card-body">
-        <div>
-          <p>{product.category?.name ?? "Beauty"}</p>
-          <h3>
-            <Link href={`/s/${storeSlug}/products/${product.slug}`}>{product.title}</Link>
-          </h3>
-        </div>
-        <small>4.9 rating - {product.category?.name ?? "All skin types"}</small>
-        <ProductPrice
-          compareAtPrice={product.compareAtPrice?.toString()}
-          currency={currency}
-          price={product.price.toString()}
-        />
-        <form action="/api/cart" method="post">
-          <input name="cartAction" type="hidden" value="add" />
-          <input name="storeId" type="hidden" value={product.storeId} />
-          <input name="storeSlug" type="hidden" value={storeSlug} />
-          <input name="productId" type="hidden" value={product.id} />
-          <input name="productSlug" type="hidden" value={product.slug} />
-          <input name="quantity" type="hidden" value="1" />
-          <button disabled={isUnavailable} type="submit">
-            {isUnavailable ? "Out of stock" : "Add to cart"}
-          </button>
-        </form>
-      </div>
-    </article>
+    <BeautyListingCard
+      currency={currency}
+      product={product}
+      section={DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.listing}
+      storeId={product.storeId}
+      storeSlug={storeSlug}
+    />
   );
 }
 
