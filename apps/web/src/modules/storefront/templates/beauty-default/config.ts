@@ -18,7 +18,7 @@ export const beautyDefaultTemplate: StorefrontTemplateConfig = {
   },
   defaultColors: {
     background: "#fff7fb",
-    primary: "#be185d",
+    primary: "#87745e",
     secondary: "#fce7f3",
     surface: "#ffffff",
     text: "#2d1721"

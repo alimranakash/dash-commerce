@@ -6672,10 +6672,13 @@ textarea {
 .sf-footer[data-storefront-footer-template="beauty-default"] {
   --beauty-ink: #2d1721;
   --beauty-muted: #7d5363;
-  --beauty-rose: #be185d;
+  --beauty-rose: #87745e;
+  /* Deeper step of the same primary, used only where white text sits on a solid
+     primary fill: #87745e against white lands at 4.48:1, a hair under AA. */
+  --beauty-rose-strong: #6f5f4b;
   --beauty-blush: #fff1f7;
   --beauty-cream: #fffaf5;
-  --beauty-border: rgba(190, 24, 93, 0.15);
+  --beauty-border: rgba(135, 116, 94, 0.15);
 }
 
 .sf-header-shell[data-storefront-header-template="beauty-default"] {
@@ -6824,7 +6827,7 @@ textarea {
 
 .beauty-story-copy a:hover,
 .beauty-newsletter button:hover {
-  background: var(--beauty-rose);
+  background: var(--beauty-rose-strong);
   transform: translateY(-2px);
 }
 
@@ -6886,8 +6889,8 @@ textarea {
 
 .beauty-category-card:hover,
 .beauty-concern-grid a:hover {
-  border-color: rgba(190, 24, 93, 0.28);
-  box-shadow: 0 24px 60px rgba(190, 24, 93, 0.13);
+  border-color: rgba(135, 116, 94, 0.28);
+  box-shadow: 0 24px 60px rgba(135, 116, 94, 0.13);
   transform: translateY(-4px);
 }
 
@@ -7366,7 +7369,7 @@ textarea {
 }
 
 .beauty-guide-grid article:hover {
-  box-shadow: 0 22px 56px rgba(190, 24, 93, 0.1);
+  box-shadow: 0 22px 56px rgba(135, 116, 94, 0.1);
   transform: translateY(-3px);
 }
 
@@ -7504,7 +7507,7 @@ textarea {
 .beauty-newsletter {
   background:
     radial-gradient(circle at 82% 20%, rgba(255, 255, 255, 0.16), transparent 34%),
-    linear-gradient(135deg, #2d1721 0%, #8a1648 58%, #be185d 100%);
+    linear-gradient(135deg, #2d1721 0%, #55483a 58%, var(--beauty-rose-strong) 100%);
   color: #ffffff;
 }
 
@@ -7636,7 +7639,7 @@ textarea {
 
 .sf-footer[data-storefront-footer-template="beauty-default"] .sf-footer-logo span {
   background: #fce7f3;
-  border: 1px solid rgba(190, 24, 93, 0.2);
+  border: 1px solid rgba(135, 116, 94, 0.2);
   border-radius: 999px;
   color: var(--beauty-rose);
 }
