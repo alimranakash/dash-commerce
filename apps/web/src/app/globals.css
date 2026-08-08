@@ -6735,8 +6735,6 @@ textarea {
 /* --- Shared section typography ------------------------------------------- */
 
 .beauty-section-heading p,
-.beauty-band-heading p,
-.beauty-story-copy > p,
 .beauty-newsletter-inner > p {
   color: var(--beauty-rose);
   font-size: 0.74rem;
@@ -6747,8 +6745,6 @@ textarea {
 }
 
 .beauty-section-heading h2,
-.beauty-band-heading h2,
-.beauty-story-copy h2,
 .beauty-newsletter-inner h2 {
   color: var(--beauty-ink);
   font-size: clamp(1.85rem, 3vw, 3.2rem);
@@ -6793,17 +6789,6 @@ textarea {
   gap: 12px;
 }
 
-.beauty-band-heading {
-  margin-bottom: clamp(26px, 3.4vw, 46px);
-  max-width: 46ch;
-}
-
-.beauty-band-heading-center {
-  margin-inline: auto;
-  text-align: center;
-}
-
-.beauty-story-copy a,
 .beauty-newsletter button {
   align-items: center;
   background: var(--beauty-ink);
@@ -6825,7 +6810,6 @@ textarea {
   width: fit-content;
 }
 
-.beauty-story-copy a:hover,
 .beauty-newsletter button:hover {
   background: var(--beauty-rose-strong);
   transform: translateY(-2px);
@@ -7341,165 +7325,6 @@ textarea {
 .beauty-concern-grid a:hover {
   background: var(--beauty-blush);
   color: var(--beauty-rose);
-}
-
-/* --- Beauty tips guide ---------------------------------------------------- */
-
-.beauty-guide {
-  background: linear-gradient(180deg, var(--beauty-blush) 0%, #fff7fb 100%);
-  border-block: 1px solid var(--beauty-border);
-}
-
-.beauty-guide-grid {
-  display: grid;
-  gap: var(--beauty-card-gap);
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.beauty-guide-grid article {
-  background: #ffffff;
-  border: 1px solid var(--beauty-border);
-  border-radius: 24px;
-  display: grid;
-  gap: 12px;
-  padding: clamp(22px, 2vw, 32px);
-  transition:
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
-}
-
-.beauty-guide-grid article:hover {
-  box-shadow: 0 22px 56px rgba(135, 116, 94, 0.1);
-  transform: translateY(-3px);
-}
-
-.beauty-guide-grid article span {
-  background: var(--beauty-rose);
-  border-radius: 999px;
-  height: 4px;
-  width: 46px;
-}
-
-.beauty-guide-grid h3 {
-  color: var(--beauty-ink);
-  font-size: clamp(1.05rem, 1.2vw, 1.22rem);
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  line-height: 1.3;
-  margin: 0;
-}
-
-.beauty-guide-grid p {
-  color: var(--beauty-muted);
-  font-size: 0.96rem;
-  line-height: 1.7;
-  margin: 0;
-}
-
-/* --- Customer reviews ----------------------------------------------------- */
-
-.beauty-reviews {
-  background: #ffffff;
-}
-
-.beauty-reviews-grid {
-  display: grid;
-  gap: var(--beauty-card-gap);
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.beauty-reviews-grid article {
-  align-content: space-between;
-  background: linear-gradient(160deg, #fffaf7 0%, #fff4f9 100%);
-  border: 1px solid var(--beauty-border);
-  border-radius: 26px;
-  display: grid;
-  gap: 24px;
-  padding: clamp(24px, 2.2vw, 34px);
-}
-
-.beauty-reviews-grid p {
-  color: var(--beauty-ink);
-  font-size: clamp(1rem, 1.15vw, 1.14rem);
-  line-height: 1.7;
-  margin: 0;
-}
-
-.beauty-reviews-grid footer {
-  align-items: center;
-  border-top: 1px solid var(--beauty-border);
-  display: flex;
-  gap: 12px;
-  padding-top: 18px;
-}
-
-.beauty-reviews-grid footer span {
-  align-items: center;
-  background: #fce7f3;
-  border-radius: 999px;
-  color: var(--beauty-rose);
-  display: inline-flex;
-  flex: 0 0 auto;
-  font-weight: 700;
-  height: 42px;
-  justify-content: center;
-  width: 42px;
-}
-
-.beauty-reviews-grid footer strong {
-  color: var(--beauty-muted);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-/* --- Brand story ---------------------------------------------------------- */
-
-.beauty-story {
-  align-items: center;
-  background: linear-gradient(135deg, #fff8f2 0%, #ffeef6 100%);
-  border-block: 1px solid var(--beauty-border);
-  display: grid;
-  gap: clamp(30px, 5vw, 84px);
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
-}
-
-.beauty-story-image {
-  aspect-ratio: 4 / 5;
-  background:
-    radial-gradient(circle at 42% 26%, rgba(255, 255, 255, 0.78), transparent 26%),
-    linear-gradient(140deg, #fce7f3, #fff8f2);
-  border: 1px solid var(--beauty-border);
-  border-radius: 32px;
-  max-width: 520px;
-  position: relative;
-  width: 100%;
-}
-
-.beauty-story-image::after {
-  background: var(--beauty-rose);
-  border-radius: 999px 999px 64px 64px;
-  bottom: 12%;
-  content: "";
-  height: 58%;
-  left: 50%;
-  opacity: 0.28;
-  position: absolute;
-  transform: translateX(-50%);
-  width: 34%;
-}
-
-.beauty-story-copy {
-  display: grid;
-  gap: 22px;
-  max-width: 58ch;
-}
-
-.beauty-story-copy span {
-  color: var(--beauty-muted);
-  font-size: clamp(1rem, 1.15vw, 1.12rem);
-  line-height: 1.8;
 }
 
 /* --- Newsletter ----------------------------------------------------------- */
@@ -12237,11 +12062,6 @@ textarea {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .beauty-guide-grid,
-  .beauty-reviews-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   /* Below the two-column breakpoint the promo stacks above the grid, which then
      drops to two cards per row. */
   .beauty-curated-layout {
@@ -12251,25 +12071,12 @@ textarea {
   .beauty-curated-panel .general-product-listing-grid {
     --product-grid-columns: 2;
   }
-
-  .beauty-story {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .beauty-story-image {
-    max-width: 420px;
-  }
 }
 
 @media (max-width: 680px) {
   .beauty-category-grid,
   .beauty-concern-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .beauty-guide-grid,
-  .beauty-reviews-grid {
-    grid-template-columns: minmax(0, 1fr);
   }
 
   .beauty-curated-header {
@@ -12280,10 +12087,6 @@ textarea {
   .beauty-curated-tablist {
     max-width: 100%;
     overflow-x: auto;
-  }
-
-  .beauty-band-heading {
-    margin-bottom: 26px;
   }
 }
 

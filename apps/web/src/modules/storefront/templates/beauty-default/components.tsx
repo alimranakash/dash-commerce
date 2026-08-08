@@ -49,18 +49,6 @@ const fallbackProducts = [
   { brand: "Silk", label: "Mask", price: 34, title: "Restorative Hair Mask" }
 ];
 
-const beautyTips = [
-  ["Daily Skincare Routine", "Cleanse, hydrate, protect, and repeat with products that suit your skin."],
-  ["Beauty Tips", "Layer formulas gently and let each step absorb before the next."],
-  ["Makeup Guide", "Choose soft tones, build coverage gradually, and finish with a natural glow."]
-];
-
-const reviews = [
-  ["A", "The texture feels luxurious and my routine finally feels simple."],
-  ["M", "Beautiful packaging, gentle formulas, and fast delivery."],
-  ["S", "My skin feels calmer. I love the curated product selection."]
-];
-
 export function BeautySection({
   actionHref,
   actionLabel = "View all",
@@ -272,88 +260,6 @@ export function BeautyConcernGrid({ storeSlug }: { storeSlug: string }) {
         </Link>
       ))}
     </div>
-  );
-}
-
-// Shared heading for the full-width bands, so the eyebrow/title pairing keeps one
-// typographic hierarchy across the guide, reviews, story, and newsletter sections.
-function BeautyBandHeading({
-  align = "start",
-  eyebrow,
-  id,
-  title
-}: {
-  align?: "center" | "start";
-  eyebrow: string;
-  id: string;
-  title: string;
-}) {
-  return (
-    <div className={`beauty-band-heading beauty-band-heading-${align}`}>
-      <p>{eyebrow}</p>
-      <h2 id={id}>{title}</h2>
-    </div>
-  );
-}
-
-export function BeautyTipsGuide() {
-  return (
-    <section className="beauty-band beauty-guide" aria-labelledby="beauty-guide-title">
-      <BeautyBandHeading
-        eyebrow="Beauty Tips"
-        id="beauty-guide-title"
-        title="Guides for rituals, shades, and skin confidence."
-      />
-      <div className="beauty-guide-grid">
-        {beautyTips.map(([title, text]) => (
-          <article key={title}>
-            <span aria-hidden="true" />
-            <h3>{title}</h3>
-            <p>{text}</p>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-export function BeautyReviews() {
-  return (
-    <section className="beauty-band beauty-reviews" aria-labelledby="beauty-reviews-title">
-      <BeautyBandHeading
-        align="center"
-        eyebrow="Customer Reviews"
-        id="beauty-reviews-title"
-        title="Loved by beauty shoppers"
-      />
-      <div className="beauty-reviews-grid">
-        {reviews.map(([initial, text]) => (
-          <article key={text}>
-            <p>"{text}"</p>
-            <footer>
-              <span aria-hidden="true">{initial}</span>
-              <strong>Verified customer</strong>
-            </footer>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-export function BeautyBrandStory({ storeName, storeSlug }: { storeName: string; storeSlug: string }) {
-  return (
-    <section className="beauty-band beauty-story" aria-labelledby="beauty-story-title">
-      <div className="beauty-story-image" aria-hidden="true" />
-      <div className="beauty-story-copy">
-        <p>Brand Story</p>
-        <h2 id="beauty-story-title">A softer way to discover beauty.</h2>
-        <span>
-          {storeName} brings together thoughtful products, gentle rituals, and a polished shopping experience for customers who value trust and elegance.
-        </span>
-        <Link href={`/s/${storeSlug}/products`}>Explore products</Link>
-      </div>
-    </section>
   );
 }
 

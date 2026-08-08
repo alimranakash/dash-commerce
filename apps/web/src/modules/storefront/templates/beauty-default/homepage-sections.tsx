@@ -6,15 +6,12 @@ import {
 } from "../../product-sections";
 import { BeautyCuratedSection } from "./beauty-curated";
 import {
-  BeautyBrandStory,
   BeautyCategoryGrid,
   BeautyConcernGrid,
   BeautyHero,
   BeautyNewsletter,
   BeautyProductSection,
-  BeautyReviews,
-  BeautySection,
-  BeautyTipsGuide
+  BeautySection
 } from "./components";
 
 export function BeautyHomepageSections({
@@ -78,9 +75,6 @@ export function BeautyHomepageSections({
         storeId={store.id}
         storeSlug={store.slug}
       />
-      <BeautyTipsGuide />
-      <BeautyReviews />
-      <BeautyBrandStory storeName={store.name} storeSlug={store.slug} />
       <BeautyNewsletter />
     </div>
   );
