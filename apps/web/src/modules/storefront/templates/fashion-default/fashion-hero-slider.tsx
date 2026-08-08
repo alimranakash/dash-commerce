@@ -152,7 +152,35 @@ function FashionHeroMedia({ slide }: { slide: StorefrontHeroSlide }) {
     );
   }
 
-  return <img alt={slide.title || "Fashion collection"} className="fashion-hero-media" loading="eager" onError={() => setFailed(true)} src={slide.url} />;
+  const mobileUrl = mobileHeroVariant(slide.url);
+
+  return (
+    <picture>
+      {mobileUrl ? <source media="(max-width: 820px)" srcSet={mobileUrl} /> : null}
+      <img
+        alt={slide.title || "Fashion collection"}
+        className="fashion-hero-media"
+        decoding="async"
+        loading="eager"
+        onError={() => setFailed(true)}
+        src={slide.url}
+      />
+    </picture>
+  );
+}
+
+// The hero art is a wide editorial crop that loses almost everything when a
+// phone squeezes it into a portrait frame, so the fashion pack ships a portrait
+// companion beside it. A `<source>` that 404s has no fallback, so every other
+// image keeps the desktop art at all widths.
+const heroPacksWithMobileArt = /^\/demo-assets\/fashion\/hero\/hero-0\d\.webp$/;
+
+function mobileHeroVariant(src: string) {
+  if (!heroPacksWithMobileArt.test(src)) {
+    return undefined;
+  }
+
+  return src.replace(/hero-0\d\.webp$/, "hero-mobile.webp");
 }
 
 function resolveSlides(

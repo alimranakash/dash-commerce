@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { useState } from "react";
+import { formatStorefrontMoney } from "../../format";
 import type { FashionProductCardData } from "./fashion-product-card-data";
 import styles from "./fashion-before-after.module.css";
 
@@ -96,7 +97,7 @@ export function FashionBeforeAfter({
           <div>
             {product.category ? <p>{product.category.name}</p> : null}
             <h2>{product.title}</h2>
-            <strong>{formatMoney(product.price, currency)}</strong>
+            <strong>{formatStorefrontMoney(product.price, currency)}</strong>
           </div>
         </Link>
       ) : null}
@@ -118,11 +119,4 @@ function ComparisonMedia({
   ) : (
     <div className={`${className} ${fallbackClassName}`} aria-hidden="true" />
   );
-}
-
-function formatMoney(value: string, currency: string) {
-  return new Intl.NumberFormat("en", {
-    currency,
-    style: "currency"
-  }).format(Number(value));
 }

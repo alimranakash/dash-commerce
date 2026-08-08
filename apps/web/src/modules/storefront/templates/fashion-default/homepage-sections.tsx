@@ -5,7 +5,6 @@ import { FashionNewArrivals } from "./fashion-new-arrivals";
 import { toFashionProductCardData } from "./fashion-product-card-data";
 import {
   FashionCategoryCards,
-  FashionCollectionCards,
   FashionCommunityGallery,
   FashionEditorialBanner,
   FashionEditorialCollectionGrid,
@@ -102,9 +101,6 @@ export function FashionHomepageSections({
         rightImageUrl={fashion?.editorialSplitRightImageUrl || heroSlides[2]?.url || editorialImages[1] || editorialImages[0]}
         textPosition="center"
       />
-      <FashionSection actionHref={resolveStorefrontHref(store.slug, productSections?.featured.ctaLink ?? "/products")} actionLabel={productSections?.featured.ctaText} eyebrow="Collections" id="fashion-featured-collections" title="Featured collections">
-        <FashionCollectionCards categories={homeData.categories} storeSlug={store.slug} />
-      </FashionSection>
       <FashionSection actionHref={`/s/${store.slug}/products`} eyebrow="Categories" id="fashion-categories" title="Shop by category">
         <FashionCategoryCards categories={homeData.categories} storeSlug={store.slug} />
       </FashionSection>

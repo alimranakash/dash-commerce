@@ -10,19 +10,23 @@ export const fashionDemoNavigation = [
     label: "New Arrivals"
   },
   {
-    href: "/categories/men",
-    label: "Men"
-  },
-  {
-    href: "/categories/women",
+    href: "/categories/womens-clothing",
     label: "Women"
   },
   {
-    href: "/categories/shoes",
-    label: "Shoes"
+    href: "/categories/mens-clothing",
+    label: "Men"
   },
   {
-    href: "/contact",
-    label: "Contact"
+    href: "/categories/footwear",
+    label: "Footwear"
+  },
+  {
+    href: "/categories/bags",
+    label: "Bags"
+  },
+  {
+    href: "/categories",
+    label: "Categories"
   }
 ] satisfies DemoPackNavigationItem[];

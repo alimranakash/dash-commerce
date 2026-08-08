@@ -1,8 +1,8 @@
 import type { DemoPackSettings } from "../types";
 
 export const fashionDemoSettings = {
-  announcementText: "New season collection is now live.",
-  primaryColor: "#111111",
-  secondaryColor: "#f3eee8",
-  storeTagline: "Modern fashion essentials for everyday confidence."
+  announcementText: "New season arrivals are live across all six categories.",
+  primaryColor: "#1c1613",
+  secondaryColor: "#ede3d8",
+  storeTagline: "Clothing, footwear, bags and accessories for everyday wear."
 } satisfies DemoPackSettings;

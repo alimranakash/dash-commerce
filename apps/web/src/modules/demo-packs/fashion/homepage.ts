@@ -1,15 +1,15 @@
 import type { DemoPackHomepage } from "../types";
 
 export const fashionDemoHomepage = {
-  bannerImageUrl: "/demo-assets/fashion/banners/banner-01.webp",
-  ctaText: "Explore the collection",
-  editorialBannerText: "A refined seasonal edit for effortless everyday dressing.",
-  featuredSectionTitle: "Curated fashion picks",
+  bannerImageUrl: "/demo-assets/fashion/banners/promo-primary.webp",
+  ctaText: "Shop all products",
+  editorialBannerText: "Twenty-four pieces that work together across six categories.",
+  featuredSectionTitle: "Featured pieces",
   heroImageUrl: "/demo-assets/fashion/hero/hero-01.webp",
-  heroSubtitle: "Discover elevated essentials, modern silhouettes, and versatile pieces for every wardrobe.",
-  heroTitle: "New season styles for a refined wardrobe",
-  newCollectionTitle: "New Collection",
-  newsletterText: "Receive new arrivals, styling notes, and limited fashion edits.",
-  promoBannerText: "Launch edit: selected wardrobe essentials now available.",
+  heroSubtitle: "TWENTY-FOUR PIECES, SIX CATEGORIES",
+  heroTitle: "Dressed for\nthe everyday.",
+  newCollectionTitle: "New arrivals",
+  newsletterText: "Get new arrivals, restocks and markdowns before they reach the homepage.",
+  promoBannerText: "Clothing, footwear, bags, jewelry and accessories - all priced in BDT.",
   trendingProductsTitle: "Trending now"
 } satisfies DemoPackHomepage;

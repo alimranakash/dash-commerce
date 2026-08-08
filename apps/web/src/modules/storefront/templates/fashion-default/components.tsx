@@ -25,22 +25,6 @@ type FashionCategory = {
   slug: string;
 };
 
-const fallbackCategories = [
-  { name: "Women", slug: "women" },
-  { name: "Men", slug: "men" },
-  { name: "Shoes", slug: "shoes" },
-  { name: "Accessories", slug: "accessories" }
-];
-
-const fallbackEditorialCollections = [
-  { cta: "Shop now", name: "Bikinis", slug: "bikinis" },
-  { cta: "One pieces", name: "One Pieces", slug: "one-pieces" },
-  { cta: "Swim tops", name: "Swim Tops", slug: "swim-tops" },
-  { cta: "Shop cover-ups", name: "Beachwear", slug: "beachwear" }
-];
-
-const communityTiles = ["Street Edit", "Neutral Layers", "Weekend Set", "Soft Tailoring", "City Walk", "Evening Ease"];
-
 export function FashionSection({
   actionHref,
   actionLabel = "View all",
@@ -91,46 +75,6 @@ export function FashionHero({
   );
 }
 
-export function FashionCollectionCards({
-  categories,
-  storeSlug
-}: {
-  categories: FashionCategory[];
-  storeSlug: string;
-}) {
-  const collections = (categories.length > 0 ? categories.slice(0, 3) : fallbackCategories.slice(0, 3));
-
-  return (
-    <div className={editorialStyles.collectionGrid}>
-      {collections.map((collection, index) => (
-        <Link
-          className={editorialStyles.collectionCard}
-          href={`/s/${storeSlug}/categories/${collection.slug}`}
-          key={collection.slug}
-        >
-          <div className={editorialStyles.collectionMedia}>
-            <StorefrontImage
-              alt={collection.name}
-              fallback={collection.name}
-              src={
-                "imageUrl" in collection && typeof collection.imageUrl === "string"
-                  ? collection.imageUrl
-                  : null
-              }
-            />
-          </div>
-          <div className={editorialStyles.collectionOverlay} aria-hidden="true" />
-          <div className={editorialStyles.collectionContent}>
-            <small>{String(index + 1).padStart(2, "0")}</small>
-            <h3>{collection.name}</h3>
-            <span>Explore collection</span>
-          </div>
-        </Link>
-      ))}
-    </div>
-  );
-}
-
 export function FashionEditorialCollectionGrid({
   categories,
   ctas,
@@ -140,20 +84,18 @@ export function FashionEditorialCollectionGrid({
   ctas?: string[] | undefined;
   storeSlug: string;
 }) {
-  const collections = (categories.length > 0 ? categories.slice(0, 4) : fallbackEditorialCollections).map(
-    (category, index) => ({
-      cta:
-        "cta" in category && typeof category.cta === "string"
-          ? category.cta
-          : ctas?.[index] ?? fallbackEditorialCollections[index]?.cta ?? "Shop now",
-      imageUrl:
-        "imageUrl" in category && typeof category.imageUrl === "string"
-          ? category.imageUrl
-          : null,
-      name: category.name,
-      slug: category.slug
-    })
-  );
+  // Cards come from the store's own categories - an empty catalogue renders no
+  // section rather than links to collections that were never created.
+  const collections = categories.slice(0, 4).map((category, index) => ({
+    cta: ctas?.[index] ?? "Shop now",
+    imageUrl: category.imageUrl ?? null,
+    name: category.name,
+    slug: category.slug
+  }));
+
+  if (collections.length === 0) {
+    return null;
+  }
 
   return (
     <section
@@ -194,11 +136,15 @@ export function FashionCategoryCards({
   categories: FashionCategory[];
   storeSlug: string;
 }) {
-  const visibleCategories = (categories.length > 0 ? categories.slice(0, 4) : fallbackCategories).map((category) => ({
-    imageUrl: "imageUrl" in category && typeof category.imageUrl === "string" ? category.imageUrl : null,
+  const visibleCategories = categories.slice(0, 4).map((category) => ({
+    imageUrl: category.imageUrl ?? null,
     name: category.name,
     slug: category.slug
   }));
+
+  if (visibleCategories.length === 0) {
+    return null;
+  }
 
   return (
     <div className="fashion-category-grid">
@@ -329,12 +275,13 @@ export function FashionCommunityGallery({
   images: Array<{ alt: string; url: string | null }>;
   title?: string | null | undefined;
 }) {
-  const tiles = Array.from({ length: 6 }, (_, index) => (
-    images[index] ?? {
-      alt: communityTiles[index] ?? "Community style",
-      url: null
-    }
-  ));
+  // Only real catalogue art is tiled here - a placeholder caption over an empty
+  // square reads as a broken image rather than a styling shot.
+  const tiles = images.filter((image) => Boolean(image.url)).slice(0, 6);
+
+  if (tiles.length === 0) {
+    return null;
+  }
 
   return (
     <section className={editorialStyles.community} aria-labelledby="fashion-community-title">

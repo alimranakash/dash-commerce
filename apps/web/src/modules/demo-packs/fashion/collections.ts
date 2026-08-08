@@ -1,17 +1,7 @@
-export const fashionDemoCollections = [
-  {
-    description: "Clean seasonal fashion pieces for a premium storefront launch.",
-    slug: "new-collection",
-    title: "New Collection"
-  },
-  {
-    description: "Curated wardrobe staples for everyday styling.",
-    slug: "modern-essentials",
-    title: "Modern Essentials"
-  },
-  {
-    description: "Accessories, shoes, and statement pieces for editorial sections.",
-    slug: "finishing-touches",
-    title: "Finishing Touches"
-  }
-];
+/**
+ * The Fashion pack ships no collections. Collections are not a seeded entity in
+ * this codebase - nothing reads `content.collections` beyond the demo-content
+ * overview counter - so listing them here would advertise content that importing
+ * never creates. Products are grouped by category and brand instead.
+ */
+export const fashionDemoCollections = [];

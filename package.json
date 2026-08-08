@@ -13,6 +13,7 @@
     "lint": "turbo lint --env-mode=loose",
     "typecheck": "turbo typecheck --env-mode=loose",
     "format": "prettier --write .",
+    "verify:demo-packs": "node scripts/verify-demo-packs.mjs",
     "db:generate": "npm run db:generate -w @dash/db",
     "db:push": "npm run db:push -w @dash/db",
     "db:migrate": "npm run db:migrate -w @dash/db",

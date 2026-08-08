@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { formatStorefrontMoney } from "../../format";
 import type { FashionProductCardData } from "./fashion-product-card-data";
 import styles from "./fashion-product-card.module.css";
 
@@ -70,8 +71,10 @@ export function FashionEditorialProductCard({
         {product.category ? <p>{product.category.name}</p> : null}
         <h3><Link href={productHref}>{product.title}</Link></h3>
         <div className={styles.price}>
-          {isSale && comparePrice ? <del>{formatMoney(String(comparePrice), currency)}</del> : null}
-          <strong data-sale={isSale}>{formatMoney(product.price, currency)}</strong>
+          {isSale && comparePrice ? (
+            <del>{formatStorefrontMoney(comparePrice, currency)}</del>
+          ) : null}
+          <strong data-sale={isSale}>{formatStorefrontMoney(product.price, currency)}</strong>
         </div>
       </div>
     </article>
@@ -141,11 +144,4 @@ function getBadgeKind(badge: string) {
   if (badge === "Sale") return "sale";
   if (badge.startsWith("Save")) return "save";
   return "new";
-}
-
-function formatMoney(value: string, currency: string) {
-  return new Intl.NumberFormat("en", {
-    currency,
-    style: "currency"
-  }).format(Number(value));
 }
