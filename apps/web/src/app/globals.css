@@ -6667,8 +6667,12 @@ textarea {
   border-top-color: var(--electronics-border);
 }
 
+/* `.fashion-header-shell` is in this list because beauty renders the fashion header
+   shell, and that shell sits outside `.sf-page` — so it inherits none of the tokens
+   the `[data-storefront-template]` selector declares. */
 [data-storefront-template="beauty-default"],
 .sf-header-shell[data-storefront-header-template="beauty-default"],
+.fashion-header-shell[data-storefront-header-template="beauty-default"],
 .sf-footer[data-storefront-footer-template="beauty-default"] {
   --beauty-ink: #2d1721;
   --beauty-muted: #7d5363;
@@ -13670,6 +13674,12 @@ textarea {
 .sf-page:not(:has(.fashion-hero)) .fashion-header {
   background: var(--fashion-header-bg, #ffffff);
   color: var(--fashion-header-color, #111111);
+}
+
+/* Beauty keeps a hairline under the header in every state, including once the shell
+   drops its overlay and paints a solid background. */
+.fashion-header-shell[data-storefront-header-template="beauty-default"] .fashion-header {
+  border-bottom: 1px solid #fff;
 }
 
 .fashion-header-shell.fashion-header-shell-static {
