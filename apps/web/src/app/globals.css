@@ -7793,6 +7793,83 @@ textarea {
   }
 }
 
+/* --- Trending moments ------------------------------------------------------
+   The one Beauty Default band with no products in it: a centred two-part
+   heading over a row of five portrait photographs. The row is a single
+   column-flow grid track, which is what lets the same markup be five equal
+   columns on a desktop and a snapped side-scroller on a phone — see the
+   breakpoints further down — without swapping to a different layout mode. */
+
+.beauty-moments {
+  --beauty-moments-gap: clamp(10px, 1.1vw, 18px);
+  --beauty-moments-radius: clamp(12px, 1vw, 18px);
+  /* Warmer than `--beauty-cream`: the strip is sandwiched between the full-bleed
+     comparison photographs and the dark newsletter, so it needs a tint that
+     reads as its own band against both rather than as page background. */
+  --beauty-moments-surface: #fdf4ea;
+  background: var(--beauty-moments-surface);
+}
+
+.beauty-moments-header {
+  margin: 0 auto clamp(26px, 3.4vw, 48px);
+  max-width: 62ch;
+  text-align: center;
+}
+
+.beauty-moments-title {
+  color: var(--beauty-ink);
+  font-size: clamp(1.75rem, 3.4vw, 3.1rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.beauty-moments-title-accent {
+  /* The storefront face ships sans-only, so the italic half of the heading uses
+     the system serif stack instead of pulling a second webfont onto the page. */
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.beauty-moments-description {
+  color: var(--beauty-muted);
+  font-size: clamp(0.92rem, 1.1vw, 1.05rem);
+  line-height: 1.6;
+  /* Roughly two lines at the reference width, which is the shape the copy is
+     written for. */
+  margin: clamp(12px, 1.4vw, 18px) auto 0;
+  max-width: 46ch;
+}
+
+.beauty-moments-track {
+  display: grid;
+  gap: var(--beauty-moments-gap);
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+}
+
+.beauty-moments-item {
+  aspect-ratio: 2 / 3;
+  border-radius: var(--beauty-moments-radius);
+  overflow: hidden;
+  position: relative;
+}
+
+.beauty-moments-image {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.45s ease;
+  width: 100%;
+}
+
+.beauty-moments-item:hover .beauty-moments-image {
+  transform: scale(1.04);
+}
+
 .beauty-concern-grid {
   display: grid;
   gap: var(--beauty-card-gap);
@@ -12708,6 +12785,37 @@ textarea {
   }
 }
 
+/* The trending strip holds five across for as long as each portrait still reads
+   as a portrait; below that it becomes a snapped side-scroller — a couple of
+   full-size frames plus a peek at the next — rather than five slivers. The
+   negative margin lets it bleed to the viewport edge while the matching padding
+   keeps the first and last frame aligned with the rest of the page. */
+@media (max-width: 1024px) {
+  .beauty-moments-track {
+    grid-auto-columns: minmax(150px, 34%);
+    margin-inline: calc(var(--beauty-band-inline) * -1);
+    overflow-x: auto;
+    padding-inline: var(--beauty-band-inline);
+    scroll-padding-inline: var(--beauty-band-inline);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .beauty-moments-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .beauty-moments-item {
+    scroll-snap-align: start;
+  }
+}
+
+@media (max-width: 640px) {
+  .beauty-moments-track {
+    grid-auto-columns: minmax(140px, 62%);
+  }
+}
+
 /* General Default homepage section rhythm */
 .sf-page[data-storefront-template="general-default"] .general-homepage {
   --general-section-padding-block: clamp(48px, 6vw, 88px);
@@ -13819,11 +13927,13 @@ textarea {
 @media (prefers-reduced-motion: reduce) {
   .beauty-product-tile-media img,
   .beauty-product-tile-hover-image,
-  .beauty-product-tile-quick-add {
+  .beauty-product-tile-quick-add,
+  .beauty-moments-image {
     transition: none;
   }
 
-  .beauty-product-tile:hover .beauty-product-tile-media img {
+  .beauty-product-tile:hover .beauty-product-tile-media img,
+  .beauty-moments-item:hover .beauty-moments-image {
     transform: none;
   }
 }

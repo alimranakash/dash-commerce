@@ -33,6 +33,7 @@ export const beautyDefaultTemplate: StorefrontTemplateConfig = {
     "shop-by-concern",
     "new-arrivals",
     "before-after",
+    "trending-moments",
     "newsletter"
   ],
   id: "beauty-default",

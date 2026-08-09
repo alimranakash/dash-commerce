@@ -151,6 +151,9 @@ export type StorefrontElectronicsHomepageSettings = {
 // Beauty Default's comparison band is a heading over one draggable before/after
 // image pair, with corner labels, a shop button and a floating product card laid
 // over the frame — the same anatomy as the Fashion Default band.
+// Beauty Default's trending-moments band carries no products at all: a centred
+// two-part heading (`momentsTitle` set normally, `momentsTitleAccent` in italic
+// serif) over a five-across row of portrait photographs.
 export type StorefrontBeautyHomepageSettings = {
   comparisonAccentColor: string;
   comparisonAfterImageUrl: string;
@@ -175,6 +178,10 @@ export type StorefrontBeautyHomepageSettings = {
   hotPicksProductCount: number;
   hotPicksTabCount: number;
   hotPicksTitle: string;
+  momentsDescription: string;
+  momentsImageUrls: string[];
+  momentsTitle: string;
+  momentsTitleAccent: string;
   spotlightCategorySlug: string;
   spotlightCtaLink: string;
   spotlightCtaText: string;
@@ -622,6 +629,17 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     hotPicksProductCount: 12,
     hotPicksTabCount: 6,
     hotPicksTitle: "Hot beauty picks",
+    momentsDescription:
+      "Stay ahead in style by exploring the latest beauty trends and must-have skincare moments with us.",
+    momentsImageUrls: [
+      "/demo-assets/beauty/moments/moment-01.webp",
+      "/demo-assets/beauty/moments/moment-02.webp",
+      "/demo-assets/beauty/moments/moment-03.webp",
+      "/demo-assets/beauty/moments/moment-04.webp",
+      "/demo-assets/beauty/moments/moment-05.webp"
+    ],
+    momentsTitle: "Tap Into Trending",
+    momentsTitleAccent: "Beauty Moments",
     spotlightCategorySlug: "",
     spotlightCtaLink: "/products",
     spotlightCtaText: "Shop Collection",
@@ -1072,6 +1090,10 @@ function beautySettings(input: Record<string, unknown>): StorefrontBeautyHomepag
     hotPicksProductCount: numberInRange(input.hotPicksProductCount, 4, 24, defaults.hotPicksProductCount),
     hotPicksTabCount: numberInRange(input.hotPicksTabCount, 2, 8, defaults.hotPicksTabCount),
     hotPicksTitle: text(input.hotPicksTitle, defaults.hotPicksTitle),
+    momentsDescription: text(input.momentsDescription, defaults.momentsDescription),
+    momentsImageUrls: textList(input.momentsImageUrls, defaults.momentsImageUrls, 5),
+    momentsTitle: text(input.momentsTitle, defaults.momentsTitle),
+    momentsTitleAccent: text(input.momentsTitleAccent, defaults.momentsTitleAccent),
     spotlightCategorySlug: text(input.spotlightCategorySlug, defaults.spotlightCategorySlug),
     spotlightCtaLink: path(input.spotlightCtaLink, defaults.spotlightCtaLink),
     spotlightCtaText: text(input.spotlightCtaText, defaults.spotlightCtaText),

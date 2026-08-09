@@ -8,6 +8,7 @@ import { BeautyBeforeAfterSection } from "./beauty-before-after";
 import { toBeautyComparisonProduct } from "./beauty-comparison-product";
 import { BeautyCuratedSection } from "./beauty-curated";
 import { BeautyHotPicksSection } from "./beauty-hot-picks";
+import { BeautyMomentsSection } from "./beauty-moments";
 import { BeautySpotlightSection } from "./beauty-spotlight";
 import {
   BeautyCategoryGrid,
@@ -102,6 +103,7 @@ export function BeautyHomepageSections({
         product={comparisonProduct ? toBeautyComparisonProduct(comparisonProduct) : null}
         storeSlug={store.slug}
       />
+      <BeautyMomentsSection advancedSettings={settings?.advancedSettings} />
       <BeautyNewsletter />
     </div>
   );

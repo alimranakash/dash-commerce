@@ -30,7 +30,8 @@ export type StorefrontTemplateSection =
   | "customer-reviews"
   | "brand-story"
   | "spotlight"
-  | "before-after";
+  | "before-after"
+  | "trending-moments";
 
 export type StorefrontTemplateColors = {
   background: string;
