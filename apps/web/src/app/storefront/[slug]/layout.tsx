@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { ScrollToTopButton } from "../../../modules/storefront/components/scroll-to-top-button";
 import { StorefrontThemeProvider } from "../../../modules/storefront/themes/storefront-theme-provider";
 import {
   createStorefrontThemeContext,
   getStorefrontThemeSettings
 } from "../../../modules/storefront/themes/theme.service";
-import { getPrimaryStorefrontDomain, getStorefrontBySlug } from "../../../modules/storefront/resolver";
+import {
+  getPrimaryStorefrontDomain,
+  getStorefrontBySlug
+} from "../../../modules/storefront/resolver";
 
 type StorefrontLayoutProps = {
   children: ReactNode;
@@ -71,6 +75,9 @@ export default async function StorefrontLayout({ children, params }: StorefrontL
   return (
     <StorefrontThemeProvider value={themeContext}>
       {children}
+      {/* Inside the theme scope so the fixed button inherits this store's colour
+          tokens and template attribute; mounted here, once, instead of per footer. */}
+      <ScrollToTopButton />
     </StorefrontThemeProvider>
   );
 }

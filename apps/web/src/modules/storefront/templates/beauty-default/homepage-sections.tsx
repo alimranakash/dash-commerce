@@ -11,7 +11,6 @@ import { BeautyHotPicksSection } from "./beauty-hot-picks";
 import { BeautySpotlightSection } from "./beauty-spotlight";
 import {
   BeautyCategoryGrid,
-  BeautyConcernGrid,
   BeautyHero,
   BeautyNewsletter,
   BeautyProductSection,
@@ -97,9 +96,6 @@ export function BeautyHomepageSections({
         storeId={store.id}
         storeSlug={store.slug}
       />
-      <BeautySection actionHref={`/s/${store.slug}/products`} eyebrow="Concerns" id="beauty-concerns" title="Shop by concern">
-        <BeautyConcernGrid storeSlug={store.slug} />
-      </BeautySection>
       <BeautyBeforeAfterSection
         advancedSettings={settings?.advancedSettings}
         currency={store.currency}

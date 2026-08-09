@@ -6836,7 +6836,7 @@ textarea {
   display: grid;
   gap: 6px;
   isolation: isolate;
-  min-height: 210px;
+  min-height: 360px;
   overflow: hidden;
   padding: 22px;
   position: relative;
@@ -13679,7 +13679,7 @@ textarea {
 /* Beauty keeps a hairline under the header in every state, including once the shell
    drops its overlay and paints a solid background. */
 .fashion-header-shell[data-storefront-header-template="beauty-default"] .fashion-header {
-  border-bottom: 1px solid #fff;
+  border-bottom: 1px solid #ffffff6e;
 }
 
 .fashion-header-shell.fashion-header-shell-static {
@@ -13825,5 +13825,105 @@ textarea {
 
   .beauty-product-tile:hover .beauty-product-tile-media img {
     transform: none;
+  }
+}
+
+/* --- Floating scroll-to-top button ----------------------------------------
+   Mounted once per storefront surface by `ScrollToTopButton`, inside the theme
+   scope, so it is pinned to the viewport rather than riding along in the footer.
+   The fill reads `--sf-primary` — which the theme provider writes from the
+   seller's colours — so every template gets its own accent for free; the two
+   overrides below only exist where that primary would read wrong.
+   `z-index` sits under the mini cart (9999), drawers (80) and modals so it never
+   floats over an open overlay. */
+.sf-scroll-top {
+  align-items: center;
+  background: var(--sf-primary, var(--store-primary, #135d66));
+  border: 1px solid transparent;
+  border-radius: 999px;
+  bottom: calc(clamp(16px, 2.2vw, 28px) + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.18);
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  height: 48px;
+  justify-content: center;
+  opacity: 0;
+  padding: 0;
+  position: fixed;
+  right: clamp(16px, 2.2vw, 28px);
+  transform: translateY(14px);
+  /* `visibility` is what keeps the hidden button out of the tab order; the 0s
+     delay holds it visible until the fade-out has finished. */
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease,
+    opacity 0.24s ease,
+    transform 0.24s ease,
+    visibility 0s linear 0.24s;
+  visibility: hidden;
+  width: 48px;
+  z-index: 60;
+}
+
+.sf-scroll-top[data-visible="true"] {
+  opacity: 1;
+  transform: none;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease,
+    opacity 0.24s ease,
+    transform 0.24s ease,
+    visibility 0s linear 0s;
+  visibility: visible;
+}
+
+.sf-scroll-top svg {
+  display: block;
+}
+
+.sf-scroll-top[data-visible="true"]:hover {
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.26);
+  transform: translateY(-3px);
+}
+
+.sf-scroll-top:focus-visible {
+  box-shadow:
+    0 0 0 3px #ffffff,
+    0 0 0 6px rgba(15, 23, 42, 0.55);
+  /* Transparent, not `none`: forced-colours mode still paints a ring. */
+  outline: 2px solid transparent;
+  outline-offset: 3px;
+}
+
+/* Beauty's primary (#87745e) lands a hair under AA against white, so the pill
+   uses the deeper step the template already reserves for solid fills. */
+[data-storefront-template="beauty-default"] .sf-scroll-top {
+  background: #6f5f4b;
+  color: #fffaf5;
+}
+
+/* Fashion is monochrome by design; its brown primary would read as a stray accent. */
+[data-storefront-template="fashion-default"] .sf-scroll-top {
+  background: #111111;
+  color: #ffffff;
+}
+
+@media (max-width: 640px) {
+  /* Still a 44px tap target, tucked closer to the edge on small screens. */
+  .sf-scroll-top {
+    height: 44px;
+    width: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-scroll-top,
+  .sf-scroll-top[data-visible="true"],
+  .sf-scroll-top[data-visible="true"]:hover {
+    transform: none;
+    transition: none;
   }
 }
