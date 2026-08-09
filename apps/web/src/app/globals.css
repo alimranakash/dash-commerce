@@ -6723,14 +6723,29 @@ textarea {
   /* Sections are edge-to-edge bands that carry their own vertical rhythm, so the
      page itself adds no gap and no side gutter. */
   gap: 0;
+  /* Explicit `minmax(0, ...)` rather than the implicit `auto` column: an auto
+     track takes its floor from the automatic minimum size of the widest band, so
+     a single band with fixed-width internals (the trending strip's 140px column
+     minimums) dragged the whole page out to ~780px on a phone. `overflow: hidden`
+     then hid the damage instead of showing it, so every section was silently
+     cropped. Capping the track at 0 lets each band be viewport-width and leaves
+     the sideways scrolling to the strips that opt into it. */
+  grid-template-columns: minmax(0, 1fr);
   overflow: hidden;
   padding: 0;
+}
+
+/* Belt and braces for the track cap above: bands whose content can exceed the
+   viewport (scrolling strips, media) must not re-inflate the column. */
+.beauty-homepage > * {
+  min-width: 0;
 }
 
 .beauty-home-section,
 .beauty-band {
   margin: 0;
   max-width: none;
+  min-width: 0;
   padding: var(--beauty-band-block) var(--beauty-band-inline);
   position: relative;
   width: 100%;
@@ -12534,14 +12549,12 @@ textarea {
 @media (max-width: 380px) {
   .general-homepage .general-product-listing-grid,
   .general-homepage .tabbed-product-carousel .general-product-listing-grid,
-  .fashion-homepage .fashion-product-grid,
-  .beauty-homepage .general-product-listing-grid {
+  .fashion-homepage .fashion-product-grid {
     grid-template-columns: 1fr;
   }
 
   .general-homepage .general-product-listing-slider,
-  .general-homepage .tabbed-product-carousel .general-product-listing-slider,
-  .beauty-homepage .general-product-listing-slider {
+  .general-homepage .tabbed-product-carousel .general-product-listing-slider {
     grid-auto-columns: minmax(86%, 1fr);
     grid-template-columns: none;
   }
@@ -12679,11 +12692,8 @@ textarea {
   }
 }
 
-@media (max-width: 420px) {
-  .beauty-spotlight-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
+/* The spotlight grid keeps the template-wide two-per-row rule rather than
+   collapsing to one — see the listing-density block at the end of this file. */
 
 /* A wide frame gets too letterboxed to read once the page is phone width, so the
    comparison squares up and the knob shrinks to match. The button and the card
@@ -13905,22 +13915,182 @@ textarea {
 }
 
 /* Beauty Default listing density -------------------------------------------
-   The shop / category / search grids are shared markup, so the beauty column
-   counts are pinned here (after the generic breakpoints) rather than in them.
-   Three padded tiles are too tight on a phone, so beauty drops to two early and
-   stays there instead of collapsing to a single column. */
+   The shop / category / search / related grids are shared markup, so the beauty
+   column counts are pinned here — after every generic breakpoint — rather than
+   in them. Three padded tiles are too tight on a phone, so beauty drops to two
+   early and then holds there: two per row is the template's mobile rule for
+   every surface a product tile appears on, and nothing below it collapses to a
+   single column or to a one-card-per-view carousel. */
 
 @media (max-width: 640px) {
-  .sf-page[data-storefront-template="beauty-default"]
-    :is(.sf-shop-page, .sf-search-products)
-    .general-product-listing-grid {
+  /* Row-flow grids: home rows, shop, category, search, curated tabs, hot picks,
+     spotlight, related products. */
+  .sf-page[data-storefront-template="beauty-default"] :is(
+    .general-product-listing-grid,
+    .beauty-spotlight-grid,
+    .beauty-hot-picks-grid
+  ) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Column-flow carousels show the same two tiles per view, so a slider row and
+     a static row read identically on a phone — only the overflow differs. */
+  .sf-page[data-storefront-template="beauty-default"] .general-product-listing-slider {
+    grid-auto-columns: calc((100% - var(--product-grid-gap, 16px)) / 2);
+    grid-template-columns: none;
+  }
+
+  /* `--beauty-hot-picks-columns` drives its own `repeat()`, so the count has to
+     move with the rule above rather than be overridden by it. */
+  .sf-page[data-storefront-template="beauty-default"] .beauty-hot-picks-grid {
+    --beauty-hot-picks-columns: 2;
   }
 }
 
-@media (max-width: 380px) {
-  .sf-page[data-storefront-template="beauty-default"] .beauty-homepage .general-product-listing-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+/* Beauty Default touch targets ---------------------------------------------
+   Beauty renders the shared fashion header shell and hero slider, so the
+   controls below are fashion markup. Every selector here is therefore pinned to
+   the beauty template attribute: the fashion storefront keeps its own sizing.
+   The icons themselves stay the size they are — only the pressable box grows,
+   so nothing about the desktop composition moves. */
+
+@media (max-width: 900px) {
+  /* The hamburger and the cart were 20px and 21px boxes: the glyph was the whole
+     hit area. Growing the button itself would drag its contents with it — the
+     cart's count badge hangs off the right edge at `right: -9px`, so a wider
+     button pushed the badge past the viewport and opened a 1px horizontal
+     scroll. An overlaid pseudo-element gives the same 44px press target while
+     the button box, the glyph and the badge all stay exactly where they were. */
+  .fashion-header-shell[data-storefront-header-template="beauty-default"] :is(
+    .fashion-mobile-menu-button,
+    .fashion-header-actions a,
+    .fashion-header-actions button
+  ) {
+    position: relative;
+  }
+
+  .fashion-header-shell[data-storefront-header-template="beauty-default"] :is(
+    .fashion-mobile-menu-button,
+    .fashion-header-actions a,
+    .fashion-header-actions button
+  )::after {
+    content: "";
+    /* 20px glyph + 12px a side = 44px; the cart's 21px glyph lands at 45px. */
+    inset: -12px;
+    position: absolute;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Hero dots: 10px is a legible dot but an unhittable button. The dot keeps its
+     size and an invisible ::after carries the touch box, sized to the 20px gap so
+     neighbouring dots end up adjacent rather than overlapping. */
+  [data-storefront-template="beauty-default"] .fashion-hero-dots {
+    gap: 20px;
+  }
+
+  [data-storefront-template="beauty-default"] .fashion-hero-dots button {
+    height: 12px;
+    position: relative;
+    width: 12px;
+  }
+
+  [data-storefront-template="beauty-default"] .fashion-hero-dots button::after {
+    content: "";
+    inset: -10px;
+    position: absolute;
+  }
+
+  /* Row arrows: 28px box -> 44px, pulled back by the same amount at the end of
+     the row so the toolbar still lines up with the section heading. */
+  [data-storefront-template="beauty-default"] .general-product-slider-controls button {
+    height: 44px;
+    width: 44px;
+  }
+
+  [data-storefront-template="beauty-default"] .general-product-slider-controls {
+    gap: 4px;
+    margin-inline-end: -8px;
+  }
+
+  /* Section "View all" links, the shop-header link and the filter toggle are all
+     20-24px of bare text. The extra height is space under the baseline, which the
+     inline-flex centring absorbs, so nothing moves except the press target. */
+  [data-storefront-template="beauty-default"] :is(
+    .beauty-section-heading a,
+    .general-product-section-cta,
+    .sf-shop-page-header a,
+    .sf-shop-toolbar-left button
+  ) {
+    align-items: center;
+    display: inline-flex;
+    min-height: 44px;
+  }
+
+  /* Breadcrumbs stay inline: vertical padding on an inline box grows the press
+     area without touching the line box, so the trail keeps its own height and
+     its separators stay aligned. */
+  [data-storefront-template="beauty-default"] :is(
+    .sf-breadcrumb a,
+    .general-cart-breadcrumb a,
+    .general-product-breadcrumb a
+  ) {
+    padding-block: 12px;
+  }
+
+  /* The brand mark is the only way back to the homepage from the mobile header,
+     and it was a 15px-tall text link. It is already an inline-flex row. */
+  .fashion-header-shell[data-storefront-header-template="beauty-default"] .fashion-brand {
+    min-height: 44px;
+  }
+
+  /* The mini cart portals into `document.body`, so it sits outside the template
+     scope every other rule here hangs off. `body:has()` is the only way to reach
+     it without giving the shared drawer a template prop it does not otherwise
+     need — and it keeps the change to beauty, as required. Matched on the bare
+     attribute rather than `.sf-page[…]`: the cart route carries it on the theme
+     scope only, so pinning it to `.sf-page` missed exactly that page. */
+  body:has([data-storefront-template="beauty-default"]) .mini-cart-close {
+    height: 44px;
+    width: 44px;
+  }
+
+  /* Card titles and footer links are inline text, so vertical padding buys press
+     area without moving anything. Both stay inside the gap that follows them —
+     10px under a tile title, 12px between footer links — so no two hit areas
+     overlap. */
+  [data-storefront-template="beauty-default"] .beauty-product-tile-title a {
+    padding-block: 8px;
+  }
+
+  .sf-footer[data-storefront-footer-template="beauty-default"] .sf-footer-column a {
+    padding-block: 6px;
+  }
+}
+
+/* Beauty Default mobile legibility -----------------------------------------
+   Several labels shrink with their container and had landed near 10.5px at phone
+   width. These floor them at ~11.5px, the smallest size the rest of the template
+   uses. The product-page selectors are shared markup, so they are pinned to the
+   beauty template and leave the other storefronts alone. */
+@media (max-width: 680px) {
+  .beauty-before-after-label {
+    font-size: 0.72rem;
+  }
+
+  .beauty-before-after-product-copy span {
+    font-size: 0.7rem;
+  }
+
+  [data-storefront-template="beauty-default"] :is(
+    .general-product-sale-badge,
+    .general-product-shipping span
+  ) {
+    font-size: 0.72rem;
+  }
+
+  [data-storefront-template="beauty-default"] .general-product-breadcrumb {
+    font-size: 0.75rem;
   }
 }
 
