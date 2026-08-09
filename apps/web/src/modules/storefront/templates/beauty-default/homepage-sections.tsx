@@ -55,6 +55,14 @@ export function BeautyHomepageSections({
       <BeautySection actionHref={`/s/${store.slug}/products`} eyebrow="Categories" id="beauty-categories" title="Shop by category">
         <BeautyCategoryGrid categories={homeData.categories} storeSlug={store.slug} />
       </BeautySection>
+      <BeautyProductSection
+        currency={store.currency}
+        id="beauty-best-sellers"
+        products={resolveProductSectionProducts(bestSellerSection, pools)}
+        section={bestSellerSection}
+        storeId={store.id}
+        storeSlug={store.slug}
+      />
       <BeautySpotlightSection
         advancedSettings={settings?.advancedSettings}
         categories={homeData.categories}
@@ -64,19 +72,11 @@ export function BeautyHomepageSections({
         storeId={store.id}
         storeSlug={store.slug}
       />
-      <BeautyHotPicksSection
-        advancedSettings={settings?.advancedSettings}
-        categories={homeData.categories}
-        currency={store.currency}
-        productPools={[homeData.bestSellers, homeData.featuredProducts, homeData.newArrivals, homeData.trending]}
-        storeId={store.id}
-        storeSlug={store.slug}
-      />
       <BeautyProductSection
         currency={store.currency}
-        id="beauty-best-sellers"
-        products={resolveProductSectionProducts(bestSellerSection, pools)}
-        section={bestSellerSection}
+        id="beauty-new-arrivals"
+        products={resolveProductSectionProducts(newArrivalsSection, pools)}
+        section={newArrivalsSection}
         storeId={store.id}
         storeSlug={store.slug}
       />
@@ -89,17 +89,17 @@ export function BeautyHomepageSections({
         storeId={store.id}
         storeSlug={store.slug}
       />
-      <BeautySection actionHref={`/s/${store.slug}/products`} eyebrow="Concerns" id="beauty-concerns" title="Shop by concern">
-        <BeautyConcernGrid storeSlug={store.slug} />
-      </BeautySection>
-      <BeautyProductSection
+      <BeautyHotPicksSection
+        advancedSettings={settings?.advancedSettings}
+        categories={homeData.categories}
         currency={store.currency}
-        id="beauty-new-arrivals"
-        products={resolveProductSectionProducts(newArrivalsSection, pools)}
-        section={newArrivalsSection}
+        productPools={[homeData.bestSellers, homeData.featuredProducts, homeData.newArrivals, homeData.trending]}
         storeId={store.id}
         storeSlug={store.slug}
       />
+      <BeautySection actionHref={`/s/${store.slug}/products`} eyebrow="Concerns" id="beauty-concerns" title="Shop by concern">
+        <BeautyConcernGrid storeSlug={store.slug} />
+      </BeautySection>
       <BeautyBeforeAfterSection
         advancedSettings={settings?.advancedSettings}
         currency={store.currency}
