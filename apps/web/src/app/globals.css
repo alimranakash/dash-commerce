@@ -7293,6 +7293,117 @@ textarea {
   --product-grid-columns: 3;
 }
 
+/* --- Hot beauty picks: copy + bestsellers CTA, category chips, wide grid ---
+   Section chrome only. The tiles inside are the same `beauty-product-tile`
+   cards every other Beauty Default surface renders. */
+
+.beauty-hot-picks-header {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 32px;
+  justify-content: space-between;
+  margin-bottom: clamp(20px, 2.4vw, 32px);
+}
+
+.beauty-hot-picks-copy {
+  max-width: 46ch;
+  min-width: 0;
+}
+
+.beauty-hot-picks-title {
+  color: var(--beauty-ink);
+  font-size: clamp(1.05rem, 1.3vw, 1.35rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+}
+
+.beauty-hot-picks-copy p {
+  color: var(--beauty-muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.beauty-hot-picks-cta {
+  align-items: center;
+  background: var(--beauty-ink);
+  border-radius: 10px;
+  color: #ffffff;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 0.95rem;
+  font-weight: 700;
+  gap: 10px;
+  padding: 15px 26px;
+  text-decoration: none;
+  transition:
+    background 0.2s ease,
+    gap 0.2s ease,
+    transform 0.2s ease;
+}
+
+.beauty-hot-picks-cta span {
+  font-size: 1.15rem;
+  line-height: 0.8;
+}
+
+.beauty-hot-picks-cta:hover {
+  background: var(--beauty-rose-strong);
+  gap: 14px;
+  transform: translateY(-2px);
+}
+
+.beauty-hot-picks-tablist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: clamp(22px, 2.6vw, 36px);
+}
+
+.beauty-hot-picks-tab {
+  background: #ffffff;
+  border: 1px solid var(--beauty-border);
+  border-radius: 999px;
+  color: var(--beauty-muted);
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 600;
+  padding: 9px 20px;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
+  white-space: nowrap;
+}
+
+.beauty-hot-picks-tab:hover {
+  border-color: var(--beauty-ink);
+  color: var(--beauty-ink);
+}
+
+/* The active chip is outlined rather than filled, so it reads as a selection
+   without competing with the dark CTA above it. */
+.beauty-hot-picks-tab.is-active {
+  border-color: var(--beauty-ink);
+  box-shadow: inset 0 0 0 1px var(--beauty-ink);
+  color: var(--beauty-ink);
+}
+
+.beauty-hot-picks-panels,
+.beauty-hot-picks-panel {
+  min-width: 0;
+}
+
+.beauty-hot-picks-grid {
+  --beauty-hot-picks-columns: 6;
+  display: grid;
+  gap: clamp(26px, 2.6vw, 44px) clamp(14px, 1.4vw, 24px);
+  grid-template-columns: repeat(var(--beauty-hot-picks-columns), minmax(0, 1fr));
+}
+
 .beauty-concern-grid {
   display: grid;
   gap: var(--beauty-card-gap);
@@ -12087,6 +12198,48 @@ textarea {
   .beauty-curated-tablist {
     max-width: 100%;
     overflow-x: auto;
+  }
+}
+
+/* Hot beauty picks steps 6 -> 2 tiles per row; the chips wrap until the row is
+   too narrow to wrap usefully, then scroll sideways instead. */
+@media (max-width: 1400px) {
+  .beauty-hot-picks-grid {
+    --beauty-hot-picks-columns: 5;
+  }
+}
+
+@media (max-width: 1180px) {
+  .beauty-hot-picks-grid {
+    --beauty-hot-picks-columns: 4;
+  }
+}
+
+@media (max-width: 900px) {
+  .beauty-hot-picks-grid {
+    --beauty-hot-picks-columns: 3;
+  }
+}
+
+@media (max-width: 680px) {
+  .beauty-hot-picks-grid {
+    --beauty-hot-picks-columns: 2;
+  }
+
+  .beauty-hot-picks-header {
+    flex-direction: column;
+  }
+
+  .beauty-hot-picks-tablist {
+    flex-wrap: nowrap;
+    margin-inline: calc(var(--beauty-band-inline) * -1);
+    overflow-x: auto;
+    padding-inline: var(--beauty-band-inline);
+    scrollbar-width: none;
+  }
+
+  .beauty-hot-picks-tablist::-webkit-scrollbar {
+    display: none;
   }
 }
 

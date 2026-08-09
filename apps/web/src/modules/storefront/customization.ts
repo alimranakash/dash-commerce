@@ -142,6 +142,9 @@ export type StorefrontElectronicsHomepageSettings = {
 // Beauty Default's "Curated for you" band: a promo card on the left and a
 // category-tabbed product grid on the right. Image lists are empty by default and
 // fall back to the store hero image at render time, same as the fashion blocks.
+// Beauty Default's "Hot beauty picks" band is the same idea one level flatter: a
+// title/description on the left, a bestsellers CTA on the right, category chips
+// below, and a wide product grid under them.
 export type StorefrontBeautyHomepageSettings = {
   curatedPromoCtaLink: string;
   curatedPromoCtaText: string;
@@ -151,6 +154,12 @@ export type StorefrontBeautyHomepageSettings = {
   curatedTabCount: number;
   curatedTitle: string;
   curatedProductsPerTab: number;
+  hotPicksCtaLink: string;
+  hotPicksCtaText: string;
+  hotPicksDescription: string;
+  hotPicksProductCount: number;
+  hotPicksTabCount: number;
+  hotPicksTitle: string;
 };
 
 export type StorefrontFashionHomepageSettings = {
@@ -572,7 +581,14 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     curatedPromoImageUrls: [],
     curatedPromoTitle: "Glow Above All",
     curatedTabCount: 4,
-    curatedTitle: "Curated for you"
+    curatedTitle: "Curated for you",
+    hotPicksCtaLink: "/products?sort=best-selling",
+    hotPicksCtaText: "Shop Bestsellers",
+    hotPicksDescription:
+      "Shop our bestselling cosmetics for a flawless look, from bold lips to glowing skin essentials.",
+    hotPicksProductCount: 12,
+    hotPicksTabCount: 6,
+    hotPicksTitle: "Hot beauty picks"
   },
   electronics: {
     brandSectionTitle: "Featured brands",
@@ -999,7 +1015,13 @@ function beautySettings(input: Record<string, unknown>): StorefrontBeautyHomepag
     curatedPromoImageUrls: textList(input.curatedPromoImageUrls, defaults.curatedPromoImageUrls, 5),
     curatedPromoTitle: text(input.curatedPromoTitle, defaults.curatedPromoTitle),
     curatedTabCount: numberInRange(input.curatedTabCount, 2, 6, defaults.curatedTabCount),
-    curatedTitle: text(input.curatedTitle, defaults.curatedTitle)
+    curatedTitle: text(input.curatedTitle, defaults.curatedTitle),
+    hotPicksCtaLink: path(input.hotPicksCtaLink, defaults.hotPicksCtaLink),
+    hotPicksCtaText: text(input.hotPicksCtaText, defaults.hotPicksCtaText),
+    hotPicksDescription: text(input.hotPicksDescription, defaults.hotPicksDescription),
+    hotPicksProductCount: numberInRange(input.hotPicksProductCount, 4, 24, defaults.hotPicksProductCount),
+    hotPicksTabCount: numberInRange(input.hotPicksTabCount, 2, 8, defaults.hotPicksTabCount),
+    hotPicksTitle: text(input.hotPicksTitle, defaults.hotPicksTitle)
   };
 }
 
