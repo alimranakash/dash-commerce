@@ -14804,3 +14804,399 @@ textarea {
     width: 44px;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   General Default — mobile
+
+   Everything below is scoped to the General Default template. It sits at the end
+   of the file so it wins over the shared per-surface breakpoints earlier on —
+   `.general-product-listing-grid` at 480px, `.general-homepage
+   .general-product-listing-slider` at 380px and friends, all of which drop these
+   rows to a single item — without needing `!important`.
+
+   The hook is `.sf-theme-scope[data-storefront-template="general-default"]`, not
+   the `.sf-page` attribute the rhythm block above uses: only the six storefront
+   routes that resolve a template stamp `.sf-page`, so cart, checkout and account
+   go unscoped there. The theme provider stamps the scope on every route, and the
+   scope wraps the header, the page body and the footer alike. The mini cart is
+   the exception — it portals into `document.body`, so it is reached through
+   `body:has([data-storefront-header-template="general-default"])`.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Belt-and-braces against a stray wide child — `clip` (not `hidden`) so the
+   sticky header keeps sticking. */
+.sf-theme-scope[data-storefront-template="general-default"] .sf-page {
+  overflow-x: clip;
+}
+
+/* --- Two products per row, on every surface -------------------------------- */
+@media (max-width: 640px) {
+  /* Homepage rows, the tabbed showcase panels, the shop and category listings,
+     search results and related products all land on the same two-column rhythm.
+     `.general-product-grid` and `.general-collection-grid` are the older card
+     grids the template still ships; they follow the same count so a store that
+     renders one reads no differently from a store that renders the other. */
+  .sf-theme-scope[data-storefront-template="general-default"] :is(
+    .general-product-grid,
+    .general-product-listing-grid,
+    .general-collection-grid
+  ) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Product sections set to "slider" are the same grid with column flow, so
+     they show two cards per view rather than one near-full-width card. A slider
+     row and a static row then read identically on a phone — only the overflow
+     differs. */
+  .sf-theme-scope[data-storefront-template="general-default"] :is(
+    .general-product-listing-slider,
+    .tabbed-product-carousel .general-product-listing-slider
+  ) {
+    grid-auto-columns: calc((100% - var(--product-grid-gap, 4px)) / 2);
+    grid-auto-flow: column;
+    grid-template-columns: none;
+  }
+
+  /* Two 185px cards leave no room for the desktop meta row, which sets the
+     title/price block against a right-aligned flags column. The badge moves
+     above the title and the row becomes a stack, so the title gets the full card
+     width and neighbouring cards line their titles up. */
+  .sf-theme-scope[data-storefront-template="general-default"] .general-product-listing-meta {
+    display: grid;
+    gap: 4px;
+    justify-items: start;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] .general-product-listing-flags {
+    align-items: start;
+    justify-items: start;
+    order: -1;
+    text-align: left;
+  }
+
+  /* A card with no badge and no variant count still renders the flags element,
+     which would otherwise sit above the title as an empty 4px row. */
+  .sf-theme-scope[data-storefront-template="general-default"] .general-product-listing-flags:empty {
+    display: none;
+  }
+
+  /* The card is a two-row grid inside a stretched row, so a neighbour whose
+     title wraps to two lines used to push this card's rows apart and leave the
+     badges on adjacent cards a line out of step. Packing the rows to the top
+     lines the badge and the title up across the row. */
+  .sf-theme-scope[data-storefront-template="general-default"] .general-product-listing-card {
+    align-content: start;
+    gap: 10px;
+  }
+}
+
+/* --- Category strip -------------------------------------------------------- */
+
+/* One 82px bubble per row turned a six-item navigation strip into most of a
+   screen of scrolling. Three per row fits the circles at their natural size and
+   the labels get a gutter of their own to wrap in. */
+@media (max-width: 640px) {
+  /* `.general-homepage` is carried only to outrank the template grid-rhythm
+     block above, whose `:is()` list resolves to two classes and would otherwise
+     hold the strip at the 4px product-row gutter. */
+  .sf-theme-scope[data-storefront-template="general-default"] .general-homepage .general-category-strip {
+    column-gap: 14px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 20px;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] .general-category-bubble strong {
+    font-size: 0.8rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* --- Section headings ------------------------------------------------------ */
+
+/* `.general-section-heading` is a flex row with the title on one side and "View
+   all" on the other; at 335px the link was a 20px-tall strip of text sharing the
+   row with a wrapping heading. Stacking gives the heading the full width and the
+   link a real press target. The product-section toolbar keeps its row — the CTA
+   and the slider arrows belong side by side — but both grow to 44px. */
+@media (max-width: 640px) {
+  .sf-theme-scope[data-storefront-template="general-default"] .general-section-heading {
+    display: grid;
+    gap: 8px;
+    justify-items: start;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] :is(
+    .general-section-heading a,
+    .general-product-section-cta
+  ) {
+    align-items: center;
+    display: inline-flex;
+    min-height: 44px;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] .general-product-section-cta {
+    margin-top: 0;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] .general-product-section-header h2 {
+    letter-spacing: -0.03em;
+    line-height: 1.12;
+    overflow-wrap: anywhere;
+  }
+
+  /* The arrows are the only way to reach the rest of a slider row besides
+     swiping, and they were 28px squares. The divider rule between the CTA and
+     the arrows gives up the width the larger buttons take. */
+  .sf-theme-scope[data-storefront-template="general-default"] .general-product-slider-controls {
+    gap: 4px;
+    max-width: none;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] .general-product-slider-controls > span {
+    min-width: 0;
+    width: auto;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] .general-product-slider-controls button {
+    height: 44px;
+    width: 44px;
+  }
+}
+
+/* --- Promo banner and newsletter ------------------------------------------- */
+
+/* Both bands already stack at 900px. What was left is the art: the promo image
+   is `height: 100%` inside a stretching grid row, which on a phone resolved to a
+   449px slab of a single product photograph, and the newsletter's CSS-shape
+   panel added 190px of ornament under the form. Capping one and trimming the
+   other keeps both sections roughly a screen tall. */
+@media (max-width: 640px) {
+  /* The ratio goes on the image rather than its box: the image is `height: 100%`
+     of a stretched grid area, so capping the box alone left the picture drawn at
+     its full 449px over a 253px frame. Sizing the image itself and letting the
+     box take its height keeps the two in step. */
+  .sf-theme-scope[data-storefront-template="general-default"] .general-promo-visual {
+    min-height: 0;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] .general-promo-visual-image {
+    aspect-ratio: 4 / 3;
+    border-radius: 16px;
+    height: auto;
+    max-height: 260px;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] .general-promo-visual-card {
+    min-height: 200px;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] .general-newsletter-visual {
+    min-height: 120px;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] .general-newsletter form {
+    max-width: none;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] .general-newsletter :is(input, button) {
+    min-height: 48px;
+  }
+}
+
+/* --- Shared surfaces: shop, product, cart, footer -------------------------- */
+
+/* This chrome is template-agnostic markup, so every selector is pinned to the
+   general attribute and leaves the other storefronts alone. Most of these are
+   bare text or small glyph boxes; the added height is slack around the baseline
+   that the inline-flex centring absorbs, so only the press target changes. */
+@media (max-width: 768px) {
+  .sf-theme-scope[data-storefront-template="general-default"] :is(
+    .sf-shop-page-header a,
+    .sf-shop-toolbar-left button,
+    .sf-shop-empty a,
+    .sf-footer-column a,
+    .sf-footer-socials a,
+    .sf-footer-bottom nav a,
+    .general-cart-shipping-row a
+  ) {
+    align-items: center;
+    display: inline-flex;
+    min-height: 44px;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] :is(
+    .sf-pagination a,
+    .sf-pagination span
+  ) {
+    min-height: 44px;
+  }
+
+  /* Tabs on the homepage showcase — a 42px box that the wrapping row can afford
+     to give two more pixels to. */
+  .sf-theme-scope[data-storefront-template="general-default"] .tabbed-product-showcase-tabs button {
+    min-height: 44px;
+  }
+
+  /* The footer link columns gain ~20px a row from the rule above, so the gap
+     between them comes down by roughly the same amount and the columns stay the
+     height they already were. */
+  .sf-theme-scope[data-storefront-template="general-default"] .sf-footer-column div {
+    gap: 2px;
+  }
+
+  /* Breadcrumbs stay inline — vertical padding on an inline box grows the press
+     area without disturbing the line box. */
+  .sf-theme-scope[data-storefront-template="general-default"] :is(
+    .sf-breadcrumb a,
+    .general-cart-breadcrumb a,
+    .general-product-breadcrumb a
+  ) {
+    padding-block: 12px;
+  }
+
+  /* Header glyph buttons and the brand mark were 42px boxes. */
+  .sf-theme-scope[data-storefront-template="general-default"] :is(
+    .sf-icon-action,
+    .sf-mobile-menu-button
+  ) {
+    height: 44px;
+    width: 44px;
+  }
+
+  /* Accordion and disclosure summaries — product details, cart order notes. */
+  .sf-theme-scope[data-storefront-template="general-default"] :is(
+    .general-product-accordion summary,
+    .general-cart-notes summary
+  ) {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    min-height: 44px;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] .general-product-accordion summary::after {
+    float: none;
+  }
+}
+
+/* --- Purchase controls ----------------------------------------------------- */
+
+/* The product page overrides the shared pill stepper with a flat 38px block,
+   which put the −/+ at 30x38 and Add to Cart — the primary action on the page —
+   at 38px tall. The stepper's track is a three-column grid, so the columns have
+   to grow with the buttons or the wider button just overflows its cell. */
+@media (max-width: 768px) {
+  .sf-theme-scope[data-storefront-template="general-default"] .general-product-info .sf-quantity-control {
+    grid-template-columns: 44px 46px 44px;
+    min-height: 44px;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] .general-product-info .sf-quantity-control button {
+    height: 44px;
+    width: 44px;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] .general-product-info .sf-purchase-box input {
+    min-height: 44px;
+    width: 46px;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] .general-product-info .sf-purchase-actions button {
+    min-height: 48px;
+  }
+
+  /* Variant swatches and the variant dropdown. */
+  .sf-theme-scope[data-storefront-template="general-default"] :is(
+    .general-product-variants button,
+    .general-product-variant-matrix button
+  ) {
+    min-height: 44px;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] .general-product-variant-select select {
+    min-height: 44px;
+  }
+
+  /* Cart line steppers and the row's remove button were all 34px squares. */
+  .sf-theme-scope[data-storefront-template="general-default"] :is(
+    .general-cart-quantity button,
+    .general-cart-remove
+  ) {
+    height: 44px;
+    width: 44px;
+  }
+
+  .sf-theme-scope[data-storefront-template="general-default"] .general-cart-quantity {
+    grid-template-columns: 44px 48px 44px;
+    min-height: 44px;
+  }
+
+  /* The gallery lightbox close and prev/next are bare glyph buttons pinned to
+     the corners and the mid-line of a full-screen overlay. */
+  .sf-theme-scope[data-storefront-template="general-default"] .general-product-lightbox button {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* The mini cart portals into `document.body`, so it sits outside the page
+     scope every other rule here hangs off. The header attribute is the one
+     marker present on every surface that renders the drawer, cart and checkout
+     included. */
+  body:has([data-storefront-header-template="general-default"]) :is(
+    .mini-cart-close,
+    .mini-cart-remove,
+    .mini-cart-item-actions .general-cart-quantity button
+  ) {
+    height: 44px;
+    width: 44px;
+  }
+
+  body:has([data-storefront-header-template="general-default"]) .mini-cart-item-actions .general-cart-quantity {
+    grid-template-columns: 44px 44px 44px;
+  }
+
+  body:has([data-storefront-header-template="general-default"]) :is(
+    .mini-cart-view-cart,
+    .mini-cart-empty a,
+    .mini-cart-notes summary,
+    .general-cart-shipping-row a
+  ) {
+    align-items: center;
+    display: inline-flex;
+    min-height: 44px;
+  }
+
+  body:has([data-storefront-header-template="general-default"]) .mini-cart-notes summary {
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
+/* --- Small type ------------------------------------------------------------
+   Labels that shrink with their container had landed near 10.5px at phone width.
+   These floor them at ~11.5px, the smallest size the template uses. */
+@media (max-width: 680px) {
+  .sf-theme-scope[data-storefront-template="general-default"] :is(
+    .general-product-sale-badge,
+    .general-product-shipping,
+    .general-product-breadcrumb,
+    .sf-checkout-form-heading p,
+    .sf-checkout-summary-image span
+  ) {
+    font-size: 0.75rem;
+  }
+
+  /* The header cart count is a numeral in a 19px disc — the one label in the
+     template still under 11px. */
+  .sf-theme-scope[data-storefront-template="general-default"] .sf-cart-icon-action span {
+    font-size: 0.72rem;
+  }
+
+  body:has([data-storefront-header-template="general-default"]) .mini-cart-item-image span {
+    font-size: 0.72rem;
+  }
+}
