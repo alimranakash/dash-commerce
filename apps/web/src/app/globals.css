@@ -7404,6 +7404,123 @@ textarea {
   grid-template-columns: repeat(var(--beauty-hot-picks-columns), minmax(0, 1fr));
 }
 
+/* --- Spotlight: overlay image panel + 2x2 product grid --------------------
+   Section chrome only. The tiles on the right are the same `beauty-product-tile`
+   cards every other Beauty Default surface renders. */
+
+.beauty-spotlight-layout {
+  /* Both columns stretch, so the image panel always ends level with the bottom
+     of the grid beside it however tall the tiles turn out. */
+  align-items: stretch;
+  display: grid;
+  gap: clamp(16px, 1.8vw, 28px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.beauty-spotlight-panel {
+  /* Copy sits low and the button lower still, with the gap between them holding
+     them near the lower middle of the card. */
+  align-content: end;
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.5), transparent 38%),
+    linear-gradient(150deg, #f3e7f7, #fff2ec);
+  /* Matches the product tile media radius so the two halves read as one row. */
+  border-radius: clamp(12px, 1vw, 16px);
+  color: #ffffff;
+  display: grid;
+  gap: clamp(26px, 4.5vw, 68px);
+  isolation: isolate;
+  justify-items: center;
+  min-height: 380px;
+  overflow: hidden;
+  padding: clamp(26px, 3vw, 52px);
+  position: relative;
+}
+
+.beauty-spotlight-panel::after {
+  background: linear-gradient(180deg, rgba(45, 23, 33, 0.1) 0%, rgba(45, 23, 33, 0.04) 34%, rgba(45, 23, 33, 0.42) 100%);
+  content: "";
+  inset: 0;
+  position: absolute;
+  z-index: -1;
+}
+
+.beauty-spotlight-image {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+  z-index: -2;
+}
+
+.beauty-spotlight-copy {
+  display: grid;
+  gap: 12px;
+  max-width: 46ch;
+  position: relative;
+  text-align: center;
+}
+
+.beauty-spotlight-title {
+  font-size: clamp(1.35rem, 2.1vw, 2.05rem);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.15;
+  margin: 0;
+  text-shadow: 0 1px 12px rgba(45, 23, 33, 0.35);
+  text-transform: uppercase;
+}
+
+.beauty-spotlight-description {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(0.9rem, 1vw, 1rem);
+  line-height: 1.55;
+  margin: 0;
+  text-shadow: 0 1px 10px rgba(45, 23, 33, 0.3);
+}
+
+.beauty-spotlight-cta {
+  align-items: center;
+  background: #ffffff;
+  border-radius: 10px;
+  color: var(--beauty-ink);
+  display: inline-flex;
+  font-size: 0.95rem;
+  font-weight: 700;
+  gap: 10px;
+  padding: 15px 28px;
+  position: relative;
+  text-decoration: none;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    gap 0.2s ease,
+    transform 0.2s ease;
+}
+
+.beauty-spotlight-cta span {
+  font-size: 1.15rem;
+  line-height: 0.8;
+}
+
+.beauty-spotlight-cta:hover {
+  background: var(--beauty-blush);
+  color: var(--beauty-rose);
+  gap: 14px;
+  transform: translateY(-2px);
+}
+
+.beauty-spotlight-grid {
+  /* Rows stay their natural height, so a short grid never stretches its tiles to
+     match the panel. */
+  align-content: start;
+  display: grid;
+  gap: clamp(20px, 2vw, 34px) clamp(14px, 1.4vw, 24px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 0;
+}
+
 .beauty-concern-grid {
   display: grid;
   gap: var(--beauty-card-gap);
@@ -12198,6 +12315,24 @@ textarea {
   .beauty-curated-tablist {
     max-width: 100%;
     overflow-x: auto;
+  }
+}
+
+/* The spotlight stacks its image panel above the product grid, which keeps two
+   tiles per row until the viewport is too narrow for a readable card. */
+@media (max-width: 980px) {
+  .beauty-spotlight-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .beauty-spotlight-panel {
+    min-height: clamp(320px, 52vw, 420px);
+  }
+}
+
+@media (max-width: 420px) {
+  .beauty-spotlight-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

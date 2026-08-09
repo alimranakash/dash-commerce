@@ -6,6 +6,7 @@ import {
 } from "../../product-sections";
 import { BeautyCuratedSection } from "./beauty-curated";
 import { BeautyHotPicksSection } from "./beauty-hot-picks";
+import { BeautySpotlightSection } from "./beauty-spotlight";
 import {
   BeautyCategoryGrid,
   BeautyConcernGrid,
@@ -48,6 +49,15 @@ export function BeautyHomepageSections({
       <BeautySection actionHref={`/s/${store.slug}/products`} eyebrow="Categories" id="beauty-categories" title="Shop by category">
         <BeautyCategoryGrid categories={homeData.categories} storeSlug={store.slug} />
       </BeautySection>
+      <BeautySpotlightSection
+        advancedSettings={settings?.advancedSettings}
+        categories={homeData.categories}
+        currency={store.currency}
+        fallbackImageUrl={settings?.heroImageUrl ?? store.themeSetting?.heroImageUrl}
+        productPools={[homeData.bestSellers, homeData.featuredProducts, homeData.newArrivals]}
+        storeId={store.id}
+        storeSlug={store.slug}
+      />
       <BeautyHotPicksSection
         advancedSettings={settings?.advancedSettings}
         categories={homeData.categories}

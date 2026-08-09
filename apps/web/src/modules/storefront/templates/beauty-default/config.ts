@@ -27,6 +27,7 @@ export const beautyDefaultTemplate: StorefrontTemplateConfig = {
   homepageSections: [
     "hero",
     "featured-categories",
+    "spotlight",
     "best-sellers",
     "collections",
     "shop-by-concern",

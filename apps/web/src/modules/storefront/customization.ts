@@ -145,6 +145,9 @@ export type StorefrontElectronicsHomepageSettings = {
 // Beauty Default's "Hot beauty picks" band is the same idea one level flatter: a
 // title/description on the left, a bestsellers CTA on the right, category chips
 // below, and a wide product grid under them.
+// Beauty Default's spotlight band splits in half: an overlay image card on the
+// left and a 2x2 product grid on the right. `spotlightCategorySlug` is empty by
+// default, which lets the band fall back to the store's own bestsellers.
 export type StorefrontBeautyHomepageSettings = {
   curatedPromoCtaLink: string;
   curatedPromoCtaText: string;
@@ -160,6 +163,13 @@ export type StorefrontBeautyHomepageSettings = {
   hotPicksProductCount: number;
   hotPicksTabCount: number;
   hotPicksTitle: string;
+  spotlightCategorySlug: string;
+  spotlightCtaLink: string;
+  spotlightCtaText: string;
+  spotlightDescription: string;
+  spotlightImageUrl: string;
+  spotlightProductCount: number;
+  spotlightTitle: string;
 };
 
 export type StorefrontFashionHomepageSettings = {
@@ -588,7 +598,15 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
       "Shop our bestselling cosmetics for a flawless look, from bold lips to glowing skin essentials.",
     hotPicksProductCount: 12,
     hotPicksTabCount: 6,
-    hotPicksTitle: "Hot beauty picks"
+    hotPicksTitle: "Hot beauty picks",
+    spotlightCategorySlug: "",
+    spotlightCtaLink: "/products",
+    spotlightCtaText: "Shop Collection",
+    spotlightDescription:
+      "Our collection blends powerful ingredients and expert formulations to deliver visible results.",
+    spotlightImageUrl: "",
+    spotlightProductCount: 4,
+    spotlightTitle: "Excellence in skincare"
   },
   electronics: {
     brandSectionTitle: "Featured brands",
@@ -1021,7 +1039,14 @@ function beautySettings(input: Record<string, unknown>): StorefrontBeautyHomepag
     hotPicksDescription: text(input.hotPicksDescription, defaults.hotPicksDescription),
     hotPicksProductCount: numberInRange(input.hotPicksProductCount, 4, 24, defaults.hotPicksProductCount),
     hotPicksTabCount: numberInRange(input.hotPicksTabCount, 2, 8, defaults.hotPicksTabCount),
-    hotPicksTitle: text(input.hotPicksTitle, defaults.hotPicksTitle)
+    hotPicksTitle: text(input.hotPicksTitle, defaults.hotPicksTitle),
+    spotlightCategorySlug: text(input.spotlightCategorySlug, defaults.spotlightCategorySlug),
+    spotlightCtaLink: path(input.spotlightCtaLink, defaults.spotlightCtaLink),
+    spotlightCtaText: text(input.spotlightCtaText, defaults.spotlightCtaText),
+    spotlightDescription: text(input.spotlightDescription, defaults.spotlightDescription),
+    spotlightImageUrl: text(input.spotlightImageUrl, defaults.spotlightImageUrl),
+    spotlightProductCount: numberInRange(input.spotlightProductCount, 2, 8, defaults.spotlightProductCount),
+    spotlightTitle: text(input.spotlightTitle, defaults.spotlightTitle)
   };
 }
 

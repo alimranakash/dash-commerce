@@ -28,7 +28,8 @@ export type StorefrontTemplateSection =
   | "community-gallery"
   | "beauty-tips"
   | "customer-reviews"
-  | "brand-story";
+  | "brand-story"
+  | "spotlight";
 
 export type StorefrontTemplateColors = {
   background: string;
