@@ -219,6 +219,12 @@
     right: 14px;
     width: 300px;
   }
+
+  /* The category line over the product name sat at 0.68rem — ~10.9px against a
+     translucent dark panel, the hardest place in the section to read. */
+  .productCallout p {
+    font-size: 0.72rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

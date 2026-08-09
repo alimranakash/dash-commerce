@@ -229,17 +229,57 @@
   .main {
     gap: 36px;
     grid-template-columns: 1fr;
-    padding: 54px 24px;
+    padding: 48px 16px;
+  }
+
+  .description {
+    max-width: none;
+  }
+
+  /* 24px icons are well under a comfortable tap target, so the row spaces out
+     and each link gets a 44px hit area. */
+  .socials {
+    gap: 6px;
+  }
+
+  .socials a {
+    height: 44px;
+    width: 44px;
+  }
+
+  .links a,
+  .newsletter p {
+    line-height: 1.45;
+  }
+
+  .links a {
+    align-content: center;
+    display: grid;
+    min-height: 40px;
+  }
+
+  .links {
+    gap: 4px;
   }
 
   .newsletter form {
     max-width: none;
   }
 
+  .newsletter button {
+    min-height: 46px;
+  }
+
   .bottomInner {
     align-items: flex-start;
     flex-direction: column;
-    padding: 22px 24px 28px;
+    padding: 22px 16px 28px;
+  }
+
+  .payments span {
+    font-size: 0.66rem;
+    height: 28px;
+    min-width: 42px;
   }
 
   .copyright {

@@ -141,6 +141,14 @@
   .overlay {
     background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.44) 48%, transparent 50%);
   }
+
+  /* The CTA is the only control in the band and it was a 22px underlined word. */
+  .content a {
+    align-items: center;
+    display: inline-flex;
+    min-height: 44px;
+    padding-bottom: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -182,10 +182,35 @@
   color: #ef313c;
 }
 
+/* Two tiles share a phone row, so the frame is ~158px wide: the overlays pull in
+   off the edges and the smallest labels come back up to a readable size. Quick
+   add has no hover state to reveal it on touch, so it is simply always visible
+   and sized as a real button. */
 @media (max-width: 640px) {
   .quickAdd {
+    bottom: 10px;
+    left: 10px;
     opacity: 1;
+    right: 10px;
     transform: none;
+  }
+
+  .quickAdd button {
+    min-height: 44px;
+  }
+
+  .badges {
+    left: 10px;
+    top: 10px;
+  }
+
+  .badges span {
+    font-size: 0.72rem;
+    padding: 6px 9px;
+  }
+
+  .details > p {
+    font-size: 0.72rem;
   }
 }
 

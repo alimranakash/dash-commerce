@@ -12150,20 +12150,6 @@ textarea {
     grid-template-rows: none;
   }
 
-  .electronics-recommended {
-    padding-inline: 14px;
-  }
-
-  .electronics-recommended-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .electronics-recommended-card {
-    gap: 14px;
-    grid-template-columns: 54px minmax(0, 1fr) auto;
-    padding: 16px;
-  }
-
   .electronics-promo-card,
   .electronics-promo-card-cooker,
   .electronics-promo-card-coffee,
@@ -12290,16 +12276,9 @@ textarea {
     font-size: 3.05rem;
   }
 
-  .electronics-category-grid,
-  .electronics-brand-grid,
-  .electronics-product-grid,
-  .electronics-trust,
-  .electronics-flash-header {
-    grid-template-columns: 1fr;
-  }
-
   .electronics-flash-header {
     display: grid;
+    grid-template-columns: 1fr;
   }
 
   .electronics-device-screen {
@@ -14108,6 +14087,384 @@ textarea {
   }
 }
 
+/* ===========================================================================
+   Fashion Default — mobile
+   ===========================================================================
+   Fashion owns its footer outright (`.fashion-footer*` is only rendered for
+   this template) but *shares* the header shell and the hero slider with beauty,
+   and the shop / product / search surfaces with every template. So anything
+   touching `.fashion-header*`, `.fashion-hero*` or a `general-*` class below is
+   pinned to the fashion template attribute and leaves the other storefronts
+   exactly as they are.
+
+   This block is last on purpose: the generic breakpoints earlier in the file
+   collapse these grids to a single column at 480px / 380px, and two per row is
+   the rule fashion holds to on every surface a product tile appears on. */
+
+/* Belt-and-braces against a stray wide child, the same guard electronics
+   carries. `clip` rather than `hidden` so the sticky header keeps sticking and
+   the footer's press marquee — which is deliberately wider than the viewport
+   inside its own `overflow: hidden` — is unaffected. */
+.sf-page[data-storefront-template="fashion-default"] {
+  overflow-x: clip;
+}
+
+/* Product density -----------------------------------------------------------
+   Row-flow grids: the homepage trending row, the shop and category listings,
+   search results, related products and recently viewed. */
+@media (max-width: 640px) {
+  .sf-page[data-storefront-template="fashion-default"] :is(
+    .fashion-product-grid,
+    .general-product-listing-grid
+  ) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Column-flow carousels show the same two tiles per view, so a slider row and
+     a static row read identically on a phone — only the overflow differs. */
+  .sf-page[data-storefront-template="fashion-default"] .general-product-listing-slider {
+    grid-auto-columns: calc((100% - var(--product-grid-gap, 16px)) / 2);
+    grid-template-columns: none;
+  }
+}
+
+/* Category cards ------------------------------------------------------------
+   Four full-width cards at 280px tall was a third of a screen each and a very
+   long scroll for what is a navigation row. Two per row halves it; the number,
+   the label and the padding all step down so the narrower card still fits its
+   own contents instead of clipping them. */
+@media (max-width: 480px) {
+  [data-storefront-template="fashion-default"] .fashion-category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  [data-storefront-template="fashion-default"] .fashion-category-card {
+    min-height: 210px;
+    padding: 16px;
+  }
+
+  [data-storefront-template="fashion-default"] .fashion-category-card div {
+    font-size: 2rem;
+  }
+
+  [data-storefront-template="fashion-default"] .fashion-category-card strong {
+    font-size: 1.15rem;
+    overflow-wrap: anywhere;
+  }
+
+  /* The card's `::before` scrim is painted *under* `> img` (the image carries
+     `z-index: 0`, the scrim does not), so the white number and label sit
+     straight on the photograph. On a pale image — and the demo pack has several
+     — the label is barely there. This scrim is a sibling of the image at the
+     same level, so tree order puts it on top of the art and under the text,
+     which keeps its own `z-index: 1`. Mobile only: the tiles are ~158px wide
+     here, where the type covers most of the frame. */
+  [data-storefront-template="fashion-default"] .fashion-category-card::after {
+    background: linear-gradient(180deg, rgba(24, 16, 13, 0.42), rgba(24, 16, 13, 0.12) 45%, rgba(24, 16, 13, 0.55));
+    content: "";
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+    z-index: 0;
+  }
+}
+
+/* Section headings ----------------------------------------------------------
+   The title and its "View all" sat on one flex row, which left a 32px display
+   heading sharing 335px with a link. Stacking them gives the heading the full
+   width and the link a real press target. */
+@media (max-width: 640px) {
+  [data-storefront-template="fashion-default"] .fashion-section-heading {
+    display: grid;
+    gap: 10px;
+    justify-items: start;
+  }
+
+  [data-storefront-template="fashion-default"] .fashion-section-heading a {
+    align-items: center;
+    display: inline-flex;
+    min-height: 44px;
+  }
+}
+
+/* Hero ----------------------------------------------------------------------
+   `align: center` (the default for a store that has not been through the demo
+   pack) set `left: 50%` while the phone breakpoints still held `right: 20px`,
+   so the copy box resolved to half the viewport minus 20px — ~167px — and the
+   display heading overflowed it into the hero's `overflow: hidden`. Dropping
+   `right` and giving the box an explicit width restores a centred, full-width
+   column. */
+@media (max-width: 980px) {
+  [data-storefront-template="fashion-default"] .fashion-hero-align-center .fashion-hero-copy {
+    left: 50%;
+    right: auto;
+    width: calc(100% - 40px);
+  }
+}
+
+/* Hero dots: 10px is a legible dot but an unhittable button. The dot keeps its
+   size and an invisible ::after carries the touch box, sized to the 20px gap so
+   neighbouring dots end up adjacent rather than overlapping. */
+@media (max-width: 768px) {
+  [data-storefront-template="fashion-default"] .fashion-hero-dots {
+    gap: 20px;
+  }
+
+  [data-storefront-template="fashion-default"] .fashion-hero-dots button {
+    height: 12px;
+    position: relative;
+    width: 12px;
+  }
+
+  [data-storefront-template="fashion-default"] .fashion-hero-dots button::after {
+    content: "";
+    inset: -10px;
+    position: absolute;
+  }
+}
+
+/* Header --------------------------------------------------------------------
+   The hamburger and the cart were 20px and 21px boxes: the glyph was the whole
+   hit area. Growing the button itself would drag its contents with it — the
+   cart's count badge hangs off the right edge at `right: -9px` — so an overlaid
+   pseudo-element gives the 44px press target while the button box, the glyph
+   and the badge all stay exactly where they were. */
+@media (max-width: 900px) {
+  .fashion-header-shell[data-storefront-header-template="fashion-default"] :is(
+    .fashion-mobile-menu-button,
+    .fashion-header-actions a,
+    .fashion-header-actions button
+  ) {
+    position: relative;
+  }
+
+  .fashion-header-shell[data-storefront-header-template="fashion-default"] :is(
+    .fashion-mobile-menu-button,
+    .fashion-header-actions a,
+    .fashion-header-actions button
+  )::after {
+    content: "";
+    /* 20px glyph + 12px a side = 44px; the cart's 21px glyph lands at 45px. */
+    inset: -12px;
+    position: absolute;
+  }
+
+  /* The brand mark is the only way back to the homepage from the mobile header,
+     and it was a 15px-tall text link. It is already an inline-flex row. */
+  .fashion-header-shell[data-storefront-header-template="fashion-default"] .fashion-brand {
+    min-height: 44px;
+  }
+}
+
+/* Mobile menu ---------------------------------------------------------------
+   On a page that has a hero the header is `position: fixed`, so the drawer —
+   which is a sibling in the sticky shell and therefore still in flow — opened
+   underneath it and lost its first link and a half behind the bar. The padding
+   is the header height at each breakpoint plus the 12px the drawer already had.
+   The cap turns a menu longer than the screen into a scroller rather than
+   something that breaks the shell's stickiness. */
+@media (max-width: 980px) {
+  .sf-page:has(.fashion-hero)
+    .fashion-header-shell[data-storefront-header-template="fashion-default"]
+    .fashion-mobile-nav {
+    max-height: calc(100svh - 34px);
+    overflow-y: auto;
+    padding-top: 80px;
+  }
+}
+
+@media (max-width: 640px) {
+  .sf-page:has(.fashion-hero)
+    .fashion-header-shell[data-storefront-header-template="fashion-default"]
+    .fashion-mobile-nav {
+    padding-top: 74px;
+  }
+}
+
+/* Footer --------------------------------------------------------------------
+   `.fashion-footer*` is fashion-only markup, so no attribute scope is needed.
+   The social pills were 20px circles; the link columns and the legal row are
+   bare text. Each link box grows to 44px and the gap between them shrinks by
+   roughly the same amount, so the hit areas stay separated without the columns
+   growing much taller than they already were. */
+@media (max-width: 768px) {
+  .fashion-footer-socials {
+    gap: 12px;
+  }
+
+  .fashion-footer-socials a {
+    font-size: 0.72rem;
+    height: 44px;
+    width: 44px;
+  }
+
+  .fashion-footer-column div {
+    gap: 6px;
+  }
+
+  .fashion-footer-legal nav {
+    gap: 4px 22px;
+  }
+
+  .fashion-footer-column a,
+  .fashion-footer-legal nav a {
+    align-items: center;
+    display: inline-flex;
+    min-height: 44px;
+  }
+}
+
+/* Shared surfaces -----------------------------------------------------------
+   Shop, product and cart chrome is template-agnostic markup, so every selector
+   here is pinned to the fashion attribute. Section links and the filter toggle
+   are 20-24px of bare text; the extra height is space under the baseline, which
+   the inline-flex centring absorbs, so nothing moves except the press target.
+   Breadcrumbs stay inline: vertical padding on an inline box grows the press
+   area without touching the line box. */
+@media (max-width: 768px) {
+  [data-storefront-template="fashion-default"] :is(
+    .general-product-section-cta,
+    .sf-shop-page-header a,
+    .sf-shop-toolbar-left button
+  ) {
+    align-items: center;
+    display: inline-flex;
+    min-height: 44px;
+  }
+
+  [data-storefront-template="fashion-default"] :is(
+    .sf-breadcrumb a,
+    .general-cart-breadcrumb a,
+    .general-product-breadcrumb a
+  ) {
+    padding-block: 12px;
+  }
+
+  /* The mini cart portals into `document.body`, so it sits outside the template
+     scope every other rule here hangs off. `body:has()` is the only way to
+     reach it without giving the shared drawer a template prop it does not
+     otherwise need. */
+  body:has([data-storefront-template="fashion-default"]) .mini-cart-close {
+    height: 44px;
+    width: 44px;
+  }
+}
+
+/* Labels that shrink with their container had landed near 10.5px at phone
+   width. These floor them at ~11.5px, the smallest size the template uses. */
+@media (max-width: 680px) {
+  [data-storefront-template="fashion-default"] :is(
+    .general-product-sale-badge,
+    .general-product-shipping span
+  ) {
+    font-size: 0.72rem;
+  }
+
+  [data-storefront-template="fashion-default"] .general-product-breadcrumb {
+    font-size: 0.75rem;
+  }
+
+  /* The header cart count is a numeral in a 15px disc — the one label in the
+     template still under 10px. The disc grows with it so the digit keeps its
+     ring, and both stay pinned to fashion: beauty renders this same header. */
+  .fashion-header-shell[data-storefront-header-template="fashion-default"]
+    .sf-cart-icon-action span {
+    font-size: 0.72rem;
+    height: 17px;
+    line-height: 17px;
+    min-width: 17px;
+  }
+
+  /* Payment marks in the footer legal row. */
+  .fashion-footer-payments span {
+    font-size: 0.72rem;
+    height: 26px;
+  }
+
+  /* Checkout's eyebrow, and the line-quantity bubble on each summary thumbnail. */
+  [data-storefront-template="fashion-default"] .sf-checkout-form-heading p {
+    font-size: 0.72rem;
+  }
+
+  [data-storefront-template="fashion-default"] .sf-checkout-summary-image span {
+    font-size: 0.74rem;
+  }
+}
+
+/* Purchase controls ---------------------------------------------------------
+   The product page overrides the shared pill stepper with a flat 38px block
+   (`.general-product-info .sf-quantity-control`), which put the −/+ at 30x38,
+   the quantity field at 34x38 and Add to Cart — the primary action on the page
+   — at 38px tall. The stepper's track is a three-column grid, so the columns
+   have to grow with the buttons or the wider button just overflows its cell. */
+@media (max-width: 768px) {
+  [data-storefront-template="fashion-default"] .general-product-info .sf-quantity-control {
+    grid-template-columns: 44px 46px 44px;
+    min-height: 44px;
+  }
+
+  [data-storefront-template="fashion-default"] .general-product-info .sf-quantity-control button {
+    height: 44px;
+    width: 44px;
+  }
+
+  [data-storefront-template="fashion-default"] .general-product-info .sf-purchase-box input {
+    min-height: 44px;
+    width: 46px;
+  }
+
+  [data-storefront-template="fashion-default"] .general-product-info .sf-purchase-actions button {
+    min-height: 48px;
+  }
+
+  /* Cart line steppers and the row's remove button were all 34px squares. */
+  [data-storefront-template="fashion-default"] :is(
+    .general-cart-quantity button,
+    .general-cart-remove
+  ) {
+    height: 44px;
+    width: 44px;
+  }
+
+  [data-storefront-template="fashion-default"] .general-cart-quantity {
+    grid-template-columns: 44px 48px 44px;
+    min-height: 44px;
+  }
+
+  /* Related / recently-viewed carousel arrows. These are the only way to reach
+     the rest of the row besides swiping, and they were 28px squares. */
+  [data-storefront-template="fashion-default"] .general-product-slider-controls button {
+    height: 44px;
+    width: 44px;
+  }
+
+  /* Size and colour swatches on the product page. Fashion-only markup. */
+  .fashion-product-detail-extras button {
+    height: 44px;
+    min-width: 44px;
+  }
+
+  .fashion-product-detail-extras button[aria-label^="Color"] {
+    min-width: 44px;
+    width: 44px;
+  }
+
+  /* The footer wordmark is the second route home and was a 28px text link. */
+  .fashion-footer-logo {
+    align-items: center;
+    min-height: 44px;
+  }
+
+  /* "Shop Now" beside the free-shipping progress bar on the cart page — a bare
+     underlined link at 23px. It shares a flex row with the progress copy, so it
+     takes the height rather than a block of padding that would push the row. */
+  [data-storefront-template="fashion-default"] .general-cart-shipping-row a {
+    align-items: center;
+    display: inline-flex;
+    min-height: 44px;
+  }
+}
+
 /* --- Floating scroll-to-top button ----------------------------------------
    Mounted once per storefront surface by `ScrollToTopButton`, inside the theme
    scope, so it is pinned to the viewport rather than riding along in the footer.
@@ -14205,5 +14562,245 @@ textarea {
   .sf-scroll-top[data-visible="true"]:hover {
     transform: none;
     transition: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Electronics Default — mobile
+
+   Everything below is scoped to the Electronics template. It sits at the end of
+   the file so it wins over the shared per-surface column rules (`.sf-shop-page
+   .general-product-listing-grid` and friends) without needing `!important`.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Belt-and-braces against a stray wide child on the shop/product/search pages —
+   `clip` (not `hidden`) so the sticky header keeps sticking. */
+.sf-page[data-storefront-template="electronics-default"] {
+  overflow-x: clip;
+}
+
+@media (max-width: 640px) {
+  /* --- 2 products per row, on every surface -------------------------------- */
+
+  /* Homepage rows, flash deals, the recommended tab panel, and every surface
+     that renders the shared listing grid (shop, category, search, related,
+     recently viewed) all land on the same two-column rhythm. */
+  .sf-page[data-storefront-template="electronics-default"] :is(
+    .electronics-product-grid,
+    .electronics-recommended-grid,
+    .general-product-listing-grid
+  ) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Two columns inside a 375px viewport leaves ~150px per card, so the desktop
+     gutter between them comes down to keep the cards legible. */
+  .electronics-product-grid,
+  .electronics-recommended-grid {
+    gap: 12px;
+  }
+
+  /* Product sections set to "slider" scroll two cards at a time rather than
+     inheriting the shared near-full-width card. */
+  .sf-page[data-storefront-template="electronics-default"] .general-product-listing-slider {
+    grid-auto-columns: calc((100% - var(--product-grid-gap)) / 2);
+    grid-template-columns: none;
+  }
+
+  /* --- One horizontal gutter for the whole page --------------------------- */
+
+  .electronics-homepage {
+    --electronics-gutter: 16px;
+    gap: 34px;
+  }
+
+  .electronics-section-inner,
+  .electronics-promo-deals,
+  .electronics-recommended,
+  .electronics-trust {
+    padding-inline: var(--electronics-gutter, 16px);
+  }
+
+  /* The deals card keeps its rounded frame, so it insets instead of padding.
+     `width: auto` is what stops the inherited `width: 100%` from adding the
+     margins back on as overflow. */
+  .electronics-flash-deals {
+    margin-inline: var(--electronics-gutter, 16px);
+    padding: 22px 16px;
+    width: auto;
+  }
+
+  /* --- Section headings --------------------------------------------------- */
+
+  /* The "View all" link is the only thing on its side of the row, so it holds
+     its width and the heading takes the wrapping. */
+  .electronics-section-heading,
+  .electronics-flash-header {
+    gap: 14px;
+  }
+
+  .electronics-section-heading a {
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 auto;
+    min-height: 44px;
+    white-space: nowrap;
+  }
+
+  .electronics-section-heading h2,
+  .electronics-flash-header h2,
+  .electronics-promo-deals h2 {
+    letter-spacing: -0.04em;
+    line-height: 1.12;
+    overflow-wrap: anywhere;
+  }
+
+  /* The band title is set at 2rem by its own clamp floor, which ran to four
+     lines in a 343px column. */
+  .electronics-promo-deals h2 {
+    font-size: 1.6rem;
+  }
+
+  /* --- Product cards ------------------------------------------------------ */
+
+  .electronics-product-card-body h3 {
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .electronics-product-card form button {
+    min-height: 44px;
+  }
+
+  /* --- Recommended for you ------------------------------------------------ */
+
+  /* The desktop card is a wide row (thumb | copy | price). At two per row there
+     is no width for that, so it becomes a stacked card. */
+  .electronics-recommended-card {
+    align-items: stretch;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch;
+    min-height: 0;
+    padding: 12px;
+  }
+
+  .electronics-recommended-media {
+    width: 100%;
+  }
+
+  .electronics-recommended-info small {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+  }
+
+  .electronics-recommended-info strong {
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+    font-size: 0.9rem;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .electronics-recommended-card .sf-price {
+    justify-items: start;
+    min-width: 0;
+  }
+
+  /* --- Promo banners ------------------------------------------------------ */
+
+  .electronics-promo-copy a {
+    align-items: center;
+    display: inline-flex;
+    margin-top: 10px;
+    min-height: 44px;
+  }
+
+  /* --- Trust badges ------------------------------------------------------- */
+
+  .electronics-trust {
+    gap: 10px;
+  }
+
+  .electronics-trust article {
+    min-height: 0;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Two per row survives the narrower breakpoint — the shared rules drop the
+     listing grids to a single column here, and the deal/promo bands shrink. */
+  .electronics-promo-card,
+  .electronics-promo-card-cooker,
+  .electronics-promo-card-coffee,
+  .electronics-promo-card-humidifier,
+  .electronics-promo-card-display,
+  .electronics-promo-card-fryer {
+    min-height: 280px;
+  }
+
+  .electronics-promo-card-cooker .electronics-promo-image,
+  .electronics-promo-card-coffee .electronics-promo-image,
+  .electronics-promo-card-humidifier .electronics-promo-image,
+  .electronics-promo-card-display .electronics-promo-image,
+  .electronics-promo-card-fryer .electronics-promo-image {
+    min-height: 170px;
+  }
+
+  .electronics-promo-badge {
+    height: 92px;
+    width: 62px;
+  }
+
+  .electronics-flash-header > div:last-child span {
+    padding: 8px 10px;
+  }
+}
+
+/* Shared surfaces -----------------------------------------------------------
+   The shop, category, search and product pages are template-agnostic markup, so
+   every selector here is pinned to the electronics attribute and leaves the
+   other storefronts alone. These controls are bare text or small glyph boxes;
+   the added height is slack around the baseline that the inline-flex centring
+   absorbs, so only the press target changes. */
+@media (max-width: 768px) {
+  [data-storefront-template="electronics-default"] :is(
+    .general-product-section-cta,
+    .sf-shop-page-header a,
+    .sf-shop-toolbar-left button,
+    .sf-shop-empty a
+  ) {
+    align-items: center;
+    display: inline-flex;
+    min-height: 44px;
+  }
+
+  [data-storefront-template="electronics-default"] :is(
+    .sf-pagination a,
+    .sf-pagination span
+  ) {
+    min-height: 44px;
+  }
+
+  /* Breadcrumbs stay inline — vertical padding on an inline box grows the press
+     area without disturbing the line box. */
+  [data-storefront-template="electronics-default"] :is(
+    .sf-breadcrumb a,
+    .general-cart-breadcrumb a,
+    .general-product-breadcrumb a
+  ) {
+    padding-block: 12px;
+  }
+
+  /* The mini cart portals into `document.body`, so it sits outside the page
+     scope every other rule here hangs off. The header attribute is the one
+     marker present on every surface that renders the drawer, cart and checkout
+     included. */
+  body:has([data-storefront-header-template="electronics-default"]) .mini-cart-close {
+    height: 44px;
+    width: 44px;
   }
 }

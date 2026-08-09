@@ -139,12 +139,24 @@
     padding-inline: 4px;
   }
 
+  /* One full-bleed card per row is the intent here — these are editorial
+     collection banners, not product tiles — but four of them at 138vw was over
+     two thousand pixels of scroll before the first product row. */
   .grid {
     grid-template-columns: 1fr;
   }
 
   .card {
-    min-height: min(138vw, 650px);
+    min-height: min(112vw, 540px);
+  }
+
+  .content {
+    bottom: 26px;
+    gap: 16px;
+  }
+
+  .content > span {
+    min-height: 44px;
   }
 }
 

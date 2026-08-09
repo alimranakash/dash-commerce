@@ -487,8 +487,9 @@
 }
 
 @media (max-width: 860px) {
+  /* 16px matches the gutter every other Electronics band uses on mobile. */
   .inner {
-    padding: 18px 18px 0;
+    padding: 18px 16px 0;
   }
 
   .topRow {
@@ -517,8 +518,21 @@
     gap: 4px;
   }
 
+  /* Comfortable thumb targets for the account / cart / menu row. */
+  .iconLink,
+  .mobileButton,
+  .actions :global(.sf-icon-action) {
+    height: 44px;
+    min-height: 44px;
+    width: 44px;
+  }
+
   .mobileButton {
     display: inline-flex;
+  }
+
+  .searchForm {
+    height: 48px;
   }
 
   .navRow {
@@ -529,31 +543,60 @@
     margin-top: 16px;
   }
 
+  /* `dvh` so the open menu still ends above the browser chrome on iOS, and
+     `overscroll-behavior` so scrolling it does not drag the page behind it. */
   .mobileNav {
     display: grid;
-    max-height: calc(100vh - 120px);
+    max-height: calc(100dvh - 150px);
     overflow-y: auto;
-    padding-inline: 18px;
+    overscroll-behavior: contain;
+    padding-inline: 16px;
+  }
+
+  .mobileNav > a,
+  .mobileSection > button,
+  .mobileSubmenu a {
+    min-height: 46px;
+  }
+
+  .mobileSection > button {
+    align-items: center;
+  }
+
+  .mobileNav > a,
+  .mobileSubmenu a {
+    align-content: center;
+    display: grid;
   }
 }
 
 @media (max-width: 520px) {
-  .inner {
-    padding-inline: 14px;
-  }
-
   .brandMark {
-    height: 30px;
-    width: 30px;
+    height: 32px;
+    width: 32px;
   }
 
   .brandName {
     font-size: 1.08rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .brand {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /* "BDT - EN" costs more width than it earns next to three icons. */
+  .currencyLabel {
+    display: none;
   }
 
   .iconLink,
+  .mobileButton,
   .actions :global(.sf-icon-action) {
-    width: 30px;
+    width: 40px;
   }
 
   .cartDivider {

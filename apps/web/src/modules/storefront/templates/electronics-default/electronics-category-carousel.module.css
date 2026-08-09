@@ -137,13 +137,27 @@
     min-height: 190px;
   }
 
+  /* The rail is swipeable here, and the arrow would sit on top of a card with
+     nothing to nudge it out of the way. */
   .arrow {
-    right: 2px;
+    display: none;
   }
 }
 
 @media (max-width: 420px) {
+  /* Two cards plus a sliver of the third — the peek is what tells a thumb the
+     rail scrolls. */
   .card {
-    flex-basis: 74%;
+    flex-basis: 44%;
+    min-height: 168px;
+    padding: 16px 12px 14px;
+  }
+
+  .image {
+    max-width: 120px;
+  }
+
+  .label {
+    font-size: 0.9rem;
   }
 }

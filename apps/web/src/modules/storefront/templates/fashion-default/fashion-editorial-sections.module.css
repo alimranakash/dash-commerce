@@ -387,8 +387,15 @@
     order: initial;
   }
 
+  /* Two per row, the same as every other product grid in this template. Three
+     tiles inside the stacked text column left each one ~93px wide with a
+     truncated title under it. */
   .lookbookProducts {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lookbookProducts > a > span {
+    font-size: 0.74rem;
   }
 
   .communityHeading {
@@ -401,8 +408,59 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .communityGrid figcaption {
+    font-size: 0.72rem;
+  }
+
   .newsletterContent form {
     grid-template-columns: 1fr;
+  }
+
+  /* The eyebrow and the CTA under each editorial block are bare text links. */
+  .campaignContent > a,
+  .lookbookContent > a {
+    align-items: center;
+    display: inline-flex;
+    min-height: 44px;
+    padding-bottom: 0;
+  }
+}
+
+/* Phone widths: the stacked text column is the viewport minus the block padding,
+   so the padding comes down and the display headings come with it — otherwise a
+   45px heading has ~300px of line to work with and every word breaks. */
+@media (max-width: 480px) {
+  .campaignContent,
+  .lookbookContent,
+  .newsletterContent {
+    gap: 18px;
+    padding: 30px 24px;
+  }
+
+  .campaignContent h2,
+  .lookbookContent h2,
+  .newsletterContent h2 {
+    font-size: clamp(2.1rem, 9vw, 2.9rem);
+  }
+
+  .communityHeading h2 {
+    font-size: clamp(2rem, 8.5vw, 2.8rem);
+  }
+
+  .community {
+    padding-inline: 16px;
+  }
+
+  /* The eyebrow above each editorial heading is the smallest type in the
+     template at 0.68rem — ~10.9px on a phone. 0.72rem is the floor the rest of
+     the mobile pass settled on; the tracking comes in slightly so the wider
+     glyphs still fit one line. */
+  .campaignContent > p,
+  .lookbookContent > p,
+  .newsletterContent > p,
+  .communityHeading p {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
   }
 }
 

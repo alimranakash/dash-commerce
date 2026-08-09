@@ -89,6 +89,8 @@
   padding: 48px 0;
 }
 
+/* Two tiles per row is this template's mobile rule, and it holds all the way
+   down — no narrower breakpoint collapses the row to a single column. */
 @media (max-width: 1024px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -109,10 +111,21 @@
   .grid {
     gap: 24px 8px;
   }
-}
 
-@media (max-width: 390px) {
-  .grid {
-    grid-template-columns: 1fr;
+  /* The tab row and the shop link were bare text at 16-20px tall. Both are the
+     only controls in this section, so they carry a full press target; the tabs
+     keep their 12px separator gutter, which stops the two boxes touching. */
+  .tabs button {
+    align-items: center;
+    display: inline-flex;
+    min-height: 44px;
+    padding: 0;
+  }
+
+  .shopLink {
+    align-items: center;
+    display: inline-flex;
+    margin-bottom: 0;
+    min-height: 44px;
   }
 }
