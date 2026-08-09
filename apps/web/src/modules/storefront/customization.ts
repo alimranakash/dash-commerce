@@ -148,7 +148,19 @@ export type StorefrontElectronicsHomepageSettings = {
 // Beauty Default's spotlight band splits in half: an overlay image card on the
 // left and a 2x2 product grid on the right. `spotlightCategorySlug` is empty by
 // default, which lets the band fall back to the store's own bestsellers.
+// Beauty Default's comparison band is a heading over one draggable before/after
+// image pair, with corner labels, a shop button and a floating product card laid
+// over the frame — the same anatomy as the Fashion Default band.
 export type StorefrontBeautyHomepageSettings = {
+  comparisonAccentColor: string;
+  comparisonAfterImageUrl: string;
+  comparisonAfterLabel: string;
+  comparisonBeforeImageUrl: string;
+  comparisonBeforeLabel: string;
+  comparisonCtaLink: string;
+  comparisonCtaText: string;
+  comparisonInitialPosition: number;
+  comparisonTitle: string;
   curatedPromoCtaLink: string;
   curatedPromoCtaText: string;
   curatedPromoEyebrow: string;
@@ -584,6 +596,17 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     })
   },
   beauty: {
+    // Empty accent means "use the template's primary colour"; the band only
+    // switches to an explicit hex when a seller sets one.
+    comparisonAccentColor: "",
+    comparisonAfterImageUrl: "/demo-assets/beauty/results/after-01.webp",
+    comparisonAfterLabel: "After",
+    comparisonBeforeImageUrl: "/demo-assets/beauty/results/before-01.webp",
+    comparisonBeforeLabel: "Before",
+    comparisonCtaLink: "/products",
+    comparisonCtaText: "Shop the routine",
+    comparisonInitialPosition: 50,
+    comparisonTitle: "Results backed by genuine customer experiences",
     curatedProductsPerTab: 6,
     curatedPromoCtaLink: "/products",
     curatedPromoCtaText: "Shop Now",
@@ -1026,6 +1049,15 @@ function beautySettings(input: Record<string, unknown>): StorefrontBeautyHomepag
   const defaults = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.beauty;
 
   return {
+    comparisonAccentColor: hex(input.comparisonAccentColor, defaults.comparisonAccentColor),
+    comparisonAfterImageUrl: text(input.comparisonAfterImageUrl, defaults.comparisonAfterImageUrl),
+    comparisonAfterLabel: text(input.comparisonAfterLabel, defaults.comparisonAfterLabel),
+    comparisonBeforeImageUrl: text(input.comparisonBeforeImageUrl, defaults.comparisonBeforeImageUrl),
+    comparisonBeforeLabel: text(input.comparisonBeforeLabel, defaults.comparisonBeforeLabel),
+    comparisonCtaLink: path(input.comparisonCtaLink, defaults.comparisonCtaLink),
+    comparisonCtaText: text(input.comparisonCtaText, defaults.comparisonCtaText),
+    comparisonInitialPosition: numberInRange(input.comparisonInitialPosition, 10, 90, defaults.comparisonInitialPosition),
+    comparisonTitle: text(input.comparisonTitle, defaults.comparisonTitle),
     curatedProductsPerTab: numberInRange(input.curatedProductsPerTab, 3, 12, defaults.curatedProductsPerTab),
     curatedPromoCtaLink: path(input.curatedPromoCtaLink, defaults.curatedPromoCtaLink),
     curatedPromoCtaText: text(input.curatedPromoCtaText, defaults.curatedPromoCtaText),

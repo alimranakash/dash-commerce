@@ -1,11 +1,15 @@
 .section {
   background: #d7dcdd;
+  /* pan-y keeps vertical scrolling with the page while horizontal drags come to
+     the pointer handlers, which is what makes the wipe work on touch. */
+  cursor: ew-resize;
   height: clamp(560px, 72vw, 860px);
   max-height: 82svh;
   min-height: 620px;
   overflow: hidden;
   position: relative;
   touch-action: pan-y;
+  user-select: none;
   width: 100%;
 }
 
@@ -15,6 +19,7 @@
   inset: 0;
   object-fit: cover;
   object-position: center;
+  pointer-events: none;
   position: absolute;
   user-select: none;
   width: 100%;
@@ -71,42 +76,40 @@
   z-index: 3;
 }
 
-.divider > span {
+.handle {
   align-items: center;
+  appearance: none;
   background: #ffffff;
+  border: 0;
   border-radius: 999px;
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.14);
   color: #111111;
+  cursor: ew-resize;
   display: flex;
-  height: 52px;
+  height: 54px;
   justify-content: center;
-  left: 50%;
+  left: var(--comparison-position);
+  padding: 0;
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 52px;
-}
-
-.divider i {
-  font-size: 1.55rem;
-  font-style: normal;
-  line-height: 1;
-}
-
-.range {
-  cursor: ew-resize;
-  height: 100%;
-  inset: 0;
-  margin: 0;
-  opacity: 0;
-  position: absolute;
-  width: 100%;
+  width: 54px;
   z-index: 5;
 }
 
-.range:focus-visible + .divider > span {
+.handle:focus-visible {
   outline: 2px solid #111111;
   outline-offset: 3px;
+}
+
+.section[data-dragging="true"] .handle {
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.2);
+}
+
+.grip {
+  height: 26px;
+  pointer-events: none;
+  width: 26px;
 }
 
 .productCallout {
@@ -115,6 +118,7 @@
   background: rgba(52, 59, 60, 0.72);
   bottom: 22px;
   color: #ffffff;
+  cursor: pointer;
   display: grid;
   gap: 18px;
   grid-template-columns: 78px minmax(0, 1fr);
@@ -196,18 +200,24 @@
     right: 16px;
   }
 
-  .divider > span {
+  .handle {
     height: 48px;
     width: 48px;
   }
 
+  .grip {
+    height: 23px;
+    width: 23px;
+  }
+
   .productCallout {
     bottom: 14px;
+    gap: 14px;
     grid-template-columns: 64px minmax(0, 1fr);
-    left: 14px;
     max-width: calc(100% - 28px);
-    right: auto;
-    width: 330px;
+    padding: 12px 16px 12px 12px;
+    right: 14px;
+    width: 300px;
   }
 }
 

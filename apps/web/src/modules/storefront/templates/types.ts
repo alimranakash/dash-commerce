@@ -29,7 +29,8 @@ export type StorefrontTemplateSection =
   | "beauty-tips"
   | "customer-reviews"
   | "brand-story"
-  | "spotlight";
+  | "spotlight"
+  | "before-after";
 
 export type StorefrontTemplateColors = {
   background: string;

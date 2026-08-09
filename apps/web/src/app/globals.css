@@ -7521,6 +7521,274 @@ textarea {
   min-width: 0;
 }
 
+/* --- Before / after: draggable image comparison ---------------------------
+   A centred heading over one rounded frame holding two stacked photographs,
+   with corner labels, a shop button and a floating product card laid over it.
+   `--beauty-comparison-position` is the only value the component drives;
+   everything below reads off it so a drag touches one custom property instead
+   of several inline styles. */
+
+.beauty-before-after {
+  --beauty-comparison-accent: var(--beauty-rose);
+  /* Overlay chrome sits further in than the other bands' gutter, so the card and
+     the badges do not hug the bare viewport edge on a wide screen. */
+  --beauty-comparison-inset: clamp(16px, 3.2vw, 64px);
+  --beauty-comparison-position: 50%;
+  /* The band runs edge to edge, so it drops the shared side gutter every other
+     `.beauty-home-section` carries and the heading re-adds it for itself. */
+  padding-inline: 0;
+}
+
+.beauty-before-after-heading {
+  color: var(--beauty-ink);
+  font-size: clamp(1.15rem, 2.1vw, 1.95rem);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  margin: 0 auto clamp(24px, 3.2vw, 46px);
+  max-width: calc(34ch + 2 * var(--beauty-band-inline));
+  padding-inline: var(--beauty-band-inline);
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.beauty-before-after-frame {
+  /* Taller than a 16/9 letterbox so the corner labels, the shop button and the
+     product card each get their own breathing room over the photographs. Once
+     the frame is viewport-wide the ratio alone would run past a screen height,
+     so the cap takes over and the images just crop further. */
+  aspect-ratio: var(--beauty-comparison-ratio, 3 / 2);
+  border-radius: 0;
+  cursor: ew-resize;
+  margin: 0;
+  max-height: clamp(520px, 76svh, 860px);
+  max-width: none;
+  overflow: hidden;
+  position: relative;
+  /* Vertical scrolling stays with the browser; horizontal movement is ours, so a
+     drag across the photo never fights the page scroll on touch. */
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  /* Explicit, so the max-height above stays a cap on the height alone. With an
+     auto inline size the ratio transfers that cap back into the width and the
+     band stops half way across the viewport; a definite width keeps the frame
+     edge to edge and lets the photographs crop instead. */
+  width: 100%;
+}
+
+.beauty-before-after-image {
+  display: block;
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  /* The frame owns every pointer gesture; the photographs must not intercept. */
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+  /* Chrome still starts a native image drag from a pointer-captured element. */
+  -webkit-user-drag: none;
+}
+
+.beauty-before-after-clip {
+  /* Masked at full size rather than sized to the wipe: narrowing the layer would
+     squash the photograph inside it, so the two images would no longer line up
+     as one scene split down the middle. */
+  clip-path: inset(0 calc(100% - var(--beauty-comparison-position)) 0 0);
+  inset: 0;
+  position: absolute;
+}
+
+/* The clip and the divider snap during a drag and glide when the position jumps
+   from a tap or an arrow key. */
+.beauty-before-after-frame:not([data-dragging="true"]) .beauty-before-after-clip,
+.beauty-before-after-frame:not([data-dragging="true"]) .beauty-before-after-divider,
+.beauty-before-after-frame:not([data-dragging="true"]) .beauty-before-after-handle {
+  transition:
+    clip-path 0.25s ease,
+    left 0.25s ease;
+}
+
+.beauty-before-after-divider {
+  background: var(--beauty-comparison-accent);
+  bottom: 0;
+  left: var(--beauty-comparison-position);
+  /* The frame owns the pointer, so the chrome above it must not swallow events. */
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  width: 2px;
+}
+
+.beauty-before-after-handle {
+  align-items: center;
+  appearance: none;
+  background: #ffffff;
+  border: 2px solid var(--beauty-comparison-accent);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(45, 23, 33, 0.22);
+  color: var(--beauty-comparison-accent);
+  cursor: ew-resize;
+  display: flex;
+  height: 48px;
+  justify-content: center;
+  left: var(--beauty-comparison-position);
+  padding: 0;
+  position: absolute;
+  top: 50%;
+  /* Presentational: the frame beneath handles every pointer gesture, and the
+     button stays in the tree for focus and arrow-key control. */
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  width: 48px;
+}
+
+.beauty-before-after-handle:focus-visible {
+  outline: 3px solid var(--beauty-comparison-accent);
+  outline-offset: 4px;
+}
+
+.beauty-before-after-grip {
+  height: 22px;
+  width: 22px;
+}
+
+/* Corner labels name each half of the wipe. They sit above both photographs and
+   stay put while the divider travels between them. */
+.beauty-before-after-label {
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 999px;
+  color: var(--beauty-ink);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  padding: 10px 20px;
+  pointer-events: none;
+  position: absolute;
+  text-transform: uppercase;
+  top: var(--beauty-comparison-inset);
+  z-index: 3;
+}
+
+.beauty-before-after-label-before {
+  left: var(--beauty-comparison-inset);
+}
+
+.beauty-before-after-label-after {
+  right: var(--beauty-comparison-inset);
+}
+
+/* Both overlays are links, so they opt back into pointer events that the frame
+   otherwise keeps for the wipe; `data-comparison-link` tells the drag handler to
+   leave presses on them alone. */
+.beauty-before-after-cta {
+  align-items: center;
+  background: var(--beauty-rose-strong);
+  border-radius: 999px;
+  bottom: var(--beauty-comparison-inset);
+  box-shadow: 0 10px 26px rgba(45, 23, 33, 0.24);
+  color: #ffffff;
+  display: flex;
+  height: 56px;
+  justify-content: center;
+  left: var(--beauty-comparison-inset);
+  pointer-events: auto;
+  position: absolute;
+  transition: transform 180ms ease;
+  width: 56px;
+  z-index: 4;
+}
+
+.beauty-before-after-cta:hover {
+  transform: translateY(-3px);
+}
+
+.beauty-before-after-cta:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}
+
+.beauty-before-after-arrow {
+  height: 24px;
+  width: 24px;
+}
+
+.beauty-before-after-product {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: clamp(14px, 1.4vw, 20px);
+  bottom: var(--beauty-comparison-inset);
+  box-shadow: 0 14px 34px rgba(45, 23, 33, 0.2);
+  color: var(--beauty-ink);
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 72px minmax(0, 1fr);
+  max-width: calc(100% - 2 * var(--beauty-comparison-inset) - 72px);
+  padding: 12px;
+  pointer-events: auto;
+  position: absolute;
+  right: var(--beauty-comparison-inset);
+  text-decoration: none;
+  transition: transform 180ms ease;
+  width: 320px;
+  z-index: 4;
+}
+
+.beauty-before-after-product:hover {
+  transform: translateY(-3px);
+}
+
+.beauty-before-after-thumb {
+  aspect-ratio: 1;
+  background: var(--beauty-blush);
+  border-radius: 12px;
+  display: block;
+  overflow: hidden;
+}
+
+.beauty-before-after-thumb img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+  -webkit-user-drag: none;
+}
+
+.beauty-before-after-product-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.beauty-before-after-product-copy span {
+  color: var(--beauty-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.beauty-before-after-product-copy strong {
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.beauty-before-after-product-copy em {
+  color: var(--beauty-rose-strong);
+  font-size: 0.85rem;
+  font-style: normal;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beauty-before-after-cta,
+  .beauty-before-after-product {
+    transition: none;
+  }
+}
+
 .beauty-concern-grid {
   display: grid;
   gap: var(--beauty-card-gap);
@@ -12333,6 +12601,64 @@ textarea {
 @media (max-width: 420px) {
   .beauty-spotlight-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A wide frame gets too letterboxed to read once the page is phone width, so the
+   comparison squares up and the knob shrinks to match. The button and the card
+   keep their corners rather than stacking, so the wipe stays the tallest thing in
+   the frame — they just shed padding until both fit a 320px viewport. */
+@media (max-width: 680px) {
+  .beauty-before-after {
+    /* One value pulls every overlay in at once, since the corners have no page
+       gutter left to borrow from at this width. */
+    --beauty-comparison-inset: 12px;
+  }
+
+  .beauty-before-after-frame {
+    --beauty-comparison-ratio: 4 / 3;
+  }
+
+  .beauty-before-after-handle {
+    height: 42px;
+    width: 42px;
+  }
+
+  .beauty-before-after-grip {
+    height: 19px;
+    width: 19px;
+  }
+
+  .beauty-before-after-label {
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    padding: 7px 14px;
+  }
+
+  .beauty-before-after-cta {
+    height: 46px;
+    width: 46px;
+  }
+
+  .beauty-before-after-arrow {
+    height: 20px;
+    width: 20px;
+  }
+
+  .beauty-before-after-product {
+    gap: 10px;
+    grid-template-columns: 52px minmax(0, 1fr);
+    max-width: calc(100% - 80px);
+    padding: 9px;
+    width: 240px;
+  }
+
+  .beauty-before-after-product-copy strong {
+    font-size: 0.82rem;
+  }
+
+  .beauty-before-after-product-copy em {
+    font-size: 0.78rem;
   }
 }
 

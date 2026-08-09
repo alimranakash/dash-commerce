@@ -4,6 +4,8 @@ import {
   resolveProductSectionProducts,
   type StorefrontProductPools
 } from "../../product-sections";
+import { BeautyBeforeAfterSection } from "./beauty-before-after";
+import { toBeautyComparisonProduct } from "./beauty-comparison-product";
 import { BeautyCuratedSection } from "./beauty-curated";
 import { BeautyHotPicksSection } from "./beauty-hot-picks";
 import { BeautySpotlightSection } from "./beauty-spotlight";
@@ -30,6 +32,10 @@ export function BeautyHomepageSections({
     ...productSections.newArrivals,
     title: productSections.newArrivals.title || "Fresh formulas and new shades"
   };
+  // The comparison card advertises one hero product; best sellers first so the
+  // band promotes the same thing the rest of the page leads with.
+  const comparisonProduct =
+    homeData.bestSellers[0] ?? homeData.featuredProducts[0] ?? homeData.newArrivals[0] ?? null;
   const pools: StorefrontProductPools = {
     "best-sellers": homeData.bestSellers.length > 0 ? homeData.bestSellers : homeData.featuredProducts,
     featured: homeData.featuredProducts,
@@ -92,6 +98,12 @@ export function BeautyHomepageSections({
         products={resolveProductSectionProducts(newArrivalsSection, pools)}
         section={newArrivalsSection}
         storeId={store.id}
+        storeSlug={store.slug}
+      />
+      <BeautyBeforeAfterSection
+        advancedSettings={settings?.advancedSettings}
+        currency={store.currency}
+        product={comparisonProduct ? toBeautyComparisonProduct(comparisonProduct) : null}
         storeSlug={store.slug}
       />
       <BeautyNewsletter />
