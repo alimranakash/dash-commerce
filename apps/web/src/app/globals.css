@@ -3734,15 +3734,11 @@ textarea {
   display: inline-flex;
   font-size: clamp(0.88rem, 1.4vw, 1.05rem);
   font-weight: 900;
-  height: clamp(72px, 9vw, 104px);
   justify-content: center;
-  max-height: 104px;
-  max-width: 104px;
   width: 100%;
 }
 
 .general-category-bubble span img {
-  border-radius: inherit;
   height: 100%;
   object-fit: cover;
   width: 100%;
