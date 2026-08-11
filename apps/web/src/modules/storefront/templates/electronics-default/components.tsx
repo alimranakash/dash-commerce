@@ -394,6 +394,24 @@ export function ElectronicsFlashDeals({
   );
 }
 
+// Promo card backgrounds are seller-editable, so the label colour has to follow the
+// chosen background rather than being hardcoded per card slot.
+function promoInkColor(backgroundColor?: string | undefined) {
+  const hex = backgroundColor?.trim().replace("#", "");
+  if (!hex || (hex.length !== 3 && hex.length !== 6)) {
+    return "#101318";
+  }
+  const full = hex.length === 3 ? hex.replace(/./g, (char) => char + char) : hex;
+  const channels = [0, 2, 4].map((offset) => {
+    const value = Number.parseInt(full.slice(offset, offset + 2), 16) / 255;
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  });
+  const [r = 0, g = 0, b = 0] = channels;
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+  return luminance > 0.45 ? "#101318" : "#ffffff";
+}
+
 export function ElectronicsTechnologyBanner({
   electronicsSettings,
   products = [],
@@ -482,7 +500,12 @@ export function ElectronicsTechnologyBanner({
           <article
             className={`electronics-promo-card ${card.className}`}
             key={card.title}
-            style={{ "--electronics-promo-bg": card.backgroundColor } as CSSProperties}
+            style={
+              {
+                "--electronics-promo-bg": card.backgroundColor,
+                "--electronics-promo-ink": promoInkColor(card.backgroundColor)
+              } as CSSProperties
+            }
           >
             {card.badge ? <PromoBadge label={card.badge} /> : null}
             <div className="electronics-promo-image">
