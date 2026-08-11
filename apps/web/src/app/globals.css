@@ -6166,7 +6166,12 @@ textarea {
   display: grid;
   gap: 8px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(300px, 1fr));
+  /* Definite row heights on purpose: with `1fr` the rows resolved to the
+     images' max-content contribution (~455px each), so any minmax() floor was
+     dead weight. Fixed rows put the height under this rule's control and let
+     `object-fit: cover` crop the artwork instead of the artwork setting the
+     row. */
+  grid-template-rows: repeat(2, 225px);
 }
 
 .electronics-promo-card {
