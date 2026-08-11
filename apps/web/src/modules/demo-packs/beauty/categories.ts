@@ -1,45 +1,51 @@
 import type { DemoPackCategory } from "../types";
 
+/**
+ * Six categories, one per image under apps/web/public/demo-assets/beauty/categories/.
+ * The slug matches the filename so a category and its art can never drift apart.
+ */
 export const beautyDemoCategories = [
   {
-    description: "Fictional cleansers, serums, moisturizers, and daily skin essentials.",
-    imageAlt: "Skincare demo category image",
-    imageUrl: "/demo-assets/beauty/categories/category-01.webp",
+    description:
+      "Cleansers, serums, sunscreen and moisturisers for a routine that fits around a working day.",
+    imageAlt: "Hand holding a skincare bottle in daylight",
+    imageUrl: "/demo-assets/beauty/categories/skincare.webp",
     name: "Skincare",
     slug: "skincare"
   },
   {
-    description: "Fictional color, complexion, and everyday makeup products.",
-    imageAlt: "Makeup demo category image",
-    imageUrl: "/demo-assets/beauty/categories/category-02.webp",
+    description:
+      "Lips, complexion and eyes - eight everyday shades rather than a full colour wall.",
+    imageAlt: "Lip pencil and its swatch on a pale background",
+    imageUrl: "/demo-assets/beauty/categories/makeup.webp",
     name: "Makeup",
     slug: "makeup"
   },
   {
-    description: "Fictional treatments, masks, and care products for healthy-looking hair.",
-    imageAlt: "Hair care demo category image",
-    imageUrl: "/demo-assets/beauty/categories/category-03.webp",
+    description: "Shampoos, oils and weekly masks for scalps that get washed more often than most.",
+    imageAlt: "Person washing their hair under running water",
+    imageUrl: "/demo-assets/beauty/categories/haircare.webp",
     name: "Hair Care",
-    slug: "hair-care"
+    slug: "haircare"
   },
   {
-    description: "Fictional scents, mists, and fragrance essentials.",
-    imageAlt: "Fragrance demo category image",
-    imageUrl: "/demo-assets/beauty/categories/category-04.webp",
+    description: "Body creams and a lightweight body serum for skin below the jawline.",
+    imageAlt: "Body oil bottle held against a shoulder",
+    imageUrl: "/demo-assets/beauty/categories/bodycare.webp",
+    name: "Body Care",
+    slug: "bodycare"
+  },
+  {
+    description: "Eau de parfum in a size that travels without being decanted.",
+    imageAlt: "Fragrance category tile",
+    imageUrl: "/demo-assets/beauty/categories/fragrance.webp",
     name: "Fragrance",
     slug: "fragrance"
   },
   {
-    description: "Fictional body lotions, scrubs, washes, and self-care products.",
-    imageAlt: "Body care demo category image",
-    imageUrl: "/demo-assets/beauty/categories/category-05.webp",
-    name: "Body Care",
-    slug: "body-care"
-  },
-  {
-    description: "Fictional tools, applicators, and beauty accessories.",
-    imageAlt: "Beauty tools demo category image",
-    imageUrl: "/demo-assets/beauty/categories/category-06.webp",
+    description: "Applicators and blending tools - the part of a routine that gets replaced most.",
+    imageAlt: "Pink powder brush on a white background",
+    imageUrl: "/demo-assets/beauty/categories/beauty-tools.webp",
     name: "Beauty Tools",
     slug: "beauty-tools"
   }

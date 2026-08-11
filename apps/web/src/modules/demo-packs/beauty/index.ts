@@ -1,4 +1,6 @@
 import type { DemoPack } from "../types";
+import { beautyDemoAdvancedSettings } from "./advanced-settings";
+import { beautyDemoBrands } from "./brands";
 import { beautyDemoCategories } from "./categories";
 import { beautyDemoCollections } from "./collections";
 import { beautyDemoHomepage } from "./homepage";
@@ -7,11 +9,14 @@ import { beautyDemoNavigation } from "./navigation";
 import { beautyDemoPages } from "./pages";
 import { beautyDemoProducts } from "./products";
 import { beautyDemoSettings } from "./settings";
+import { beautyDemoTags } from "./tags";
 
 export const beautyDemoPack: DemoPack = {
   businessType: "Cosmetics & Beauty",
   compatibleTemplate: "beauty-default",
   content: {
+    advancedSettings: beautyDemoAdvancedSettings,
+    brands: beautyDemoBrands,
     categories: beautyDemoCategories,
     collections: beautyDemoCollections,
     homepage: beautyDemoHomepage,
@@ -19,14 +24,16 @@ export const beautyDemoPack: DemoPack = {
     navigation: beautyDemoNavigation,
     pages: beautyDemoPages,
     products: beautyDemoProducts,
-    settings: beautyDemoSettings
+    settings: beautyDemoSettings,
+    tags: beautyDemoTags
   },
-  description: "Starter demo architecture for cosmetics, skincare, and beauty brands.",
+  description:
+    "A complete cosmetics catalogue: 24 products across 6 categories, with brands, tags and two images per product.",
   id: "beauty-demo-v1",
   metadata: {
     demoProductCount: beautyDemoProducts.length,
     size: "mvp"
   },
   name: "Cosmetics & Beauty Demo Pack v1",
-  version: "1.0.0"
+  version: "2.0.0"
 };

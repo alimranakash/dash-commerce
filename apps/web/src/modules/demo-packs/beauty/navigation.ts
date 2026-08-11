@@ -6,6 +6,10 @@ export const beautyDemoNavigation = [
     label: "Home"
   },
   {
+    href: "/products?sort=newest",
+    label: "New Arrivals"
+  },
+  {
     href: "/categories/skincare",
     label: "Skincare"
   },
@@ -14,15 +18,15 @@ export const beautyDemoNavigation = [
     label: "Makeup"
   },
   {
-    href: "/categories/hair-care",
+    href: "/categories/haircare",
     label: "Hair Care"
   },
   {
-    href: "/categories/fragrance",
-    label: "Fragrance"
+    href: "/categories/bodycare",
+    label: "Body Care"
   },
   {
-    href: "/contact",
-    label: "Contact"
+    href: "/categories",
+    label: "Categories"
   }
 ] satisfies DemoPackNavigationItem[];

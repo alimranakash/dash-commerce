@@ -23,7 +23,9 @@ const beautyMenuItems = [
   { label: "SHOP", url: "/products" },
   { label: "CATEGORIES", url: "#beauty-categories" },
   { label: "BEST SELLERS", url: "#beauty-best-sellers" },
-  { label: "COLLECTIONS", url: "#beauty-collections" },
+  // Every anchor here has to match a section id the homepage actually renders,
+  // or the link scrolls nowhere.
+  { label: "CURATED", url: "#beauty-curated" },
   { label: "NEW ARRIVALS", url: "#beauty-new-arrivals" }
 ];
 

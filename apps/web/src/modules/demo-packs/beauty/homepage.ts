@@ -1,15 +1,16 @@
 import type { DemoPackHomepage } from "../types";
 
 export const beautyDemoHomepage = {
-  bannerImageUrl: "/demo-assets/beauty/banners/banner-01.webp",
-  beautyTipsTitle: "Beauty tips and skincare guides",
-  bestSellersTitle: "Best sellers for daily glow",
-  ctaText: "Shop beauty",
+  bannerImageUrl: "/demo-assets/beauty/banners/promo-primary.webp",
+  bestSellersTitle: "Most loved beauty picks",
+  ctaText: "Shop all products",
   featuredSectionTitle: "Featured beauty essentials",
   heroImageUrl: "/demo-assets/beauty/hero/hero-01.webp",
-  heroSubtitle: "Explore fictional skincare, makeup, hair care, fragrance, and beauty tools for a soft daily ritual.",
-  heroTitle: "Soft beauty essentials for radiant routines",
-  newsletterText: "Get beauty tips, new launches, and exclusive demo offers.",
-  promoBannerText: "Limited launch edit on selected fictional beauty essentials.",
-  shopByConcernTitle: "Shop by concern"
+  heroSubtitle: "TWENTY-FOUR PRODUCTS, SIX CATEGORIES",
+  heroTitle: "Skin, hair and\neverything after.",
+  newsletterText:
+    "New formulas, restocks and markdowns, sent when there is something worth sending.",
+  promoBannerText:
+    "Skincare, makeup, hair care, body care, fragrance and tools - all priced in BDT.",
+  trendingProductsTitle: "Trending now"
 } satisfies DemoPackHomepage;

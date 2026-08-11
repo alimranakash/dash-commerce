@@ -170,10 +170,11 @@ function FashionHeroMedia({ slide }: { slide: StorefrontHeroSlide }) {
 }
 
 // The hero art is a wide editorial crop that loses almost everything when a
-// phone squeezes it into a portrait frame, so the fashion pack ships a portrait
-// companion beside it. A `<source>` that 404s has no fallback, so every other
-// image keeps the desktop art at all widths.
-const heroPacksWithMobileArt = /^\/demo-assets\/fashion\/hero\/hero-0\d\.webp$/;
+// phone squeezes it into a portrait frame, so every demo pack ships a portrait
+// `hero-mobile.webp` beside its wide slides. A `<source>` that 404s has no
+// fallback, so the pattern stays pinned to that convention - any other image
+// keeps the desktop art at all widths.
+const heroPacksWithMobileArt = /^\/demo-assets\/[a-z-]+\/hero\/hero-0\d\.webp$/;
 
 function mobileHeroVariant(src: string) {
   if (!heroPacksWithMobileArt.test(src)) {
