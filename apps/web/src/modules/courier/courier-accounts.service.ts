@@ -14,6 +14,7 @@ import {
   getCourierAccountForStore,
   getCourierAccountsForStore,
   setDefaultCourierAccountForStore,
+  updateCourierAccountSecretCacheForStore,
   updateCourierAccountTestResultForStore,
   upsertCourierAccountForStore
 } from "./courier.repository";
@@ -217,17 +218,58 @@ export async function describeSendTarget(storeId: string) {
 
 export function toCourierContext(
   storeId: string,
-  account: { credentialsCipher: string | null; credentialsPublic: unknown }
+  account: {
+    credentialsCipher: string | null;
+    credentialsPublic: unknown;
+    metadata?: unknown;
+    provider: string;
+  }
 ): CourierContext {
+  let cache: Record<string, string> | null = null;
+
   return {
     credentials: {
       ...toStringRecord(account.credentialsPublic),
       ...decryptCredentials(account.credentialsCipher)
     },
     requestId: randomUUID(),
+    // Encrypted at rest exactly like the seller-entered credentials — an OAuth
+    // access token is every bit as sensitive as the password that minted it.
+    secretStore: {
+      read: async () => {
+        cache ??= readSecretCache(account.metadata);
+
+        return { ...cache };
+      },
+      write: async (values) => {
+        cache = { ...(cache ?? readSecretCache(account.metadata)), ...values };
+
+        await updateCourierAccountSecretCacheForStore(
+          storeId,
+          account.provider,
+          encryptCredentials(cache)
+        );
+      }
+    },
     storeId,
     timeoutMs: COURIER_TIMEOUT_MS
   };
+}
+
+function readSecretCache(metadata: unknown): Record<string, string> {
+  const cipher = toStringRecord(metadata).secretCache;
+
+  if (!cipher) {
+    return {};
+  }
+
+  try {
+    return decryptCredentials(cipher);
+  } catch {
+    // A rotated COURIER_CREDENTIALS_KEY invalidates the cache, not the account:
+    // the adapter simply re-authenticates and writes a fresh one.
+    return {};
+  }
 }
 
 export async function testCourierConnection(storeId: string, providerKey: string) {

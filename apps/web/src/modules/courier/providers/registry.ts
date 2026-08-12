@@ -1,4 +1,5 @@
 import { courierProviderKeys, type CourierProviderKey } from "../courier.types";
+import { pathaoProvider } from "./pathao";
 import type { CourierProvider } from "./provider.types";
 import { steadfastProvider } from "./steadfast";
 
@@ -12,6 +13,7 @@ import { steadfastProvider } from "./steadfast";
  */
 
 const implementedProviders: Partial<Record<CourierProviderKey, CourierProvider>> = {
+  pathao: pathaoProvider,
   steadfast: steadfastProvider
 };
 

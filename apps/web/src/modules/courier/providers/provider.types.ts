@@ -42,10 +42,25 @@ export type CredentialField = {
   type?: "text" | "url" | undefined;
 };
 
+/**
+ * Encrypted per-account scratch space for values an adapter derives at runtime
+ * rather than receiving from the seller — OAuth access/refresh tokens, a
+ * resolved pickup-store id, a cached area map.
+ *
+ * Provider-agnostic on purpose: it is just a string map, so the courier layer
+ * never learns what any carrier keeps in it. Steadfast's static key/secret auth
+ * simply never touches it.
+ */
+export type CourierSecretStore = {
+  read: () => Promise<Record<string, string>>;
+  write: (values: Record<string, string>) => Promise<void>;
+};
+
 export type CourierContext = {
   /** Already decrypted and validated. */
   credentials: Record<string, string>;
   requestId: string;
+  secretStore: CourierSecretStore;
   /** For logging and rate-limit keys only — never sent upstream. */
   storeId: string;
   timeoutMs: number;

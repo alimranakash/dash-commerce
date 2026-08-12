@@ -177,6 +177,43 @@ export async function updateCourierAccountTestResultForStore(
   });
 }
 
+/**
+ * Read-modify-write of the encrypted secret cache, preserving the rest of
+ * metadata (secret hints, migration markers).
+ */
+export async function updateCourierAccountSecretCacheForStore(
+  storeId: string,
+  provider: string,
+  cipher: string
+) {
+  await ensureCourierSchema();
+
+  const account = await prisma.courierAccount.findFirst({
+    where: {
+      provider,
+      storeId
+    },
+    select: {
+      metadata: true
+    }
+  });
+
+  const metadata =
+    account?.metadata && typeof account.metadata === "object" && !Array.isArray(account.metadata)
+      ? (account.metadata as Record<string, unknown>)
+      : {};
+
+  return prisma.courierAccount.updateMany({
+    where: {
+      provider,
+      storeId
+    },
+    data: {
+      metadata: { ...metadata, secretCache: cipher }
+    }
+  });
+}
+
 export async function updateCourierAccountBalanceForStore(
   storeId: string,
   provider: string,
