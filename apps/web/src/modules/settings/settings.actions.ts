@@ -23,7 +23,6 @@ import {
 } from "../storefront/customization";
 import {
   getStoreSettings,
-  updateCourierSettings,
   updateInvoiceSettings,
   updateMarketingSettings,
   updateSocialLoginSettings,
@@ -31,7 +30,6 @@ import {
   updateStoreSettings,
   updateThemeSettings
 } from "./settings.service";
-import { courierProviderFields, courierProviderKeys } from "./settings.schema";
 import type { StoreSettingsInput, ThemeSettingsInput } from "./settings.schema";
 
 export type SettingsActionState = {
@@ -180,26 +178,9 @@ export async function updateMarketingSettingsFormAction(_state: SettingsActionSt
   return settingsSuccessState("Marketing settings saved.");
 }
 
-export async function updateCourierSettingsFormAction(_state: SettingsActionState, formData: FormData) {
-  const store = await requireStore();
-
-  try {
-    await updateCourierSettings(store.id, {
-      providers: courierProviderKeys.map((key) => ({
-        credentials: Object.fromEntries(
-          (courierProviderFields[key] ?? []).map((field) => [field, getValue(formData, `${key}.${field}`)])
-        ),
-        isEnabled: checkbox(formData, `${key}.isEnabled`),
-        key
-      }))
-    });
-  } catch (error) {
-    return settingsErrorState(error, "Please fix the highlighted courier settings.");
-  }
-
-  revalidateSettingsPaths(store.slug);
-  return settingsSuccessState("Courier settings saved.");
-}
+// Courier credentials are no longer written here. They live in the encrypted
+// CourierAccount table and are saved through modules/courier/courier.actions.ts,
+// so there is exactly one write path and it cannot store plaintext secrets.
 
 export async function updateInvoiceSettingsFormAction(_state: SettingsActionState, formData: FormData) {
   const store = await requireStore();

@@ -157,6 +157,26 @@ export async function setDefaultCourierAccountForStore(storeId: string, provider
   ]);
 }
 
+export async function updateCourierAccountTestResultForStore(
+  storeId: string,
+  provider: string,
+  input: { lastTestMessage: string; lastTestStatus: string }
+) {
+  await ensureCourierSchema();
+
+  return prisma.courierAccount.updateMany({
+    where: {
+      provider,
+      storeId
+    },
+    data: {
+      lastTestMessage: input.lastTestMessage,
+      lastTestStatus: input.lastTestStatus,
+      lastTestedAt: new Date()
+    }
+  });
+}
+
 /* -------------------------------------------------------------------------- */
 /* Shipments                                                                  */
 /* -------------------------------------------------------------------------- */

@@ -1,8 +1,12 @@
 import { CalendarDays, UserRound } from "lucide-react";
 import { notFound } from "next/navigation";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
-import { CustomerCard, OrderItemsTable, OrderStatusCards, OrderSummaryCard, OrderTimeline, PaymentCard, QuickActionsCard, ShippingCard, type OrderAddressView } from "../../../../modules/orders/components/order-detail-components";
+import { CustomerCard, OrderItemsTable, OrderStatusCards, OrderSummaryCard, OrderTimeline, PaymentCard, QuickActionsCard, type OrderAddressView } from "../../../../modules/orders/components/order-detail-components";
 import { OrderHeaderActions } from "../../../../modules/orders/components/order-detail-actions";
+import { CourierCard } from "../../../../modules/courier/components/courier-card";
+import { describeSendTarget } from "../../../../modules/courier/courier-accounts.service";
+import { getOrderShipments, getShipmentTimeline } from "../../../../modules/courier/courier.service";
+import { getCourierProvider } from "../../../../modules/courier/providers/registry";
 import { getOrderByIdForStore } from "../../../../modules/orders/order.service";
 import { requireStore } from "../../../../modules/stores/queries";
 
@@ -21,6 +25,9 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
 
   const orderNumber = order.orderNumber.startsWith("#") ? order.orderNumber : `#${order.orderNumber}`;
   const paymentDate = order.paymentStatus === "PENDING" ? "Awaiting payment" : formatDate(order.updatedAt);
+  const shipment = (await getOrderShipments(store.id, order.id))[0] ?? null;
+  const shipmentEvents = shipment ? await getShipmentTimeline(store.id, shipment.id) : [];
+  const sendTarget = await describeSendTarget(store.id);
 
   return (
     <DashboardShell storeSlug={store.slug}>
@@ -62,7 +69,33 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
 
         <div className="grid items-start gap-4 xl:grid-cols-2">
           <PaymentCard method={order.paymentMethodName} paymentDate={paymentDate} reference={order.paymentReference} status={order.paymentStatus} />
-          <ShippingCard cost={formatMoney(order.shippingAmount, order.currency)} deliveryStatus={order.fulfillmentStatus} method={order.shippingRateName ?? "Manual delivery"} />
+          <CourierCard
+            courierLabel={sendTarget.label}
+            orderId={order.id}
+            shipment={shipment ? {
+              bookedAt: shipment.bookedAt,
+              codAmount: formatMoney(shipment.codAmount, order.currency),
+              createdAt: shipment.createdAt,
+              events: shipmentEvents.map((event) => ({
+                id: event.id,
+                message: event.message,
+                occurredAt: event.occurredAt,
+                source: event.source,
+                status: event.status
+              })),
+              id: shipment.id,
+              lastError: shipment.lastError,
+              lastSyncedAt: shipment.lastSyncedAt,
+              providerLabel: getCourierProvider(shipment.provider)?.label ?? shipment.provider,
+              providerShipmentId: shipment.providerShipmentId,
+              providerStatus: shipment.providerStatus,
+              status: shipment.status,
+              trackingCode: shipment.trackingCode
+            } : null}
+            shippingCost={formatMoney(order.shippingAmount, order.currency)}
+            shippingMethod={order.shippingRateName ?? "Manual delivery"}
+            {...(sendTarget.reason ? { sendDisabledReason: sendTarget.reason } : {})}
+          />
         </div>
 
         <OrderItemsTable
@@ -80,7 +113,12 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
 
         <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,0.7fr)]">
           <OrderTimeline createdAt={order.createdAt} fulfillmentStatus={order.fulfillmentStatus} orderStatus={order.status} paymentStatus={order.paymentStatus} updatedAt={order.updatedAt} />
-          <QuickActionsCard orderId={order.id} />
+          <QuickActionsCard
+            courierLabel={sendTarget.label}
+            hasShipment={shipment !== null}
+            orderId={order.id}
+            {...(sendTarget.reason ? { sendDisabledReason: sendTarget.reason } : {})}
+          />
         </div>
       </section>
     </DashboardShell>

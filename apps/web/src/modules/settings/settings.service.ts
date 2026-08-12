@@ -8,14 +8,12 @@ import {
   updateThemeSettingsRecord
 } from "./settings.repository";
 import {
-  courierSettingsSchema,
   invoiceSettingsSchema,
   marketingSettingsSchema,
   socialLoginSettingsSchema,
   socialProfileLinksSchema,
   storeSettingsSchema,
   themeSettingsSchema,
-  type CourierSettingsInput,
   type InvoiceSettingsInput,
   type MarketingSettingsInput,
   type SocialLoginSettingsInput,
@@ -60,14 +58,9 @@ export async function getModuleSettings(storeId: string) {
   return getModuleSettingsRecord(storeId);
 }
 
-export async function updateCourierSettings(storeId: string, input: CourierSettingsInput) {
-  const current = await getModuleSettingsRecord(storeId);
-
-  return updateModuleSettingsRecord(storeId, {
-    ...current,
-    courier: courierSettingsSchema.parse(input)
-  });
-}
+// updateCourierSettings() was removed with Phase 1: courier credentials now live
+// encrypted in CourierAccount. The courier section of moduleSettings is still
+// read so the one-time migration can drain and blank it.
 
 export async function updateInvoiceSettings(storeId: string, input: InvoiceSettingsInput) {
   const current = await getModuleSettingsRecord(storeId);
