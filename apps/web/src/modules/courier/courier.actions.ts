@@ -14,10 +14,18 @@ import {
   getCourierBalance,
   type CourierScoreView
 } from "./courier-insight.service";
-import { customerScoreSchema, refreshShipmentSchema, sendShipmentSchema } from "./courier.schema";
 import {
+  bulkSendShipmentsSchema,
+  customerScoreSchema,
+  refreshShipmentSchema,
+  sendShipmentSchema
+} from "./courier.schema";
+import {
+  refreshActiveShipments,
   refreshShipmentStatus,
   sendOrderToCourier,
+  sendOrdersToCourier,
+  type BulkSendResult,
   type SendOrderToCourierResult
 } from "./courier.service";
 import { requireCourierProvider } from "./providers/registry";
@@ -49,6 +57,75 @@ export async function sendOrderToCourierAction(
   revalidateCourierPaths(store.slug, parsed.data.orderId);
 
   return toActionState(result);
+}
+
+export type BulkSendActionState = CourierActionState & {
+  result: BulkSendResult | null;
+};
+
+/**
+ * The highest-risk action in the product: one call, many real parcels. Every
+ * safety guarantee lives in the service; this wrapper only validates the shape
+ * and enforces the 50-order product cap through the schema.
+ */
+export async function sendOrdersToCourierAction(
+  orderIds: string[],
+  provider?: string
+): Promise<BulkSendActionState> {
+  const store = await requireStore();
+  const user = await getCurrentUser();
+  const parsed = bulkSendShipmentsSchema.safeParse({
+    orderIds,
+    ...(provider ? { provider } : {})
+  });
+
+  if (!parsed.success) {
+    return {
+      message: parsed.error.issues[0]?.message ?? "Select between 1 and 50 orders.",
+      result: null,
+      status: "error"
+    };
+  }
+
+  try {
+    const result = await sendOrdersToCourier({
+      orderIds: parsed.data.orderIds,
+      storeId: store.id,
+      ...(parsed.data.provider ? { provider: parsed.data.provider } : {}),
+      ...(user?.id ? { userId: user.id } : {})
+    });
+
+    revalidateCourierPaths(store.slug);
+
+    return {
+      message: `${result.sent.length} sent · ${result.skipped.length} skipped · ${result.failed.length} failed`,
+      result,
+      status: result.failed.length > 0 || result.needsReconciliation.length > 0 ? "warning" : "success"
+    };
+  } catch (error) {
+    return { message: messageFor(error), result: null, status: "error" };
+  }
+}
+
+export async function refreshActiveShipmentsAction(): Promise<CourierActionState> {
+  const store = await requireStore();
+
+  try {
+    const { checked, failed, updated } = await refreshActiveShipments(store.id);
+
+    revalidateCourierPaths(store.slug);
+
+    if (checked === 0) {
+      return { message: "No active shipments to check.", status: "warning" };
+    }
+
+    return {
+      message: `Checked ${checked} shipment(s) — ${updated} updated${failed ? `, ${failed} could not be reached` : ""}.`,
+      status: failed > 0 ? "warning" : "success"
+    };
+  } catch (error) {
+    return { message: messageFor(error), status: "error" };
+  }
 }
 
 export async function refreshShipmentStatusAction(

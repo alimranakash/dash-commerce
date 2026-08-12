@@ -2,6 +2,8 @@ import { CourierError } from "../../courier-errors";
 import { redactSecrets } from "../../courier-http";
 import type {
   BalanceResult,
+  BulkShipmentItemResult,
+  BulkShipmentResult,
   CourierContext,
   CourierProvider,
   CreateShipmentInput,
@@ -10,6 +12,7 @@ import type {
   GetStatusInput,
   ShipmentStatusResult
 } from "../provider.types";
+import { parseSteadfastBulkResponse, toSteadfastBulkBody } from "./bulk";
 import { steadfastDefaultBaseUrl, steadfastRequest } from "./client";
 import { toSteadfastCreateOrderPayload } from "./mapper";
 import { steadfastStatusToShipmentStatus } from "./status-map";
@@ -88,6 +91,7 @@ export const steadfastProvider: CourierProvider = {
     }
   ],
   checkCustomer,
+  createShipments,
   getBalance,
   getStatus,
   key: "steadfast",
@@ -125,6 +129,61 @@ async function createShipment(
     status: providerStatus ? steadfastStatusToShipmentStatus(providerStatus) : "BOOKED",
     trackingCode: toNullableString(consignment.tracking_code)
   };
+}
+
+/**
+ * One call, up to 500 parcels. Like createShipment there is no retry here: a
+ * retried bulk call is up to 500 second parcels.
+ */
+async function createShipments(
+  inputs: CreateShipmentInput[],
+  context: CourierContext
+): Promise<BulkShipmentResult> {
+  const data = await steadfastRequest<Record<string, unknown>>(context, {
+    body: toSteadfastBulkBody(inputs),
+    method: "POST",
+    path: "/create_order/bulk-order"
+  });
+
+  const { matched } = parseSteadfastBulkResponse(data, inputs.map((input) => input.reference));
+
+  const results: BulkShipmentItemResult[] = inputs.map((input) => {
+    const outcome = matched.get(input.reference);
+
+    if (!outcome) {
+      return {
+        message: "The courier did not return a result we could match to this order.",
+        outcome: "UNMATCHED",
+        reference: input.reference
+      };
+    }
+
+    if (!outcome.success || !outcome.consignmentId) {
+      return {
+        message: outcome.providerStatus
+          ? `The courier rejected this order (${outcome.providerStatus}).`
+          : "The courier rejected this order.",
+        outcome: "ERROR",
+        reference: input.reference
+      };
+    }
+
+    return {
+      outcome: "SUCCESS",
+      reference: input.reference,
+      result: {
+        providerShipmentId: outcome.consignmentId,
+        // Bulk echoes "success", not a delivery status; a freshly created
+        // consignment is in_review exactly as the single endpoint reports.
+        providerStatus: "in_review",
+        raw: redactSecrets(outcome.raw),
+        status: steadfastStatusToShipmentStatus("in_review"),
+        trackingCode: outcome.trackingCode
+      }
+    };
+  });
+
+  return { raw: redactSecrets(data), results };
 }
 
 /**

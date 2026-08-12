@@ -18,6 +18,18 @@ import { isTerminalShipmentStatus, type DeliveryEventSource, type ShipmentStatus
  */
 
 export type StatusUpdate = {
+  /**
+   * Set only when a booking call just succeeded. Carrying it here rather than in
+   * a separate writer is what lets single send and bulk send settle through the
+   * identical code path — the two cannot drift because there is only one.
+   */
+  booking?:
+    | {
+        labelUrl?: string | undefined;
+        providerShipmentId: string | null;
+        trackingCode: string | null;
+      }
+    | undefined;
   /** Absent for message-only events such as Steadfast's tracking_update. */
   status?: ShipmentStatus | undefined;
   message?: string | null | undefined;
@@ -77,6 +89,15 @@ export async function applyShipmentStatus(update: StatusUpdate): Promise<ApplySt
     lastSyncedAt: new Date(),
     providerStatus,
     status: next,
+    ...(update.booking
+      ? {
+          bookedAt: shipment.bookedAt ?? occurredAt,
+          lastError: null,
+          providerShipmentId: update.booking.providerShipmentId,
+          trackingCode: update.booking.trackingCode,
+          ...(update.booking.labelUrl !== undefined ? { labelUrl: update.booking.labelUrl } : {})
+        }
+      : {}),
     ...(next === "DELIVERED" && !shipment.deliveredAt ? { deliveredAt: occurredAt } : {}),
     ...(next === "CANCELLED" && !shipment.cancelledAt ? { cancelledAt: occurredAt } : {}),
     ...(update.payload !== undefined ? { rawResponse: (update.payload ?? {}) as object } : {})
@@ -84,7 +105,7 @@ export async function applyShipmentStatus(update: StatusUpdate): Promise<ApplySt
 
   // An unchanged status writes no event, so the timeline stays meaningful. A
   // message-only update (tracking_update) still earns one at the current status.
-  if (!statusChanged && !hasMessage && !providerStatusChanged) {
+  if (!statusChanged && !hasMessage && !providerStatusChanged && !update.booking) {
     return {
       changed: false,
       fulfillmentStatus: null,
@@ -94,7 +115,7 @@ export async function applyShipmentStatus(update: StatusUpdate): Promise<ApplySt
     };
   }
 
-  if (statusChanged || hasMessage) {
+  if (statusChanged || hasMessage || update.booking) {
     await createDeliveryEventForStore({
       message: update.message?.trim() || describe(next, providerStatus),
       occurredAt,

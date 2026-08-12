@@ -289,6 +289,100 @@ export async function createShipmentForStore(input: ShipmentCreateInput) {
   });
 }
 
+/**
+ * Reserves every row for a bulk run in one transaction, *before* any parcel is
+ * booked. This is the step that makes native bulk no more dangerous than a loop:
+ * the `(storeId, orderId, provider)` unique constraint fires here, on our side,
+ * while the carrier has still been told nothing.
+ *
+ * A previously FAILED row is reused in place rather than duplicated, so a retry
+ * after a rejection does not accumulate dead rows.
+ */
+export async function reserveShipmentsForStore(input: {
+  courierAccountId: string;
+  createdByUserId?: string | null;
+  drafts: Array<{ codAmount: number; invoiceReference: string; orderId: string; requestHash: string }>;
+  provider: string;
+  reuseShipmentIds: Map<string, { attemptCount: number; id: string }>;
+  storeId: string;
+}) {
+  await ensureCourierSchema();
+
+  if (input.drafts.length === 0) {
+    return [];
+  }
+
+  const creates = input.drafts.filter((draft) => !input.reuseShipmentIds.has(draft.orderId));
+  const reuses = input.drafts.filter((draft) => input.reuseShipmentIds.has(draft.orderId));
+
+  await prisma.$transaction([
+    ...(creates.length > 0
+      ? [
+          prisma.shipment.createMany({
+            data: creates.map((draft) => ({
+              codAmount: draft.codAmount,
+              courierAccountId: input.courierAccountId,
+              invoiceReference: draft.invoiceReference,
+              orderId: draft.orderId,
+              provider: input.provider,
+              requestHash: draft.requestHash,
+              status: "REQUESTED" as const,
+              storeId: input.storeId,
+              ...(input.createdByUserId ? { createdByUserId: input.createdByUserId } : {})
+            })),
+            // A concurrent run that already reserved the same order wins; we
+            // simply do not book it twice.
+            skipDuplicates: true
+          })
+        ]
+      : []),
+    ...reuses.map((draft) => {
+      const existing = input.reuseShipmentIds.get(draft.orderId);
+
+      return prisma.shipment.updateMany({
+        where: {
+          id: existing?.id ?? "",
+          storeId: input.storeId
+        },
+        data: {
+          attemptCount: (existing?.attemptCount ?? 0) + 1,
+          codAmount: draft.codAmount,
+          courierAccountId: input.courierAccountId,
+          lastError: null,
+          requestHash: draft.requestHash,
+          status: "REQUESTED"
+        }
+      });
+    })
+  ]);
+
+  return prisma.shipment.findMany({
+    where: {
+      orderId: {
+        in: input.drafts.map((draft) => draft.orderId)
+      },
+      provider: input.provider,
+      storeId: input.storeId
+    }
+  });
+}
+
+export async function getActiveShipmentsForStore(storeId: string) {
+  await ensureCourierSchema();
+
+  return prisma.shipment.findMany({
+    where: {
+      status: {
+        notIn: ["DELIVERED", "PARTIALLY_DELIVERED", "RETURNED", "CANCELLED", "LOST", "FAILED"]
+      },
+      storeId
+    },
+    orderBy: {
+      createdAt: "desc"
+    }
+  });
+}
+
 export async function updateShipmentForStore(
   storeId: string,
   shipmentId: string,

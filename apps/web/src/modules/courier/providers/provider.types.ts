@@ -117,6 +117,24 @@ export type BalanceResult = {
 };
 
 /**
+ * Keyed by *our* reference, never by position — bulk responses do not promise
+ * to preserve request order.
+ *
+ * UNMATCHED is a first-class outcome, not an error: the carrier answered, but
+ * not about a request we can confidently identify. Those route to invoice
+ * reconciliation rather than being guessed at in either direction.
+ */
+export type BulkShipmentItemResult =
+  | { outcome: "SUCCESS"; reference: string; result: CreateShipmentResult }
+  | { message: string; outcome: "ERROR"; reference: string }
+  | { message: string; outcome: "UNMATCHED"; reference: string };
+
+export type BulkShipmentResult = {
+  raw: unknown;
+  results: BulkShipmentItemResult[];
+};
+
+/**
  * Raw counts only. The success ratio is computed once in the service so every
  * carrier agrees on the formula rather than each adapter inventing one.
  */
@@ -142,6 +160,11 @@ export type CourierProvider = {
   readonly label: string;
   readonly testConnection: (context: CourierContext) => Promise<TestConnectionResult>;
 
+  /** Present iff capabilities.nativeBulk. One call, N independently settled results. */
+  readonly createShipments?: (
+    inputs: CreateShipmentInput[],
+    context: CourierContext
+  ) => Promise<BulkShipmentResult>;
   /** Present iff capabilities.balance. */
   readonly getBalance?: (context: CourierContext) => Promise<BalanceResult>;
   /** Present iff capabilities.customerScore. */

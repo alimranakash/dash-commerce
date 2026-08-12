@@ -42,6 +42,32 @@ export async function getOrderByIdForStore(storeId: string, orderId: string) {
   });
 }
 
+/** Bulk sibling of getOrderByIdForStore, with the same includes a booking needs. */
+export async function getOrdersByIdsForStore(storeId: string, orderIds: string[]) {
+  if (orderIds.length === 0) {
+    return [];
+  }
+
+  return prisma.order.findMany({
+    where: {
+      id: {
+        in: orderIds
+      },
+      storeId
+    },
+    include: {
+      customer: true,
+      shippingAddress: true,
+      billingAddress: true,
+      items: {
+        orderBy: {
+          createdAt: "asc"
+        }
+      }
+    }
+  });
+}
+
 export async function updateOrderStatusForStore(
   storeId: string,
   orderId: string,
