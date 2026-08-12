@@ -1,7 +1,11 @@
+/* Gutter and rhythm come from the tokens `.electronics-homepage` sets — the
+   same `--electronics-band-inline` every band below uses — so the hero sits on
+   exactly the same column. The fallbacks cover the hero being rendered outside
+   that wrapper. */
 .section {
   background: #f8f8f8;
   color: #07090d;
-  padding: 0 50px 22px;
+  padding: 0 var(--electronics-band-inline, 50px) var(--electronics-section-space, 40px);
 }
 
 .grid {
@@ -9,7 +13,7 @@
   gap: 8px;
   grid-template-columns: minmax(0, 2.05fr) minmax(280px, 1fr) minmax(280px, 1fr);
   margin: 0 auto;
-  max-width: 1820px;
+  max-width: var(--electronics-container, 1820px);
 }
 
 .card {
@@ -262,10 +266,6 @@
 }
 
 @media (max-width: 1240px) {
-  .section {
-    padding-inline: 28px;
-  }
-
   .grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -284,11 +284,6 @@
 }
 
 @media (max-width: 820px) {
-  /* 16px matches the gutter every other Electronics band uses on mobile. */
-  .section {
-    padding: 0 16px 16px;
-  }
-
   .grid,
   .mainCard {
     grid-template-columns: 1fr;

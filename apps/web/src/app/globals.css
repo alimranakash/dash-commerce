@@ -5697,14 +5697,38 @@ textarea {
   grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr) minmax(160px, 1fr) auto;
 }
 
+/* Every band on this page is laid out from these three tokens, so a section
+   only ever opts into the shared container rather than carrying its own
+   one-off padding. `--electronics-band-inline` keeps the band background
+   full-bleed while pinning its content to the same 1820px column the hero
+   uses: the gutter on normal screens, and half the leftover on ultra-wide. */
 .electronics-homepage {
+  --electronics-container: 1820px;
+  --electronics-gutter: 50px;
+  --electronics-section-space: clamp(20px, 2.6vw, 40px);
+  /* Heading-to-content gap inside a band. One value for every band, tinted or
+     not, so a section's internal rhythm doesn't give away which one it is. */
+  --electronics-section-gap: clamp(16px, 1.6vw, 22px);
+  --electronics-band-inline: max(
+    var(--electronics-gutter),
+    (100% - var(--electronics-container)) / 2
+  );
   background: #f8fbff;
   color: var(--electronics-ink);
   display: grid;
-  gap: clamp(36px, 5vw, 72px);
+  /* Vertical rhythm is the sections' own padding-block, never the grid gap —
+     that way a tinted band's inner padding and the space between two plain
+     sections are the same number. */
+  gap: 0;
   grid-template-columns: minmax(0, 1fr);
   overflow-x: clip;
-  padding: 0 0 72px;
+  padding: 0 0 var(--electronics-section-space);
+}
+
+@media (max-width: 1240px) {
+  .electronics-homepage {
+    --electronics-gutter: 28px;
+  }
 }
 
 .electronics-home-section,
@@ -5715,16 +5739,20 @@ textarea {
 .electronics-newsletter {
   margin-inline: auto;
   max-width: none;
+  padding-block: var(--electronics-section-space);
+  padding-inline: var(--electronics-band-inline);
   width: 100%;
 }
 
-.electronics-section-inner {
+/* Sections that wrap their content get the cap a second time so the inner
+   grid is the thing that is 1820px wide, not the band. */
+.electronics-section-inner,
+.electronics-recommended-inner {
   display: grid;
-  gap: 22px;
+  gap: var(--electronics-section-gap);
   grid-template-columns: minmax(0, 1fr);
   margin-inline: auto;
-  max-width: 1820px;
-  padding-inline: 50px;
+  max-width: var(--electronics-container);
   width: 100%;
 }
 
@@ -6121,16 +6149,16 @@ textarea {
   cursor: not-allowed;
 }
 
+/* A full-bleed tinted band (like "Recommended for you"), not a floating card:
+   the gradient runs edge to edge and the shared container is what holds the
+   header and the deal grid on the page's column. A rounded, bordered frame
+   cannot survive a full-width background, so it is gone. */
 .electronics-flash-deals {
   background:
     radial-gradient(circle at 88% 12%, rgba(124, 58, 237, 0.16), transparent 30%),
     #ffffff;
-  border: 1px solid rgba(37, 99, 235, 0.12);
-  border-radius: 24px;
-  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.06);
   display: grid;
-  gap: 22px;
-  padding: clamp(24px, 4vw, 40px);
+  gap: var(--electronics-section-gap);
 }
 
 .electronics-flash-header > div:last-child {
@@ -6148,8 +6176,7 @@ textarea {
 
 .electronics-promo-deals {
   display: grid;
-  gap: 30px;
-  padding-inline: 20px;
+  gap: var(--electronics-section-gap);
 }
 
 .electronics-promo-deals h2 {
@@ -6331,15 +6358,6 @@ textarea {
 .electronics-recommended {
   background: #f5f5f5;
   display: grid;
-  padding: 22px 20px 36px;
-}
-
-.electronics-recommended-inner {
-  display: grid;
-  gap: 18px;
-  margin-inline: auto;
-  max-width: 1820px;
-  width: 100%;
 }
 
 .electronics-recommended h2 {
@@ -11674,8 +11692,6 @@ textarea {
 
   .fashion-lookbook,
   .fashion-editorial,
-  .electronics-flash-deals,
-  .electronics-promo-deals,
   .electronics-newsletter {
     border-radius: 22px;
   }
@@ -11739,23 +11755,6 @@ textarea {
 
   .fashion-lookbook-grid span:first-child {
     min-height: 260px;
-  }
-
-  .electronics-homepage {
-    gap: 42px;
-  }
-
-  .electronics-home-section,
-  .electronics-flash-deals,
-  .electronics-promo-deals,
-  .electronics-recommended,
-  .electronics-trust,
-  .electronics-newsletter {
-    width: 100%;
-  }
-
-  .electronics-section-inner {
-    padding-inline: 18px;
   }
 
   .electronics-promo-grid {
@@ -14588,25 +14587,12 @@ textarea {
 
   /* --- One horizontal gutter for the whole page --------------------------- */
 
+  /* Retuning this one token is the whole mobile gutter story — every band,
+     including the hero, reads its horizontal padding from it. The vertical
+     rhythm needs no override: `--electronics-section-space` already bottoms
+     out at its 20px clamp floor by this width. */
   .electronics-homepage {
     --electronics-gutter: 16px;
-    gap: 34px;
-  }
-
-  .electronics-section-inner,
-  .electronics-promo-deals,
-  .electronics-recommended,
-  .electronics-trust {
-    padding-inline: var(--electronics-gutter, 16px);
-  }
-
-  /* The deals card keeps its rounded frame, so it insets instead of padding.
-     `width: auto` is what stops the inherited `width: 100%` from adding the
-     margins back on as overflow. */
-  .electronics-flash-deals {
-    margin-inline: var(--electronics-gutter, 16px);
-    padding: 22px 16px;
-    width: auto;
   }
 
   /* --- Section headings --------------------------------------------------- */

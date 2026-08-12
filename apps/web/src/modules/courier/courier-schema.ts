@@ -111,6 +111,18 @@ async function createCourierSchema(db: CourierSchemaClient) {
   await db.$executeRawUnsafe(
     `CREATE INDEX IF NOT EXISTS "Shipment_courierAccountId_idx" ON "${schema}"."Shipment" ("courierAccountId")`
   );
+  // The carrier requires `invoice` to be unique per merchant account, and both the
+  // webhook receiver and the timed-out-booking reconciliation look a shipment up by
+  // invoice or consignment id rather than by order.
+  await db.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "Shipment_storeId_provider_invoiceReference_key" ON "${schema}"."Shipment" ("storeId", "provider", "invoiceReference")`
+  );
+  await db.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "Shipment_storeId_invoiceReference_idx" ON "${schema}"."Shipment" ("storeId", "invoiceReference")`
+  );
+  await db.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "Shipment_provider_providerShipmentId_idx" ON "${schema}"."Shipment" ("provider", "providerShipmentId")`
+  );
 
   await db.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS "${schema}"."DeliveryEvent" (
