@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getCustomerVisibleShipment } from "../../../../../modules/courier/courier.service";
 import { getPublicOrderByNumber } from "../../../../../modules/orders/order.service";
 import {
   getPaymentMethods,
@@ -28,6 +29,9 @@ export default async function ThankYouPage({ params }: ThankYouPageProps) {
   if (!order) {
     notFound();
   }
+
+  // Customer-safe slice only: carrier, tracking code, carrier status.
+  const shipment = await getCustomerVisibleShipment(store.id, order.id);
 
   return (
     <main className="sf-page">
@@ -65,6 +69,24 @@ export default async function ThankYouPage({ params }: ThankYouPageProps) {
             <span>Status</span>
             <strong>{order.status.toLowerCase()}</strong>
           </div>
+          {shipment ? (
+            <>
+              <div>
+                <span>Courier</span>
+                <strong>{shipment.providerLabel}</strong>
+              </div>
+              <div>
+                <span>Tracking code</span>
+                <strong>{shipment.trackingCode}</strong>
+              </div>
+              {shipment.providerStatus ? (
+                <div>
+                  <span>Delivery status</span>
+                  <strong>{shipment.providerStatus.replace(/_/g, " ")}</strong>
+                </div>
+              ) : null}
+            </>
+          ) : null}
         </div>
         {isManualPaymentType(order.paymentMethodType) || paymentMethod?.instructions ? (
           <div className="sf-payment-instructions">

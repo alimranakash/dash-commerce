@@ -1,6 +1,7 @@
 "use client";
 
-import { Loader2, Truck } from "lucide-react";
+import { Loader2, Settings2, Truck } from "lucide-react";
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { sendOrderToCourierAction, type CourierActionState } from "../courier.actions";
 
@@ -51,7 +52,20 @@ export function SendToCourierButton({
         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Truck className="h-4 w-4" />}
         {isPending ? "Sending…" : `Send to ${courierLabel}`}
       </button>
-      {blocked ? <p className="m-0 text-[11px] leading-5 text-[#777985]">{disabledReason}</p> : null}
+      {blocked ? (
+        <p className="m-0 text-[11px] leading-5 text-[#777985]">
+          {disabledReason}{" "}
+          {/* Every reason a send is blocked is fixed in the same place, so always
+              offer the way out rather than leaving a dead-end message. */}
+          <Link
+            className="inline-flex items-center gap-1 font-semibold text-[#6d3cf5] hover:underline"
+            href="/dashboard/settings/courier"
+          >
+            <Settings2 className="h-3 w-3" />
+            Courier settings
+          </Link>
+        </p>
+      ) : null}
       {state.status !== "idle" && state.message ? (
         <p className={`m-0 rounded-lg px-3 py-2 text-[11px] leading-5 ${toneClass(state.status)}`}>
           {state.message}

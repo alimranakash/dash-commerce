@@ -420,6 +420,39 @@ export async function createDeliveryEventForStore(input: DeliveryEventCreateInpu
   });
 }
 
+/**
+ * Store-wide recent activity, newest first. Exists so a seller can diagnose a
+ * failed booking or a stalled sync from the settings page instead of needing
+ * database access.
+ */
+export async function getRecentDeliveryEventsForStore(storeId: string, limit = 20) {
+  await ensureCourierSchema();
+
+  return prisma.deliveryEvent.findMany({
+    where: {
+      storeId
+    },
+    include: {
+      shipment: {
+        select: {
+          invoiceReference: true,
+          provider: true,
+          order: {
+            select: {
+              id: true,
+              orderNumber: true
+            }
+          }
+        }
+      }
+    },
+    orderBy: {
+      occurredAt: "desc"
+    },
+    take: limit
+  });
+}
+
 export async function getDeliveryEventsForShipment(storeId: string, shipmentId: string) {
   await ensureCourierSchema();
 

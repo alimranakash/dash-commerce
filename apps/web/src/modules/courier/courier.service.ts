@@ -16,13 +16,14 @@ import {
   getCourierAccountsForStore,
   getDeliveryEventsForShipment,
   getShipmentByIdForStore,
+  getRecentDeliveryEventsForStore,
   getShipmentForOrderProvider,
   getShipmentsForOrder,
   getShipmentsForOrders,
   reserveShipmentsForStore,
   updateShipmentForStore
 } from "./courier.repository";
-import { requireCourierProvider } from "./providers/registry";
+import { getCourierProvider, requireCourierProvider } from "./providers/registry";
 import { toSteadfastAddressLine } from "./providers/steadfast/mapper";
 import type { CreateShipmentInput, CreateShipmentResult } from "./providers/provider.types";
 
@@ -74,6 +75,52 @@ export async function getShipmentsByOrderId(storeId: string, orderIds: string[])
 
 export async function getShipmentTimeline(storeId: string, shipmentId: string) {
   return getDeliveryEventsForShipment(storeId, shipmentId);
+}
+
+export type CourierActivityEntry = {
+  id: string;
+  message: string;
+  occurredAt: Date;
+  orderId: string | null;
+  orderNumber: string | null;
+  providerLabel: string;
+  source: string;
+  status: string;
+};
+
+/** Recent bookings, failures and status syncs across the whole store. */
+export async function getCourierActivity(storeId: string, limit = 20): Promise<CourierActivityEntry[]> {
+  const events = await getRecentDeliveryEventsForStore(storeId, limit);
+
+  return events.map((event) => ({
+    id: event.id,
+    message: event.message ?? event.status,
+    occurredAt: event.occurredAt,
+    orderId: event.shipment.order?.id ?? null,
+    orderNumber: event.shipment.order?.orderNumber ?? event.shipment.invoiceReference,
+    providerLabel: getCourierProvider(event.shipment.provider)?.label ?? event.shipment.provider,
+    source: event.source,
+    status: event.status
+  }));
+}
+
+/**
+ * The customer-facing slice of a shipment: carrier, tracking code, and the
+ * carrier's own status. Deliberately narrow — no COD, no internal ids, no error
+ * text ever reaches the storefront.
+ */
+export async function getCustomerVisibleShipment(storeId: string, orderId: string) {
+  const [shipment] = await getShipmentsForOrder(storeId, orderId);
+
+  if (!shipment || !shipment.trackingCode) {
+    return null;
+  }
+
+  return {
+    providerLabel: getCourierProvider(shipment.provider)?.label ?? shipment.provider,
+    providerStatus: shipment.providerStatus,
+    trackingCode: shipment.trackingCode
+  };
 }
 
 export type RefreshShipmentStatusResult = {
