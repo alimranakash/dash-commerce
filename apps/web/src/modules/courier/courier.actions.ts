@@ -9,7 +9,12 @@ import {
   testCourierConnection
 } from "./courier-accounts.service";
 import { courierErrorMessage, toCourierError } from "./courier-errors";
-import { refreshShipmentSchema, sendShipmentSchema } from "./courier.schema";
+import {
+  checkCourierCustomerScore,
+  getCourierBalance,
+  type CourierScoreView
+} from "./courier-insight.service";
+import { customerScoreSchema, refreshShipmentSchema, sendShipmentSchema } from "./courier.schema";
 import {
   refreshShipmentStatus,
   sendOrderToCourier,
@@ -75,6 +80,53 @@ export async function refreshShipmentStatusAction(
   }
 
   return { message: result.message, status: "warning" };
+}
+
+export type CourierScoreActionState = CourierActionState & {
+  score: CourierScoreView | null;
+};
+
+/** Read-only, so it never redirects and never throws into the page. */
+export async function checkCourierScoreAction(
+  phone: string,
+  force = false
+): Promise<CourierScoreActionState> {
+  const store = await requireStore();
+  const parsed = customerScoreSchema.safeParse({ force, phone });
+
+  if (!parsed.success) {
+    return { message: "That phone number is not valid.", score: null, status: "error" };
+  }
+
+  const score = await checkCourierCustomerScore(store.id, parsed.data.phone, {
+    force: parsed.data.force
+  });
+
+  return {
+    score,
+    status: score.error ? "warning" : "success",
+    ...(score.error ? { message: score.error } : {})
+  };
+}
+
+export async function refreshCourierBalanceAction(providerKey: string): Promise<CourierActionState> {
+  const store = await requireStore();
+  const balance = await getCourierBalance(store.id, providerKey, { force: true });
+
+  revalidateCourierPaths(store.slug);
+
+  if (!balance) {
+    return { message: "This courier does not report a balance.", status: "warning" };
+  }
+
+  if (balance.error) {
+    return { message: balance.error, status: "warning" };
+  }
+
+  return {
+    message: `Balance ৳${(balance.amount ?? 0).toLocaleString("en-BD")}.`,
+    status: "success"
+  };
 }
 
 export async function saveCourierAccountFormAction(

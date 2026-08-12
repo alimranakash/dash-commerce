@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
+import { CourierBalance } from "../../../modules/courier/components/courier-balance";
+import { describeSendTarget } from "../../../modules/courier/courier-accounts.service";
+import { getCachedCourierBalance } from "../../../modules/courier/courier-insight.service";
 import { OrderListControls, type OrderFilterKey } from "../../../modules/orders/components/order-list-controls";
 import { getOrdersForStore } from "../../../modules/orders/order.service";
 import { requireStore } from "../../../modules/stores/queries";
@@ -19,11 +22,19 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const scopedOrders = orders.filter((order) => matchesSearch(order, search) && matchesDateRange(order, dateFrom, dateTo));
   const counts = getOrderCounts(scopedOrders);
   const visibleOrders = scopedOrders.filter((order) => matchesStatus(order, activeFilter));
+  // Cache-only: this page must never wait on a carrier API.
+  const sendTarget = await describeSendTarget(store.id);
+  const courierBalance = sendTarget.provider
+    ? await getCachedCourierBalance(store.id, sendTarget.provider)
+    : null;
 
   return (
     <DashboardShell storeSlug={store.slug}>
       <section className="resource-page">
-        <div className="catalog-page-heading"><h1>Orders</h1></div>
+        <div className="catalog-page-heading">
+          <h1>Orders</h1>
+          {courierBalance ? <CourierBalance balance={courierBalance} showRefresh={false} /> : null}
+        </div>
         <OrderListControls activeFilter={activeFilter} counts={counts} dateFrom={dateFrom} dateTo={dateTo} search={search} />
         {visibleOrders.length === 0 ? (
           <div className="empty-state">

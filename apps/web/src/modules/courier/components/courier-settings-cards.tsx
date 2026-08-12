@@ -3,6 +3,7 @@
 import { CheckCircle2, Loader2, PlugZap, Save, ShieldCheck, Star, XCircle } from "lucide-react";
 import { useActionState, useState, useTransition } from "react";
 import type { CourierAccountView } from "../courier-accounts.service";
+import { CourierBalance } from "./courier-balance";
 import {
   saveCourierAccountFormAction,
   setDefaultCourierAccountAction,
@@ -146,6 +147,12 @@ function ProviderCard({
               name="isDefault"
             />
           </div>
+
+          {account.balance ? (
+            <div className="rounded-lg border border-[#f0eff7] bg-[#fbfaff] px-3 py-2.5">
+              <CourierBalance balance={account.balance} />
+            </div>
+          ) : null}
 
           {account.lastTestedAt ? (
             <p className="m-0 flex items-center gap-1.5 text-[11px] text-[#858691]">

@@ -4,7 +4,9 @@ import { DashboardShell } from "../../../../components/dashboard/dashboard-shell
 import { CustomerCard, OrderItemsTable, OrderStatusCards, OrderSummaryCard, OrderTimeline, PaymentCard, QuickActionsCard, type OrderAddressView } from "../../../../modules/orders/components/order-detail-components";
 import { OrderHeaderActions } from "../../../../modules/orders/components/order-detail-actions";
 import { CourierCard } from "../../../../modules/courier/components/courier-card";
+import { CourierScoreCard } from "../../../../modules/courier/components/courier-score-card";
 import { describeSendTarget } from "../../../../modules/courier/courier-accounts.service";
+import { getCachedCourierScore } from "../../../../modules/courier/courier-insight.service";
 import { getOrderShipments, getShipmentTimeline } from "../../../../modules/courier/courier.service";
 import { getCourierProvider } from "../../../../modules/courier/providers/registry";
 import { getOrderByIdForStore } from "../../../../modules/orders/order.service";
@@ -28,6 +30,8 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
   const shipment = (await getOrderShipments(store.id, order.id))[0] ?? null;
   const shipmentEvents = shipment ? await getShipmentTimeline(store.id, shipment.id) : [];
   const sendTarget = await describeSendTarget(store.id);
+  // Cache-only on render: checking the carrier is an explicit click.
+  const courierScore = await getCachedCourierScore(store.id, order.customerPhone);
 
   return (
     <DashboardShell storeSlug={store.slug}>
@@ -58,13 +62,16 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
             phone={order.customerPhone}
             shippingAddress={addressView(order.shippingAddress)}
           />
-          <OrderSummaryCard
-            discount={formatMoney(order.discountAmount, order.currency)}
-            shipping={formatMoney(order.shippingAmount, order.currency)}
-            subtotal={formatMoney(order.subtotalAmount, order.currency)}
-            tax={formatMoney(order.taxAmount, order.currency)}
-            total={formatMoney(order.totalAmount, order.currency)}
-          />
+          <div className="grid items-start gap-4">
+            <OrderSummaryCard
+              discount={formatMoney(order.discountAmount, order.currency)}
+              shipping={formatMoney(order.shippingAmount, order.currency)}
+              subtotal={formatMoney(order.subtotalAmount, order.currency)}
+              tax={formatMoney(order.taxAmount, order.currency)}
+              total={formatMoney(order.totalAmount, order.currency)}
+            />
+            <CourierScoreCard cached={courierScore} phone={order.customerPhone} />
+          </div>
         </div>
 
         <div className="grid items-start gap-4 xl:grid-cols-2">

@@ -9,6 +9,7 @@ import {
 } from "./courier-credentials";
 import { CourierError } from "./courier-errors";
 import { COURIER_TIMEOUT_MS } from "./courier-http";
+import { getCourierBalance, type CourierBalanceView } from "./courier-insight.service";
 import {
   getCourierAccountForStore,
   getCourierAccountsForStore,
@@ -30,6 +31,7 @@ import type { CourierContext, CredentialField } from "./providers/provider.types
  */
 
 export type CourierAccountView = {
+  balance: CourierBalanceView | null;
   /** Plain objects only — this view crosses into a client component. */
   fields: CredentialField[];
   hasCredentials: boolean;
@@ -52,13 +54,24 @@ export async function listCourierAccountViews(storeId: string): Promise<CourierA
 
   const accounts = await getCourierAccountsForStore(storeId);
   const byProvider = new Map(accounts.map((account) => [account.provider, account]));
+  const catalog = listCourierCatalog();
+  // Honours the 15-minute TTL, so this refreshes at most once per provider per
+  // quarter hour and degrades to a stale figure if the carrier is unreachable.
+  const balances = new Map(
+    await Promise.all(
+      catalog.map(
+        async (entry) => [entry.key, await getCourierBalance(storeId, entry.key)] as const
+      )
+    )
+  );
 
-  return listCourierCatalog().map((entry) => {
+  return catalog.map((entry) => {
     const account = byProvider.get(entry.key) ?? null;
     const publicValues = toStringRecord(account?.credentialsPublic);
     const secretHints = toStringRecord(account?.metadata, "secretHints");
 
     return {
+      balance: balances.get(entry.key) ?? null,
       fields: entry.provider ? [...entry.provider.credentialFields] : [],
       hasCredentials: Boolean(account?.credentialsCipher),
       implemented: entry.implemented,

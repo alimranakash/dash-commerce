@@ -111,6 +111,22 @@ export type ShipmentStatusResult = {
   status: ShipmentStatus;
 };
 
+export type BalanceResult = {
+  amount: number;
+  currency: string;
+};
+
+/**
+ * Raw counts only. The success ratio is computed once in the service so every
+ * carrier agrees on the formula rather than each adapter inventing one.
+ */
+export type CustomerScoreResult = {
+  raw: unknown;
+  totalCancelled: number | null;
+  totalDelivered: number;
+  totalParcels: number;
+};
+
 export type CourierProvider = {
   readonly capabilities: CourierCapabilities;
   readonly createShipment: (
@@ -125,4 +141,12 @@ export type CourierProvider = {
   readonly key: CourierProviderKey;
   readonly label: string;
   readonly testConnection: (context: CourierContext) => Promise<TestConnectionResult>;
+
+  /** Present iff capabilities.balance. */
+  readonly getBalance?: (context: CourierContext) => Promise<BalanceResult>;
+  /** Present iff capabilities.customerScore. */
+  readonly checkCustomer?: (
+    input: { phone: string },
+    context: CourierContext
+  ) => Promise<CustomerScoreResult>;
 };

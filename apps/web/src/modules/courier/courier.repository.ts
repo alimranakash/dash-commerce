@@ -177,6 +177,25 @@ export async function updateCourierAccountTestResultForStore(
   });
 }
 
+export async function updateCourierAccountBalanceForStore(
+  storeId: string,
+  provider: string,
+  balanceAmount: number
+) {
+  await ensureCourierSchema();
+
+  return prisma.courierAccount.updateMany({
+    where: {
+      provider,
+      storeId
+    },
+    data: {
+      balanceAmount,
+      balanceCheckedAt: new Date()
+    }
+  });
+}
+
 /* -------------------------------------------------------------------------- */
 /* Shipments                                                                  */
 /* -------------------------------------------------------------------------- */
@@ -336,6 +355,27 @@ export async function getCourierCustomerScoreForStore(
     where: {
       phone,
       provider,
+      storeId
+    }
+  });
+}
+
+/**
+ * Bulk cache read for the risk engine, which must never make a network call —
+ * it only ever sees scores that were already fetched and stored.
+ */
+export async function getCourierCustomerScoresForPhones(storeId: string, phones: string[]) {
+  await ensureCourierSchema();
+
+  if (phones.length === 0) {
+    return [];
+  }
+
+  return prisma.courierCustomerScore.findMany({
+    where: {
+      phone: {
+        in: phones
+      },
       storeId
     }
   });

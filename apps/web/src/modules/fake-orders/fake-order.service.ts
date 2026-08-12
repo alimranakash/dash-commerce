@@ -1,3 +1,5 @@
+import { getCachedCourierScoreMap } from "../courier/courier-insight.service";
+import { normalizeBangladeshPhone } from "../courier/courier-phone";
 import {
   getOrdersForRiskReview,
   getRiskOrderByIdForStore,
@@ -12,8 +14,9 @@ type RiskOrder = Awaited<ReturnType<typeof getOrdersForRiskReview>>[number];
 
 export async function getFakeOrderDashboard(storeId: string, filter: FakeOrderFilter, search = "") {
   const orders = await getOrdersForRiskReview(storeId);
+  const courierScores = await loadCourierScores(storeId, orders);
   const assessed = orders.map((order) => ({
-    assessment: assessOrderRisk(order, orders),
+    assessment: assessOrderRisk(order, orders, courierScores),
     order
   }));
   const visible = assessed.filter(({ assessment, order }) => matchesFilter(assessment.level, order.verificationStatus, filter) && matchesSearch(order, search));
@@ -33,9 +36,10 @@ export async function getFakeOrderDashboard(storeId: string, filter: FakeOrderFi
 
 export async function getVerificationQueue(storeId: string, search = "") {
   const orders = await getOrdersForRiskReview(storeId);
+  const courierScores = await loadCourierScores(storeId, orders);
   const queue = orders
     .map((order) => ({
-      assessment: assessOrderRisk(order, orders),
+      assessment: assessOrderRisk(order, orders, courierScores),
       order
     }))
     .filter(({ assessment, order }) => {
@@ -55,7 +59,7 @@ export async function getFakeOrderDetails(storeId: string, orderId: string) {
   if (!order) return null;
 
   const relatedOrders = orders.filter((candidate) => normalizePhone(candidate.customerPhone) === normalizePhone(order.customerPhone));
-  const assessment = assessOrderRisk(order, orders);
+  const assessment = assessOrderRisk(order, orders, await loadCourierScores(storeId, [order]));
 
   return {
     assessment,
@@ -112,7 +116,19 @@ export async function returnOrderToNormalQueue(storeId: string, orderId: string)
   return true;
 }
 
-export function assessOrderRisk(order: RiskOrder, allOrders: RiskOrder[]): RiskAssessment {
+/**
+ * Cached courier delivery history, keyed by canonical 01XXXXXXXXX phone.
+ *
+ * Passed in rather than fetched so the risk engine stays synchronous and
+ * network-free: list rendering must not depend on a carrier being reachable.
+ */
+export type CourierScoreLookup = Map<string, { successRatio: number | null; totalParcels: number }>;
+
+export function assessOrderRisk(
+  order: RiskOrder,
+  allOrders: RiskOrder[],
+  courierScores?: CourierScoreLookup
+): RiskAssessment {
   const factors: RiskFactor[] = [];
   const phone = normalizePhone(order.customerPhone);
   const samePhoneOrders = allOrders.filter((candidate) => normalizePhone(candidate.customerPhone) === phone);
@@ -129,6 +145,17 @@ export function assessOrderRisk(order: RiskOrder, allOrders: RiskOrder[]): RiskA
   if (order.customer?.flagStatus === "WATCHLIST") factors.push({ label: "Customer is on watchlist", points: 20 });
   if (order.customer?.flagStatus === "BLOCKED") factors.push({ label: "Customer is blocked", points: 40 });
 
+  const courierScore = courierScores?.get(courierPhoneKey(order.customerPhone));
+  const courierRatio = courierScore?.successRatio ?? null;
+
+  if (courierScore && courierRatio !== null) {
+    if (courierRatio < 40 && courierScore.totalParcels >= 5) {
+      factors.push({ label: "Poor courier delivery history", points: 20 });
+    } else if (courierRatio < 60 && courierScore.totalParcels >= 10) {
+      factors.push({ label: "Weak courier delivery history", points: 12 });
+    }
+  }
+
   const score = Math.min(100, factors.reduce((total, factor) => total + factor.points, 0));
 
   return {
@@ -136,6 +163,18 @@ export function assessOrderRisk(order: RiskOrder, allOrders: RiskOrder[]): RiskA
     level: riskLevelFromScore(score),
     score
   };
+}
+
+/**
+ * Cache-only, and deliberately failure-tolerant: courier history is advisory,
+ * so a database hiccup here must degrade the score, never break the page.
+ */
+async function loadCourierScores(storeId: string, orders: Array<{ customerPhone: string }>) {
+  try {
+    return await getCachedCourierScoreMap(storeId, orders.map((order) => order.customerPhone));
+  } catch {
+    return new Map() as CourierScoreLookup;
+  }
 }
 
 function riskLevelFromScore(score: number): RiskLevel {
@@ -163,6 +202,11 @@ function uniqueBlockedCustomers(orders: RiskOrder[]) {
 
 function normalizePhone(phone: string) {
   return phone.replace(/\D/g, "");
+}
+
+/** Matches the canonical form the courier score cache is keyed by. */
+function courierPhoneKey(phone: string) {
+  return normalizeBangladeshPhone(phone) ?? "";
 }
 
 function isCod(paymentMethodType: string) {

@@ -1,10 +1,12 @@
 import { CourierError } from "../../courier-errors";
 import { redactSecrets } from "../../courier-http";
 import type {
+  BalanceResult,
   CourierContext,
   CourierProvider,
   CreateShipmentInput,
   CreateShipmentResult,
+  CustomerScoreResult,
   GetStatusInput,
   ShipmentStatusResult
 } from "../provider.types";
@@ -85,6 +87,8 @@ export const steadfastProvider: CourierProvider = {
       secret: true
     }
   ],
+  checkCustomer,
+  getBalance,
   getStatus,
   key: "steadfast",
   label: "Steadfast",
@@ -179,22 +183,86 @@ async function getStatus(
     : new CourierError("NOT_FOUND", "The courier has no record of this consignment.");
 }
 
-/** The cheapest authenticated read — a 200 proves key + secret are both valid. */
-async function testConnection(context: CourierContext) {
+async function getBalance(context: CourierContext): Promise<BalanceResult> {
   const data = await steadfastRequest<BalanceResponse>(context, {
     method: "GET",
     path: "/get_balance",
     retry: true
   });
+  const amount = Number(data.current_balance ?? 0);
 
-  const balance = Number(data.current_balance ?? 0);
+  return { amount: Number.isFinite(amount) ? amount : 0, currency: "BDT" };
+}
+
+/**
+ * The customer delivery-history check.
+ *
+ * `/fraud_check/{phone}` is NOT part of the published V1 documentation — it is
+ * undocumented but works against live merchant accounts, and we chose to depend
+ * on it deliberately. The consequence is that its response shape is not
+ * contractual, so parsing is tolerant: counts are read from the envelope or a
+ * nested `data` object under any of the spellings seen in the wild, and an
+ * unrecognised shape raises a clean error the UI renders as "couldn't check"
+ * rather than a broken card.
+ */
+async function checkCustomer(
+  input: { phone: string },
+  context: CourierContext
+): Promise<CustomerScoreResult> {
+  const data = await steadfastRequest<Record<string, unknown>>(context, {
+    method: "GET",
+    path: `/fraud_check/${encodeURIComponent(input.phone)}`,
+    retry: true
+  });
+
+  const source = pickSource(data);
+  const totalParcels = readCount(source, ["total_parcels", "totalParcels", "total_order", "total"]);
+  const totalDelivered = readCount(source, ["total_delivered", "totalDelivered", "delivered"]);
+
+  if (totalParcels === null || totalDelivered === null) {
+    throw new CourierError(
+      "UNKNOWN",
+      "The courier's delivery-history check returned a response we could not read."
+    );
+  }
 
   return {
-    message: Number.isFinite(balance)
-      ? `Connected. Current balance ৳${balance.toLocaleString("en-BD")}.`
-      : "Connected.",
-    ok: true
+    raw: redactSecrets(data),
+    totalCancelled: readCount(source, ["total_cancelled", "totalCancelled", "cancelled"]),
+    totalDelivered,
+    totalParcels
   };
+}
+
+function pickSource(data: Record<string, unknown>) {
+  const nested = data.data;
+
+  return nested && typeof nested === "object" && !Array.isArray(nested)
+    ? (nested as Record<string, unknown>)
+    : data;
+}
+
+function readCount(source: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = source[key];
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) {
+      return Number(value);
+    }
+  }
+
+  return null;
+}
+
+/** The cheapest authenticated read — a 200 proves key + secret are both valid. */
+async function testConnection(context: CourierContext) {
+  const { amount } = await getBalance(context);
+
+  return { message: `Connected. Current balance ৳${amount.toLocaleString("en-BD")}.`, ok: true };
 }
 
 function toNullableString(value: number | string | null | undefined) {
