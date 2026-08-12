@@ -1,7 +1,12 @@
 import { prisma } from "@dash/db";
 
 type OrderStatus = "PENDING" | "CONFIRMED" | "PROCESSING" | "COMPLETED" | "CANCELLED";
-type FulfillmentStatus = "UNFULFILLED" | "PARTIALLY_FULFILLED" | "FULFILLED" | "RETURNED";
+export type FulfillmentStatus =
+  | "UNFULFILLED"
+  | "SHIPPED"
+  | "PARTIALLY_FULFILLED"
+  | "FULFILLED"
+  | "RETURNED";
 type PaymentStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED" | "CANCELLED";
 
 export async function getOrdersForStore(storeId: string) {
@@ -40,7 +45,26 @@ export async function getOrderByIdForStore(storeId: string, orderId: string) {
 export async function updateOrderStatusForStore(
   storeId: string,
   orderId: string,
-  status: OrderStatus,
+  status: OrderStatus
+) {
+  return prisma.order.updateMany({
+    where: {
+      id: orderId,
+      storeId
+    },
+    data: {
+      status
+    }
+  });
+}
+
+/**
+ * The only writer of fulfillmentStatus outside checkout. Owned by the courier
+ * layer (shipment status projection) and by an explicit seller override.
+ */
+export async function updateOrderFulfillmentStatusForStore(
+  storeId: string,
+  orderId: string,
   fulfillmentStatus: FulfillmentStatus
 ) {
   return prisma.order.updateMany({
@@ -49,8 +73,7 @@ export async function updateOrderStatusForStore(
       storeId
     },
     data: {
-      fulfillmentStatus,
-      status
+      fulfillmentStatus
     }
   });
 }

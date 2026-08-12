@@ -139,9 +139,27 @@ enum CustomerFlagStatus {
 
 enum FulfillmentStatus {
   UNFULFILLED
+  SHIPPED
   PARTIALLY_FULFILLED
   FULFILLED
   RETURNED
+}
+
+enum ShipmentStatus {
+  PENDING
+  REQUESTED
+  BOOKED
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  PARTIALLY_DELIVERED
+  RETURNED
+  CANCELLED
+  HOLD
+  LOST
+  FAILED
+  UNKNOWN
 }
 
 enum SupplierStatus {
@@ -346,6 +364,10 @@ model Store {
   payments       Payment[]
   supportTickets SupportTicket[]
   systemLogs     SystemLog[]
+  courierAccounts CourierAccount[]
+  shipments      Shipment[]
+  deliveryEvents DeliveryEvent[]
+  courierCustomerScores CourierCustomerScore[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @default(now()) @updatedAt
 
@@ -1016,6 +1038,7 @@ model Order {
   shippingAddress   Address?          @relation("OrderShippingAddress", fields: [shippingAddressId], references: [id], onDelete: SetNull)
   billingAddress    Address?          @relation("OrderBillingAddress", fields: [billingAddressId], references: [id], onDelete: SetNull)
   items             OrderItem[]
+  shipments         Shipment[]
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @default(now()) @updatedAt
 
@@ -1043,4 +1066,102 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId])
+}
+
+model CourierAccount {
+  id                String     @id @default(cuid())
+  storeId           String
+  provider          String
+  label             String?
+  isEnabled         Boolean    @default(true)
+  isDefault         Boolean    @default(false)
+  credentialsCipher String?
+  credentialsPublic Json?
+  secretHint        String?
+  metadata          Json?
+  lastTestedAt      DateTime?
+  lastTestStatus    String?
+  lastTestMessage   String?
+  balanceAmount     Decimal?   @db.Decimal(12, 2)
+  balanceCheckedAt  DateTime?
+  store             Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  shipments         Shipment[]
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @default(now()) @updatedAt
+
+  @@unique([storeId, provider])
+  @@index([storeId])
+}
+
+model Shipment {
+  id                 String          @id @default(cuid())
+  storeId            String
+  orderId            String
+  provider           String
+  courierAccountId   String?
+  status             ShipmentStatus  @default(PENDING)
+  providerStatus     String?
+  providerShipmentId String?
+  trackingCode       String?
+  invoiceReference   String
+  codAmount          Decimal         @default(0) @db.Decimal(12, 2)
+  labelUrl           String?
+  requestHash        String?
+  attemptCount       Int             @default(0)
+  lastError          String?
+  lastSyncedAt       DateTime?
+  bookedAt           DateTime?
+  deliveredAt        DateTime?
+  cancelledAt        DateTime?
+  rawResponse        Json?
+  createdByUserId    String?
+  store              Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  order              Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  courierAccount     CourierAccount? @relation(fields: [courierAccountId], references: [id], onDelete: SetNull)
+  events             DeliveryEvent[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @default(now()) @updatedAt
+
+  @@unique([storeId, orderId, provider])
+  @@index([storeId, status])
+  @@index([orderId])
+  @@index([trackingCode])
+  @@index([courierAccountId])
+}
+
+model DeliveryEvent {
+  id             String         @id @default(cuid())
+  storeId        String
+  shipmentId     String
+  status         ShipmentStatus
+  providerStatus String?
+  message        String?
+  source         String         @default("SYSTEM")
+  occurredAt     DateTime       @default(now())
+  payload        Json?
+  store          Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  shipment       Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  createdAt      DateTime       @default(now())
+
+  @@index([shipmentId, occurredAt])
+  @@index([storeId])
+}
+
+model CourierCustomerScore {
+  id             String   @id @default(cuid())
+  storeId        String
+  provider       String
+  phone          String
+  totalParcels   Int      @default(0)
+  totalDelivered Int      @default(0)
+  totalCancelled Int      @default(0)
+  successRatio   Decimal? @db.Decimal(5, 2)
+  raw            Json?
+  checkedAt      DateTime @default(now())
+  store          Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@unique([storeId, provider, phone])
+  @@index([storeId])
 }
