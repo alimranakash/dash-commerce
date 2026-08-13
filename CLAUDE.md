@@ -42,9 +42,11 @@ Monorepo: `apps/web` (the whole product), `apps/worker` (placeholder), `packages
 | `dash.com`, `localhost` | marketing | `/` |
 | `app.dash.com` | seller app + platform admin | `/dashboard/**`, `/admin/**`, `/login`, `/register` |
 | `<slug>.dash.com`, `<slug>.localhost` | tenant storefront | rewritten to `/s/<slug>/**` |
-| any other domain | custom-domain storefront | rewritten to `/storefront-domain/<domain>/**` |
+| any other domain | custom-domain storefront | resolved to a store, then rewritten to `/s/<slug>/**` |
 
 `/admin`, `/dashboard`, `/login`, `/register` are never rewritten, so they stay reachable on any host.
+
+A custom domain is resolved by `resolveCustomDomainRoute` in [modules/domains/domain-routing.ts](apps/web/src/modules/domains/domain-routing.ts) — a cached lookup that only matches a **verified** `StoreDomain` row of type `CUSTOM` on a live store. Unresolved hosts are rewritten to `/domain-not-configured`; nothing renders a storefront for them. Because the storefront components hardcode `/s/<slug>/…` hrefs, the proxy also 308-redirects `/s/<slug>/*` back to the bare path on a custom domain, which is what keeps `worzen.com/products` in the address bar. `proxy.ts` is a Node-runtime entry (Next builds `proxy` server-side only), so it can query Prisma directly.
 
 **`app/s/[slug]/**` files are one-line re-exports of `app/storefront/[slug]/**`.** `/s/` is the rewrite target; `/storefront/` holds the real implementations. When adding a storefront route, write it under `app/storefront/[slug]/` and add the matching `export { default } from ...` stub under `app/s/[slug]/`.
 

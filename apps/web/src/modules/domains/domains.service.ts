@@ -1,5 +1,6 @@
 import { createSystemLog } from "../../lib/system-log";
 import { canUseCustomDomain } from "../billing/subscription-limits";
+import { invalidateCustomDomainRoute } from "./domain-routing";
 import {
   countCustomDomains,
   createCustomDomains,
@@ -133,6 +134,12 @@ export async function addCustomDomain(
 
   await createCustomDomains({ hostnames, storeId: scope.storeId });
 
+  // Drops any negative routing cache entry left by an earlier request to this
+  // hostname, so the domain starts working the moment it is verified.
+  for (const hostname of hostnames) {
+    invalidateCustomDomainRoute(hostname);
+  }
+
   await logDomainChange(scope, `Custom domain added (${hostnames.join(", ")})`, {
     action: "add",
     domains: hostnames,
@@ -167,6 +174,7 @@ export async function removeCustomDomain(scope: StoreScope, input: { domainId: s
   }
 
   await deleteStoreDomain({ domainId: domain.id, storeId: scope.storeId });
+  invalidateCustomDomainRoute(domain.domain);
 
   // A store must always have exactly one primary domain, so removing the primary
   // hands the flag back to the built-in subdomain, which is always reachable.
@@ -234,7 +242,14 @@ export async function setPrimaryDomain(scope: StoreScope, input: { domainId: str
  * writes `verifiedAt`.
  */
 export async function markCustomDomainVerified(scope: StoreScope, domainId: string) {
+  const domain = await findStoreDomainById({ domainId, storeId: scope.storeId });
+
   await setStoreDomainVerification({ domainId, storeId: scope.storeId, verifiedAt: new Date() });
+
+  if (domain) {
+    invalidateCustomDomainRoute(domain.domain);
+  }
+
   await logDomainChange(scope, "Custom domain verified", { action: "verify", domainId });
 }
 
@@ -242,6 +257,10 @@ export async function markCustomDomainUnverified(scope: StoreScope, domainId: st
   const domain = await findStoreDomainById({ domainId, storeId: scope.storeId });
 
   await setStoreDomainVerification({ domainId, storeId: scope.storeId, verifiedAt: null });
+
+  if (domain) {
+    invalidateCustomDomainRoute(domain.domain);
+  }
 
   // Losing verification also loses the right to be the canonical address.
   if (domain?.isPrimary) {
