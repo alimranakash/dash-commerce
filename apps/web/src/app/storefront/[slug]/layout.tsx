@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { MarketingTags } from "../../../modules/marketing/components/marketing-tags";
+import {
+  getMarketingMetaTags,
+  getMarketingTagPlan
+} from "../../../modules/marketing/marketing.service";
 import { ScrollToTopButton } from "../../../modules/storefront/components/scroll-to-top-button";
 import { StorefrontThemeProvider } from "../../../modules/storefront/themes/storefront-theme-provider";
 import {
@@ -33,12 +38,14 @@ export async function generateMetadata({ params }: StorefrontLayoutProps): Promi
   const description =
     store.themeSetting?.heroSubtitle ?? store.setting?.tagline ?? `Shop ${store.name} online.`;
   const canonical = primaryDomain ? `https://${primaryDomain.domain}` : `/s/${store.slug}`;
+  const verification = await getMarketingMetaTags(store.id);
 
   return {
     alternates: {
       canonical
     },
     description,
+    ...(verification ? { other: verification } : {}),
     ...(store.setting?.faviconUrl
       ? {
           icons: {
@@ -66,7 +73,10 @@ export default async function StorefrontLayout({ children, params }: StorefrontL
     return <div data-storefront-layout="true">{children}</div>;
   }
 
-  const settings = await getStorefrontThemeSettings(store.id);
+  const [settings, marketing] = await Promise.all([
+    getStorefrontThemeSettings(store.id),
+    getMarketingTagPlan(store.id)
+  ]);
   const themeContext = createStorefrontThemeContext({
     settings,
     store
@@ -74,10 +84,15 @@ export default async function StorefrontLayout({ children, params }: StorefrontL
 
   return (
     <StorefrontThemeProvider value={themeContext}>
+      {/* Analytics only ever mounts on a storefront surface — never on /dashboard
+          or /admin, which render outside this layout entirely. */}
+      <MarketingTags tags={marketing.head} />
+      <MarketingTags tags={marketing.bodyStart} />
       {children}
       {/* Inside the theme scope so the fixed button inherits this store's colour
           tokens and template attribute; mounted here, once, instead of per footer. */}
       <ScrollToTopButton />
+      <MarketingTags tags={marketing.bodyEnd} />
     </StorefrontThemeProvider>
   );
 }

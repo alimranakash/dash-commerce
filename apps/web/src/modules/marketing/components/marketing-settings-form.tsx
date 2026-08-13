@@ -118,7 +118,7 @@ export function MarketingSettingsForm({
 
       <aside className="flex items-start gap-3 rounded-xl border border-[#e5e0f7] bg-[#f7f4ff] px-4 py-3 text-xs leading-5 text-[#655d78]">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#7548f5]" />
-        Saved settings are not injected into your storefront yet — that arrives with the next release. Every change here is recorded in the store activity log with who made it.
+        These tags load on your storefront only — never on your dashboard, so your own admin activity is not tracked. Changes go live on the next page load, and every change here is recorded in the store activity log with who made it.
       </aside>
 
       {canManage ? (

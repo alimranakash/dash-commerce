@@ -1115,7 +1115,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
           "Conversions API token encrypt করে রাখা হয়, browser-এ কখনও যায় না — শুধু শেষ চারটি character দেখা যায়।",
           "Custom Tracking-এ শুধু tracking tag এবং পরিচিত analytics host allow করা হয়; বাকিটা save-এর সময় reject হয়।",
           "প্রতিটি change activity log-এ কে করেছে সহ record হয়।",
-          "Storefront-এ script injection পরের release-এ আসছে।"
+          "Storefront-এ tag শুধু আপনার store-এ load হয়, dashboard-এ নয় — নিজের admin activity track হবে না।"
         ],
         tips: [
           "পুরো meta tag paste করলেও চলবে — আমরা content value বের করে নিই।",

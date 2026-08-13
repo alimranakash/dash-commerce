@@ -51,6 +51,15 @@ const idPatterns = {
 
 export type MarketingIdField = keyof typeof idPatterns;
 
+/**
+ * The patterns alone, for re-validating stored values at render time. Kept in
+ * this module so the settings form and the storefront can never drift apart on
+ * what counts as a well-formed ID.
+ */
+export const marketingIdPatterns: Record<MarketingIdField, RegExp> = Object.fromEntries(
+  Object.entries(idPatterns).map(([key, value]) => [key, value.pattern])
+) as Record<MarketingIdField, RegExp>;
+
 export const marketingIdHints: Record<MarketingIdField, { example: string; message: string }> =
   Object.fromEntries(
     Object.entries(idPatterns).map(([key, value]) => [

@@ -1,6 +1,12 @@
+import { cache } from "react";
 import { createSystemLog } from "../../lib/system-log";
 import { encryptSecret, isSecretEncryptionConfigured, secretHintFor } from "../../lib/secret-box";
 import { validateCustomTrackingCode } from "./marketing-code";
+import {
+  buildMarketingTags,
+  emptyMarketingTagPlan,
+  type MarketingTagPlan
+} from "./marketing-tags";
 import {
   getMarketingSettingsRecord,
   upsertMarketingSettingsRecord,
@@ -157,8 +163,9 @@ export async function updateMarketingSettings(params: {
 }
 
 /**
- * Re-runs the allowlist on stored code. Phase 2 calls this before injecting, so
- * a row edited directly in the database still cannot ship arbitrary markup.
+ * Re-runs the allowlist on stored code, so a row edited directly in the
+ * database still cannot ship arbitrary markup. `buildMarketingTags` applies the
+ * same check per slot; this stays for callers that need a single field.
  */
 export function readSafeCustomCode(value: string | null | undefined) {
   if (!value?.trim()) {
@@ -166,6 +173,48 @@ export function readSafeCustomCode(value: string | null | undefined) {
   }
 
   return validateCustomTrackingCode(value).length === 0 ? value : null;
+}
+
+/**
+ * What the storefront renders. Deliberately its own read path: it never touches
+ * the token columns, so a marketing secret cannot leak into a public page even
+ * by accident.
+ *
+ * Cached per request — the layout builds the tag plan and `generateMetadata`
+ * reads the verification tags out of it, which would otherwise be two queries
+ * for the same row on every storefront render.
+ */
+export const getMarketingTagPlan = cache(async (storeId: string): Promise<MarketingTagPlan> => {
+  const record = await getMarketingSettingsRecord(storeId);
+
+  if (!record) {
+    return emptyMarketingTagPlan;
+  }
+
+  return buildMarketingTags({
+    customBodyCode: record.customBodyCode,
+    customEnabled: record.customEnabled,
+    customFooterCode: record.customFooterCode,
+    customHeaderCode: record.customHeaderCode,
+    ga4MeasurementId: record.ga4MeasurementId,
+    googleAdsConversionId: record.googleAdsConversionId,
+    googleSiteVerification: record.googleSiteVerification,
+    gtmContainerId: record.gtmContainerId,
+    metaDomainVerification: record.metaDomainVerification,
+    metaPixelId: record.metaPixelId,
+    tiktokPixelId: record.tiktokPixelId
+  });
+});
+
+/** `generateMetadata`-shaped verification tags, or undefined when there are none. */
+export async function getMarketingMetaTags(storeId: string) {
+  const plan = await getMarketingTagPlan(storeId);
+
+  if (plan.meta.length === 0) {
+    return undefined;
+  }
+
+  return Object.fromEntries(plan.meta.map((entry) => [entry.name, entry.content]));
 }
 
 function resolveTokenAction(params: {
