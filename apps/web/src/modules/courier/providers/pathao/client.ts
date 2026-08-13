@@ -1,5 +1,5 @@
 import { CourierError } from "../../courier-errors";
-import { courierRequest } from "../../courier-http";
+import { courierRequest, extractFieldErrors } from "../../courier-http";
 import type { CourierContext } from "../provider.types";
 
 /**
@@ -182,42 +182,26 @@ function assertEnvelopeOk(data: unknown) {
     return;
   }
 
-  const message = describeError(envelope);
+  const message = envelope.message?.trim() || "Pathao rejected the request.";
+  // Same extractor the HTTP layer uses, so a field error is surfaced whether
+  // Pathao reports the failure as an HTTP status or inside a 200 envelope.
+  const details = extractFieldErrors(data);
 
   if (code === 401 || code === 403) {
-    throw new CourierError("AUTH", message, { status: code });
+    throw new CourierError("AUTH", message, { details, status: code });
   }
 
   if (code === 404) {
-    throw new CourierError("NOT_FOUND", message, { status: code });
+    throw new CourierError("NOT_FOUND", message, { details, status: code });
   }
 
   if (code === 429) {
-    throw new CourierError("RATE_LIMIT", message, { status: code });
+    throw new CourierError("RATE_LIMIT", message, { details, status: code });
   }
 
   if (code >= 500) {
-    throw new CourierError("PROVIDER_DOWN", message, { status: code });
+    throw new CourierError("PROVIDER_DOWN", message, { details, status: code });
   }
 
-  throw new CourierError("VALIDATION", message, { status: code });
-}
-
-/** Pathao returns field errors as `{ errors: { field: ["msg"] } }`. */
-function describeError(envelope: PathaoEnvelope) {
-  const base = envelope.message?.trim() || "Pathao rejected the request.";
-
-  if (!envelope.errors || typeof envelope.errors !== "object") {
-    return base;
-  }
-
-  const details = Object.entries(envelope.errors as Record<string, unknown>)
-    .map(([field, value]) => {
-      const text = Array.isArray(value) ? value.join(", ") : String(value);
-
-      return `${field}: ${text}`;
-    })
-    .join("; ");
-
-  return details ? `${base} (${details})` : base;
+  throw new CourierError("VALIDATION", message, { details, status: code });
 }

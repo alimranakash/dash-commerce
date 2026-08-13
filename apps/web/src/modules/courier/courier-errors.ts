@@ -16,12 +16,15 @@ export type CourierErrorKind =
 
 type CourierErrorOptions = {
   cause?: unknown;
+  /** Per-field carrier messages, e.g. `store_id: Wrong Store selected`. */
+  details?: string[];
   /** Only ever true for reads. A create is never retried automatically. */
   retryable?: boolean;
   status?: number;
 };
 
 export class CourierError extends Error {
+  readonly details: string[];
   readonly kind: CourierErrorKind;
   readonly retryable: boolean;
   readonly status: number | undefined;
@@ -30,6 +33,7 @@ export class CourierError extends Error {
     super(message, ...(options.cause !== undefined ? [{ cause: options.cause }] : []));
 
     this.name = "CourierError";
+    this.details = options.details ?? [];
     this.kind = kind;
     this.retryable = options.retryable ?? defaultRetryable(kind);
     this.status = options.status;
@@ -56,6 +60,24 @@ export function toCourierError(error: unknown) {
  * to settings, not leave them re-clicking a button that will never work.
  */
 export function courierErrorMessage(error: CourierError) {
+  return withDetails(baseMessage(error), error.details);
+}
+
+/**
+ * Carrier field errors are the whole point of a validation failure — a seller
+ * needs to know *which* field and *why*, not that "errors" exist. Pathao's
+ * envelope, for instance, pairs a useless "Please fix the given errors" message
+ * with an `errors` object naming the exact fields.
+ */
+function withDetails(message: string, details: string[]) {
+  if (details.length === 0) {
+    return message;
+  }
+
+  return `${message.replace(/[.\s]+$/, "")}: ${details.join("; ")}`;
+}
+
+function baseMessage(error: CourierError) {
   switch (error.kind) {
     case "AUTH":
       // A 401/403 does not always mean "wrong keys" — Steadfast also answers

@@ -104,30 +104,65 @@ async function sendOnce<T>(request: CourierRequestInit): Promise<CourierResponse
 
 function statusError(status: number, data: unknown, text: string) {
   const message = extractMessage(data) ?? `The courier returned HTTP ${status}.`;
+  // Carried on every kind, not just VALIDATION: an auth or not-found body can
+  // name a field too, and dropping it here is what produced the useless
+  // "Please fix the given errors" with no indication of what to fix.
+  const details = extractFieldErrors(data);
 
   if (status === 401 || status === 403) {
-    return new CourierError("AUTH", message, { status });
+    return new CourierError("AUTH", message, { details, status });
   }
 
   if (status === 422 || status === 400) {
-    return new CourierError("VALIDATION", message, { status });
+    return new CourierError("VALIDATION", message, { details, status });
   }
 
   // Distinguished from UNKNOWN on purpose: only an explicit not-found lets
   // timeout reconciliation conclude that no parcel was ever created.
   if (status === 404) {
-    return new CourierError("NOT_FOUND", message, { status });
+    return new CourierError("NOT_FOUND", message, { details, status });
   }
 
   if (status === 429) {
-    return new CourierError("RATE_LIMIT", message, { status });
+    return new CourierError("RATE_LIMIT", message, { details, status });
   }
 
   if (status >= 500) {
-    return new CourierError("PROVIDER_DOWN", message, { status });
+    return new CourierError("PROVIDER_DOWN", message, { details, status });
   }
 
-  return new CourierError("UNKNOWN", message || text.slice(0, 200), { status });
+  return new CourierError("UNKNOWN", message || text.slice(0, 200), { details, status });
+}
+
+/**
+ * Pulls `{ errors: { field: ["reason"] } }` into `field: reason` strings.
+ *
+ * Both carriers are Laravel apps, so this validation-error shape is shared — one
+ * generic extractor keeps every adapter's field errors visible without each
+ * having to remember to do it.
+ */
+export function extractFieldErrors(data: unknown): string[] {
+  if (!data || typeof data !== "object") {
+    return [];
+  }
+
+  const errors = (data as Record<string, unknown>).errors;
+
+  if (!errors || typeof errors !== "object" || Array.isArray(errors)) {
+    return [];
+  }
+
+  return Object.entries(errors as Record<string, unknown>)
+    .map(([field, value]) => {
+      const reason = Array.isArray(value)
+        ? value.filter((entry): entry is string => typeof entry === "string").join(", ")
+        : typeof value === "string"
+          ? value
+          : "";
+
+      return reason ? `${field} — ${reason.replace(/\s{2,}/g, " ").trim()}` : "";
+    })
+    .filter((entry) => entry.length > 0);
 }
 
 function parseJson(text: string): unknown {

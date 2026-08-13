@@ -4,8 +4,12 @@ import type { CreateShipmentInput } from "../provider.types";
 /**
  * Domain input → Pathao's `/orders` payload.
  *
- * Limits come from the published parameter table: name 3–100, address 10–220,
- * phone 11 digits, weight 0.5–10 kg, `amount_to_collect` an integer.
+ * Limits come from the published parameter table: address 10–220, phone 11
+ * digits, weight 0.5–10 kg, `amount_to_collect` an integer.
+ *
+ * One exception, verified against the sandbox: the doc says `recipient_name` may
+ * be 3–100 characters, but the API rejects anything over 64 with "The recipient
+ * name must be between 3 and 64 characters." The tighter real limit wins.
  *
  * Address is sent as free text only. `recipient_city` / `recipient_zone` /
  * `recipient_area` are optional and Pathao resolves them from the address
@@ -21,6 +25,8 @@ const onDemandDelivery = 12;
 const parcelItemType = 2;
 const minimumWeightKg = 0.5;
 const maximumWeightKg = 10;
+/** Enforced by the API at 64, not the 100 the documentation claims. */
+const maximumNameLength = 64;
 
 export type PathaoOrderPayload = {
   amount_to_collect: number;
@@ -42,7 +48,7 @@ export function toPathaoOrderPayload(
   input: CreateShipmentInput,
   storeId: number
 ): PathaoOrderPayload {
-  const name = clampText(input.recipient.name, 3, 100);
+  const name = clampText(input.recipient.name, 3, maximumNameLength);
 
   if (!name) {
     throw new CourierError("VALIDATION", "Pathao needs a recipient name of at least 3 characters.");

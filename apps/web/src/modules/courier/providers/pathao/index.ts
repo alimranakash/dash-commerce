@@ -212,6 +212,16 @@ async function testConnection(context: CourierContext) {
     .map((store) => `${store.store_name ?? "Store"} (${store.store_id})`)
     .join(", ");
 
+  // A store id that does not belong to this account is only rejected at send
+  // time, with a bare "Wrong Store selected". Catching it here means the seller
+  // finds out while setting up rather than on a real parcel.
+  if (configured && !stores.some((store) => String(store.store_id) === configured)) {
+    return {
+      message: `Connected, but store ${configured} does not belong to this Pathao account — sending will fail. Pick one of: ${summary}.`,
+      ok: false
+    };
+  }
+
   return {
     message: configured
       ? `Connected. Using store ${configured}. Available: ${summary}.`
@@ -250,7 +260,10 @@ async function resolveStoreId(context: CourierContext) {
       "VALIDATION",
       active.length === 0
         ? "This Pathao account has no active pickup store. Create one in the Pathao merchant panel first."
-        : "Several Pathao pickup stores exist and none is marked default. Enter the Store ID to use in courier settings."
+        : `Several Pathao pickup stores exist and none is marked default. Enter a Store ID in courier settings — for example ${active
+            .slice(0, 3)
+            .map((store) => `${store.store_name ?? "Store"} (${store.store_id})`)
+            .join(", ")}.`
     );
   }
 
