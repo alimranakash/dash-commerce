@@ -65,6 +65,7 @@ const reportLinks = [
 
 const settingsLinks = [
   { href: "/dashboard/settings/general", label: "General" },
+  { href: "/dashboard/settings/domains", label: "Domains" },
   { href: "/dashboard/settings/marketing", label: "Marketing" },
   { href: "/dashboard/settings/courier", label: "Courier" },
   { href: "/dashboard/settings/invoice", label: "Invoice" },

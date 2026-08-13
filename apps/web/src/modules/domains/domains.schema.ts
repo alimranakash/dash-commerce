@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isPlatformHostname } from "../../lib/host-routing";
+import type { DnsInstruction } from "./domain-verification";
 
 /**
  * A store gets one `<slug>.dash.com` row for free; this caps the *custom* rows.
@@ -129,13 +130,24 @@ export type StoreDomainRefInput = z.infer<typeof storeDomainRefSchema>;
 export type StoreDomainView = {
   canSetPrimary: boolean;
   createdAt: Date;
+  dnsInstructions: DomainDnsInstruction[];
   domain: string;
   id: string;
   isPlatformDomain: boolean;
   isPrimary: boolean;
   isVerified: boolean;
+  /** Last DNS check, `null` until the seller has verified once. */
+  lastCheckDetail: string | null;
+  lastCheckStatus: string | null;
+  lastCheckedAt: Date | null;
   verifiedAt: Date | null;
 };
+
+/**
+ * Re-exported so the settings components can stay on this module's types without
+ * importing `domain-verification.ts`, which pulls in `node:dns`.
+ */
+export type DomainDnsInstruction = DnsInstruction;
 
 export type StoreDomainsView = {
   canAddCustomDomain: boolean;
@@ -144,4 +156,6 @@ export type StoreDomainsView = {
   maxCustomDomains: number;
   planAllowsCustomDomain: boolean;
   platformDomain: string | null;
+  /** False when the server has no PLATFORM_DOMAIN_* target to hand out. */
+  platformDnsConfigured: boolean;
 };

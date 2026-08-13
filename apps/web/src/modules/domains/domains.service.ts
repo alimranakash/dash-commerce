@@ -2,6 +2,12 @@ import { createSystemLog } from "../../lib/system-log";
 import { canUseCustomDomain } from "../billing/subscription-limits";
 import { invalidateCustomDomainRoute } from "./domain-routing";
 import {
+  buildDnsInstructions,
+  checkDomainDns,
+  isPlatformDnsConfigured,
+  type DomainCheckResult
+} from "./domain-verification";
+import {
   countCustomDomains,
   createCustomDomains,
   deleteStoreDomain,
@@ -9,6 +15,7 @@ import {
   findPlatformStoreDomain,
   findStoreDomainById,
   listStoreDomains,
+  recordStoreDomainCheck,
   setPrimaryStoreDomain,
   setStoreDomainVerification,
   type StoreDomainRecord
@@ -75,6 +82,7 @@ export async function getStoreDomainsView(scope: StoreScope): Promise<StoreDomai
     domains: domains.map(toDomainView),
     maxCustomDomains: MAX_CUSTOM_DOMAINS_PER_STORE,
     planAllowsCustomDomain,
+    platformDnsConfigured: isPlatformDnsConfigured(),
     platformDomain: platformDomain?.domain ?? null
   };
 }
@@ -237,6 +245,93 @@ export async function setPrimaryDomain(scope: StoreScope, input: { domainId: str
 }
 
 /**
+ * Runs a real DNS lookup for one of the store's domains and records the outcome.
+ *
+ * Verification is idempotent and re-runnable: a domain that stops pointing at us
+ * loses `verifiedAt` on the next check, which immediately makes it unservable
+ * again. That is why the failure branch calls `markCustomDomainUnverified` rather
+ * than just storing a message.
+ */
+export async function verifyCustomDomain(
+  scope: StoreScope,
+  input: { domainId: string }
+): Promise<{ check: DomainCheckResult; domain: string }> {
+  await assertPlanAllowsCustomDomain(scope);
+
+  const parsed = storeDomainRefSchema.safeParse(input);
+
+  if (!parsed.success) {
+    throw new DomainError("Select a domain to verify.");
+  }
+
+  const domain = await findStoreDomainById({
+    domainId: parsed.data.domainId,
+    storeId: scope.storeId
+  });
+
+  if (!domain) {
+    throw new DomainError("That domain is not on this store.");
+  }
+
+  if (domain.type !== "CUSTOM") {
+    throw new DomainError("The built-in store address does not need verification.");
+  }
+
+  if (!consumeVerificationAttempt(domain.id)) {
+    throw new DomainError("Give DNS a moment to settle, then verify again.");
+  }
+
+  const check = await checkDomainDns(domain.domain);
+
+  await recordStoreDomainCheck({
+    detail: check.detail,
+    domainId: domain.id,
+    status: check.status,
+    storeId: scope.storeId
+  });
+
+  // A server that does not know its own address cannot judge anyone's DNS, so
+  // that outcome leaves the stored verification exactly as it was.
+  if (check.status === "platform-not-configured" || check.status === "lookup-failed") {
+    return { check, domain: domain.domain };
+  }
+
+  if (check.status === "verified") {
+    if (!domain.verifiedAt) {
+      await markCustomDomainVerified(scope, domain.id);
+    }
+  } else if (domain.verifiedAt) {
+    await markCustomDomainUnverified(scope, domain.id);
+  }
+
+  return { check, domain: domain.domain };
+}
+
+/**
+ * One check per domain every few seconds. A "Verify" button invites clicking, and
+ * each click is a real outbound DNS query.
+ */
+const verificationAttempts = new Map<string, number>();
+const VERIFICATION_INTERVAL_MS = 5000;
+
+function consumeVerificationAttempt(domainId: string) {
+  const now = Date.now();
+  const previous = verificationAttempts.get(domainId);
+
+  if (previous && now - previous < VERIFICATION_INTERVAL_MS) {
+    return false;
+  }
+
+  if (verificationAttempts.size > 500) {
+    verificationAttempts.clear();
+  }
+
+  verificationAttempts.set(domainId, now);
+
+  return true;
+}
+
+/**
  * Verification write paths, for the DNS-checking pass. They live here so the
  * "verified means servable" rule has a single owner: nothing else in the app
  * writes `verifiedAt`.
@@ -283,11 +378,17 @@ function toDomainView(domain: StoreDomainRecord): StoreDomainView {
   return {
     canSetPrimary: !domain.isPrimary && (isPlatformDomain || Boolean(domain.verifiedAt)),
     createdAt: domain.createdAt,
+    // The platform's own subdomain needs no seller action, so it carries no
+    // instructions — only custom rows do.
+    dnsInstructions: isPlatformDomain ? [] : buildDnsInstructions(domain.domain),
     domain: domain.domain,
     id: domain.id,
     isPlatformDomain,
     isPrimary: domain.isPrimary,
     isVerified: isPlatformDomain || Boolean(domain.verifiedAt),
+    lastCheckDetail: domain.lastCheckDetail,
+    lastCheckStatus: domain.lastCheckStatus,
+    lastCheckedAt: domain.lastCheckedAt,
     verifiedAt: domain.verifiedAt
   };
 }

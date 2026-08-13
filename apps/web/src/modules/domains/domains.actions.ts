@@ -6,7 +6,8 @@ import {
   DomainError,
   addCustomDomain,
   removeCustomDomain,
-  setPrimaryDomain
+  setPrimaryDomain,
+  verifyCustomDomain
 } from "./domains.service";
 
 export type DomainActionState = {
@@ -56,6 +57,32 @@ export async function removeCustomDomainAction(
     return { message: `${result.removed} removed.`, status: "success" };
   } catch (error) {
     return toErrorState(error, "Could not remove that domain.");
+  }
+}
+
+/**
+ * Runs the DNS check. Reports the outcome as `success` only when the domain
+ * really points here — the other statuses are things the seller has to act on, so
+ * they surface as errors even though the check itself worked.
+ */
+export async function verifyCustomDomainAction(
+  _state: DomainActionState,
+  formData: FormData
+): Promise<DomainActionState> {
+  try {
+    const access = await requireStoreManager();
+    const { check } = await verifyCustomDomain(scopeFrom(access), {
+      domainId: text(formData, "domainId")
+    });
+
+    revalidateDomains();
+
+    return {
+      message: check.detail,
+      status: check.status === "verified" ? "success" : "error"
+    };
+  } catch (error) {
+    return toErrorState(error, "Could not check that domain's DNS.");
   }
 }
 

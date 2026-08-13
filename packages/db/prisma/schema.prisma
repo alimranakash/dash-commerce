@@ -389,6 +389,11 @@ model StoreDomain {
   type       StoreDomainType
   isPrimary  Boolean         @default(false)
   verifiedAt DateTime?
+  // Result of the last DNS check, so a seller still sees why a domain failed
+  // after reloading the page. `lastCheckStatus` holds a DomainCheckStatus value.
+  lastCheckedAt   DateTime?
+  lastCheckStatus String?
+  lastCheckDetail String?
   store      Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @default(now()) @updatedAt

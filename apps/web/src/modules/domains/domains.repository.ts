@@ -179,4 +179,28 @@ export async function setStoreDomainVerification(params: {
   });
 }
 
+/**
+ * Records what the last DNS check saw, so the badge and its explanation survive
+ * a page reload instead of living only in the action's response.
+ */
+export async function recordStoreDomainCheck(params: {
+  detail: string;
+  domainId: string;
+  status: string;
+  storeId: string;
+}) {
+  return prisma.storeDomain.updateMany({
+    data: {
+      lastCheckDetail: params.detail,
+      lastCheckStatus: params.status,
+      lastCheckedAt: new Date()
+    },
+    where: {
+      id: params.domainId,
+      storeId: params.storeId,
+      type: "CUSTOM"
+    }
+  });
+}
+
 export type StoreDomainRecord = Awaited<ReturnType<typeof listStoreDomains>>[number];
