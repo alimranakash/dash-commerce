@@ -1,6 +1,9 @@
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
 import { MarketingSettingsForm } from "../../../../modules/marketing/components/marketing-settings-form";
-import { updateMarketingSettingsFormAction } from "../../../../modules/marketing/marketing.actions";
+import {
+  sendMetaTestEventAction,
+  updateMarketingSettingsFormAction
+} from "../../../../modules/marketing/marketing.actions";
 import { getMarketingSettingsView } from "../../../../modules/marketing/marketing.service";
 import { getStoreAccess } from "../../../../modules/stores/queries";
 
@@ -26,6 +29,7 @@ export default async function MarketingSettingsPage() {
         <MarketingSettingsForm
           action={updateMarketingSettingsFormAction}
           canManage={access.canManage}
+          onSendTestEvent={sendMetaTestEventAction}
           settings={settings}
         />
       </section>

@@ -1,8 +1,8 @@
 "use client";
 
-import { AlertTriangle, BarChart3, Code2, Globe2, Lock, Megaphone, Music2, RotateCcw, Save, ShieldCheck } from "lucide-react";
-import { useActionState, useRef, useState, type ComponentType, type ReactNode } from "react";
-import type { MarketingActionState } from "../marketing.actions";
+import { AlertTriangle, BarChart3, Code2, Globe2, Lock, Megaphone, Music2, RotateCcw, Save, Send, ShieldCheck } from "lucide-react";
+import { useActionState, useRef, useState, useTransition, type ComponentType, type ReactNode } from "react";
+import type { MarketingActionState, MetaTestEventState } from "../marketing.actions";
 import { marketingIdHints, type MarketingIdField } from "../marketing.schema";
 import type { MarketingSettingsView } from "../marketing.schema";
 
@@ -16,10 +16,12 @@ const initialState: MarketingActionState = { status: "idle" };
 export function MarketingSettingsForm({
   action,
   canManage,
+  onSendTestEvent,
   settings
 }: {
   action: (state: MarketingActionState, formData: FormData) => Promise<MarketingActionState>;
   canManage: boolean;
+  onSendTestEvent: () => Promise<MetaTestEventState>;
   settings: MarketingSettingsView;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
@@ -28,6 +30,8 @@ export function MarketingSettingsForm({
   const [capiEnabled, setCapiEnabled] = useState(settings.metaCapiEnabled);
   const [replacingToken, setReplacingToken] = useState(!settings.hasCapiToken);
   const [clearToken, setClearToken] = useState(false);
+  const [testResult, setTestResult] = useState<MetaTestEventState | null>(null);
+  const [isTesting, startTest] = useTransition();
   const disabled = !canManage;
 
   return (
@@ -58,6 +62,33 @@ export function MarketingSettingsForm({
               <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#7548f5]" />
               Server-side only. The token is encrypted before it is stored, is never sent to the browser, and never appears in your storefront HTML.
             </p>
+
+            {settings.hasCapiToken ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#dcd9e8] bg-white px-3 text-xs font-semibold text-[#555762] hover:bg-[#f8f7fc] disabled:opacity-60"
+                  disabled={disabled || isTesting}
+                  onClick={() =>
+                    startTest(async () => {
+                      setTestResult(await onSendTestEvent());
+                    })
+                  }
+                  type="button"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  {isTesting ? "Sending..." : "Send test event"}
+                </button>
+                {testResult ? (
+                  <span
+                    className={`text-[11px] font-medium ${testResult.ok ? "text-emerald-700" : "text-rose-600"}`}
+                  >
+                    {testResult.message}
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-[#858691]">Uses the saved token.</span>
+                )}
+              </div>
+            ) : null}
 
             {settings.hasCapiToken && !replacingToken ? (
               <div className="flex flex-wrap items-center gap-3">

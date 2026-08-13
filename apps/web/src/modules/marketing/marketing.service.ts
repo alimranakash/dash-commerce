@@ -13,6 +13,7 @@ import {
   type MarketingSettingsWriteData
 } from "./marketing.repository";
 import {
+  marketingIdPatterns,
   marketingSettingsSchema,
   type MarketingSettingsFormInput,
   type MarketingSettingsView
@@ -205,6 +206,14 @@ export const getMarketingTagPlan = cache(async (storeId: string): Promise<Market
     tiktokPixelId: record.tiktokPixelId
   });
 });
+
+/** The validated pixel id, for surfaces that fire their own browser events. */
+export async function getMetaPixelId(storeId: string) {
+  const record = await getMarketingSettingsRecord(storeId);
+  const pixelId = record?.metaPixelId?.trim();
+
+  return pixelId && marketingIdPatterns.metaPixelId.test(pixelId) ? pixelId : null;
+}
 
 /** `generateMetadata`-shaped verification tags, or undefined when there are none. */
 export async function getMarketingMetaTags(storeId: string) {

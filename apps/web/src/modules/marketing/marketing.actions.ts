@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { StoreAccessError, requireStoreManager } from "../stores/queries";
 import { MarketingSettingsError, updateMarketingSettings } from "./marketing.service";
+import { sendMetaTestEvent } from "./meta-capi";
 
 export type MarketingActionState = {
   fieldErrors?: Record<string, string>;
@@ -63,6 +64,49 @@ export async function updateMarketingSettingsFormAction(
   revalidatePath(`/s/${storeSlug}`);
 
   return { message: "Marketing settings saved.", status: "success" };
+}
+
+export type MetaTestEventState = {
+  message: string;
+  ok: boolean;
+};
+
+/**
+ * Sends a real TestEvent to Meta using the *stored* token, so a seller can prove
+ * the credentials work before any customer places an order. Behind the same role
+ * gate as saving, since it spends the store's credentials.
+ */
+export async function sendMetaTestEventAction(): Promise<MetaTestEventState> {
+  try {
+    const access = await requireStoreManager();
+    const result = await sendMetaTestEvent({
+      storeId: access.store.id,
+      ...(access.userId ? { userId: access.userId } : {})
+    });
+
+    if (result.ok) {
+      return {
+        message: "Meta accepted the test event. Check Events Manager → Test events.",
+        ok: true
+      };
+    }
+
+    return {
+      message:
+        result.reason === "disabled"
+          ? "Turn the Conversions API on and save before sending a test event."
+          : result.reason === "not-configured"
+            ? `${result.message} Save your pixel ID and token first.`
+            : result.message,
+      ok: false
+    };
+  } catch (error) {
+    if (error instanceof StoreAccessError) {
+      return { message: error.message, ok: false };
+    }
+
+    return { message: "Could not send the test event.", ok: false };
+  }
 }
 
 function text(formData: FormData, key: string) {

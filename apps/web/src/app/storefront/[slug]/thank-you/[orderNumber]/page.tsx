@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCustomerVisibleShipment } from "../../../../../modules/courier/courier.service";
+import { MetaPurchaseEvent } from "../../../../../modules/marketing/components/meta-purchase-event";
+import { getMetaPixelId } from "../../../../../modules/marketing/marketing.service";
+import { metaEventIdForOrder } from "../../../../../modules/marketing/meta-capi";
 import { getPublicOrderByNumber } from "../../../../../modules/orders/order.service";
 import {
   getPaymentMethods,
@@ -32,9 +35,16 @@ export default async function ThankYouPage({ params }: ThankYouPageProps) {
 
   // Customer-safe slice only: carrier, tracking code, carrier status.
   const shipment = await getCustomerVisibleShipment(store.id, order.id);
+  const metaPixelId = await getMetaPixelId(store.id);
 
   return (
     <main className="sf-page">
+      <MetaPurchaseEvent
+        currency={order.currency}
+        eventId={metaEventIdForOrder(order.id)}
+        pixelId={metaPixelId}
+        value={Number(order.totalAmount)}
+      />
       <StorefrontHeader store={store} />
       <section className="sf-thank-you" aria-labelledby="thank-you-title">
         <p>Order received</p>
