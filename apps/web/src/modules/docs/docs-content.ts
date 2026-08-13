@@ -870,7 +870,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
           "Coupon তৈরি করলেই checkout automatically discount দেবে মনে করা।",
           "Date range না দিয়ে campaign control হারানো।"
         ],
-        related: ["Marketing Tracking", "Checkout", "Reports"]
+        related: ["Marketing / Analytics", "Checkout", "Reports"]
       }),
       page({
         slug: "business/reports",
@@ -1091,36 +1091,39 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
           "Facebook App Secret public note field-এ লেখা।",
           "Redirect URL নিজের মতো edit করা।"
         ],
-        related: ["General Settings", "Storefront Footer", "Marketing Tracking"]
+        related: ["General Settings", "Storefront Footer", "Marketing / Analytics"]
       }),
       page({
         slug: "settings/marketing-tracking",
-        title: "Marketing Tracking",
-        intro: "Marketing Settings page tracking scripts এবং verification code সংরক্ষণের UI। Facebook/Meta pixel, Meta domain verification, Google Analytics/GTM header/body code এবং Google verification fields আছে।",
+        title: "Marketing / Analytics",
+        intro: "Marketing / Analytics page platform গুলোকে ID দিয়ে connect করার UI — Google (GA4, GTM, Verification), Meta (Pixel, Conversions API, Domain Verification), TikTok Pixel এবং Google Ads Conversion ID। Script tag paste করতে হয় না; আমরা প্রতিটি platform-এর official snippet generate করি।",
         useCase: [
-          "Meta Pixel বা Google Analytics setup information রাখতে।",
-          "Domain verification meta tag store করতে।",
-          "Future storefront script injection-এর প্রস্তুতি নিতে।"
+          "GA4/GTM বা Meta Pixel শুধু ID দিয়ে connect করতে।",
+          "Domain verification-এর content value রাখতে।",
+          "Meta Conversions API-এর server-side token নিরাপদে রাখতে।"
         ],
         steps: [
           "Settings > Marketing খুলুন।",
-          "Facebook Pixel Code textarea-তে pixel script বা ID রাখুন।",
-          "Facebook Domain Verification meta tag দিন।",
-          "Google Header Code, Body Tag এবং Verification fields পূরণ করুন।",
+          "Google card-এ GA4 Measurement ID (G-...) ও GTM Container ID (GTM-...) দিন।",
+          "Meta card-এ Pixel ID দিন; Conversions API লাগলে toggle on করে access token দিন।",
+          "TikTok Pixel ID এবং Google Ads Conversion ID (AW-...) দিন।",
+          "প্রয়োজন হলে Custom Tracking enable করে header/body/footer code দিন।",
           "Save Marketing Settings চাপুন।"
         ],
         important: [
-          "Dashboard preview-তে script execute করা হয় না।",
-          "বর্তমানে storefront script injection fully connected না থাকলে fields data storage/UI foundation হিসেবে থাকবে।",
-          "Script paste করার সময় incomplete tag দিলে future integration problem হতে পারে।"
+          "শুধু store owner বা admin এই settings change করতে পারেন; অন্যরা দেখতে পারেন।",
+          "Conversions API token encrypt করে রাখা হয়, browser-এ কখনও যায় না — শুধু শেষ চারটি character দেখা যায়।",
+          "Custom Tracking-এ শুধু tracking tag এবং পরিচিত analytics host allow করা হয়; বাকিটা save-এর সময় reject হয়।",
+          "প্রতিটি change activity log-এ কে করেছে সহ record হয়।",
+          "Storefront-এ script injection পরের release-এ আসছে।"
         ],
         tips: [
-          "কোন platform থেকে code নিয়েছেন notes-এ রাখুন।",
-          "একই pixel/script দুইবার paste করবেন না।"
+          "পুরো meta tag paste করলেও চলবে — আমরা content value বের করে নিই।",
+          "GTM-এর ভিতরে GA4 থাকলে দুই জায়গায় একই ID দেবেন না, event duplicate হবে।"
         ],
         commonMistakes: [
-          "Google body noscript code header field-এ দেয়া।",
-          "Verification meta tag-এর শুধু content value copy করে পুরো tag না দেয়া।"
+          "ID-এর জায়গায় পুরো <script> tag paste করা।",
+          "Conversions API token কে Pixel ID-এর ঘরে দেয়া — ওটা secret, আলাদা field।"
         ],
         related: ["Social Settings", "Storefront Setup", "Reports"]
       }),

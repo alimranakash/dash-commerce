@@ -9,13 +9,11 @@ import {
 } from "./settings.repository";
 import {
   invoiceSettingsSchema,
-  marketingSettingsSchema,
   socialLoginSettingsSchema,
   socialProfileLinksSchema,
   storeSettingsSchema,
   themeSettingsSchema,
   type InvoiceSettingsInput,
-  type MarketingSettingsInput,
   type SocialLoginSettingsInput,
   type SocialProfileLinksInput,
   type StoreSettingsInput,
@@ -68,15 +66,6 @@ export async function updateInvoiceSettings(storeId: string, input: InvoiceSetti
   return updateModuleSettingsRecord(storeId, {
     ...current,
     invoice: invoiceSettingsSchema.parse(input)
-  });
-}
-
-export async function updateMarketingSettings(storeId: string, input: MarketingSettingsInput) {
-  const current = await getModuleSettingsRecord(storeId);
-
-  return updateModuleSettingsRecord(storeId, {
-    ...current,
-    marketing: marketingSettingsSchema.parse(input)
   });
 }
 

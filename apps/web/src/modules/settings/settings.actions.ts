@@ -24,7 +24,6 @@ import {
 import {
   getStoreSettings,
   updateInvoiceSettings,
-  updateMarketingSettings,
   updateSocialLoginSettings,
   updateSocialProfileLinks,
   updateStoreSettings,
@@ -159,24 +158,9 @@ export async function updateSocialProfilesFormAction(_state: SettingsActionState
   redirect("/dashboard/settings/social?updated=1");
 }
 
-export async function updateMarketingSettingsFormAction(_state: SettingsActionState, formData: FormData) {
-  const store = await requireStore();
-
-  try {
-    await updateMarketingSettings(store.id, {
-      facebookDomainVerification: getValue(formData, "facebookDomainVerification"),
-      facebookPixelCode: getValue(formData, "facebookPixelCode"),
-      googleBodyCode: getValue(formData, "googleBodyCode"),
-      googleDomainVerification: getValue(formData, "googleDomainVerification"),
-      googleHeaderCode: getValue(formData, "googleHeaderCode")
-    });
-  } catch (error) {
-    return settingsErrorState(error, "Please fix the highlighted marketing settings.");
-  }
-
-  revalidateSettingsPaths(store.slug);
-  return settingsSuccessState("Marketing settings saved.");
-}
+// Marketing settings are no longer written here. They live in the
+// MarketingSetting table behind a role gate and are saved through
+// modules/marketing/marketing.actions.ts.
 
 // Courier credentials are no longer written here. They live in the encrypted
 // CourierAccount table and are saved through modules/courier/courier.actions.ts,

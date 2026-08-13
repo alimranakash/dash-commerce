@@ -64,13 +64,11 @@ export const themeSettingsSchema = z.object({
   advancedSettings: z.custom<StorefrontAdvancedSettings>().optional()
 });
 
-export const marketingSettingsSchema = z.object({
-  facebookDomainVerification: optionalTextSchema(4000),
-  facebookPixelCode: optionalTextSchema(8000),
-  googleBodyCode: optionalTextSchema(8000),
-  googleDomainVerification: optionalTextSchema(4000),
-  googleHeaderCode: optionalTextSchema(8000)
-});
+// Marketing settings moved out of `moduleSettings` to the `MarketingSetting`
+// table: the fields are structured IDs now, and the Conversions API token is a
+// secret that must not live in a plaintext JSON column. Any legacy
+// `moduleSettings.marketing` blob is simply ignored — nothing ever read it.
+// See modules/marketing/.
 
 export const courierProviderKeys = ["pathao", "steadfast", "redx", "paperfly", "carrybee"] as const;
 
@@ -182,13 +180,6 @@ export const DEFAULT_SOCIAL_LOGIN_SETTINGS: SocialLoginSettingsInput = {
 export const DEFAULT_MODULE_SETTINGS: ModuleSettings = {
   courier: { providers: [] },
   invoice: DEFAULT_INVOICE_SETTINGS,
-  marketing: {
-    facebookDomainVerification: undefined,
-    facebookPixelCode: undefined,
-    googleBodyCode: undefined,
-    googleDomainVerification: undefined,
-    googleHeaderCode: undefined
-  },
   socialLogin: DEFAULT_SOCIAL_LOGIN_SETTINGS,
   socialProfiles: {
     linkedinUrl: undefined,
@@ -204,7 +195,6 @@ export function normalizeModuleSettings(value: unknown): ModuleSettings {
   return {
     courier: parseSection(courierSettingsSchema, source.courier, DEFAULT_MODULE_SETTINGS.courier),
     invoice: parseSection(invoiceSettingsSchema, source.invoice, DEFAULT_INVOICE_SETTINGS),
-    marketing: parseSection(marketingSettingsSchema, source.marketing, DEFAULT_MODULE_SETTINGS.marketing),
     socialLogin: parseSection(socialLoginSettingsSchema, source.socialLogin, DEFAULT_SOCIAL_LOGIN_SETTINGS),
     socialProfiles: parseSection(socialProfileLinksSchema, source.socialProfiles, DEFAULT_MODULE_SETTINGS.socialProfiles)
   };
@@ -219,7 +209,6 @@ function parseSection<T>(schema: { safeParse: (input: unknown) => { success: boo
 export type CourierProviderKey = (typeof courierProviderKeys)[number];
 export type CourierSettingsInput = z.infer<typeof courierSettingsSchema>;
 export type InvoiceSettingsInput = z.infer<typeof invoiceSettingsSchema>;
-export type MarketingSettingsInput = z.infer<typeof marketingSettingsSchema>;
 export type SocialLoginSettingsInput = z.infer<typeof socialLoginSettingsSchema>;
 export type SocialProfileLinksInput = z.infer<typeof socialProfileLinksSchema>;
 export type StoreSettingsInput = z.infer<typeof storeSettingsSchema>;
@@ -228,7 +217,6 @@ export type ThemeSettingsInput = z.infer<typeof themeSettingsSchema>;
 export type ModuleSettings = {
   courier: CourierSettingsInput;
   invoice: InvoiceSettingsInput;
-  marketing: MarketingSettingsInput;
   socialLogin: SocialLoginSettingsInput;
   socialProfiles: SocialProfileLinksInput;
 };

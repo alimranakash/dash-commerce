@@ -1,22 +1,22 @@
-import { createCipheriv, createDecipheriv, randomBytes, timingSafeEqual } from "node:crypto";
-import "../../lib/env";
+import {
+  SecretBoxError,
+  decryptSecretRecord,
+  encryptSecretRecord,
+  isSecretEncryptionConfigured,
+  requireSecretEncryptionKey,
+  safeEquals,
+  secretHintFor
+} from "../../lib/secret-box";
 
 /**
- * AES-256-GCM at rest for carrier API secrets.
+ * Courier-facing view of the shared secret box (`lib/secret-box.ts`).
  *
- * The stored string is self-describing (`v1.iv.tag.ciphertext`, all base64) so a
- * future key rotation or algorithm change can be detected rather than guessed.
- * Non-secret values (base URL, a carrier's own store id) are kept readable in
- * `CourierAccount.credentialsPublic` instead, so settings can show them back
- * without a decrypt.
- *
- * This replaces plaintext secrets in `StoreSetting.moduleSettings.courier`.
+ * The crypto itself moved there so the Meta Conversions API token can reuse it;
+ * this module keeps the courier wording on errors and the same exported API, so
+ * nothing in the courier stack had to change. Non-secret values (base URL, a
+ * carrier's own store id) still live in `CourierAccount.credentialsPublic`, so
+ * settings can show them back without a decrypt.
  */
-
-const cipherVersion = "v1";
-const algorithm = "aes-256-gcm";
-const ivLength = 12;
-const keyLength = 32;
 
 export class CourierCredentialsError extends Error {
   constructor(message: string) {
@@ -26,111 +26,43 @@ export class CourierCredentialsError extends Error {
 }
 
 export function isCourierEncryptionConfigured() {
-  return readKey() !== null;
+  return isSecretEncryptionConfigured();
 }
 
 export function requireCourierEncryptionKey() {
-  const key = readKey();
-
-  if (!key) {
-    throw new CourierCredentialsError(
-      "COURIER_CREDENTIALS_KEY is missing or invalid. Generate a 32-byte base64 key and add it to the root .env before saving courier credentials."
-    );
-  }
-
-  return key;
+  return asCourierError(() => requireSecretEncryptionKey());
 }
 
 export function encryptCredentials(values: Record<string, string>) {
-  const key = requireCourierEncryptionKey();
-  const iv = randomBytes(ivLength);
-  const cipher = createCipheriv(algorithm, key, iv);
-  const payload = Buffer.concat([
-    cipher.update(JSON.stringify(values), "utf8"),
-    cipher.final()
-  ]);
-
-  return [
-    cipherVersion,
-    iv.toString("base64"),
-    cipher.getAuthTag().toString("base64"),
-    payload.toString("base64")
-  ].join(".");
+  return asCourierError(() => encryptSecretRecord(values));
 }
 
 export function decryptCredentials(value: string | null | undefined): Record<string, string> {
-  if (!value) {
-    return {};
-  }
+  return asCourierError(() => decryptSecretRecord(value));
+}
 
-  const key = requireCourierEncryptionKey();
-  const [version, ivPart, tagPart, payloadPart] = value.split(".");
+export { safeEquals, secretHintFor };
 
-  if (version !== cipherVersion || !ivPart || !tagPart || !payloadPart) {
-    throw new CourierCredentialsError("Stored courier credentials are in an unrecognised format.");
-  }
-
+function asCourierError<T>(run: () => T): T {
   try {
-    const decipher = createDecipheriv(algorithm, key, Buffer.from(ivPart, "base64"));
-
-    decipher.setAuthTag(Buffer.from(tagPart, "base64"));
-
-    const plain = Buffer.concat([
-      decipher.update(Buffer.from(payloadPart, "base64")),
-      decipher.final()
-    ]).toString("utf8");
-
-    const parsed: unknown = JSON.parse(plain);
-
-    return isStringRecord(parsed) ? parsed : {};
+    return run();
   } catch (error) {
-    if (error instanceof CourierCredentialsError) {
-      throw error;
+    if (error instanceof SecretBoxError) {
+      throw new CourierCredentialsError(courierMessageFor(error.message));
     }
 
-    // A GCM tag mismatch means the key changed or the row was tampered with.
-    throw new CourierCredentialsError(
-      "Could not decrypt the stored courier credentials. COURIER_CREDENTIALS_KEY may have changed — re-enter the keys in courier settings."
-    );
+    throw error;
   }
 }
 
-/** Last four characters, so settings can prove which secret is stored. */
-export function secretHintFor(value: string | undefined) {
-  const trimmed = value?.trim() ?? "";
-
-  return trimmed.length >= 4 ? `••••${trimmed.slice(-4)}` : null;
-}
-
-/** Constant-time compare, for the webhook bearer token in Phase 6. */
-export function safeEquals(a: string, b: string) {
-  const left = Buffer.from(a);
-  const right = Buffer.from(b);
-
-  return left.length === right.length && timingSafeEqual(left, right);
-}
-
-function readKey() {
-  const raw = process.env.COURIER_CREDENTIALS_KEY?.trim();
-
-  if (!raw) {
-    return null;
+function courierMessageFor(message: string) {
+  if (message.includes("missing or invalid")) {
+    return "COURIER_CREDENTIALS_KEY is missing or invalid. Generate a 32-byte base64 key and add it to the root .env before saving courier credentials.";
   }
 
-  try {
-    const key = Buffer.from(raw, "base64");
-
-    return key.length === keyLength ? key : null;
-  } catch {
-    return null;
+  if (message.includes("unrecognised format")) {
+    return "Stored courier credentials are in an unrecognised format.";
   }
-}
 
-function isStringRecord(value: unknown): value is Record<string, string> {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    !Array.isArray(value) &&
-    Object.values(value).every((entry) => typeof entry === "string")
-  );
+  return "Could not decrypt the stored courier credentials. COURIER_CREDENTIALS_KEY may have changed — re-enter the keys in courier settings.";
 }

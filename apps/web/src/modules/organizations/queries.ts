@@ -2,6 +2,11 @@ import { prisma } from "@dash/db";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "../../lib/auth";
 
+/**
+ * Returns the organization exactly as before, plus the caller's membership
+ * `role` alongside it. Purely additive — `Organization` has no `role` column of
+ * its own, so existing callers that read `id`/`name`/`slug` are unaffected.
+ */
 export async function getCurrentOrganization() {
   const user = await getCurrentUser();
 
@@ -21,7 +26,14 @@ export async function getCurrentOrganization() {
     }
   });
 
-  return membership?.organization ?? null;
+  if (!membership) {
+    return null;
+  }
+
+  return {
+    ...membership.organization,
+    role: membership.role
+  };
 }
 
 export async function requireOrganization() {

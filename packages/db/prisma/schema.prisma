@@ -254,6 +254,7 @@ model User {
   assignedSupportTickets SupportTicket[] @relation("SupportTicketAssignee")
   supportTicketReplies SupportTicketReply[]
   systemLogs SystemLog[]
+  marketingSettingUpdates MarketingSetting[]
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @default(now()) @updatedAt
 }
@@ -351,6 +352,7 @@ model Store {
   addresses      Address[]
   setting        StoreSetting?
   themeSetting   ThemeSetting?
+  marketingSetting MarketingSetting?
   paymentMethods PaymentMethod[]
   shippingZones  ShippingZone[]
   shippingRates  ShippingRate[]
@@ -428,6 +430,40 @@ model ThemeSetting {
   store                Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @default(now()) @updatedAt
+}
+
+/// Marketing / analytics configuration for one store.
+///
+/// Deliberately a table rather than a slice of `StoreSetting.moduleSettings`:
+/// the Conversions API token is a secret (secrets never live in that JSON — see
+/// CourierAccount), these columns are read on every storefront render, and
+/// change logging wants a per-field before/after diff.
+model MarketingSetting {
+  id                     String   @id @default(cuid())
+  storeId                String   @unique
+  ga4MeasurementId       String?
+  gtmContainerId         String?
+  googleSiteVerification String?
+  googleAdsConversionId  String?
+  metaPixelId            String?
+  metaDomainVerification String?
+  metaCapiEnabled        Boolean  @default(false)
+  /// AES-256-GCM. Server-side only — never rendered into storefront HTML.
+  metaCapiTokenCipher    String?
+  /// Last four characters, so settings can prove which token is stored.
+  metaCapiTokenHint      String?
+  tiktokPixelId          String?
+  customEnabled          Boolean  @default(false)
+  customHeaderCode       String?
+  customBodyCode         String?
+  customFooterCode       String?
+  updatedById            String?
+  store                  Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  updatedBy              User?    @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @default(now()) @updatedAt
+
+  @@index([storeId])
 }
 
 model PaymentMethod {
