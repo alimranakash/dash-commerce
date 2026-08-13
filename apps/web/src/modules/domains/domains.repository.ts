@@ -83,6 +83,39 @@ export async function findServableCustomDomain(domain: string) {
   });
 }
 
+/**
+ * The same question for the platform's own tenant subdomains, which we issue at
+ * store creation and therefore never verify.
+ *
+ * Used only by the TLS authorisation endpoint: a certificate for `<slug>.<root>`
+ * may be requested only when that exact row exists, because an SNI value is not
+ * proof a subdomain was ever handed out.
+ */
+export async function findServablePlatformDomain(domain: string) {
+  return prisma.storeDomain.findFirst({
+    select: {
+      domain: true,
+      id: true,
+      store: {
+        select: {
+          id: true,
+          slug: true,
+          status: true
+        }
+      }
+    },
+    where: {
+      domain,
+      store: {
+        status: {
+          in: ["ACTIVE", "DRAFT"]
+        }
+      },
+      type: "DASH_SUBDOMAIN"
+    }
+  });
+}
+
 export async function countCustomDomains(storeId: string) {
   return prisma.storeDomain.count({
     where: {

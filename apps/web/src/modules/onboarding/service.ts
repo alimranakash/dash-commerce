@@ -1,4 +1,5 @@
 import { prisma } from "@dash/db";
+import { getPlatformRootDomain } from "../../lib/host-routing";
 import { ensureDefaultPlans } from "../admin/admin-plans.repository";
 import { getDemoPackIdForBusinessType } from "../demo-packs/registry";
 import { seedDemoPack } from "../demo-packs/seeder";
@@ -71,7 +72,10 @@ export async function createOnboardingWorkspace(userId: string, input: Onboardin
             timezone: data.timezone,
             domains: {
               create: {
-                domain: `${storeSlug}.dash.com`,
+                // Must follow the deployment's real root domain: this row is what
+                // request routing matches and what authorises the subdomain's TLS
+                // certificate, so a hardcoded one would be unreachable in production.
+                domain: `${storeSlug}.${getPlatformRootDomain()}`,
                 type: "DASH_SUBDOMAIN",
                 isPrimary: true
               }

@@ -46,6 +46,8 @@ Monorepo: `apps/web` (the whole product), `apps/worker` (placeholder), `packages
 
 `/admin`, `/dashboard`, `/login`, `/register` are never rewritten, so they stay reachable on any host.
 
+The hostnames in that table are defaults: `PLATFORM_ROOT_DOMAIN` and `PLATFORM_APP_HOST` override them, and a deployed server must set them since new stores' subdomains and TLS authorisation both derive from the root domain. Caddy's on-demand TLS asks [/api/domains/authorize](apps/web/src/app/api/domains/authorize/route.ts) before issuing a certificate for any hostname; [deploy/Caddyfile](deploy/Caddyfile) is the reference config.
+
 A custom domain is resolved by `resolveCustomDomainRoute` in [modules/domains/domain-routing.ts](apps/web/src/modules/domains/domain-routing.ts) — a cached lookup that only matches a **verified** `StoreDomain` row of type `CUSTOM` on a live store. Unresolved hosts are rewritten to `/domain-not-configured`; nothing renders a storefront for them. Because the storefront components hardcode `/s/<slug>/…` hrefs, the proxy also 308-redirects `/s/<slug>/*` back to the bare path on a custom domain, which is what keeps `worzen.com/products` in the address bar. `proxy.ts` is a Node-runtime entry (Next builds `proxy` server-side only), so it can query Prisma directly.
 
 **`app/s/[slug]/**` files are one-line re-exports of `app/storefront/[slug]/**`.** `/s/` is the rewrite target; `/storefront/` holds the real implementations. When adding a storefront route, write it under `app/storefront/[slug]/` and add the matching `export { default } from ...` stub under `app/s/[slug]/`.

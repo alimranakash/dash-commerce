@@ -1,0 +1,74 @@
+# Dash Commerce OS — Caddy reverse proxy with on-demand TLS for seller domains.
+#
+# Replace dash.com / app.dash.com with the real PLATFORM_ROOT_DOMAIN and
+# PLATFORM_APP_HOST, and admin@dash.com with a real address. Everything else works
+# as written.
+#
+# Install to /etc/caddy/Caddyfile, then:  caddy validate --config /etc/caddy/Caddyfile
+#                                        systemctl reload caddy
+
+{
+	# Let's Encrypt sends expiry notices here.
+	email admin@dash.com
+
+	# Testing? Uncomment this to use the staging CA, whose limits are far higher and
+	# whose certificates are untrusted (browsers will warn — that is expected).
+	# acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+
+	on_demand_tls {
+		# The app decides which hostnames may get a certificate. 2xx = issue.
+		# Add &token=... if DOMAIN_AUTHORIZE_TOKEN is set in the app's .env.
+		ask http://127.0.0.1:3000/api/domains/authorize
+	}
+}
+
+(app) {
+	encode zstd gzip
+
+	# The app reads the Host header to pick the tenant, and x-forwarded-proto to
+	# build redirects. Caddy passes both through by default.
+	reverse_proxy 127.0.0.1:3000
+
+	# Caddy reaches the authorisation endpoint directly on 127.0.0.1, so it never
+	# needs to be answerable from the outside.
+	@authorize path /api/domains/authorize*
+	handle @authorize {
+		respond "not found" 404
+	}
+}
+
+# --- The platform's own hostnames -------------------------------------------
+# Named sites, so Caddy gets these certificates at startup instead of waiting for
+# a handshake.
+dash.com, www.dash.com, app.dash.com {
+	import app
+}
+
+# --- Tenant subdomains and seller custom domains -----------------------------
+# Any other hostname that arrives on 443: issued on demand, only if the app
+# authorises it.
+#
+# Note: every <slug>.dash.com certificate counts against the same "50 certificates
+# per registered domain per week" bucket for dash.com. Past ~50 new stores a week,
+# switch the tenant subdomains to a single wildcard certificate — that needs a
+# DNS-01 challenge, i.e. a Caddy build with your DNS provider plugin:
+#
+#   *.dash.com {
+#       tls { dns cloudflare {env.CLOUDFLARE_API_TOKEN} }
+#       import app
+#   }
+#
+# Seller custom domains are each their own registered domain, so they have their
+# own bucket and are unaffected.
+https:// {
+	tls {
+		on_demand
+	}
+	import app
+}
+
+# Plain HTTP on any hostname: redirect to HTTPS. Caddy answers ACME HTTP-01
+# challenges on port 80 ahead of this route, so issuance still works.
+http:// {
+	redir https://{host}{uri} permanent
+}
