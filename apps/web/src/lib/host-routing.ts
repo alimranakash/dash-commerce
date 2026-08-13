@@ -3,6 +3,30 @@ const APP_HOSTS = new Set(["app.dash.com"]);
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 const RESERVED_SUBDOMAINS = new Set(["www", "app", "api", "admin"]);
 
+/** The root the platform's own subdomains hang off. */
+export const PLATFORM_ROOT_DOMAIN = "dash.com";
+
+/**
+ * True for any hostname the platform already answers on — its root, the seller
+ * app, localhost, and the whole `*.dash.com` / `*.localhost` tenant space.
+ *
+ * A seller must never be able to register one of these as a custom domain: the
+ * `StoreDomain.domain` column is globally unique, so claiming `app.dash.com`
+ * would let one store squat a hostname the platform routes by other rules.
+ */
+export function isPlatformHostname(hostname: string) {
+  const normalizedHostname = normalizeHostname(hostname);
+
+  return (
+    ROOT_HOSTS.has(normalizedHostname) ||
+    APP_HOSTS.has(normalizedHostname) ||
+    LOCAL_HOSTS.has(normalizedHostname) ||
+    normalizedHostname.endsWith(`.${PLATFORM_ROOT_DOMAIN}`) ||
+    normalizedHostname === PLATFORM_ROOT_DOMAIN ||
+    normalizedHostname.endsWith(".localhost")
+  );
+}
+
 export type HostRoute =
   | {
       type: "marketing";

@@ -85,13 +85,33 @@ export async function getStorefrontBySlug(slug: string) {
   return refreshedStore ? withStoreActiveTemplate(refreshedStore) : null;
 }
 
+/**
+ * Resolves the store a public hostname belongs to.
+ *
+ * A `CUSTOM` row must be verified to resolve. Adding a row is self-service, so
+ * without that check anyone could enter a hostname they do not control and have
+ * us serve their store on it the moment the real owner's DNS pointed here — or
+ * simply squat the name. `DASH_SUBDOMAIN` rows are issued by us at store
+ * creation and carry no `verifiedAt`, so they resolve on their own.
+ */
 export async function getStorefrontByDomain(domain: string) {
   const normalizedDomain = domain.toLowerCase().trim();
   const store = await prisma.store.findFirst({
     where: {
       domains: {
         some: {
-          domain: normalizedDomain
+          domain: normalizedDomain,
+          OR: [
+            {
+              type: "DASH_SUBDOMAIN"
+            },
+            {
+              type: "CUSTOM",
+              verifiedAt: {
+                not: null
+              }
+            }
+          ]
         }
       },
       status: {
@@ -462,10 +482,19 @@ export async function requireStorefrontByDomain(domain: string) {
   return store;
 }
 
+/**
+ * The store's canonical public hostname. Unverified custom rows are excluded for
+ * the same reason they do not resolve: a hostname we cannot prove points at us is
+ * not an address to show customers.
+ */
 export function getPrimaryStorefrontDomain(
   store: NonNullable<Awaited<ReturnType<typeof getStorefrontBySlug>>>
 ) {
-  return store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
+  const servable = store.domains.filter(
+    (domain) => domain.type === "DASH_SUBDOMAIN" || domain.verifiedAt !== null
+  );
+
+  return servable.find((domain) => domain.isPrimary) ?? servable[0];
 }
 
 // Brands and tags live in the raw-SQL taxonomy tables the generated Prisma
