@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { getMediaPickerAssets } from "../../media/media.service";
 import { BrandAssetsForm } from "../../settings/components/brand-assets-form";
 import { ThemeSettingsForm } from "../../settings/components/theme-settings-form";
 import {
@@ -50,10 +49,9 @@ export async function StorefrontThemeSettingsPage({
   searchParams,
   store
 }: StorefrontThemeSettingsPageProps) {
-  const [settings, storeSettings, mediaAssets, activeTemplate] = await Promise.all([
+  const [settings, storeSettings, activeTemplate] = await Promise.all([
     getThemeSettings(store.id),
     getStoreSettings(store.id),
-    getMediaPickerAssets(store.id),
     getStoreActiveTemplate(store.id)
   ]);
   const updated = getSearchParamValue(searchParams.updated);
@@ -125,15 +123,11 @@ export async function StorefrontThemeSettingsPage({
           </div>
 
           <div id="branding" className="storefront-settings-section">
-            <BrandAssetsForm action={updateBrandSettingsFormAction} mediaAssets={mediaAssets} settings={storeSettings} />
+            <BrandAssetsForm action={updateBrandSettingsFormAction} settings={storeSettings} />
           </div>
 
           <div id="theme-settings" className="storefront-settings-section">
-            <ThemeSettingsForm
-              action={updateThemeSettingsFormAction}
-              mediaAssets={mediaAssets}
-              settings={settings}
-            />
+            <ThemeSettingsForm action={updateThemeSettingsFormAction} settings={settings} />
           </div>
 
           <section id="footer-social-preview" className="storefront-settings-info-card storefront-settings-section">

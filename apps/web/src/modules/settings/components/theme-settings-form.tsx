@@ -2,7 +2,7 @@
 
 import { Button } from "@dash/ui";
 import { useActionState } from "react";
-import type { MediaPickerAsset } from "../../media/media.types";
+import { MediaPickerField } from "../../media/components/media-picker";
 import { StorefrontSettingsToast } from "../../storefront/dashboard/storefront-settings-toast";
 import {
   FOOTER_COLUMN_SLOTS,
@@ -13,7 +13,7 @@ import {
   type StorefrontProductSectionSettings
 } from "../../storefront/customization";
 import type { SettingsActionState } from "../settings.actions";
-import { ColorPickerField, SettingsCard, ToggleField, UploadField } from "./theme-form-fields";
+import { ColorPickerField, SettingsCard, ToggleField } from "./theme-form-fields";
 
 export type ThemeSettingsFormValue = {
   advancedSettings?: StorefrontAdvancedSettings | null;
@@ -29,7 +29,6 @@ export type ThemeSettingsFormValue = {
 
 type ThemeSettingsFormProps = {
   action: (state: SettingsActionState, formData: FormData) => Promise<SettingsActionState>;
-  mediaAssets?: MediaPickerAsset[];
   settings: ThemeSettingsFormValue;
 };
 
@@ -37,7 +36,7 @@ const initialState: SettingsActionState = {
   status: "idle"
 };
 
-export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeSettingsFormProps) {
+export function ThemeSettingsForm({ action, settings }: ThemeSettingsFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
   const advanced = normalizeAdvancedSettings(settings.advancedSettings);
   const slides = normalizeSlides(advanced.hero.slides);
@@ -126,11 +125,10 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
         description="Manage the top hero with image, slider, video, YouTube, overlay, title, and CTA buttons."
       >
         <div className="theme-settings-grid two">
-          <UploadField
-            assets={mediaAssets}
-            fileName="heroImageFile"
+          <MediaPickerField
             label="Hero Image"
             name="heroImageUrl"
+            usageType="HERO"
             value={settings.heroImageUrl ?? advanced.hero.imageUrl}
           />
           <div className="theme-settings-grid two compact">
@@ -246,7 +244,7 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
             <p>Upload up to 4 slides. Use the title/subtitle fields only when a slide needs custom copy.</p>
           </div>
           {slides.map((slide, index) => (
-            <HeroSlideFields assets={mediaAssets} index={index} key={index} slide={slide} />
+            <HeroSlideFields index={index} key={index} slide={slide} />
           ))}
         </div>
       </SettingsCard>
@@ -969,22 +967,13 @@ export function ThemeSettingsForm({ action, mediaAssets = [], settings }: ThemeS
   );
 }
 
-function HeroSlideFields({
-  assets,
-  index,
-  slide
-}: {
-  assets: MediaPickerAsset[];
-  index: number;
-  slide: StorefrontHeroSlide;
-}) {
+function HeroSlideFields({ index, slide }: { index: number; slide: StorefrontHeroSlide }) {
   return (
     <div className="theme-slide-card">
-      <UploadField
-        assets={assets}
-        fileName={`heroSlideImageFile${index}`}
+      <MediaPickerField
         label={`Slide ${index + 1} Image`}
         name={`heroSlideImageUrl${index}`}
+        usageType="HERO"
         value={slide.mediaType === "image" ? slide.url : ""}
       />
       <div className="theme-settings-grid two compact">

@@ -2,17 +2,16 @@
 
 import { Button } from "@dash/ui";
 import { useActionState } from "react";
-import type { MediaPickerAsset } from "../../media/media.types";
+import { MediaPickerField } from "../../media/components/media-picker";
 import { StorefrontSettingsToast } from "../../storefront/dashboard/storefront-settings-toast";
 import type { SettingsActionState } from "../settings.actions";
 import type { StoreSettingsFormValue } from "./store-settings-form";
-import { SettingsCard, UploadField } from "./theme-form-fields";
+import { SettingsCard } from "./theme-form-fields";
 
 const initialState: SettingsActionState = { status: "idle" };
 
-export function BrandAssetsForm({ action, mediaAssets, settings }: {
+export function BrandAssetsForm({ action, settings }: {
   action: (state: SettingsActionState, formData: FormData) => Promise<SettingsActionState>;
-  mediaAssets: MediaPickerAsset[];
   settings: StoreSettingsFormValue;
 }) {
   const [state, formAction, isPending] = useActionState(action, initialState);
@@ -26,22 +25,21 @@ export function BrandAssetsForm({ action, mediaAssets, settings }: {
       />
       <SettingsCard
         title="Branding"
-        description="Upload the storefront logo and browser favicon. Existing media can be selected from your library."
+        description="Pick the storefront logo and browser favicon from your media library, or upload new ones."
       >
         <div className="theme-settings-grid two">
-          <UploadField
-            assets={mediaAssets}
-            fileName="logoFile"
+          <MediaPickerField
+            description="SVG, PNG, JPG, or WebP."
             label="Store Logo"
             name="logoUrl"
+            usageType="LOGO"
             value={settings.logoUrl}
           />
-          <UploadField
-            accept="image/jpeg,image/png,image/webp,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,.ico"
-            assets={mediaAssets}
-            fileName="faviconFile"
+          <MediaPickerField
+            description="ICO and SVG are allowed here."
             label="Favicon"
             name="faviconUrl"
+            usageType="FAVICON"
             value={settings.faviconUrl}
           />
         </div>

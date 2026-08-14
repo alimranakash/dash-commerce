@@ -21,12 +21,6 @@ export async function getMediaAssetsForStore(storeId: string) {
   return getMediaAssetsForStoreRecord(storeId);
 }
 
-export async function getMediaPickerAssets(storeId: string) {
-  const assets = await getMediaAssetsForStoreRecord(storeId);
-
-  return assets.map(toPickerAsset);
-}
-
 export async function listMediaAssets(
   storeId: string,
   input: ListMediaAssetsInput

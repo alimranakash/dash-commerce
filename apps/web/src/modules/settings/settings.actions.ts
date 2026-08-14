@@ -3,8 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
-import type { MediaUsageType } from "../media/media.schema";
-import { uploadMediaAsset } from "../media/media.service";
 import { requireStore } from "../stores/queries";
 import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
@@ -71,13 +69,8 @@ export async function updateGeneralSettingsFormAction(_state: SettingsActionStat
   };
 
   try {
-    const [logoUrl, faviconUrl] = await Promise.all([
-      resolveSettingsImageUpload(store.id, formData, "logoFile", "LOGO", getValue(formData, "logoUrl")),
-      resolveSettingsImageUpload(store.id, formData, "faviconFile", "FAVICON", getValue(formData, "faviconUrl"))
-    ]);
-
-    next.logoUrl = logoUrl;
-    next.faviconUrl = faviconUrl;
+    next.logoUrl = getValue(formData, "logoUrl");
+    next.faviconUrl = getValue(formData, "faviconUrl");
     next.tagline = getValue(formData, "tagline");
     next.contactEmail = getValue(formData, "contactEmail");
     next.contactPhone = getValue(formData, "contactPhone");
@@ -110,13 +103,8 @@ export async function updateBrandSettingsFormAction(_state: SettingsActionState,
   };
 
   try {
-    const [logoUrl, faviconUrl] = await Promise.all([
-      resolveSettingsImageUpload(store.id, formData, "logoFile", "LOGO", getValue(formData, "logoUrl")),
-      resolveSettingsImageUpload(store.id, formData, "faviconFile", "FAVICON", getValue(formData, "faviconUrl"))
-    ]);
-
-    next.logoUrl = logoUrl;
-    next.faviconUrl = faviconUrl;
+    next.logoUrl = getValue(formData, "logoUrl");
+    next.faviconUrl = getValue(formData, "faviconUrl");
     await updateStoreSettings(store.id, next);
   } catch (error) {
     return settingsErrorState(error, "Please fix the highlighted branding settings.");
@@ -226,7 +214,7 @@ export async function updateThemeSettingsFormAction(
   const store = await requireStore();
 
   try {
-    await updateThemeSettings(store.id, await themeSettingsFromFormData(store.id, formData));
+    await updateThemeSettings(store.id, themeSettingsFromFormData(formData));
   } catch (error) {
     return settingsErrorState(error, "Please fix the highlighted theme settings.");
   }
@@ -250,17 +238,13 @@ function storeSettingsFromFormData(formData: FormData): StoreSettingsInput {
   };
 }
 
-async function themeSettingsFromFormData(storeId: string, formData: FormData): Promise<ThemeSettingsInput> {
-  const heroImageUrl = await resolveSettingsImageUpload(
-    storeId,
-    formData,
-    "heroImageFile",
-    "HERO",
-    getValue(formData, "heroImageUrl")
-  );
+// Hero and slide images come from the media picker already uploaded, so this
+// only ever reads URLs.
+function themeSettingsFromFormData(formData: FormData): ThemeSettingsInput {
+  const heroImageUrl = getValue(formData, "heroImageUrl");
 
   return {
-    advancedSettings: await advancedSettingsFromFormData(storeId, formData, heroImageUrl),
+    advancedSettings: advancedSettingsFromFormData(formData, heroImageUrl),
     themeName: "Theme v1",
     primaryColor: getValue(formData, "primaryColor") || "#135d66",
     secondaryColor: getValue(formData, "secondaryColor"),
@@ -272,8 +256,8 @@ async function themeSettingsFromFormData(storeId: string, formData: FormData): P
   };
 }
 
-async function advancedSettingsFromFormData(storeId: string, formData: FormData, heroImageUrl: string) {
-  const slides = await parseSlides(storeId, formData);
+function advancedSettingsFromFormData(formData: FormData, heroImageUrl: string) {
+  const slides = parseSlides(formData);
 
   return normalizeAdvancedSettings({
     announcement: {
@@ -682,17 +666,11 @@ function parseShopSortOptions(value: string) {
   return options.length > 0 ? options : DEFAULT_STOREFRONT_ADVANCED_SETTINGS.shopPage.sortOptions;
 }
 
-async function parseSlides(storeId: string, formData: FormData): Promise<StorefrontHeroSlide[]> {
+function parseSlides(formData: FormData): StorefrontHeroSlide[] {
   const slides: StorefrontHeroSlide[] = [];
 
   for (let index = 0; index < 4; index += 1) {
-    const url = await resolveSettingsImageUpload(
-      storeId,
-      formData,
-      `heroSlideImageFile${index}`,
-      "HERO",
-      getValue(formData, `heroSlideImageUrl${index}`)
-    );
+    const url = getValue(formData, `heroSlideImageUrl${index}`);
     const youtubeUrl = getValue(formData, `heroSlideYoutubeUrl${index}`);
     const videoUrl = getValue(formData, `heroSlideVideoUrl${index}`);
     const title = getValue(formData, `heroSlideTitle${index}`);
@@ -728,29 +706,6 @@ async function parseSlides(storeId: string, formData: FormData): Promise<Storefr
 
 function getValue(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
-}
-
-async function resolveSettingsImageUpload(
-  storeId: string,
-  formData: FormData,
-  fileField: string,
-  usageType: MediaUsageType,
-  fallbackUrl: string
-) {
-  const file = formData.get(fileField);
-
-  if (file instanceof File && file.size > 0) {
-    const asset = await uploadMediaAsset({
-      alt: usageType === "LOGO" ? "Store logo" : "Store favicon",
-      file,
-      storeId,
-      usageType
-    });
-
-    return asset.url;
-  }
-
-  return fallbackUrl;
 }
 
 function settingsErrorState(error: unknown, fallbackMessage: string): SettingsActionState {

@@ -1,9 +1,8 @@
 "use client";
 
 import { Button } from "@dash/ui";
-import { useActionState, useState, type ReactNode } from "react";
-import { MediaUrlPicker } from "../../media/components/media-url-picker";
-import type { MediaPickerAsset } from "../../media/media.types";
+import { useActionState, type ReactNode } from "react";
+import { MediaPickerField } from "../../media/components/media-picker";
 import type { SettingsActionState } from "../settings.actions";
 
 export type StoreSettingsFormValue = {
@@ -21,7 +20,6 @@ export type StoreSettingsFormValue = {
 
 type StoreSettingsFormProps = {
   action: (state: SettingsActionState, formData: FormData) => Promise<SettingsActionState>;
-  mediaAssets: MediaPickerAsset[];
   settings: StoreSettingsFormValue;
   store: {
     currency: string;
@@ -35,15 +33,8 @@ const initialState: SettingsActionState = {
   status: "idle"
 };
 
-export function StoreSettingsForm({
-  action,
-  mediaAssets,
-  settings,
-  store
-}: StoreSettingsFormProps) {
+export function StoreSettingsForm({ action, settings, store }: StoreSettingsFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
-  const [logoUrl, setLogoUrl] = useState(settings.logoUrl ?? "");
-  const [faviconUrl, setFaviconUrl] = useState(settings.faviconUrl ?? "");
 
   return (
     <form action={formAction} className="resource-form">
@@ -65,34 +56,22 @@ export function StoreSettingsForm({
       </div>
       <div className="form-grid">
         <FieldError errors={state.fieldErrors} name="logoUrl">
-          <label>
-            Store Logo
-            <input accept="image/jpeg,image/png,image/webp,image/svg+xml" name="logoFile" type="file" />
-            <input
-              name="logoUrl"
-              onChange={(event) => setLogoUrl(event.target.value)}
-              placeholder="Or paste logo image URL"
-              type="text"
-              value={logoUrl}
-            />
-          </label>
-          {logoUrl ? <img alt="Store logo preview" className="settings-image-preview" src={logoUrl} /> : null}
-          <MediaUrlPicker assets={mediaAssets} label="Use uploaded logo" onSelect={setLogoUrl} />
+          <MediaPickerField
+            description="SVG, PNG, JPG, or WebP."
+            label="Store Logo"
+            name="logoUrl"
+            usageType="LOGO"
+            value={settings.logoUrl}
+          />
         </FieldError>
         <FieldError errors={state.fieldErrors} name="faviconUrl">
-          <label>
-            Favicon
-            <input accept="image/jpeg,image/png,image/webp,image/svg+xml" name="faviconFile" type="file" />
-            <input
-              name="faviconUrl"
-              onChange={(event) => setFaviconUrl(event.target.value)}
-              placeholder="Or paste favicon image URL"
-              type="text"
-              value={faviconUrl}
-            />
-          </label>
-          {faviconUrl ? <img alt="Favicon preview" className="settings-favicon-preview" src={faviconUrl} /> : null}
-          <MediaUrlPicker assets={mediaAssets} label="Use uploaded favicon" onSelect={setFaviconUrl} />
+          <MediaPickerField
+            description="ICO and SVG are allowed here."
+            label="Favicon"
+            name="faviconUrl"
+            usageType="FAVICON"
+            value={settings.faviconUrl}
+          />
         </FieldError>
       </div>
       <FieldError errors={state.fieldErrors} name="tagline">
