@@ -1,6 +1,5 @@
 import { getCategoriesForStore } from "../../../modules/categories/category.service";
 import { CategoryManagement } from "../../../modules/categories/components/category-management";
-import { getMediaPickerAssets } from "../../../modules/media/media.service";
 import { requireStore } from "../../../modules/stores/queries";
 
 type CategoriesPageProps = {
@@ -9,20 +8,10 @@ type CategoriesPageProps = {
 
 export default async function CategoriesPage({ searchParams }: CategoriesPageProps) {
   const store = await requireStore();
-  const [categories, mediaAssets] = await Promise.all([
-    getCategoriesForStore(store.id),
-    getMediaPickerAssets(store.id)
-  ]);
+  const categories = await getCategoriesForStore(store.id);
   const message = getCategoriesMessage(await searchParams);
 
-  return (
-    <CategoryManagement
-      categories={categories}
-      mediaAssets={mediaAssets}
-      message={message}
-      storeSlug={store.slug}
-    />
-  );
+  return <CategoryManagement categories={categories} message={message} storeSlug={store.slug} />;
 }
 
 function getCategoriesMessage(searchParams: Record<string, string | string[] | undefined>) {

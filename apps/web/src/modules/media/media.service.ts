@@ -2,18 +2,20 @@ import {
   createMediaAssetRecord,
   deleteMediaAssetForStoreRecord,
   getMediaAssetForStoreRecord,
-  getMediaAssetsForStoreRecord
+  getMediaAssetsForStoreRecord,
+  listMediaAssetsRecord
 } from "./media.repository";
-import type { MediaUsageType } from "./media.schema";
+import {
+  allowedMimeTypesForUsage,
+  listMediaAssetsSchema,
+  maxMediaUploadSize,
+  mediaMimeRuleMessage,
+  mediaSvgMimeType,
+  type ListMediaAssetsInput,
+  type MediaUsageType
+} from "./media.schema";
 import { deleteStoredMediaFile, saveMediaFile } from "./storage";
-import type { UploadMediaFileInput } from "./media.types";
-
-const maxUploadSize = 5 * 1024 * 1024;
-const rasterMimeTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
-const svgMimeType = "image/svg+xml";
-// Browsers report .ico under either name depending on the platform, and the
-// branding favicon picker offers .ico, so both have to be accepted there.
-const iconMimeTypes = new Set(["image/vnd.microsoft.icon", "image/x-icon"]);
+import type { MediaPickerAsset, MediaPickerPage, UploadMediaFileInput } from "./media.types";
 
 export async function getMediaAssetsForStore(storeId: string) {
   return getMediaAssetsForStoreRecord(storeId);
@@ -22,13 +24,48 @@ export async function getMediaAssetsForStore(storeId: string) {
 export async function getMediaPickerAssets(storeId: string) {
   const assets = await getMediaAssetsForStoreRecord(storeId);
 
-  return assets.map((asset) => ({
+  return assets.map(toPickerAsset);
+}
+
+export async function listMediaAssets(
+  storeId: string,
+  input: ListMediaAssetsInput
+): Promise<MediaPickerPage> {
+  const query = listMediaAssetsSchema.parse(input);
+  const rows = await listMediaAssetsRecord({
+    mimeTypes: allowedMimeTypesForUsage(query.context),
+    storeId,
+    // One extra row tells us whether another page exists without a count query.
+    take: query.take + 1,
+    ...(query.cursor ? { cursor: query.cursor } : {}),
+    ...(query.search ? { search: query.search } : {}),
+    ...(query.usageType ? { usageType: query.usageType } : {})
+  });
+  const hasMore = rows.length > query.take;
+  const assets = (hasMore ? rows.slice(0, query.take) : rows).map(toPickerAsset);
+
+  return {
+    assets,
+    nextCursor: hasMore ? (assets[assets.length - 1]?.id ?? null) : null
+  };
+}
+
+function toPickerAsset(asset: {
+  alt: string | null;
+  filename: string;
+  id: string;
+  mimeType: string;
+  url: string;
+  usageType: string | null;
+}): MediaPickerAsset {
+  return {
     alt: asset.alt,
     filename: asset.filename,
     id: asset.id,
+    mimeType: asset.mimeType,
     url: asset.url,
     usageType: asset.usageType
-  }));
+  };
 }
 
 export async function uploadMediaAsset(input: UploadMediaFileInput) {
@@ -70,26 +107,17 @@ async function validateUpload(file: File, usageType: MediaUsageType) {
     throw new Error("Choose an image to upload.");
   }
 
-  if (file.size > maxUploadSize) {
+  if (file.size > maxMediaUploadSize) {
     throw new Error("Image must be 5MB or smaller.");
   }
 
-  if (rasterMimeTypes.has(file.type)) {
-    return;
+  if (!allowedMimeTypesForUsage(usageType).includes(file.type)) {
+    throw new Error(mediaMimeRuleMessage);
   }
 
-  if (file.type === svgMimeType && (usageType === "LOGO" || usageType === "FAVICON")) {
+  if (file.type === mediaSvgMimeType) {
     await validateSvg(file);
-    return;
   }
-
-  if (iconMimeTypes.has(file.type) && usageType === "FAVICON") {
-    return;
-  }
-
-  throw new Error(
-    "Use JPG, PNG, or WebP images. SVG is only allowed for logo or favicon uploads, and ICO only for favicons."
-  );
 }
 
 async function validateSvg(file: File) {

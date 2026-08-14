@@ -17,8 +17,14 @@ export type MediaPickerAsset = {
   alt: string | null;
   filename: string;
   id: string;
+  mimeType: string;
   url: string;
   usageType: string | null;
+};
+
+export type MediaPickerPage = {
+  assets: MediaPickerAsset[];
+  nextCursor: string | null;
 };
 
 export type StoredMediaFile = {

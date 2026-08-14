@@ -7,7 +7,6 @@ import {
   getCategoriesForStore,
   getCategoryByIdForStore
 } from "../../../../../modules/categories/category.service";
-import { getMediaPickerAssets } from "../../../../../modules/media/media.service";
 import { requireStore } from "../../../../../modules/stores/queries";
 
 type EditCategoryPageProps = {
@@ -19,10 +18,9 @@ type EditCategoryPageProps = {
 export default async function EditCategoryPage({ params }: EditCategoryPageProps) {
   const store = await requireStore();
   const { categoryId } = await params;
-  const [category, categories, mediaAssets] = await Promise.all([
+  const [category, categories] = await Promise.all([
     getCategoryByIdForStore(store.id, categoryId),
-    getCategoriesForStore(store.id),
-    getMediaPickerAssets(store.id)
+    getCategoriesForStore(store.id)
   ]);
 
   if (!category) {
@@ -53,7 +51,6 @@ export default async function EditCategoryPage({ params }: EditCategoryPageProps
               imageUrl: category.imageUrl,
               parentId: category.parentId ?? undefined
             }}
-            mediaAssets={mediaAssets}
             parentOptions={categories.map((entry) => ({
               id: entry.id,
               name: entry.name

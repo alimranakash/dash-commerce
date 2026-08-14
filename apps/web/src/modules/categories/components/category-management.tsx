@@ -2,7 +2,6 @@ import { Edit3, ImageIcon, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { DeleteConfirmationButton } from "../../../components/dashboard/delete-confirmation-button";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
-import type { MediaPickerAsset } from "../../media/media.types";
 import { createCategoryFormAction, deleteCategoryFormAction } from "../category.actions";
 import { CategoryForm } from "./category-form";
 
@@ -16,12 +15,11 @@ type CategoryItem = {
 
 type CategoryManagementProps = {
   categories: CategoryItem[];
-  mediaAssets?: MediaPickerAsset[];
   message?: string | null;
   storeSlug: string;
 };
 
-export function CategoryManagement({ categories, mediaAssets = [], message, storeSlug }: CategoryManagementProps) {
+export function CategoryManagement({ categories, message, storeSlug }: CategoryManagementProps) {
   const parentOptions = categories.map(({ id, name }) => ({ id, name }));
 
   return (
@@ -87,7 +85,6 @@ export function CategoryManagement({ categories, mediaAssets = [], message, stor
             <div className="catalog-form-body">
               <CategoryForm
                 action={createCategoryFormAction}
-                mediaAssets={mediaAssets}
                 parentOptions={parentOptions}
                 submitLabel="Create Category"
               />

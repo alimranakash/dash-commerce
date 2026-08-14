@@ -26,6 +26,38 @@ export async function createMediaAssetRecord(input: CreateMediaAssetInput) {
   });
 }
 
+type ListMediaAssetsRecordInput = {
+  cursor?: string;
+  mimeTypes?: string[];
+  search?: string;
+  storeId: string;
+  take: number;
+  usageType?: string;
+};
+
+export async function listMediaAssetsRecord(input: ListMediaAssetsRecordInput) {
+  return prisma.mediaAsset.findMany({
+    where: {
+      storeId: input.storeId,
+      ...(input.mimeTypes ? { mimeType: { in: input.mimeTypes } } : {}),
+      ...(input.usageType ? { usageType: input.usageType } : {}),
+      ...(input.search
+        ? {
+            OR: [
+              { filename: { contains: input.search, mode: "insensitive" as const } },
+              { alt: { contains: input.search, mode: "insensitive" as const } }
+            ]
+          }
+        : {})
+    },
+    // `id` has to take part in the ordering for the cursor to be stable when
+    // several assets share a createdAt timestamp.
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: input.take,
+    ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {})
+  });
+}
+
 export async function getMediaAssetsForStoreRecord(storeId: string) {
   return prisma.mediaAsset.findMany({
     where: {
