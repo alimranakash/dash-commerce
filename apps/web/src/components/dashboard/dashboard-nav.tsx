@@ -7,6 +7,7 @@ import {
   ClipboardList,
   Boxes,
   FileText,
+  Images,
   LayoutDashboard,
   Package,
   Percent,
@@ -72,7 +73,6 @@ const settingsLinks = [
   { href: "/dashboard/settings/social", label: "Social" },
   { href: "/dashboard/payments", label: "Payments" },
   { href: "/dashboard/shipping", label: "Shipping" },
-  { href: "/dashboard/media", label: "Media" },
   { href: "/dashboard/ai", label: "StoreOS / AI" }
 ];
 
@@ -101,6 +101,7 @@ const mainLinks: NavItem[] = [
 ];
 
 const trailingLinks: NavItem[] = [
+  { href: "/dashboard/media", icon: Images, label: "Media" },
   { href: "/dashboard/abandoned-cart", icon: ShoppingCart, label: "Abandoned cart" }
 ];
 
@@ -111,6 +112,7 @@ const iconColors: Record<string, string> = {
   Customers: "text-sky-500",
   Expenses: "text-rose-500",
   Inventory: "text-lime-600",
+  Media: "text-teal-500",
   Orders: "text-blue-600",
   Purchases: "text-indigo-500",
   Reports: "text-pink-500",
@@ -129,7 +131,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
   const orderRouteActive = pathname.startsWith("/dashboard/orders");
   const reportRouteActive = pathname.startsWith("/dashboard/reports");
   const storefrontRouteActive = pathname.startsWith("/dashboard/storefront") || pathname.startsWith("/dashboard/theme");
-  const settingsRouteActive = pathname.startsWith("/dashboard/settings") || ["/dashboard/payments", "/dashboard/shipping", "/dashboard/media", "/dashboard/ai"].some(
+  const settingsRouteActive = pathname.startsWith("/dashboard/settings") || ["/dashboard/payments", "/dashboard/shipping", "/dashboard/ai"].some(
     (route) => pathname.startsWith(route)
   );
   const [productsOpen, setProductsOpen] = useState(productRouteActive);
