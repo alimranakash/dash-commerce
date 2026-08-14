@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import { canCreateProduct } from "../billing/subscription-limits";
 import { createCategory } from "../categories/category.service";
-import { uploadMediaAsset } from "../media/media.service";
 import { requireStore } from "../stores/queries";
 import {
   archiveProduct,
@@ -50,7 +49,7 @@ export async function createProductFormAction(
   const store = await requireStore();
 
   try {
-    const payload = await productPayloadFromFormData(store.id, formData);
+    const payload = productPayloadFromFormData(formData);
 
     await assertCanCreateProduct(store.id);
     const product = await createProduct(store.id, payload.input);
@@ -89,7 +88,7 @@ export async function updateProductFormAction(
   const store = await requireStore();
 
   try {
-    const payload = await productPayloadFromFormData(store.id, formData);
+    const payload = productPayloadFromFormData(formData);
     const product = await updateProduct(store.id, productId, payload.input);
 
     if (!product) {
@@ -160,17 +159,17 @@ type ProductFormPayload = {
   variants: ProductVariantInput[];
 };
 
-async function productPayloadFromFormData(storeId: string, formData: FormData): Promise<ProductFormPayload> {
+// The media picker uploads before submit, so every image arrives as a library
+// URL and nothing here has to touch storage.
+function productPayloadFromFormData(formData: FormData): ProductFormPayload {
   const categoryIds = getValues(formData, "categoryIds");
-  const variants = await productVariantsFromFormData(storeId, formData);
-  const images = (
-    await Promise.all([
-      resolveProductImage(storeId, formData, "mainImageUrl", "mainImageFile", 0),
-      resolveProductImage(storeId, formData, "galleryImageUrl0", "galleryImageFile0", 1),
-      resolveProductImage(storeId, formData, "galleryImageUrl1", "galleryImageFile1", 2),
-      resolveProductImage(storeId, formData, "galleryImageUrl2", "galleryImageFile2", 3)
-    ])
-  ).filter((image): image is { position: number; url: string } => Boolean(image));
+  const variants = productVariantsFromFormData(formData);
+  const images = [
+    productImageFromFormData(formData, "mainImageUrl", 0),
+    productImageFromFormData(formData, "galleryImageUrl0", 1),
+    productImageFromFormData(formData, "galleryImageUrl1", 2),
+    productImageFromFormData(formData, "galleryImageUrl2", 3)
+  ].filter((image): image is { position: number; url: string } => Boolean(image));
 
   return {
     attributes: productAttributesFromFormData(formData),
@@ -223,7 +222,7 @@ function productAttributesFromFormData(formData: FormData): ProductAttributeInpu
   }).filter((attribute) => attribute.name.trim().length > 0 && attribute.values.length > 0);
 }
 
-async function productVariantsFromFormData(storeId: string, formData: FormData): Promise<ProductVariantInput[]> {
+function productVariantsFromFormData(formData: FormData): ProductVariantInput[] {
   const parsed = parseJsonArray(formData, "productVariantsJson");
   const variants: ProductVariantInput[] = [];
   const signatures = new Set<string>();
@@ -245,7 +244,7 @@ async function productVariantsFromFormData(storeId: string, formData: FormData):
       continueSelling: Boolean(item.continueSelling),
       costPrice: stringValue(item.costPrice),
       dimensions: stringValue(item.dimensions),
-      imageUrl: await resolveVariantImage(storeId, formData, index, stringValue(item.imageUrl)),
+      imageUrl: variantImageFromFormData(formData, index, stringValue(item.imageUrl)),
       lowStockThreshold: numberValue(item.lowStockThreshold),
       optionSignature: signature,
       options,
@@ -263,20 +262,7 @@ async function productVariantsFromFormData(storeId: string, formData: FormData):
   return variants;
 }
 
-async function resolveVariantImage(storeId: string, formData: FormData, index: number, fallbackUrl: string | null | undefined) {
-  const file = formData.get(`variantImageFile${index}`);
-
-  if (file instanceof File && file.size > 0) {
-    const asset = await uploadMediaAsset({
-      alt: getValue(formData, "title") || "Variant image",
-      file,
-      storeId,
-      usageType: "PRODUCT"
-    });
-
-    return asset.url;
-  }
-
+function variantImageFromFormData(formData: FormData, index: number, fallbackUrl: string | null | undefined) {
   const explicitUrl = getValue(formData, `variantImageUrl${index}`);
 
   return explicitUrl || fallbackUrl || null;
@@ -329,29 +315,7 @@ function numberValue(value: unknown) {
   return Number.isFinite(number) ? number : 0;
 }
 
-async function resolveProductImage(
-  storeId: string,
-  formData: FormData,
-  valueField: string,
-  fileField: string,
-  position: number
-) {
-  const file = formData.get(fileField);
-
-  if (file instanceof File && file.size > 0) {
-    const asset = await uploadMediaAsset({
-      alt: getValue(formData, "title") || "Product image",
-      file,
-      storeId,
-      usageType: "PRODUCT"
-    });
-
-    return {
-      position,
-      url: asset.url
-    };
-  }
-
+function productImageFromFormData(formData: FormData, valueField: string, position: number) {
   const url = getValue(formData, valueField);
 
   return url ? { position, url } : null;

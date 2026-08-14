@@ -15515,3 +15515,37 @@ textarea {
     gap: 10px;
   }
 }
+
+/* --- Product media slots ---------------------------------------------------- */
+.dash-dashboard .product-image-slot-actions {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.dash-dashboard .product-image-slot-actions > span {
+  color: #77748a;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.dash-dashboard .media-picker-choose:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.variant-image-clear,
+.dash-dashboard .variant-image-clear {
+  background: #fff4f4;
+  border: 1px solid #ffd8d8;
+  border-radius: 9px;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 750;
+  min-height: 34px;
+  padding-inline: 8px;
+  width: 100%;
+}

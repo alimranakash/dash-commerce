@@ -2,14 +2,13 @@
 
 import { Copy, ImagePlus, Plus, Sparkles, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { MediaPickerAsset } from "../../media/media.types";
+import { MediaPicker } from "../../media/components/media-picker";
 import type { ProductAttributeInput, ProductVariantRecord } from "../product-variants.service";
 
 type ProductVariantsEditorProps = {
   attributes?: ProductAttributeInput[];
   basePrice?: string | undefined;
   baseSku?: string | undefined;
-  mediaAssets?: MediaPickerAsset[];
   variants?: ProductVariantRecord[];
 };
 
@@ -30,7 +29,6 @@ export function ProductVariantsEditor({
   attributes = [],
   basePrice,
   baseSku,
-  mediaAssets = [],
   variants = []
 }: ProductVariantsEditorProps) {
   const [attributeDrafts, setAttributeDrafts] = useState<AttributeDraft[]>(() => (
@@ -332,7 +330,6 @@ export function ProductVariantsEditor({
                 <VariantRow
                   index={index}
                   key={variant.draftId}
-                  mediaAssets={mediaAssets}
                   onDuplicate={duplicateVariant}
                   onRemove={removeVariant}
                   onUpdate={updateVariant}
@@ -433,14 +430,12 @@ function AttributeCard({
 
 function VariantRow({
   index,
-  mediaAssets,
   onDuplicate,
   onRemove,
   onUpdate,
   variant
 }: {
   index: number;
-  mediaAssets: MediaPickerAsset[];
   onDuplicate: (draftId: string) => void;
   onRemove: (draftId: string) => void;
   onUpdate: (draftId: string, patch: Partial<VariantDraft>) => void;
@@ -451,7 +446,6 @@ function VariantRow({
       <td>
         <VariantImageUploader
           index={index}
-          mediaAssets={mediaAssets}
           onChange={(imageUrl) => onUpdate(variant.draftId, { imageUrl })}
           value={variant.imageUrl ?? null}
         />
@@ -485,57 +479,40 @@ function VariantRow({
 
 function VariantImageUploader({
   index,
-  mediaAssets,
   onChange,
   value
 }: {
   index: number;
-  mediaAssets: MediaPickerAsset[];
   onChange: (imageUrl: string) => void;
   value?: string | null;
 }) {
-  const [previewUrl, setPreviewUrl] = useState(value ?? "");
-  const imageAssets = mediaAssets.filter((asset) => asset.url);
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="variant-image-uploader">
       <input name={`variantImageUrl${index}`} type="hidden" value={value ?? ""} />
-      <label className="variant-image-drop">
-        {previewUrl ? <img alt="" src={previewUrl} /> : <ImagePlus className="h-5 w-5" />}
-        <span>Upload</span>
-        <input
-          accept="image/jpeg,image/png,image/webp"
-          name={`variantImageFile${index}`}
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-
-            if (!file) return;
-
-            setPreviewUrl(URL.createObjectURL(file));
-            onChange("");
-          }}
-          type="file"
-        />
-      </label>
-      {imageAssets.length > 0 ? (
-        <select
-          aria-label="Use existing variant media"
-          onChange={(event) => {
-            const nextUrl = event.target.value;
-
-            onChange(nextUrl);
-            setPreviewUrl(nextUrl);
-          }}
-          value=""
-        >
-          <option value="">Media</option>
-          {imageAssets.map((asset) => (
-            <option key={asset.id} value={asset.url}>
-              {asset.filename}
-            </option>
-          ))}
-        </select>
+      <button className="variant-image-drop" onClick={() => setOpen(true)} type="button">
+        {value ? <img alt="" src={value} /> : <ImagePlus className="h-5 w-5" />}
+        {value ? null : <span>Add</span>}
+      </button>
+      {value ? (
+        <button className="variant-image-clear" onClick={() => onChange("")} type="button">
+          Remove
+        </button>
       ) : null}
+      <MediaPicker
+        onClose={() => setOpen(false)}
+        onSelect={(picked) => {
+          const first = picked[0];
+
+          if (first) {
+            onChange(first.url);
+          }
+        }}
+        open={open}
+        title="Select variant image"
+        usageType="PRODUCT"
+      />
     </div>
   );
 }

@@ -20,6 +20,9 @@ type MediaPickerFieldProps = {
   description?: string;
   label: string;
   name: string;
+  // Supply this to let a parent own the value (product slots fill each other);
+  // leave it off and the field keeps its own state.
+  onChange?: ((url: string) => void) | undefined;
   usageType: MediaUsageType;
   value?: string | null | undefined;
 };
@@ -432,6 +435,7 @@ export function MediaPickerField({
   description,
   label,
   name,
+  onChange,
   usageType,
   value
 }: MediaPickerFieldProps) {
@@ -442,13 +446,18 @@ export function MediaPickerField({
     setSelectedUrl(value ?? "");
   }, [value]);
 
+  function applyUrl(url: string) {
+    setSelectedUrl(url);
+    onChange?.(url);
+  }
+
   return (
     <div className="media-picker-field">
       <input name={name} type="hidden" value={selectedUrl} />
       <div className="theme-upload-label-row">
         <span>{label}</span>
         {selectedUrl ? (
-          <button className="theme-upload-remove" onClick={() => setSelectedUrl("")} type="button">
+          <button className="theme-upload-remove" onClick={() => applyUrl("")} type="button">
             <Trash2 className="h-4 w-4" />
             Remove
           </button>
@@ -475,7 +484,7 @@ export function MediaPickerField({
           const first = picked[0];
 
           if (first) {
-            setSelectedUrl(first.url);
+            applyUrl(first.url);
           }
         }}
         open={open}

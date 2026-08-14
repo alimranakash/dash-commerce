@@ -4,7 +4,6 @@ import { DashboardShell } from "../../../../../components/dashboard/dashboard-sh
 import { getCategoriesForStore } from "../../../../../modules/categories/category.service";
 import { ProductStockHistory } from "../../../../../modules/inventory/components/product-stock-history";
 import { getStockMovementsForProduct } from "../../../../../modules/inventory/inventory.service";
-import { getMediaPickerAssets } from "../../../../../modules/media/media.service";
 import { ProductForm } from "../../../../../modules/products/components/product-form";
 import { updateProductFormAction } from "../../../../../modules/products/product.actions";
 import {
@@ -25,10 +24,9 @@ type EditProductPageProps = {
 export default async function EditProductPage({ params }: EditProductPageProps) {
   const store = await requireStore();
   const { productId } = await params;
-  const [product, categories, mediaAssets, stockMovements, tags, brands, selectedTagIds, selectedBrandIds, selectedCategoryIds, variantConfiguration] = await Promise.all([
+  const [product, categories, stockMovements, tags, brands, selectedTagIds, selectedBrandIds, selectedCategoryIds, variantConfiguration] = await Promise.all([
     getProductByIdForStore(store.id, productId),
     getCategoriesForStore(store.id),
-    getMediaPickerAssets(store.id),
     getStockMovementsForProduct(store.organizationId, store.id, productId, 8),
     getProductTaxonomyItems(store.id, "TAG"),
     getProductTaxonomyItems(store.id, "BRAND"),
@@ -65,7 +63,6 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
             id: category.id,
             name: category.name
           }))}
-          mediaAssets={mediaAssets}
           product={{
             id: product.id,
             title: product.title,

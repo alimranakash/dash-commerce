@@ -3,8 +3,6 @@
 import { Button } from "@dash/ui";
 import { useActionState, useMemo, useState, type ReactNode } from "react";
 import { normalizeSlug } from "../../../lib/slug";
-import type { MediaPickerAsset } from "../../media/media.types";
-import { UploadField } from "../../settings/components/theme-form-fields";
 import {
   quickCreateProductBrandAction,
   quickCreateProductCategoryAction,
@@ -12,6 +10,7 @@ import {
   type ProductActionState
 } from "../product.actions";
 import type { ProductVariantConfiguration } from "../product-variants.service";
+import { ProductImageSlots } from "./product-image-slots";
 import { ProductVariantsEditor } from "./product-variants-editor";
 import { TaxonomyMultiSelect, type TaxonomyOption } from "./taxonomy-multi-select";
 
@@ -46,7 +45,6 @@ type ProductFormProps = {
   action: (state: ProductActionState, formData: FormData) => Promise<ProductActionState>;
   brands: ProductFormCategory[];
   categories: ProductFormCategory[];
-  mediaAssets?: MediaPickerAsset[];
   product?: ProductFormValue;
   storeSlug: string;
   submitLabel: string;
@@ -61,7 +59,6 @@ export function ProductForm({
   action,
   brands,
   categories,
-  mediaAssets = [],
   product,
   storeSlug,
   submitLabel,
@@ -218,27 +215,7 @@ export function ProductForm({
             title="Media"
           >
             {state.fieldErrors?.images ? <p className="field-error">{state.fieldErrors.images}</p> : null}
-            <div className="product-image-slots">
-              <UploadField
-                accept="image/jpeg,image/png,image/webp"
-                assets={mediaAssets}
-                fileName="mainImageFile"
-                label="Main Image"
-                name="mainImageUrl"
-                value={imageUrls[0]}
-              />
-              {[0, 1, 2].map((index) => (
-                <UploadField
-                  accept="image/jpeg,image/png,image/webp"
-                  assets={mediaAssets}
-                  fileName={`galleryImageFile${index}`}
-                  key={index}
-                  label={`Gallery Image ${index + 1}`}
-                  name={`galleryImageUrl${index}`}
-                  value={imageUrls[index + 1]}
-                />
-              ))}
-            </div>
+            <ProductImageSlots imageUrls={imageUrls} />
             <p className="product-editor-hint">Gallery limit: 3 images. The storefront shows 4 images total including the main image.</p>
           </ProductEditorCard>
 
@@ -275,7 +252,6 @@ export function ProductForm({
             attributes={product?.variantConfiguration?.attributes ?? []}
             basePrice={productPrice}
             baseSku={productSku}
-            mediaAssets={mediaAssets}
             variants={product?.variantConfiguration?.variants ?? []}
           />
         </div>

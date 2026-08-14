@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
 import { getCategoriesForStore } from "../../../../modules/categories/category.service";
-import { getMediaPickerAssets } from "../../../../modules/media/media.service";
 import { ProductForm } from "../../../../modules/products/components/product-form";
 import { createProductFormAction } from "../../../../modules/products/product.actions";
 import { getProductTaxonomyItems } from "../../../../modules/products/product-taxonomy.service";
@@ -9,9 +8,8 @@ import { requireStore } from "../../../../modules/stores/queries";
 
 export default async function NewProductPage() {
   const store = await requireStore();
-  const [categories, mediaAssets, tags, brands] = await Promise.all([
+  const [categories, tags, brands] = await Promise.all([
     getCategoriesForStore(store.id),
-    getMediaPickerAssets(store.id),
     getProductTaxonomyItems(store.id, "TAG"),
     getProductTaxonomyItems(store.id, "BRAND")
   ]);
@@ -39,7 +37,6 @@ export default async function NewProductPage() {
             id: category.id,
             name: category.name
           }))}
-          mediaAssets={mediaAssets}
           storeSlug={store.slug}
           submitLabel="Create product"
           tags={tags.map((tag) => ({
