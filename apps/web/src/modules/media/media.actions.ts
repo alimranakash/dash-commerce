@@ -7,11 +7,6 @@ import { deleteMediaAsset, listMediaAssets, uploadMediaAsset } from "./media.ser
 import { uploadMediaSchema, type ListMediaAssetsInput } from "./media.schema";
 import type { MediaPickerAsset, MediaPickerPage } from "./media.types";
 
-export type MediaUploadActionState = {
-  message?: string;
-  status: "idle" | "error";
-};
-
 export type MediaUploadResult =
   | { asset: MediaPickerAsset; status: "success" }
   | { message: string; status: "error" };
@@ -24,9 +19,9 @@ export async function listMediaAssetsAction(input: ListMediaAssetsInput): Promis
 }
 
 /**
- * Upload straight from the picker modal. Unlike `uploadMediaFormAction` this
- * returns the created asset instead of redirecting, so the modal can drop it
- * into the grid and select it without leaving the page.
+ * The single upload entry point, shared by the picker modal and the library
+ * page: it returns the created asset instead of redirecting, so the caller can
+ * drop it into a grid without leaving the page.
  */
 export async function uploadMediaAction(formData: FormData): Promise<MediaUploadResult> {
   const store = await requireStore();
@@ -68,56 +63,12 @@ export async function uploadMediaAction(formData: FormData): Promise<MediaUpload
   }
 }
 
-export async function uploadMediaFormAction(
-  state: MediaUploadActionState,
-  formData: FormData
-): Promise<MediaUploadActionState> {
-  void state;
-
-  const store = await requireStore();
-
-  try {
-    const data = uploadMediaSchema.parse({
-      alt: getValue(formData, "alt"),
-      usageType: getValue(formData, "usageType") || "GENERAL"
-    });
-    const file = formData.get("file");
-
-    if (!(file instanceof File)) {
-      throw new Error("Choose an image to upload.");
-    }
-
-    await uploadMediaAsset({
-      ...(data.alt ? { alt: data.alt } : {}),
-      file,
-      storeId: store.id,
-      usageType: data.usageType
-    });
-  } catch (error) {
-    return {
-      message: error instanceof Error ? error.message : "Upload failed.",
-      status: "error"
-    };
-  }
-
-  revalidateMediaPaths();
-  redirect("/dashboard/media?uploaded=1");
-}
-
 export async function deleteMediaFormAction(assetId: string) {
   const store = await requireStore();
 
   await deleteMediaAsset(store.id, assetId);
-  revalidateMediaPaths();
-  redirect("/dashboard/media?deleted=1");
-}
-
-function revalidateMediaPaths() {
   revalidatePath("/dashboard/media");
-  revalidatePath("/dashboard/products/new");
-  revalidatePath("/dashboard/settings");
-  revalidatePath("/dashboard/theme");
-  revalidatePath("/dashboard/storefront/themes");
+  redirect("/dashboard/media?deleted=1");
 }
 
 function getValue(formData: FormData, key: string) {

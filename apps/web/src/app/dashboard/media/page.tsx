@@ -1,7 +1,6 @@
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { MediaLibrary } from "../../../modules/media/components/media-library";
 import { MediaUploadForm } from "../../../modules/media/components/media-upload-form";
-import { uploadMediaFormAction } from "../../../modules/media/media.actions";
 import { getMediaAssetsForStore } from "../../../modules/media/media.service";
 import { requireStore } from "../../../modules/stores/queries";
 
@@ -13,7 +12,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
   const store = await requireStore();
   const assets = await getMediaAssetsForStore(store.id);
   const params = await searchParams;
-  const message = params.uploaded ? "Image uploaded." : params.deleted ? "Image deleted." : null;
+  const message = params.deleted ? "Image deleted." : null;
 
   return (
     <DashboardShell storeSlug={store.slug}>
@@ -29,7 +28,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         </div>
         {message ? <p className="success-message">{message}</p> : null}
         <div className="dashboard-shell media-upload-shell">
-          <MediaUploadForm action={uploadMediaFormAction} />
+          <MediaUploadForm />
         </div>
         <MediaLibrary
           assets={assets.map((asset) => ({

@@ -19,7 +19,9 @@ type MediaPickerProps = {
 type MediaPickerFieldProps = {
   description?: string;
   label: string;
-  name: string;
+  // Omit to render no hidden input — for values a parent serializes itself,
+  // like the promo-card rows.
+  name?: string | undefined;
   // Supply this to let a parent own the value (product slots fill each other);
   // leave it off and the field keeps its own state.
   onChange?: ((url: string) => void) | undefined;
@@ -428,6 +430,55 @@ export function MediaPicker({
 }
 
 /**
+ * For settings that hold a newline-separated list of image URLs. The textarea
+ * stays editable (sellers can reorder or paste), and the picker appends to it.
+ */
+export function MediaPickerListField({
+  helper,
+  label,
+  name,
+  usageType,
+  value
+}: {
+  helper?: string;
+  label: string;
+  name: string;
+  usageType: MediaUsageType;
+  value: string;
+}) {
+  const [urls, setUrls] = useState(value);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="media-picker-list-field">
+      <div className="theme-upload-label-row">
+        <span>{label}</span>
+        <button className="media-picker-choose" onClick={() => setOpen(true)} type="button">
+          Add from library
+        </button>
+      </div>
+      <textarea name={name} onChange={(event) => setUrls(event.target.value)} rows={4} value={urls} />
+      {helper ? <span className="media-picker-list-helper">{helper}</span> : null}
+      <MediaPicker
+        multiple
+        onClose={() => setOpen(false)}
+        onSelect={(picked) => {
+          setUrls((current) => {
+            const lines = current.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+            const added = picked.map((asset) => asset.url).filter((url) => !lines.includes(url));
+
+            return [...lines, ...added].join("\n");
+          });
+        }}
+        open={open}
+        title={`Add ${label}`}
+        usageType={usageType}
+      />
+    </div>
+  );
+}
+
+/**
  * Form-bound wrapper: keeps the hidden-input contract the server actions already
  * read, so adopting it in a form is a straight swap for the old upload field.
  */
@@ -453,7 +504,7 @@ export function MediaPickerField({
 
   return (
     <div className="media-picker-field">
-      <input name={name} type="hidden" value={selectedUrl} />
+      {name ? <input name={name} type="hidden" value={selectedUrl} /> : null}
       <div className="theme-upload-label-row">
         <span>{label}</span>
         {selectedUrl ? (

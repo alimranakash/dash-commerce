@@ -1,8 +1,6 @@
 "use client";
 
-import { ImagePlus, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import type { MediaPickerAsset } from "../../media/media.types";
+import { useEffect, useState, type ReactNode } from "react";
 
 type SettingsCardProps = {
   children: ReactNode;
@@ -22,107 +20,6 @@ export function SettingsCard({ children, description, id, title }: SettingsCardP
       </div>
       <div className="theme-settings-card-body">{children}</div>
     </section>
-  );
-}
-
-export function UploadField({
-  accept = "image/jpeg,image/png,image/webp,image/svg+xml",
-  assets = [],
-  fileName,
-  label,
-  name,
-  value
-}: {
-  accept?: string;
-  assets?: MediaPickerAsset[];
-  fileName: string;
-  label: string;
-  name: string;
-  value?: string | null | undefined;
-}) {
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [selectedUrl, setSelectedUrl] = useState(value ?? "");
-  const [previewUrl, setPreviewUrl] = useState(value ?? "");
-
-  useEffect(() => {
-    setSelectedUrl(value ?? "");
-    setPreviewUrl(value ?? "");
-  }, [value]);
-
-  const imageAssets = useMemo(() => assets.filter((asset) => asset.url), [assets]);
-
-  return (
-    <div className="theme-upload-field">
-      <input name={name} type="hidden" value={selectedUrl} />
-      <div className="theme-upload-label-row">
-        <span>{label}</span>
-        {previewUrl ? (
-          <button
-            className="theme-upload-remove"
-            onClick={() => {
-              if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-              }
-
-              setSelectedUrl("");
-              setPreviewUrl("");
-            }}
-            type="button"
-          >
-            <Trash2 className="h-4 w-4" />
-            Remove
-          </button>
-        ) : null}
-      </div>
-      <div className="theme-upload-box">
-        <div className="theme-upload-preview">
-          {previewUrl ? <img alt={`${label} preview`} src={previewUrl} /> : <ImagePlus className="h-8 w-8" />}
-        </div>
-        <div className="theme-upload-actions">
-          <label className="theme-upload-button">
-            Upload
-            <input
-              accept={accept}
-              name={fileName}
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-
-                if (!file) {
-                  return;
-                }
-
-                const objectUrl = URL.createObjectURL(file);
-                setSelectedUrl("");
-                setPreviewUrl(objectUrl);
-              }}
-              ref={fileInputRef}
-              type="file"
-            />
-          </label>
-          {imageAssets.length > 0 ? (
-            <select
-              aria-label={`Select existing ${label}`}
-              onChange={(event) => {
-                const url = event.target.value;
-
-                if (url) {
-                  setSelectedUrl(url);
-                  setPreviewUrl(url);
-                }
-              }}
-              value=""
-            >
-              <option value="">Use media library</option>
-              {imageAssets.map((asset) => (
-                <option key={asset.id} value={asset.url}>
-                  {asset.filename}
-                </option>
-              ))}
-            </select>
-          ) : null}
-        </div>
-      </div>
-    </div>
   );
 }
 

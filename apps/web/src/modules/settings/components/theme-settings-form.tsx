@@ -2,7 +2,7 @@
 
 import { Button } from "@dash/ui";
 import { useActionState } from "react";
-import { MediaPickerField } from "../../media/components/media-picker";
+import { MediaPickerField, MediaPickerListField } from "../../media/components/media-picker";
 import { StorefrontSettingsToast } from "../../storefront/dashboard/storefront-settings-toast";
 import {
   FOOTER_COLUMN_SLOTS,
@@ -13,6 +13,7 @@ import {
   type StorefrontProductSectionSettings
 } from "../../storefront/customization";
 import type { SettingsActionState } from "../settings.actions";
+import { PromoCardsEditor } from "./promo-cards-editor";
 import { ColorPickerField, SettingsCard, ToggleField } from "./theme-form-fields";
 
 export type ThemeSettingsFormValue = {
@@ -659,14 +660,18 @@ export function ThemeSettingsForm({ action, settings }: ThemeSettingsFormProps) 
             Split overlay opacity
             <input defaultValue={advanced.fashion.editorialSplitOverlayOpacity} max={80} min={0} name="fashionEditorialSplitOverlayOpacity" type="number" />
           </label>
-          <label>
-            Split left image URL
-            <input defaultValue={advanced.fashion.editorialSplitLeftImageUrl} name="fashionEditorialSplitLeftImageUrl" type="text" />
-          </label>
-          <label>
-            Split right image URL
-            <input defaultValue={advanced.fashion.editorialSplitRightImageUrl} name="fashionEditorialSplitRightImageUrl" type="text" />
-          </label>
+          <MediaPickerField
+            label="Split left image"
+            name="fashionEditorialSplitLeftImageUrl"
+            usageType="HERO"
+            value={advanced.fashion.editorialSplitLeftImageUrl}
+          />
+          <MediaPickerField
+            label="Split right image"
+            name="fashionEditorialSplitRightImageUrl"
+            usageType="HERO"
+            value={advanced.fashion.editorialSplitRightImageUrl}
+          />
           <label>
             Split height
             <input defaultValue={advanced.fashion.editorialSplitHeight} max={1000} min={360} name="fashionEditorialSplitHeight" type="number" />
@@ -679,10 +684,12 @@ export function ThemeSettingsForm({ action, settings }: ThemeSettingsFormProps) 
             Campaign subtitle
             <input defaultValue={advanced.fashion.editorialBannerSubtitle} name="fashionEditorialBannerSubtitle" type="text" />
           </label>
-          <label>
-            Campaign image URL
-            <input defaultValue={advanced.fashion.editorialBannerImageUrl} name="fashionEditorialBannerImageUrl" type="text" />
-          </label>
+          <MediaPickerField
+            label="Campaign image"
+            name="fashionEditorialBannerImageUrl"
+            usageType="HERO"
+            value={advanced.fashion.editorialBannerImageUrl}
+          />
           <label>
             Campaign CTA text
             <input defaultValue={advanced.fashion.editorialBannerCtaText} name="fashionEditorialBannerCtaText" type="text" />
@@ -699,10 +706,12 @@ export function ThemeSettingsForm({ action, settings }: ThemeSettingsFormProps) 
             Featured look description
             <input defaultValue={advanced.fashion.featuredLookDescription} name="fashionFeaturedLookDescription" type="text" />
           </label>
-          <label>
-            Featured look image URL
-            <input defaultValue={advanced.fashion.featuredLookImageUrl} name="fashionFeaturedLookImageUrl" type="text" />
-          </label>
+          <MediaPickerField
+            label="Featured look image"
+            name="fashionFeaturedLookImageUrl"
+            usageType="HERO"
+            value={advanced.fashion.featuredLookImageUrl}
+          />
           <label>
             Featured look CTA text
             <input defaultValue={advanced.fashion.featuredLookCtaText} name="fashionFeaturedLookCtaText" type="text" />
@@ -719,10 +728,13 @@ export function ThemeSettingsForm({ action, settings }: ThemeSettingsFormProps) 
             Community description
             <input defaultValue={advanced.fashion.communityDescription} name="fashionCommunityDescription" type="text" />
           </label>
-          <label>
-            Community image URLs
-            <textarea defaultValue={advanced.fashion.communityImages.join("\n")} name="fashionCommunityImages" rows={4} />
-          </label>
+          <MediaPickerListField
+            helper="One image URL per line."
+            label="Community images"
+            name="fashionCommunityImages"
+            usageType="HERO"
+            value={advanced.fashion.communityImages.join("\n")}
+          />
           <label>
             Newsletter title
             <input defaultValue={advanced.fashion.newsletterTitle} name="fashionNewsletterTitle" type="text" />
@@ -731,26 +743,32 @@ export function ThemeSettingsForm({ action, settings }: ThemeSettingsFormProps) 
             Newsletter description
             <input defaultValue={advanced.fashion.newsletterDescription} name="fashionNewsletterDescription" type="text" />
           </label>
-          <label>
-            Newsletter image URL
-            <input defaultValue={advanced.fashion.newsletterImageUrl} name="fashionNewsletterImageUrl" type="text" />
-          </label>
+          <MediaPickerField
+            label="Newsletter image"
+            name="fashionNewsletterImageUrl"
+            usageType="HERO"
+            value={advanced.fashion.newsletterImageUrl}
+          />
           <label>
             Newsletter button text
             <input defaultValue={advanced.fashion.newsletterButtonText} name="fashionNewsletterButtonText" type="text" />
           </label>
-          <label>
-            Before image URL
-            <input defaultValue={advanced.fashion.beforeAfterBeforeImageUrl} name="fashionBeforeAfterBeforeImageUrl" type="text" />
-          </label>
+          <MediaPickerField
+            label="Before image"
+            name="fashionBeforeAfterBeforeImageUrl"
+            usageType="HERO"
+            value={advanced.fashion.beforeAfterBeforeImageUrl}
+          />
           <label>
             Before label
             <input defaultValue={advanced.fashion.beforeAfterBeforeLabel} name="fashionBeforeAfterBeforeLabel" type="text" />
           </label>
-          <label>
-            After image URL
-            <input defaultValue={advanced.fashion.beforeAfterAfterImageUrl} name="fashionBeforeAfterAfterImageUrl" type="text" />
-          </label>
+          <MediaPickerField
+            label="After image"
+            name="fashionBeforeAfterAfterImageUrl"
+            usageType="HERO"
+            value={advanced.fashion.beforeAfterAfterImageUrl}
+          />
           <label>
             After label
             <input defaultValue={advanced.fashion.beforeAfterAfterLabel} name="fashionBeforeAfterAfterLabel" type="text" />
@@ -851,17 +869,15 @@ export function ThemeSettingsForm({ action, settings }: ThemeSettingsFormProps) 
             <input defaultValue={advanced.electronics.newsletterDescription} name="electronicsNewsletterDescription" type="text" />
           </label>
         </div>
-        <RepeaterTextarea
-          helper="One card per line. Format: title | badge | description | image URL | CTA text | CTA link | background color."
+        <PromoCardsEditor
+          cards={advanced.electronics.heroPromoCards}
           label="Hero promo cards"
           name="electronicsHeroPromoCards"
-          value={advanced.electronics.heroPromoCards.map((card) => `${card.title} | ${card.badge} | ${card.description} | ${card.imageUrl} | ${card.ctaText} | ${card.ctaLink} | ${card.backgroundColor}`).join("\n")}
         />
-        <RepeaterTextarea
-          helper="One card per line. Format: title | badge | description | image URL | CTA text | CTA link | background color."
+        <PromoCardsEditor
+          cards={advanced.electronics.promoCards}
           label="Urgent sale promo cards"
           name="electronicsPromoCards"
-          value={advanced.electronics.promoCards.map((card) => `${card.title} | ${card.badge} | ${card.description} | ${card.imageUrl} | ${card.ctaText} | ${card.ctaLink} | ${card.backgroundColor}`).join("\n")}
         />
         <RepeaterTextarea
           helper="One item per line. Format: title | description."

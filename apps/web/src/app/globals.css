@@ -565,11 +565,6 @@
   padding: 5px;
 }
 
-.theme-upload-field {
-  display: grid;
-  gap: 10px;
-}
-
 .theme-upload-label-row {
   align-items: center;
   display: flex;
@@ -623,31 +618,6 @@
   height: 100%;
   object-fit: cover;
   width: 100%;
-}
-
-.theme-upload-actions {
-  align-content: center;
-  display: grid;
-  gap: 10px;
-}
-
-.theme-upload-button {
-  align-items: center;
-  background: #7c3aed;
-  border-radius: 12px;
-  color: #ffffff !important;
-  cursor: pointer;
-  display: inline-flex !important;
-  font-size: 0.9rem !important;
-  font-weight: 850 !important;
-  justify-content: center;
-  min-height: 42px;
-  padding: 0 16px;
-  text-align: center;
-}
-
-.theme-upload-button input {
-  display: none;
 }
 
 .theme-repeater-field span,
@@ -11304,68 +11274,6 @@ textarea {
   padding: 12px 14px;
 }
 
-.media-picker,
-.media-picker-empty {
-  margin-top: 8px;
-}
-
-.media-picker {
-  display: grid;
-  gap: 8px;
-}
-
-.media-picker > span,
-.media-picker-empty {
-  color: var(--muted);
-  font-size: 0.84rem;
-  font-weight: 700;
-}
-
-.media-picker > div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.media-picker button {
-  background: #f7f5ef;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  color: var(--foreground);
-  cursor: pointer;
-  font-weight: 800;
-  max-width: 220px;
-  overflow: hidden;
-  padding: 8px 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.media-picker button:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.settings-image-preview,
-.settings-favicon-preview {
-  background: #ffffff;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  display: block;
-  margin-top: 10px;
-  object-fit: cover;
-}
-
-.settings-image-preview {
-  height: 72px;
-  width: 144px;
-}
-
-.settings-favicon-preview {
-  height: 48px;
-  width: 48px;
-}
-
 .order-detail-panel {
   display: grid;
   gap: 14px;
@@ -13248,27 +13156,6 @@ textarea {
   font-size: 12px;
 }
 
-.variant-table .theme-upload-field,
-.dash-dashboard .variant-table .theme-upload-field {
-  min-width: 132px;
-}
-
-.variant-table .theme-upload-label-row span,
-.dash-dashboard .variant-table .theme-upload-label-row span {
-  display: none;
-}
-
-.variant-table .theme-upload-box,
-.dash-dashboard .variant-table .theme-upload-box {
-  padding: 0;
-}
-
-.variant-table .theme-upload-preview,
-.dash-dashboard .variant-table .theme-upload-preview {
-  height: 54px;
-  width: 54px;
-}
-
 .variant-image-uploader,
 .dash-dashboard .variant-image-uploader {
   align-items: center;
@@ -13302,25 +13189,6 @@ textarea {
 .dash-dashboard .variant-image-drop img {
   height: 100%;
   object-fit: cover;
-  width: 100%;
-}
-
-.variant-image-drop input,
-.dash-dashboard .variant-image-drop input {
-  cursor: pointer;
-  inset: 0;
-  opacity: 0;
-  position: absolute;
-}
-
-.variant-image-uploader select,
-.dash-dashboard .variant-image-uploader select {
-  border-radius: 9px;
-  font-size: 11px;
-  height: 34px;
-  min-height: 34px;
-  min-width: 0;
-  padding-inline: 8px;
   width: 100%;
 }
 
@@ -15548,4 +15416,69 @@ textarea {
   min-height: 34px;
   padding-inline: 8px;
   width: 100%;
+}
+
+/* --- Media list field + promo card rows ------------------------------------- */
+.media-picker-list-field {
+  display: grid;
+  gap: 8px;
+}
+
+.media-picker-list-helper {
+  color: #777d97;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.promo-cards-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.promo-cards-helper {
+  color: #777d97;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.promo-card-row {
+  align-items: start;
+  background: #fbfbff;
+  border: 1px solid #ececf5;
+  border-radius: 14px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 240px minmax(0, 1fr) 40px;
+  padding: 14px;
+}
+
+.promo-card-fields {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.promo-card-remove {
+  align-items: center;
+  background: #fff4f4;
+  border: 1px solid #ffd8d8;
+  border-radius: 9px;
+  color: #dc2626;
+  cursor: pointer;
+  display: inline-flex;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+@media (max-width: 900px) {
+  .promo-card-row {
+    grid-template-columns: minmax(0, 1fr) 40px;
+  }
+
+  .promo-card-fields {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
