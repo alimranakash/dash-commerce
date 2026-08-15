@@ -186,7 +186,7 @@ function IdField({ disabled, docHref, error, field, helper, label, value }: {
 
 function DocLink({ href }: { href: string }) {
   return (
-    <a className="inline-flex items-center gap-1 whitespace-nowrap font-medium text-[#7548f5] hover:underline" href={href} rel="noreferrer" target="_blank">
+    <a className="dash-doc-link inline-flex items-center gap-1 whitespace-nowrap font-medium" href={href} rel="noreferrer" target="_blank">
       Where to find this
       <ExternalLink className="h-3 w-3" />
     </a>

@@ -1,6 +1,10 @@
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { AbandonedCartListControls, type AbandonedCartFilterKey } from "../../../modules/abandoned-carts/components/abandoned-cart-list-controls";
-import { AbandonedCartDashboard, type AbandonedCartRecord } from "../../../modules/abandoned-carts/components/abandoned-cart-dashboard";
+import { AbandonedCartDashboard } from "../../../modules/abandoned-carts/components/abandoned-cart-dashboard";
+import {
+  getAbandonedCartInactivityMinutes,
+  listAbandonedCarts
+} from "../../../modules/abandoned-carts/abandoned-cart.service";
 import { requireStore } from "../../../modules/stores/queries";
 
 type AbandonedCartsPageProps = {
@@ -10,9 +14,10 @@ type AbandonedCartsPageProps = {
 export default async function AbandonedCartsPage({ searchParams }: AbandonedCartsPageProps) {
   const store = await requireStore();
   const params = await searchParams;
-  const carts: AbandonedCartRecord[] = [];
   const activeFilter = parseFilter(singleValue(params.status));
   const search = singleValue(params.search).trim();
+  const dateRange = singleValue(params.dateRange).trim();
+  const carts = await listAbandonedCarts(store, { dateRange, search });
   const counts = {
     all: carts.length,
     contacted: carts.filter((cart) => cart.status === "CONTACTED").length,
@@ -27,10 +32,17 @@ export default async function AbandonedCartsPage({ searchParams }: AbandonedCart
         <AbandonedCartListControls
           activeFilter={activeFilter}
           counts={counts}
-          dateRange={singleValue(params.dateRange).trim()}
+          dateRange={dateRange}
           search={search}
         />
-        <AbandonedCartDashboard activeFilter={activeFilter} carts={carts} currency={store.currency} search={search} />
+        <AbandonedCartDashboard
+          activeFilter={activeFilter}
+          carts={carts}
+          currency={store.currency}
+          inactivityMinutes={getAbandonedCartInactivityMinutes()}
+          search={search}
+          storeName={store.name}
+        />
       </section>
     </DashboardShell>
   );

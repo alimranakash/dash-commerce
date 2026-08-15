@@ -1162,6 +1162,19 @@ a {
   text-decoration: none;
 }
 
+/* The rule above is unlayered, so it beats anything Tailwind puts in
+   `@layer utilities` no matter how specific that utility is — `text-[#7548f5]`
+   on an anchor silently loses to `color: inherit`. Links that need to read as
+   links therefore need an unlayered class selector of their own. */
+.dash-doc-link {
+  color: #7548f5;
+}
+
+.dash-doc-link:hover,
+.dash-doc-link:focus-visible {
+  text-decoration: underline;
+}
+
 button {
   font: inherit;
 }

@@ -1,5 +1,9 @@
 import { prisma, type Prisma } from "@dash/db";
-import { clearCart, getCart } from "../cart/cart.service";
+import {
+  captureCheckoutContact,
+  resolveCartAfterCheckout
+} from "../abandoned-carts/abandoned-cart.service";
+import { clearCart, getCart, getCartToken } from "../cart/cart.service";
 import {
   getEnabledPaymentMethodForCheckout,
   isManualPaymentType
@@ -21,6 +25,16 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
   if (cart.items.length === 0) {
     throw new Error("Your cart is empty.");
   }
+
+  const cartToken = await getCartToken(store.id);
+
+  // Before anything can fail: a checkout that dies on stock, payment or a
+  // closed tab is exactly the cart the seller most needs to be able to chase.
+  await captureCheckoutContact(store.id, cartToken, {
+    email: data.email,
+    name: data.name,
+    phone: data.phone
+  });
 
   const paymentMethod = await getEnabledPaymentMethodForCheckout(store.id, data.paymentMethod);
   const shippingRate = await getEnabledShippingRateForCheckout(store.id, data.shippingRateId);
@@ -179,6 +193,9 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
     });
   });
 
+  // Settled before the cookie goes: `clearCart` can no longer find the token,
+  // and a cart that converted while still active is not a recovery.
+  await resolveCartAfterCheckout(store.id, cartToken, order);
   await clearCart(store.id);
 
   return order;

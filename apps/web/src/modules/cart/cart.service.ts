@@ -1,6 +1,11 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { prisma } from "@dash/db";
 import { cookies } from "next/headers";
+import {
+  discardCartSnapshot,
+  findAbandonedCartSnapshot,
+  trackCartActivity
+} from "../abandoned-carts/abandoned-cart.service";
 import { getProductVariantForCart } from "../products/product-variants.service";
 import type { Cart, StoredCart, StoredCartItem } from "./cart.types";
 
@@ -9,7 +14,9 @@ const CART_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 const CART_VERSION = 1;
 const CART_NOTE_MAX_LENGTH = 1000;
 
-type CartCookiePayload = StoredCart & {
+type CartCookiePayload = Omit<StoredCart, "token"> & {
+  /** Absent on cookies written before cart snapshots existed. */
+  token?: string;
   version: number;
 };
 
@@ -19,11 +26,18 @@ export async function getCart(storeId: string): Promise<Cart> {
   return buildCart(storeId, cart.items, cart.note);
 }
 
+/** The cart's snapshot key, so checkout can settle the snapshot it belongs to. */
+export async function getCartToken(storeId: string) {
+  const cart = await readStoredCart(storeId);
+
+  return cart.token;
+}
+
 /** Order note from the cart page or mini cart drawer; carried into checkout. */
 export async function setCartNote(storeId: string, note: string) {
   const currentCart = await readStoredCart(storeId);
 
-  await writeStoredCart(storeId, currentCart.items, note);
+  await writeStoredCart(currentCart, currentCart.items, note);
 
   return getCart(storeId);
 }
@@ -53,7 +67,7 @@ export async function addToCart(storeId: string, productId: string, quantity: nu
     quantity: nextQuantity
   };
 
-  await writeStoredCart(storeId, upsertItem(currentCart.items, nextItem), currentCart.note);
+  await writeStoredCart(currentCart, upsertItem(currentCart.items, nextItem), currentCart.note);
 
   return getCart(storeId);
 }
@@ -81,7 +95,7 @@ export async function updateCartItemQuantity(
     item.lineId === currentItem.lineId ? { ...item, quantity: nextQuantity } : item
   );
 
-  await writeStoredCart(storeId, nextItems, currentCart.note);
+  await writeStoredCart(currentCart, nextItems, currentCart.note);
 
   return getCart(storeId);
 }
@@ -90,17 +104,40 @@ export async function removeCartItem(storeId: string, lineId: string) {
   const currentCart = await readStoredCart(storeId);
   const nextItems = currentCart.items.filter((item) => item.lineId !== lineId && item.productId !== lineId);
 
-  await writeStoredCart(storeId, nextItems, currentCart.note);
+  await writeStoredCart(currentCart, nextItems, currentCart.note);
 
   return getCart(storeId);
 }
 
 export async function clearCart(storeId: string) {
+  const currentCart = await readStoredCart(storeId);
   const cookieStore = await cookies();
 
   cookieStore.delete(cookieName(storeId));
 
+  // Only drops a snapshot that is still open — a cart already settled as
+  // recovered by checkout stays in the seller's recovery history.
+  await discardCartSnapshot(storeId, currentCart.token);
+
   return buildCart(storeId, [], "");
+}
+
+/**
+ * Rebuilds the cart cookie from a snapshot, so a recovery link a seller sent
+ * lands the shopper back on the cart they left — on whatever device they open
+ * it on. The snapshot keeps its token, so completing checkout from here still
+ * settles the same row as a recovery.
+ */
+export async function restoreCartFromSnapshot(storeId: string, token: string) {
+  const snapshot = await findAbandonedCartSnapshot(storeId, token);
+
+  if (!snapshot || snapshot.items.length === 0) {
+    return null;
+  }
+
+  await writeStoredCart({ items: [], note: "", storeId, token }, snapshot.items, snapshot.note);
+
+  return getCart(storeId);
 }
 
 export function calculateCartTotals(items: StoredCartItem[]) {
@@ -162,7 +199,8 @@ async function readStoredCart(storeId: string): Promise<StoredCart> {
     return {
       storeId,
       items: [],
-      note: ""
+      note: "",
+      token: createCartToken()
     };
   }
 
@@ -171,25 +209,36 @@ async function readStoredCart(storeId: string): Promise<StoredCart> {
     items: payload.items
       .map(normalizeStoredItem)
       .filter((item): item is StoredCartItem => Boolean(item)),
-    note: normalizeNote(payload.note)
+    note: normalizeNote(payload.note),
+    // Carts written before snapshots existed have no token; they get one on
+    // their next write rather than being dropped by a cookie version bump.
+    token: typeof payload.token === "string" && payload.token ? payload.token : createCartToken()
   };
 }
 
-async function writeStoredCart(storeId: string, items: StoredCartItem[], note: string) {
+async function writeStoredCart(cart: StoredCart, items: StoredCartItem[], note: string) {
   const cookieStore = await cookies();
   const payload: CartCookiePayload = {
     version: CART_VERSION,
-    storeId,
+    storeId: cart.storeId,
     items: items.slice(0, 50),
-    note: normalizeNote(note)
+    note: normalizeNote(note),
+    token: cart.token
   };
 
-  cookieStore.set(cookieName(storeId), encodeCartCookie(payload), {
+  cookieStore.set(cookieName(cart.storeId), encodeCartCookie(payload), {
     httpOnly: true,
     maxAge: CART_COOKIE_MAX_AGE,
     path: "/",
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production"
+  });
+
+  await trackCartActivity({
+    items: payload.items,
+    note: payload.note,
+    storeId: cart.storeId,
+    token: cart.token
   });
 }
 
@@ -233,6 +282,10 @@ async function getActiveCartVariant(storeId: string, productId: string, variantI
 
 function cartLineId(productId: string, variantId?: string | null) {
   return variantId ? `${productId}:${variantId}` : productId;
+}
+
+function createCartToken() {
+  return randomUUID();
 }
 
 function normalizeNote(value: unknown) {

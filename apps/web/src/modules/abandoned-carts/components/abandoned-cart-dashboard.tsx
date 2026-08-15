@@ -10,41 +10,35 @@ import {
   TrendingDown,
   X
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { SummaryMetricCard } from "../../../components/dashboard/summary-metric-card";
+import {
+  markAbandonedCartContactedAction,
+  markAbandonedCartRecoveredAction
+} from "../abandoned-cart.actions";
+import type {
+  AbandonedCartOutreachChannel,
+  AbandonedCartRecord,
+  AbandonedCartStatus
+} from "../abandoned-cart.types";
 import type { AbandonedCartFilterKey } from "./abandoned-cart-list-controls";
-
-export type AbandonedCartStatus = "NOT_CONTACTED" | "CONTACTED" | "RECOVERED";
-
-export type AbandonedCartRecord = {
-  cartValue: number;
-  currency: string;
-  customerName: string;
-  email: string | null;
-  id: string;
-  items: Array<{
-    id: string;
-    price: number;
-    productName: string;
-    quantity: number;
-  }>;
-  lastActivity: string;
-  phone: string | null;
-  status: AbandonedCartStatus;
-};
 
 type AbandonedCartDashboardProps = {
   activeFilter: AbandonedCartFilterKey;
   carts: AbandonedCartRecord[];
   currency: string;
+  inactivityMinutes: number;
   search: string;
+  storeName: string;
 };
 
-export function AbandonedCartDashboard({ activeFilter, carts, currency, search }: AbandonedCartDashboardProps) {
+export function AbandonedCartDashboard({ activeFilter, carts, currency, inactivityMinutes, search, storeName }: AbandonedCartDashboardProps) {
   const [records, setRecords] = useState(carts);
   const [loadedCarts, setLoadedCarts] = useState(carts);
   const [selectedCart, setSelectedCart] = useState<AbandonedCartRecord | null>(null);
   const [notice, setNotice] = useState("");
+  const [isSaving, startSaving] = useTransition();
 
   // Filtering/searching re-renders this component with a fresh server list; without
   // this the local copy would keep showing the first page's carts forever.
@@ -74,9 +68,42 @@ export function AbandonedCartDashboard({ activeFilter, carts, currency, search }
   const lostRevenue = records.filter((cart) => cart.status !== "RECOVERED").reduce((total, cart) => total + cart.cartValue, 0);
   const recoveryRate = records.length ? (recovered.length / records.length) * 100 : 0;
 
-  function updateStatus(id: string, status: AbandonedCartStatus) {
+  function applyStatus(id: string, status: AbandonedCartStatus, channel: AbandonedCartOutreachChannel = "manual") {
+    const previous = records;
+
     setRecords((current) => current.map((cart) => cart.id === id ? { ...cart, status } : cart));
-    setNotice(status === "RECOVERED" ? "Cart marked as recovered." : "Cart marked as contacted.");
+    startSaving(async () => {
+      try {
+        if (status === "RECOVERED") {
+          await markAbandonedCartRecoveredAction(id);
+          setNotice("Cart marked as recovered.");
+          return;
+        }
+
+        await markAbandonedCartContactedAction(id, channel);
+        setNotice(channel === "manual" ? "Cart marked as contacted." : "Recovery message opened — cart marked as contacted.");
+      } catch {
+        setRecords(previous);
+        setNotice("That change could not be saved. Please try again.");
+      }
+    });
+  }
+
+  /**
+   * Outreach is a link, not an integration: the seller's own mail client or
+   * WhatsApp opens with the message prefilled, and the cart is only marked
+   * contacted once that has actually happened.
+   */
+  function startOutreach(cart: AbandonedCartRecord, channel: "email" | "whatsapp") {
+    const target = channel === "email" ? emailLink(cart, storeName) : whatsappLink(cart, storeName);
+
+    if (!target) {
+      setNotice(channel === "email" ? "This cart has no email address on file." : "This cart has no phone number on file.");
+      return;
+    }
+
+    window.open(target, "_blank", "noopener,noreferrer");
+    applyStatus(cart.id, "CONTACTED", channel);
   }
 
   return (
@@ -98,7 +125,7 @@ export function AbandonedCartDashboard({ activeFilter, carts, currency, search }
       <section className="min-w-0 rounded-xl border border-[#ececf5] bg-white shadow-[0_8px_24px_rgba(62,54,114,0.04)]">
         <div className="border-b border-[#ececf5] px-5 py-4">
           <h2 className="m-0 text-base font-semibold text-[#20212a]">Abandoned Cart Recovery</h2>
-          <p className="mb-0 mt-1 text-xs text-[#85869a]">Review customer carts and prepare manual recovery outreach.</p>
+          <p className="mb-0 mt-1 text-xs text-[#85869a]">Carts left untouched for more than {formatDuration(inactivityMinutes)}. Reach out from here and the cart is marked contacted.</p>
         </div>
 
         {visibleRecords.length ? (
@@ -120,10 +147,10 @@ export function AbandonedCartDashboard({ activeFilter, carts, currency, search }
                     <td className="px-5 py-4">
                       <div className="flex flex-wrap gap-2">
                         <ActionButton label="View Cart" onClick={() => setSelectedCart(cart)} />
-                        <ActionButton icon={Mail} label="Send Email" onClick={() => setNotice("Email recovery will be available when campaigns are connected.")} />
-                        <ActionButton icon={MessageCircle} label="Send WhatsApp" onClick={() => setNotice("WhatsApp recovery will be available when campaigns are connected.")} />
-                        {cart.status === "NOT_CONTACTED" ? <ActionButton label="Mark Contacted" onClick={() => updateStatus(cart.id, "CONTACTED")} /> : null}
-                        {cart.status !== "RECOVERED" ? <ActionButton label="Mark Recovered" onClick={() => updateStatus(cart.id, "RECOVERED")} /> : null}
+                        <ActionButton disabled={isSaving} icon={Mail} label="Send Email" onClick={() => startOutreach(cart, "email")} />
+                        <ActionButton disabled={isSaving} icon={MessageCircle} label="Send WhatsApp" onClick={() => startOutreach(cart, "whatsapp")} />
+                        {cart.status === "NOT_CONTACTED" ? <ActionButton disabled={isSaving} label="Mark Contacted" onClick={() => applyStatus(cart.id, "CONTACTED")} /> : null}
+                        {cart.status !== "RECOVERED" ? <ActionButton disabled={isSaving} label="Mark Recovered" onClick={() => applyStatus(cart.id, "RECOVERED")} /> : null}
                       </div>
                     </td>
                   </tr>
@@ -131,7 +158,7 @@ export function AbandonedCartDashboard({ activeFilter, carts, currency, search }
               </tbody>
             </table>
           </div>
-        ) : <AbandonedCartEmptyState onLearn={() => setNotice("Recovery campaigns will become available when abandoned cart tracking is connected.")} />}
+        ) : <AbandonedCartEmptyState inactivityMinutes={inactivityMinutes} />}
       </section>
 
       {selectedCart ? <CartDetailsDrawer cart={selectedCart} onClose={() => setSelectedCart(null)} /> : null}
@@ -139,7 +166,7 @@ export function AbandonedCartDashboard({ activeFilter, carts, currency, search }
   );
 }
 
-function AbandonedCartEmptyState({ onLearn }: { onLearn: () => void }) {
+function AbandonedCartEmptyState({ inactivityMinutes }: { inactivityMinutes: number }) {
   return (
     <div className="flex min-h-[390px] flex-col items-center justify-center px-5 py-14 text-center">
       <div className="relative mb-5 grid h-24 w-24 place-items-center rounded-2xl bg-[#f3efff] text-[#7950f2]">
@@ -147,8 +174,8 @@ function AbandonedCartEmptyState({ onLearn }: { onLearn: () => void }) {
         <ShoppingCart aria-hidden="true" className="absolute h-8 w-8" strokeWidth={2} />
       </div>
       <h2 className="m-0 text-xl font-semibold text-[#20212a]">No Abandoned Carts Found</h2>
-      <p className="mt-3 max-w-lg text-sm leading-6 text-[#85869a]">Abandoned carts will appear here when customers leave products in their cart without completing checkout.</p>
-      <button className="mt-5 rounded-lg border border-[#7548f5] px-4 py-2 text-sm font-semibold text-[#6d3cf5] transition hover:bg-[#f5f1ff]" onClick={onLearn} type="button">Learn About Recovery</button>
+      <p className="mt-3 max-w-lg text-sm leading-6 text-[#85869a]">A cart shows up here once a customer has left products in it for more than {formatDuration(inactivityMinutes)} without checking out.</p>
+      <Link className="mt-5 rounded-lg border border-[#7548f5] px-4 py-2 text-sm font-semibold text-[#6d3cf5] transition hover:bg-[#f5f1ff]" href="/dashboard/reports/abandoned-carts">View Recovery Report</Link>
     </div>
   );
 }
@@ -164,6 +191,7 @@ function CartDetailsDrawer({ cart, onClose }: { cart: AbandonedCartRecord; onClo
         <div className="flex-1 overflow-y-auto px-6 py-5">
           <section className="rounded-lg bg-[#f8f7fd] p-4"><h3 className="m-0 text-sm font-semibold">Customer Info</h3><p className="mb-0 mt-3 text-sm font-medium">{cart.customerName}</p><p className="mb-0 mt-1 text-xs text-[#757684]">{cart.email ?? "No email"}</p><p className="mb-0 mt-1 text-xs text-[#757684]">{cart.phone ?? "No phone"}</p></section>
           <section className="mt-5"><h3 className="m-0 text-sm font-semibold">Products</h3><div className="mt-3 divide-y divide-[#ececf5] border-y border-[#ececf5]">{cart.items.map((item) => <div className="flex justify-between gap-4 py-4 text-sm" key={item.id}><div><p className="m-0 font-medium">{item.productName}</p><p className="mb-0 mt-1 text-xs text-[#85869a]">Quantity: {item.quantity}</p></div><strong>{formatMoney(item.price * item.quantity, cart.currency)}</strong></div>)}</div></section>
+          <section className="mt-5"><h3 className="m-0 text-sm font-semibold">Recovery link</h3><p className="mb-0 mt-2 break-all text-xs text-[#757684]">{cart.recoveryUrl}</p><p className="mb-0 mt-2 text-xs text-[#85869a]">Opening this link rebuilds this cart on the storefront.</p></section>
         </div>
         <footer className="border-t border-[#ececf5] px-6 py-5"><div className="flex items-center justify-between"><span className="text-sm text-[#626370]">Cart Value</span><strong className="text-xl text-[#20212a]">{formatMoney(cart.cartValue, cart.currency)}</strong></div></footer>
       </aside>
@@ -176,12 +204,69 @@ function CartStatusBadge({ status }: { status: AbandonedCartStatus }) {
   return <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold ${styles}`}>{status === "NOT_CONTACTED" ? "Not Contacted" : status === "CONTACTED" ? "Contacted" : "Recovered"}</span>;
 }
 
-function ActionButton({ icon: Icon, label, onClick }: { icon?: typeof Mail; label: string; onClick: () => void }) {
-  return <button className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-[#ded9ef] px-2.5 text-[11px] font-semibold text-[#5f3dc4] hover:bg-[#f5f1ff]" onClick={onClick} type="button">{Icon ? <Icon className="h-3.5 w-3.5" /> : null}{label}</button>;
+function ActionButton({ disabled, icon: Icon, label, onClick }: { disabled?: boolean; icon?: typeof Mail; label: string; onClick: () => void }) {
+  return <button className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-[#ded9ef] px-2.5 text-[11px] font-semibold text-[#5f3dc4] hover:bg-[#f5f1ff] disabled:opacity-50" disabled={disabled} onClick={onClick} type="button">{Icon ? <Icon className="h-3.5 w-3.5" /> : null}{label}</button>;
 }
 
 function statusToFilter(status: AbandonedCartStatus): AbandonedCartFilterKey {
   return status === "NOT_CONTACTED" ? "not-contacted" : status === "CONTACTED" ? "contacted" : "recovered";
+}
+
+function emailLink(cart: AbandonedCartRecord, storeName: string) {
+  if (!cart.email) {
+    return null;
+  }
+
+  const subject = `You left something in your cart at ${storeName}`;
+  const body = [
+    `Hi ${cart.customerName},`,
+    "",
+    "Your cart is still waiting for you:",
+    ...cart.items.map((item) => `- ${item.productName} x${item.quantity}`),
+    "",
+    `Pick up where you left off: ${cart.recoveryUrl}`,
+    "",
+    storeName
+  ].join("\n");
+
+  return `mailto:${encodeURIComponent(cart.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+function whatsappLink(cart: AbandonedCartRecord, storeName: string) {
+  const number = toWhatsAppNumber(cart.phone);
+
+  if (!number) {
+    return null;
+  }
+
+  const message = `Hi ${cart.customerName}, you left ${cart.items.length === 1 ? "an item" : "some items"} in your cart at ${storeName}. You can finish your order here: ${cart.recoveryUrl}`;
+
+  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+}
+
+/**
+ * wa.me needs a full international number. Checkout collects local Bangladeshi
+ * numbers (`01…`), which are expanded with the country code; anything already
+ * carrying one is left alone.
+ */
+function toWhatsAppNumber(phone: string | null) {
+  const digits = (phone ?? "").replace(/\D/g, "").replace(/^00/, "");
+
+  if (digits.length < 8) {
+    return null;
+  }
+
+  return digits.startsWith("0") ? `880${digits.slice(1)}` : digits;
+}
+
+function formatDuration(minutes: number) {
+  if (minutes < 60) {
+    return `${minutes} minute${minutes === 1 ? "" : "s"}`;
+  }
+
+  const hours = Math.round((minutes / 60) * 10) / 10;
+
+  return `${hours} hour${hours === 1 ? "" : "s"}`;
 }
 
 function formatDate(value: string) {

@@ -1,3 +1,5 @@
+import { getAbandonedCartReportRecords } from "../abandoned-carts/abandoned-cart.repository";
+import { getAbandonedCartCutoff } from "../abandoned-carts/abandoned-cart.service";
 import { getCustomersReportRecords, getOrdersReportRecords, getProductsReportRecords, getReportOverviewRecords, getRevenueReportRecords } from "./report.repository";
 import type { AbandonedCartsReportData, CustomersReportData, OrdersReportData, ProductsReportData, ReportOverviewData, ReportRangeKey, ReportSeriesPoint, ReportTopCustomer, ReportTopProduct, RevenuesReportData } from "./report.types";
 
@@ -165,24 +167,54 @@ export async function getCustomersReport(storeId: string, fallbackCurrency: stri
 }
 
 export async function getAbandonedCartsReport(storeId: string, fallbackCurrency: string, range: ReportRangeKey = "30d"): Promise<AbandonedCartsReportData> {
-  // Abandoned cart persistence is not available yet (carts live in a signed cookie,
-  // see modules/cart/cart.service.ts). Keep the report contract store-scoped and
-  // range-aware so real repository data can replace this empty source later.
-  void storeId;
   const window = reportWindow(range);
+  const carts = await getAbandonedCartReportRecords(storeId, window.start, getAbandonedCartCutoff());
+  // Bucketed by when a cart went quiet, which is the moment it became abandoned;
+  // a recovery lands in the same bucket so a day's rate compares like for like.
   const daily = Array.from({ length: window.length }, (_, index) => {
     const date = new Date(window.start);
     if (window.unit === "day") date.setDate(date.getDate() + index);
     else date.setMonth(date.getMonth() + index);
-    return { abandoned: 0, label: window.unit === "day" ? dayLabel(date) : monthLabel(date), lostRevenue: 0, recovered: 0, recoveredRevenue: 0, recoveryRate: 0 };
+    const label = window.unit === "day" ? dayLabel(date) : monthLabel(date);
+    const bucket = carts.filter((cart) => (window.unit === "day" ? dayLabel(cart.lastActivityAt) : monthLabel(cart.lastActivityAt)) === label);
+    const recovered = bucket.filter((cart) => cart.status === "RECOVERED");
+    const lost = bucket.filter((cart) => cart.status !== "RECOVERED");
+
+    return {
+      abandoned: bucket.length,
+      label,
+      lostRevenue: sumCartValue(lost),
+      recovered: recovered.length,
+      recoveredRevenue: sumCartValue(recovered),
+      recoveryRate: bucket.length ? (recovered.length / bucket.length) * 100 : 0
+    };
   });
+  const recoveredCarts = carts.filter((cart) => cart.status === "RECOVERED");
+  const channelLabels: Record<string, string> = { email: "Email", manual: "Manual outreach", whatsapp: "WhatsApp" };
+  const channelCounts = new Map<string, number>();
+
+  for (const cart of recoveredCarts) {
+    const label = channelLabels[cart.contactChannel ?? ""] ?? "Returned on their own";
+    channelCounts.set(label, (channelCounts.get(label) ?? 0) + 1);
+  }
 
   return {
     currency: fallbackCurrency,
     daily,
-    metrics: { lostRevenue: 0, recoveredRevenue: 0, recoveryRate: 0, total: 0 },
-    recoveryChannels: []
+    metrics: {
+      lostRevenue: sumCartValue(carts.filter((cart) => cart.status !== "RECOVERED")),
+      recoveredRevenue: sumCartValue(recoveredCarts),
+      recoveryRate: carts.length ? (recoveredCarts.length / carts.length) * 100 : 0,
+      total: carts.length
+    },
+    recoveryChannels: [...channelCounts.entries()]
+      .map(([label, value]) => ({ label, value }))
+      .sort((first, second) => second.value - first.value)
   };
+}
+
+function sumCartValue(carts: Array<{ subtotalAmount: unknown }>) {
+  return carts.reduce((total, cart) => total + Number(cart.subtotalAmount), 0);
 }
 
 function timeSeries<T extends { createdAt: Date }>(

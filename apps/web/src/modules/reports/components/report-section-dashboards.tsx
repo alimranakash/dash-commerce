@@ -26,7 +26,7 @@ export function AbandonedCartsReportDashboard({ data }: { data: AbandonedCartsRe
       <ReportCard title="Recovery Performance"><ReportChartOrEmpty data={data} mode="performance" show={hasRecoveryActivity} /></ReportCard>
     </div>
     <ReportCard title="Top Recovery Channels">
-      {data.recoveryChannels.length ? <ReportBarList items={data.recoveryChannels} /> : <ReportEmptyState message="Recovery channel performance will appear when email, WhatsApp, or automated campaigns are connected." />}
+      {data.recoveryChannels.length ? <ReportBarList items={data.recoveryChannels} /> : <ReportEmptyState message="Recovery channels appear here once a contacted cart is recovered." />}
     </ReportCard>
   </div>;
 }

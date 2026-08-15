@@ -1,6 +1,7 @@
 import { DashboardShell } from "../../components/dashboard/dashboard-shell";
 import { DashboardCard } from "../../components/dashboard/dashboard-card";
 import { requireUser } from "../../lib/auth";
+import { listAbandonedCarts } from "../../modules/abandoned-carts/abandoned-cart.service";
 import { AbandonedCarts } from "../../modules/analytics/components/abandoned-carts";
 import { LowStockProducts } from "../../modules/analytics/components/low-stock-products";
 import { MetricCard } from "../../modules/analytics/components/metric-card";
@@ -37,26 +38,23 @@ export default async function DashboardPage() {
 
   return (
     <DashboardShell storeSlug={store.slug}>
-      <DashboardOverview
-        currency={store.currency}
-        storeId={store.id}
-      />
+      <DashboardOverview store={store} />
     </DashboardShell>
   );
 }
 
 async function DashboardOverview({
-  currency,
-  storeId
+  store
 }: {
-  currency: string;
-  storeId: string;
+  store: { currency: string; id: string; slug: string };
 }) {
-  const [metrics, recentOrders, topProducts, lowStockProducts] = await Promise.all([
+  const { currency, id: storeId } = store;
+  const [metrics, recentOrders, topProducts, lowStockProducts, abandonedCarts] = await Promise.all([
     getDashboardMetrics(storeId),
     getRecentOrders(storeId),
     getTopProducts(storeId),
-    getLowStockProducts(storeId)
+    getLowStockProducts(storeId),
+    listAbandonedCarts(store, { limit: 5 })
   ]);
   return (
     <section className="mx-auto grid max-w-[1480px] gap-4" aria-label="Dashboard overview">
@@ -76,7 +74,7 @@ async function DashboardOverview({
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)]">
         <RecentSales orders={recentOrders} />
-        <AbandonedCarts />
+        <AbandonedCarts carts={abandonedCarts} />
       </div>
 
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.85fr)_minmax(260px,0.75fr)]">

@@ -137,6 +137,12 @@ enum CustomerFlagStatus {
   BLOCKED
 }
 
+enum AbandonedCartStatus {
+  NOT_CONTACTED
+  CONTACTED
+  RECOVERED
+}
+
 enum FulfillmentStatus {
   UNFULFILLED
   SHIPPED
@@ -376,6 +382,7 @@ model Store {
   productAttributes          ProductAttribute[]
   productAttributeValues     ProductAttributeValue[]
   productVariants            ProductVariant[]
+  abandonedCarts AbandonedCart[]
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @default(now()) @updatedAt
 
@@ -1135,6 +1142,7 @@ model Customer {
   orders    Order[]
   sales     Sale[]
   addresses Address[]
+  abandonedCarts AbandonedCart[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
 
@@ -1233,6 +1241,45 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId])
+}
+
+/// Server-side mirror of one storefront cart.
+///
+/// The live cart is a signed httpOnly cookie (modules/cart/cart.service.ts), so
+/// nothing about it is queryable and a seller could never see a cart that was
+/// left behind. Every cart write mirrors the cart here, keyed by a random
+/// `token` that is carried in the same cookie. A row counts as abandoned once
+/// `lastActivityAt` is older than the inactivity window; it is deleted when the
+/// shopper empties the cart or checks out inside that window, and marked
+/// RECOVERED when a checkout completes after it.
+model AbandonedCart {
+  id                   String              @id @default(cuid())
+  storeId              String
+  token                String
+  customerId           String?
+  customerName         String?
+  customerEmail        String?
+  customerPhone        String?
+  status               AbandonedCartStatus @default(NOT_CONTACTED)
+  itemCount            Int                 @default(0)
+  subtotalAmount       Decimal             @default(0) @db.Decimal(12, 2)
+  items                Json
+  note                 String?
+  contactChannel       String?
+  contactedAt          DateTime?
+  recoveredAt          DateTime?
+  recoveredOrderId     String?
+  recoveredOrderNumber String?
+  lastActivityAt       DateTime            @default(now())
+  store                Store               @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  customer             Customer?           @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @default(now()) @updatedAt
+
+  @@unique([storeId, token])
+  @@index([storeId, lastActivityAt])
+  @@index([storeId, status])
+  @@index([customerId])
 }
 
 model CourierAccount {

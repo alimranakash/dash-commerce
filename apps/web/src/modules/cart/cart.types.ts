@@ -29,4 +29,9 @@ export type StoredCart = {
   storeId: string;
   items: StoredCartItem[];
   note: string;
+  /**
+   * Random per-cart id, carried in the cookie and used as the key of the
+   * server-side snapshot the abandoned-cart dashboard reads.
+   */
+  token: string;
 };
