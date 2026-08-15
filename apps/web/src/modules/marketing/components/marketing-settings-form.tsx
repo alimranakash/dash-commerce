@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, BarChart3, Code2, Globe2, Lock, Megaphone, Music2, RotateCcw, Save, Send, ShieldCheck } from "lucide-react";
+import { AlertTriangle, BarChart3, Code2, ExternalLink, Globe2, Lock, Megaphone, Music2, RotateCcw, Save, Send, ShieldCheck } from "lucide-react";
 import { useActionState, useRef, useState, useTransition, type ComponentType, type ReactNode } from "react";
 import type { MarketingActionState, MetaTestEventState } from "../marketing.actions";
 import { marketingIdHints, type MarketingIdField } from "../marketing.schema";
@@ -45,13 +45,13 @@ export function MarketingSettingsForm({
 
       <div className="grid items-start gap-5 xl:grid-cols-2">
         <MarketingCard icon={Globe2} subtitle="Analytics and Tag Manager" title="Google">
-          <IdField disabled={disabled} error={state.fieldErrors?.ga4MeasurementId} field="ga4MeasurementId" helper="Found in Google Analytics under Admin → Data streams." label="GA4 Measurement ID" value={settings.ga4MeasurementId} />
-          <IdField disabled={disabled} error={state.fieldErrors?.gtmContainerId} field="gtmContainerId" helper="Found at the top of your Tag Manager workspace." label="GTM Container ID" value={settings.gtmContainerId} />
-          <IdField disabled={disabled} error={state.fieldErrors?.googleSiteVerification} field="googleSiteVerification" helper="The content value only — paste the whole meta tag and we will pull it out." label="Google Verification" value={settings.googleSiteVerification} />
+          <IdField disabled={disabled} docHref="https://support.google.com/analytics/answer/9539598" error={state.fieldErrors?.ga4MeasurementId} field="ga4MeasurementId" helper="Found in Google Analytics under Admin → Data streams." label="GA4 Measurement ID" value={settings.ga4MeasurementId} />
+          <IdField disabled={disabled} docHref="https://support.google.com/tagmanager/answer/6103696" error={state.fieldErrors?.gtmContainerId} field="gtmContainerId" helper="Found at the top of your Tag Manager workspace." label="GTM Container ID" value={settings.gtmContainerId} />
+          <IdField disabled={disabled} docHref="https://search.google.com/search-console" error={state.fieldErrors?.googleSiteVerification} field="googleSiteVerification" helper="The content value only — paste the whole meta tag and we will pull it out." label="Google Verification" value={settings.googleSiteVerification} />
         </MarketingCard>
 
         <MarketingCard icon={Megaphone} subtitle="Pixel, Conversions API, and domain verification" title="Meta">
-          <IdField disabled={disabled} error={state.fieldErrors?.metaPixelId} field="metaPixelId" helper="Events Manager → Data sources. Digits only." label="Pixel ID" value={settings.metaPixelId} />
+          <IdField disabled={disabled} docHref="https://www.facebook.com/business/help/952192354843755" error={state.fieldErrors?.metaPixelId} field="metaPixelId" helper="Events Manager → Data sources. Digits only." label="Pixel ID" value={settings.metaPixelId} />
 
           <div className="grid gap-3 rounded-lg border border-[#e5e0f7] bg-[#faf9ff] p-4">
             <label className="flex items-center gap-2.5 text-sm font-medium text-[#33343e]">
@@ -106,7 +106,7 @@ export function MarketingSettingsForm({
                 {state.fieldErrors?.metaCapiToken ? (
                   <span className="text-[11px] font-medium text-rose-600">{state.fieldErrors.metaCapiToken}</span>
                 ) : (
-                  <span className="text-[11px] font-normal leading-5 text-[#858691]">Events Manager → Settings → Generate access token.</span>
+                  <span className="text-[11px] font-normal leading-5 text-[#858691]">Events Manager → Settings → Generate access token. <DocLink href="https://www.facebook.com/business/help/2041148702652965" /></span>
                 )}
               </label>
             )}
@@ -116,11 +116,11 @@ export function MarketingSettingsForm({
         </MarketingCard>
 
         <MarketingCard icon={Music2} subtitle="TikTok Ads pixel" title="TikTok">
-          <IdField disabled={disabled} error={state.fieldErrors?.tiktokPixelId} field="tiktokPixelId" helper="TikTok Ads Manager → Assets → Events. 20 characters." label="Pixel ID" value={settings.tiktokPixelId} />
+          <IdField disabled={disabled} docHref="https://ads.tiktok.com/help/article/get-started-pixel" error={state.fieldErrors?.tiktokPixelId} field="tiktokPixelId" helper="TikTok Ads Manager → Assets → Events. 20 characters." label="Pixel ID" value={settings.tiktokPixelId} />
         </MarketingCard>
 
         <MarketingCard icon={BarChart3} subtitle="Conversion tracking for Google Ads" title="Google Ads">
-          <IdField disabled={disabled} error={state.fieldErrors?.googleAdsConversionId} field="googleAdsConversionId" helper="Google Ads → Goals → Conversions. Starts with AW-." label="Conversion ID" value={settings.googleAdsConversionId} />
+          <IdField disabled={disabled} docHref="https://support.google.com/google-ads/answer/6331304" error={state.fieldErrors?.googleAdsConversionId} field="googleAdsConversionId" helper="Google Ads → Goals → Conversions. Starts with AW-." label="Conversion ID" value={settings.googleAdsConversionId} />
         </MarketingCard>
       </div>
 
@@ -162,8 +162,9 @@ export function MarketingSettingsForm({
   );
 }
 
-function IdField({ disabled, error, field, helper, label, value }: {
+function IdField({ disabled, docHref, error, field, helper, label, value }: {
   disabled: boolean;
+  docHref?: string | undefined;
   error: string | undefined;
   field: MarketingIdField;
   helper: string;
@@ -175,11 +176,20 @@ function IdField({ disabled, error, field, helper, label, value }: {
       {label}
       <input autoComplete="off" className={inputClass} defaultValue={value} disabled={disabled} name={field} placeholder={marketingIdHints[field].example} spellCheck={false} type="text" />
       {error ? (
-        <span className="text-[11px] font-medium text-rose-600">{error}</span>
+        <span className="text-[11px] font-medium text-rose-600">{error} {docHref ? <DocLink href={docHref} /> : null}</span>
       ) : (
-        <span className="text-[11px] font-normal leading-5 text-[#858691]">{helper}</span>
+        <span className="text-[11px] font-normal leading-5 text-[#858691]">{helper} {docHref ? <DocLink href={docHref} /> : null}</span>
       )}
     </label>
+  );
+}
+
+function DocLink({ href }: { href: string }) {
+  return (
+    <a className="inline-flex items-center gap-1 whitespace-nowrap font-medium text-[#7548f5] hover:underline" href={href} rel="noreferrer" target="_blank">
+      Where to find this
+      <ExternalLink className="h-3 w-3" />
+    </a>
   );
 }
 
