@@ -10,6 +10,7 @@ import { getCachedCourierScore } from "../../../../modules/courier/courier-insig
 import { getOrderShipments, getShipmentTimeline } from "../../../../modules/courier/courier.service";
 import { getCourierProvider } from "../../../../modules/courier/providers/registry";
 import { getOrderByIdForStore } from "../../../../modules/orders/order.service";
+import { hasPlanFeature } from "../../../../modules/billing/subscription-limits";
 import { requireStore } from "../../../../modules/stores/queries";
 
 type OrderDetailsPageProps = {
@@ -70,7 +71,11 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
               tax={formatMoney(order.taxAmount, order.currency)}
               total={formatMoney(order.totalAmount, order.currency)}
             />
-            <CourierScoreCard cached={courierScore} phone={order.customerPhone} />
+            <CourierScoreCard
+              cached={courierScore}
+              locked={!(await hasPlanFeature(store.id, "fraud_check"))}
+              phone={order.customerPhone}
+            />
           </div>
         </div>
 

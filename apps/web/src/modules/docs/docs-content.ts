@@ -25,7 +25,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "getting-started",
         title: "Dash Commerce OS কী?",
-        intro: "Dash Commerce OS হলো বাংলাদেশের অনলাইন ব্যবসার জন্য একটি পূর্ণাঙ্গ কমার্স অপারেটিং সিস্টেম। এখানে একই জায়গা থেকে স্টোরফ্রন্ট, পণ্য, অর্ডার, কাস্টমার, পেমেন্ট, শিপিং, রিপোর্ট, স্টক, বিলিং এবং StoreOS AI Assistant পরিচালনা করা যায়।",
+        intro:
+          "Dash Commerce OS হলো বাংলাদেশের অনলাইন ব্যবসার জন্য একটি পূর্ণাঙ্গ কমার্স অপারেটিং সিস্টেম। এখানে একই জায়গা থেকে স্টোরফ্রন্ট, পণ্য, অর্ডার, কাস্টমার, পেমেন্ট, শিপিং, রিপোর্ট, স্টক, বিলিং এবং StoreOS AI Assistant পরিচালনা করা যায়।",
         useCase: [
           "Facebook/Instagram inbox নির্ভর অর্ডারকে একটি পেশাদার অনলাইন স্টোরে আনতে।",
           "পণ্য, অর্ডার, কাস্টমার, স্টক, খরচ এবং রিপোর্ট এক জায়গায় রাখতে।",
@@ -57,7 +58,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "create-account",
         title: "অ্যাকাউন্ট তৈরি করা",
-        intro: "Dash Commerce OS ব্যবহার শুরু করতে seller account প্রয়োজন। Registration পেজে email/password দিয়ে account তৈরি করা যায়, এবং Google authentication configured থাকলে Google দিয়েও শুরু করা যায়।",
+        intro:
+          "Dash Commerce OS ব্যবহার শুরু করতে seller account প্রয়োজন। Registration পেজে email/password দিয়ে account তৈরি করা যায়, এবং Google authentication configured থাকলে Google দিয়েও শুরু করা যায়।",
         useCase: [
           "নতুন ব্যবসার জন্য প্রথম seller account তৈরি করতে।",
           "নিজের dashboard, store setup এবং billing access পেতে।",
@@ -88,7 +90,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "login",
         title: "লগইন",
-        intro: "Login পেজ থেকে email/password অথবা Google OAuth দিয়ে dashboard-এ প্রবেশ করা যায়। সফল login-এর পর যদি store থাকে তাহলে dashboard দেখা যাবে, আর store না থাকলে onboarding flow শুরু হবে।",
+        intro:
+          "Login পেজ থেকে email/password অথবা Google OAuth দিয়ে dashboard-এ প্রবেশ করা যায়। সফল login-এর পর যদি store থাকে তাহলে dashboard দেখা যাবে, আর store না থাকলে onboarding flow শুরু হবে।",
         useCase: [
           "প্রতিদিনের order, product, customer এবং report দেখার জন্য dashboard খুলতে।",
           "Google-connected account দিয়ে দ্রুত sign in করতে।",
@@ -119,7 +122,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "create-store",
         title: "স্টোর তৈরি করা",
-        intro: "প্রথম login-এর পরে Dash Commerce OS একটি premium multi-step workspace setup দেখায়। এখানে store name, slug/subdomain, business type, country, currency এবং timezone দিয়ে আপনার tenant store তৈরি হয়।",
+        intro:
+          "প্রথম login-এর পরে Dash Commerce OS একটি premium multi-step workspace setup দেখায়। এখানে store name, slug/subdomain, business type, country, currency এবং timezone দিয়ে আপনার tenant store তৈরি হয়।",
         useCase: [
           "নতুন brand-এর জন্য Dash storefront তৈরি করতে।",
           "Organization, Organization Member, Store এবং Store Domain একসাথে তৈরি করতে।",
@@ -150,7 +154,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "complete-store-setup",
         title: "Complete Store Setup",
-        intro: "স্টোর তৈরি করার পর dashboard ব্যবহারযোগ্য হলেও public checkout চালু করার আগে কিছু গুরুত্বপূর্ণ setup শেষ করা দরকার। General, Theme, Payment, Shipping এবং Media সেটিংস সম্পূর্ণ করলে customer experience ভালো হয়।",
+        intro:
+          "স্টোর তৈরি করার পর dashboard ব্যবহারযোগ্য হলেও public checkout চালু করার আগে কিছু গুরুত্বপূর্ণ setup শেষ করা দরকার। General, Theme, Payment, Shipping এবং Media সেটিংস সম্পূর্ণ করলে customer experience ভালো হয়।",
         useCase: [
           "স্টোরফ্রন্টে সঠিক logo, hero, contact এবং brand color দেখাতে।",
           "Customer checkout-এ payment method ও shipping rate দেখাতে।",
@@ -181,7 +186,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "dashboard-overview",
         title: "Dashboard Overview",
-        intro: "Dashboard overview হলো store-এর দৈনিক health check। এখানে revenue, orders, pending orders, product count, low stock, recent orders, top products এবং quick actions দেখা যায়।",
+        intro:
+          "Dashboard overview হলো store-এর দৈনিক health check। এখানে revenue, orders, pending orders, product count, low stock, recent orders, top products এবং quick actions দেখা যায়।",
         useCase: [
           "আজকের sales এবং pending কাজ দ্রুত দেখতে।",
           "Low stock product খুঁজে stock update করতে।",
@@ -217,7 +223,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "products",
         title: "Manage Products",
-        intro: "Products page থেকে store-এর সব product দেখা, search/filter/sort করা, status পরিবর্তন করা, bulk action নেয়া এবং edit/view/archive করা যায়।",
+        intro:
+          "Products page থেকে store-এর সব product দেখা, search/filter/sort করা, status পরিবর্তন করা, bulk action নেয়া এবং edit/view/archive করা যায়।",
         useCase: [
           "Live, Draft এবং Trash tab দিয়ে catalog আলাদা করতে।",
           "Category filter ও sort দিয়ে দ্রুত product খুঁজতে।",
@@ -248,7 +255,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "products/add-product",
         title: "Add Product",
-        intro: "Add Product form দিয়ে title, slug, description, SKU, price, stock, category, status, visibility এবং image URL দিয়ে নতুন product তৈরি করা যায়।",
+        intro:
+          "Add Product form দিয়ে title, slug, description, SKU, price, stock, category, status, visibility এবং image URL দিয়ে নতুন product তৈরি করা যায়।",
         useCase: [
           "নতুন item catalog-এ যোগ করতে।",
           "Price, compare-at price এবং cost price track করতে।",
@@ -279,7 +287,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "products/edit-product",
         title: "Edit Product",
-        intro: "Edit Product page-এ existing product-এর তথ্য update করা যায়। Title, pricing, inventory, category, images, status এবং visibility পরিবর্তন করলে storefront behavior বদলে যায়।",
+        intro:
+          "Edit Product page-এ existing product-এর তথ্য update করা যায়। Title, pricing, inventory, category, images, status এবং visibility পরিবর্তন করলে storefront behavior বদলে যায়।",
         useCase: [
           "ভুল price বা stock ঠিক করতে।",
           "Product description বা image update করতে।",
@@ -310,7 +319,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "products/status",
         title: "Product Status",
-        intro: "Product status store catalog workflow নিয়ন্ত্রণ করে। Dash Commerce OS-এ product DRAFT, ACTIVE বা ARCHIVED হতে পারে এবং visibility PUBLIC বা HIDDEN হতে পারে।",
+        intro:
+          "Product status store catalog workflow নিয়ন্ত্রণ করে। Dash Commerce OS-এ product DRAFT, ACTIVE বা ARCHIVED হতে পারে এবং visibility PUBLIC বা HIDDEN হতে পারে।",
         useCase: [
           "অপূর্ণ product Draft রাখতে।",
           "Customer-facing product Active/Public করতে।",
@@ -341,7 +351,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "products/inventory",
         title: "Inventory",
-        intro: "Inventory module product stock এবং stock movement history দেখায়। Purchases, Sales এবং manual adjustment থেকে stock পরিবর্তনের record তৈরি হয়।",
+        intro:
+          "Inventory module product stock এবং stock movement history দেখায়। Purchases, Sales এবং manual adjustment থেকে stock পরিবর্তনের record তৈরি হয়।",
         useCase: [
           "Total products, low stock, out of stock এবং stock value দেখতে।",
           "Manual stock adjustment করতে।",
@@ -372,7 +383,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "products/categories",
         title: "Categories",
-        intro: "Categories দিয়ে product catalog সাজানো যায়। Dashboard-এর category page-এ list/table এবং create form আছে, যেখানে name, slug, description এবং parent category দেয়া যায়।",
+        intro:
+          "Categories দিয়ে product catalog সাজানো যায়। Dashboard-এর category page-এ list/table এবং create form আছে, যেখানে name, slug, description এবং parent category দেয়া যায়।",
         useCase: [
           "Shop page-এ category filter তৈরি করতে।",
           "Category/collection page-এ একই ধরনের product দেখাতে।",
@@ -403,7 +415,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "products/attributes",
         title: "Attributes",
-        intro: "Attributes page Products submenu-এর catalog organization foundation। বর্তমানে এটি dashboard UI pattern অনুযায়ী name ও slug সংরক্ষণের lightweight management screen হিসেবে ব্যবহৃত হয়।",
+        intro:
+          "Attributes page Products submenu-এর catalog organization foundation। বর্তমানে এটি dashboard UI pattern অনুযায়ী name ও slug সংরক্ষণের lightweight management screen হিসেবে ব্যবহৃত হয়।",
         useCase: [
           "Size, Color, Material-এর মতো reusable product attribute পরিকল্পনা করতে।",
           "ভবিষ্যতের advanced filter বা variant system-এর জন্য catalog structure প্রস্তুত রাখতে।",
@@ -434,7 +447,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "products/tags",
         title: "Tags",
-        intro: "Tags product grouping-এর জন্য lightweight label foundation। Dashboard-এ Tags page category-style list এবং create form দিয়ে name/slug manage করে।",
+        intro:
+          "Tags product grouping-এর জন্য lightweight label foundation। Dashboard-এ Tags page category-style list এবং create form দিয়ে name/slug manage করে।",
         useCase: [
           "New Arrival, Eid Collection, Clearance-এর মতো internal grouping করতে।",
           "Marketing campaign অনুযায়ী product label plan করতে।",
@@ -452,10 +466,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
           "Slug consistent রাখলে future integrations সহজ হয়।",
           "Delete করলে confirmation popup দিয়ে accidental deletion আটকানো হয়।"
         ],
-        tips: [
-          "Season বা campaign tag আলাদা রাখুন।",
-          "একই অর্থের অনেক tag তৈরি করবেন না।"
-        ],
+        tips: ["Season বা campaign tag আলাদা রাখুন।", "একই অর্থের অনেক tag তৈরি করবেন না।"],
         commonMistakes: [
           "Category-এর বদলে Tag দিয়ে catalog navigation আশা করা।",
           "Duplicate spelling দিয়ে একই tag বারবার বানানো।"
@@ -465,7 +476,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "products/brands",
         title: "Brands",
-        intro: "Brands page পণ্যের manufacturer, label বা collection brand organize করার foundation। Category-style UI দিয়ে brand name এবং slug manage করা যায়।",
+        intro:
+          "Brands page পণ্যের manufacturer, label বা collection brand organize করার foundation। Category-style UI দিয়ে brand name এবং slug manage করা যায়।",
         useCase: [
           "Multiple brand বা supplier collection আলাদা করতে।",
           "Product details page-এ future brand information দেখানোর প্রস্তুতি নিতে।",
@@ -496,7 +508,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "products/reviews",
         title: "Product Reviews",
-        intro: "Product Reviews page customer feedback management-এর UI foundation। বর্তমানে reviews schema বা submission system নেই, তাই page empty state এবং future-ready table structure দেখায়।",
+        intro:
+          "Product Reviews page customer feedback management-এর UI foundation। বর্তমানে reviews schema বা submission system নেই, তাই page empty state এবং future-ready table structure দেখায়।",
         useCase: [
           "ভবিষ্যতে customer review list দেখার জায়গা হিসেবে।",
           "Product, Customer, Rating, Review, Status, Date এবং Actions column-এর structure প্রস্তুত রাখতে।",
@@ -531,7 +544,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "orders",
         title: "Manage Orders",
-        intro: "Orders page customer checkout থেকে তৈরি হওয়া order দেখায়। এখানে status tabs, search, date range, order table এবং order details page আছে।",
+        intro:
+          "Orders page customer checkout থেকে তৈরি হওয়া order দেখায়। এখানে status tabs, search, date range, order table এবং order details page আছে।",
         useCase: [
           "নতুন order processing করতে।",
           "Customer, payment, shipping এবং product items একসাথে দেখতে।",
@@ -562,7 +576,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "orders/status",
         title: "Order Status",
-        intro: "Order status business workflow বুঝতে সাহায্য করে। Dash Commerce OS order, payment, fulfillment এবং verification status আলাদা করে দেখায়।",
+        intro:
+          "Order status business workflow বুঝতে সাহায্য করে। Dash Commerce OS order, payment, fulfillment এবং verification status আলাদা করে দেখায়।",
         useCase: [
           "Pending order থেকে processing বা completed workflow track করতে।",
           "Payment pending/paid/refunded বোঝাতে।",
@@ -592,7 +607,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "orders/fake-order-detection",
         title: "Fake Order Detection",
-        intro: "Fake Orders module rule-based risk score দিয়ে সন্দেহজনক order review করতে সাহায্য করে। Duplicate phone, cancellation history, high COD amount এবং missing information-এর মতো signal ব্যবহার করা হয়।",
+        intro:
+          "Fake Orders module rule-based risk score দিয়ে সন্দেহজনক order review করতে সাহায্য করে। Duplicate phone, cancellation history, high COD amount এবং missing information-এর মতো signal ব্যবহার করা হয়।",
         useCase: [
           "High risk COD order dispatch করার আগে যাচাই করতে।",
           "Verification Queue-তে manual review করতে।",
@@ -622,7 +638,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "orders/customers",
         title: "Customers",
-        intro: "Customers page existing orders থেকে customer summary তৈরি করে। এখানে total customers, new/returning classification, average customer value এবং customer table দেখা যায়।",
+        intro:
+          "Customers page existing orders থেকে customer summary তৈরি করে। এখানে total customers, new/returning classification, average customer value এবং customer table দেখা যায়।",
         useCase: [
           "Recurring buyer ও one-time buyer আলাদা করতে।",
           "Customer email, phone, order count, total spent এবং last order দেখতে।",
@@ -653,7 +670,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "orders/abandoned-carts",
         title: "Abandoned Carts",
-        intro: "Abandoned Carts page operational recovery workspace। এখানে KPI cards, cart table structure, search/date filter এবং recovery action placeholders আছে। Analytics অংশ Reports > Abandoned Carts-এ রাখা হয়েছে।",
+        intro:
+          "Abandoned Carts page operational recovery workspace। এখানে KPI cards, cart table structure, search/date filter এবং recovery action placeholders আছে। Analytics অংশ Reports > Abandoned Carts-এ রাখা হয়েছে।",
         useCase: [
           "Checkout complete না করা cart review করার জন্য foundation।",
           "Not Contacted, Contacted, Recovered status দিয়ে recovery workflow plan করতে।",
@@ -684,7 +702,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "orders/transactions",
         title: "Transactions",
-        intro: "Transactions page store orders থেকে payment/refund style activity দেখায়। আলাদা transaction model না থাকলে order total থেকে simple payment rows derive করা হয়।",
+        intro:
+          "Transactions page store orders থেকে payment/refund style activity দেখায়। আলাদা transaction model না থাকলে order total থেকে simple payment rows derive করা হয়।",
         useCase: [
           "Payment, Refund এবং Adjustment tab দিয়ে আর্থিক activity দেখতে।",
           "Transaction ID, order number, customer, amount, status এবং date review করতে।",
@@ -720,7 +739,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "business/sales",
         title: "Sales",
-        intro: "Sales module offline/manual sales record করার জন্য। Online storefront orders আলাদা Orders module-এ থাকে, আর Sales module future POS-ready manual sales foundation।",
+        intro:
+          "Sales module offline/manual sales record করার জন্য। Online storefront orders আলাদা Orders module-এ থাকে, আর Sales module future POS-ready manual sales foundation।",
         useCase: [
           "Showroom, phone call বা direct sale record করতে।",
           "Cash, Card, bKash, Nagad, Bank, COD বা Other payment method দিয়ে manual sale রাখতে।",
@@ -751,7 +771,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "business/suppliers",
         title: "Suppliers",
-        intro: "Suppliers module purchase source বা vendor profile রাখার জায়গা। Supplier name, company, phone, email, address, notes এবং Active/Inactive status manage করা যায়।",
+        intro:
+          "Suppliers module purchase source বা vendor profile রাখার জায়গা। Supplier name, company, phone, email, address, notes এবং Active/Inactive status manage করা যায়।",
         useCase: [
           "যাদের কাছ থেকে product কিনেন তাদের contact data রাখতে।",
           "Purchases form-এ supplier select করতে।",
@@ -782,7 +803,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "business/purchases",
         title: "Purchases",
-        intro: "Purchases module supplier থেকে stock কেনার record রাখে। Purchase status Draft, Ordered, Received বা Cancelled হতে পারে। Received হলে selected product stock বাড়ে।",
+        intro:
+          "Purchases module supplier থেকে stock কেনার record রাখে। Purchase status Draft, Ordered, Received বা Cancelled হতে পারে। Received হলে selected product stock বাড়ে।",
         useCase: [
           "Supplier invoice বা purchase receipt record করতে।",
           "Manual product name বা existing product select করে purchase item রাখতে।",
@@ -813,7 +835,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "business/expenses",
         title: "Expenses",
-        intro: "Expenses module ব্যবসার খরচ record করার জন্য। Marketing, Courier, Packaging, Salary, Office Rent, Internet, Utilities, Software & Tools, Travel এবং Miscellaneous default categories থাকে।",
+        intro:
+          "Expenses module ব্যবসার খরচ record করার জন্য। Marketing, Courier, Packaging, Salary, Office Rent, Internet, Utilities, Software & Tools, Travel এবং Miscellaneous default categories থাকে।",
         useCase: [
           "Paid, Pending বা Cancelled expense track করতে।",
           "Cash, Bank, bKash, Nagad, Card বা Other payment method দিয়ে খরচ লিখতে।",
@@ -844,7 +867,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "business/coupons",
         title: "Coupons",
-        intro: "Coupons module discount setup UI foundation। Coupons list, status tabs, create coupon page, discount type options এবং conditions form তৈরি আছে, তবে checkout discount application fully connected নয়।",
+        intro:
+          "Coupons module discount setup UI foundation। Coupons list, status tabs, create coupon page, discount type options এবং conditions form তৈরি আছে, তবে checkout discount application fully connected নয়।",
         useCase: [
           "Percentage, Fixed Cart, Free Products বা Free Shipping offer plan করতে।",
           "Coupon name, code, amount, product condition, minimum/maximum spend এবং date range UI প্রস্তুত রাখতে।",
@@ -875,7 +899,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "business/reports",
         title: "Reports",
-        intro: "Reports module store performance বুঝতে সাহায্য করে। Overview ছাড়াও Orders, Revenues, Products, Customers এবং Abandoned Carts report pages আছে।",
+        intro:
+          "Reports module store performance বুঝতে সাহায্য করে। Overview ছাড়াও Orders, Revenues, Products, Customers এবং Abandoned Carts report pages আছে।",
         useCase: [
           "Order count, revenue, refunds, net revenue, products sold এবং customer metrics দেখতে।",
           "Top selling products, low stock, category/product performance বুঝতে।",
@@ -911,7 +936,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "settings/general",
         title: "General Settings",
-        intro: "General Settings হলো store-level মূল তথ্যের জায়গা। Store logo, favicon, tagline, email, phone, support phone, address, currency, language এবং timezone এখানে দেখা বা আপডেট করা যায়।",
+        intro:
+          "General Settings হলো store-level মূল তথ্যের জায়গা। Store logo, favicon, tagline, email, phone, support phone, address, currency, language এবং timezone এখানে দেখা বা আপডেট করা যায়।",
         useCase: [
           "Header, footer, checkout এবং invoice-এ store branding দেখাতে।",
           "Customer contact information ঠিক রাখতে।",
@@ -942,7 +968,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "settings/theme-and-branding",
         title: "Theme & Branding",
-        intro: "Theme settings storefront-এর visual identity নিয়ন্ত্রণ করে। Default Theme currently active; seller primary color, secondary color, hero copy, hero image, announcement এবং featured section title সেট করতে পারে।",
+        intro:
+          "Theme settings storefront-এর visual identity নিয়ন্ত্রণ করে। Default Theme currently active; seller primary color, secondary color, hero copy, hero image, announcement এবং featured section title সেট করতে পারে।",
         useCase: [
           "Storefront homepage premium এবং brand-consistent করতে।",
           "Hero title/subtitle দিয়ে customer-কে প্রথম impression দিতে।",
@@ -973,7 +1000,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "settings/logo-and-favicon",
         title: "Logo and Favicon",
-        intro: "Logo storefront header/footer/checkout/invoice-এ brand identity দেখায়, আর favicon browser tab-এ ছোট icon হিসেবে দেখা যায়।",
+        intro:
+          "Logo storefront header/footer/checkout/invoice-এ brand identity দেখায়, আর favicon browser tab-এ ছোট icon হিসেবে দেখা যায়।",
         useCase: [
           "Customer trust বাড়াতে professional logo দেখাতে।",
           "Browser tab-এ store চিনতে favicon ব্যবহার করতে।",
@@ -1004,7 +1032,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "settings/storefront",
         title: "Storefront Setup",
-        intro: "Storefront হলো customer-facing public store। Dash supports /s/{storeSlug} local route এবং wildcard subdomain foundation যেমন {storeSlug}.dash.com।",
+        intro:
+          "Storefront হলো customer-facing public store। Dash supports /s/{storeSlug} local route এবং wildcard subdomain foundation যেমন {storeSlug}.dash.com।",
         useCase: [
           "Customer-কে professional shop, product, cart এবং checkout experience দিতে।",
           "Store settings ও theme settings public storefront-এ apply করতে।",
@@ -1035,7 +1064,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "settings/custom-domain",
         title: "Custom Domain",
-        intro: "Custom Domain support future-ready architecture হিসেবে রাখা হয়েছে। Storefront resolver future custom domain support করতে প্রস্তুত, তবে seller UI/configuration fully live নাও থাকতে পারে।",
+        intro:
+          "Custom Domain support future-ready architecture হিসেবে রাখা হয়েছে। Storefront resolver future custom domain support করতে প্রস্তুত, তবে seller UI/configuration fully live নাও থাকতে পারে।",
         useCase: [
           "নিজস্ব domain যেমন yourbrand.com storefront-এ connect করার জন্য future planning।",
           "Brand trust বাড়াতে dash.com subdomain-এর বাইরে custom address ব্যবহার করতে।",
@@ -1065,7 +1095,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "settings/social-links",
         title: "Social Settings",
-        intro: "Social Settings page social login credentials এবং social profile links রাখার জন্য। Facebook/Google OAuth fields, redirect URL এবং Facebook, Instagram, X/Twitter, YouTube, TikTok, LinkedIn, WhatsApp fields আছে।",
+        intro:
+          "Social Settings page social login credentials এবং social profile links রাখার জন্য। Facebook/Google OAuth fields, redirect URL এবং Facebook, Instagram, X/Twitter, YouTube, TikTok, LinkedIn, WhatsApp fields আছে।",
         useCase: [
           "ভবিষ্যতে social login provider configure করার credential structure রাখতে।",
           "Storefront footer/contact area-এ social profile links দেখাতে।",
@@ -1096,15 +1127,18 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "settings/marketing-tracking",
         title: "Marketing / Analytics",
-        intro: "Marketing / Analytics page platform গুলোকে ID দিয়ে connect করার UI — Google (GA4, GTM, Verification), Meta (Pixel, Conversions API, Domain Verification), TikTok Pixel এবং Google Ads Conversion ID। Script tag paste করতে হয় না; আমরা প্রতিটি platform-এর official snippet generate করি।",
+        intro:
+          "Marketing / Analytics page platform গুলোকে ID দিয়ে connect করার UI — Google (GA4, GTM, Verification), Meta (Pixel, Conversions API, Domain Verification), TikTok Pixel এবং Google Ads Conversion ID। Script tag paste করতে হয় না; আমরা প্রতিটি platform-এর official snippet generate করি।",
         useCase: [
           "GA4/GTM বা Meta Pixel শুধু ID দিয়ে connect করতে।",
           "Domain verification-এর content value রাখতে।",
-          "Meta Conversions API-এর server-side token নিরাপদে রাখতে।"
+          "Meta Conversions API-এর server-side token নিরাপদে রাখতে।",
+          "GA4-তে server-side purchase পাঠাতে (Measurement Protocol)।"
         ],
         steps: [
           "Settings > Marketing খুলুন।",
           "Google card-এ GA4 Measurement ID (G-...) ও GTM Container ID (GTM-...) দিন।",
+          "GA4-তে server-side tracking লাগলে toggle on করে Measurement Protocol API secret দিন (GA4 Admin > Data streams > আপনার stream > Measurement Protocol API secrets)।",
           "Meta card-এ Pixel ID দিন; Conversions API লাগলে toggle on করে access token দিন।",
           "TikTok Pixel ID এবং Google Ads Conversion ID (AW-...) দিন।",
           "প্রয়োজন হলে Custom Tracking enable করে header/body/footer code দিন।",
@@ -1112,7 +1146,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         ],
         important: [
           "শুধু store owner বা admin এই settings change করতে পারেন; অন্যরা দেখতে পারেন।",
-          "Conversions API token encrypt করে রাখা হয়, browser-এ কখনও যায় না — শুধু শেষ চারটি character দেখা যায়।",
+          "Conversions API token ও GA4 API secret encrypt করে রাখা হয়, browser-এ কখনও যায় না — শুধু শেষ চারটি character দেখা যায়।",
+          "Server-side purchase order confirm হওয়ার পরে যায়; কোনো কারণে fail করলেও checkout-এ কোনো প্রভাব পড়ে না, শুধু activity log-এ record হয়।",
           "Custom Tracking-এ শুধু tracking tag এবং পরিচিত analytics host allow করা হয়; বাকিটা save-এর সময় reject হয়।",
           "প্রতিটি change activity log-এ কে করেছে সহ record হয়।",
           "Storefront-এ tag শুধু আপনার store-এ load হয়, dashboard-এ নয় — নিজের admin activity track হবে না।"
@@ -1130,7 +1165,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "payments-delivery/courier-setup",
         title: "Courier Setup",
-        intro: "Courier Settings page Pathao, SteadFast, RedX, Paperfly এবং Carry Bee API credential রাখার UI foundation। Automatic booking/tracking এখনো চালু নয়।",
+        intro:
+          "Courier Settings page Pathao, SteadFast, RedX, Paperfly এবং Carry Bee API credential রাখার UI foundation। Automatic booking/tracking এখনো চালু নয়।",
         useCase: [
           "ভবিষ্যতের delivery booking integration-এর credential প্রস্তুত রাখতে।",
           "Provider অনুযায়ী API base URL, store ID, key, token, username/password সংরক্ষণ করতে।",
@@ -1161,7 +1197,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "payments-delivery/invoice-settings",
         title: "Invoice Settings",
-        intro: "Invoice Settings page invoice information, numbering, branding, tax/VAT এবং display options configure করার জন্য। PDF generation এখনো built নয়, কিন্তু invoice data structure প্রস্তুত।",
+        intro:
+          "Invoice Settings page invoice information, numbering, branding, tax/VAT এবং display options configure করার জন্য। PDF generation এখনো built নয়, কিন্তু invoice data structure প্রস্তুত।",
         useCase: [
           "Company/store name, address, phone, email, website invoice-এ রাখতে।",
           "Invoice prefix ও starting number দিয়ে format preview দেখতে।",
@@ -1192,7 +1229,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "payments-delivery/payment-methods",
         title: "Payment Methods",
-        intro: "Payment settings checkout-এ customer কোন পদ্ধতিতে pay করবে তা নিয়ন্ত্রণ করে। COD, manual bKash, manual Nagad, manual Rocket support আছে।",
+        intro:
+          "Payment settings checkout-এ customer কোন পদ্ধতিতে pay করবে তা নিয়ন্ত্রণ করে। COD, manual bKash, manual Nagad, manual Rocket support আছে।",
         useCase: [
           "Cash on Delivery enable/disable করতে।",
           "bKash/Nagad/Rocket account number, account type এবং instruction দেখাতে।",
@@ -1223,7 +1261,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "payments-delivery/manual-mobile-payments",
         title: "Manual bKash/Nagad/Rocket Payments",
-        intro: "Manual mobile payment flow-তে seller number/instruction দেখায়, customer বাইরে থেকে pay করে transaction ID, reference এবং note দিয়ে order place করে।",
+        intro:
+          "Manual mobile payment flow-তে seller number/instruction দেখায়, customer বাইরে থেকে pay করে transaction ID, reference এবং note দিয়ে order place করে।",
         useCase: [
           "bKash/Nagad/Rocket gateway API ছাড়াই payment নিতে।",
           "Bangladesh-first checkout চালাতে।",
@@ -1254,7 +1293,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "payments-delivery/shipping-zones",
         title: "Shipping Zones",
-        intro: "Shipping settings Bangladesh-first delivery zones ও flat rates manage করে। Default Inside Dhaka এবং Outside Dhaka zones/rates তৈরি হতে পারে।",
+        intro:
+          "Shipping settings Bangladesh-first delivery zones ও flat rates manage করে। Default Inside Dhaka এবং Outside Dhaka zones/rates তৈরি হতে পারে।",
         useCase: [
           "Checkout-এ delivery method/rate দেখাতে।",
           "District, city, area match fields দিয়ে flat rate organize করতে।",
@@ -1285,7 +1325,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "settings/media",
         title: "Media Library",
-        intro: "Media Library store-scoped image upload এবং URL reuse করার জায়গা। Logo, favicon, hero image এবং product images এখানে upload করে URL copy করা যায়।",
+        intro:
+          "Media Library store-scoped image upload এবং URL reuse করার জায়গা। Logo, favicon, hero image এবং product images এখানে upload করে URL copy করা যায়।",
         useCase: [
           "Product image URL field পূরণ করতে।",
           "General/Theme settings-এ logo বা hero image ব্যবহার করতে।",
@@ -1316,7 +1357,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "settings/storeos-ai",
         title: "StoreOS AI",
-        intro: "StoreOS AI Assistant Dash dashboard-এর মধ্যে chat interface দিয়ে business প্রশ্নের উত্তর দেয়। StoreOS API configured না থাকলে clear fallback message দেখায়।",
+        intro:
+          "StoreOS AI Assistant Dash dashboard-এর মধ্যে chat interface দিয়ে business প্রশ্নের উত্তর দেয়। StoreOS API configured না থাকলে clear fallback message দেখায়।",
         useCase: [
           "আজ কত order, এই মাসে sales, low stock product বা best-selling product দ্রুত জিজ্ঞেস করতে।",
           "StoreOS native connection status দেখতে।",
@@ -1352,7 +1394,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "billing",
         title: "Current Plan",
-        intro: "Billing page seller subscription, plan, usage, manual payment submission, billing history এবং invoice records দেখায়। Dash manual bKash/Nagad/Rocket/Bank payment verification flow ব্যবহার করে।",
+        intro:
+          "Billing page seller subscription, plan, usage, manual payment submission, billing history এবং invoice records দেখায়। Dash manual bKash/Nagad/Rocket/Bank payment verification flow ব্যবহার করে।",
         useCase: [
           "বর্তমান plan name, status, trial remaining, next billing date এবং billing cycle দেখতে।",
           "Products, Orders, Staff, Stores, Storage এবং AI Usage progress বুঝতে।",
@@ -1383,7 +1426,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "billing/upgrade",
         title: "Upgrade Plan",
-        intro: "Upgrade Plan section থেকে active plans দেখা যায়। Starter, Growth, Pro plan monthly বা yearly billing cycle দিয়ে select করা যায়।",
+        intro:
+          "Upgrade Plan section থেকে active plans দেখা যায়। Starter, Growth, Pro plan monthly বা yearly billing cycle দিয়ে select করা যায়।",
         useCase: [
           "Product/order/staff/store limit বাড়াতে।",
           "AI বা custom domain enabled plan বেছে নিতে।",
@@ -1414,7 +1458,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "billing/submit-manual-payment",
         title: "Submit Manual Payment",
-        intro: "Manual subscription payment flow-তে seller bKash, Nagad, Rocket বা Bank Transfer দিয়ে pay করে transaction ID, sender number এবং note submit করে।",
+        intro:
+          "Manual subscription payment flow-তে seller bKash, Nagad, Rocket বা Bank Transfer দিয়ে pay করে transaction ID, sender number এবং note submit করে।",
         useCase: [
           "Gateway ছাড়া subscription payment জমা দিতে।",
           "Payment verification pending status tracking করতে।",
@@ -1445,7 +1490,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "billing/history",
         title: "Billing History",
-        intro: "Billing History subscription payment submissions দেখায়। Invoice number, method, amount, status এবং date দিয়ে pending/paid/failed payment track করা যায়।",
+        intro:
+          "Billing History subscription payment submissions দেখায়। Invoice number, method, amount, status এবং date দিয়ে pending/paid/failed payment track করা যায়।",
         useCase: [
           "Payment submitted হয়েছে কিনা নিশ্চিত করতে।",
           "Pending verification status দেখতে।",
@@ -1476,7 +1522,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "billing/invoices",
         title: "Invoices",
-        intro: "Invoices card subscription payment invoice records দেখায়। View/Print action placeholder হিসেবে থাকে, আর future PDF download support-এর জন্য structure প্রস্তুত।",
+        intro:
+          "Invoices card subscription payment invoice records দেখায়। View/Print action placeholder হিসেবে থাকে, আর future PDF download support-এর জন্য structure প্রস্তুত।",
         useCase: [
           "Subscription invoice number ও amount দেখতে।",
           "Payment status অনুযায়ী invoice বুঝতে।",
@@ -1506,7 +1553,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "billing/subscription-settings",
         title: "Subscription Settings",
-        intro: "Subscription Settings section subscription renewal ও manual billing note দেখায়। Dash বর্তমানে manual billing verification model ব্যবহার করে, auto-renewal শুধুমাত্র tracking indicator হতে পারে।",
+        intro:
+          "Subscription Settings section subscription renewal ও manual billing note দেখায়। Dash বর্তমানে manual billing verification model ব্যবহার করে, auto-renewal শুধুমাত্র tracking indicator হতে পারে।",
         useCase: [
           "Cancel at period end বা auto renewal status বুঝতে।",
           "Manual billing rules পড়তে।",
@@ -1541,7 +1589,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "storefront",
         title: "Storefront Overview",
-        intro: "Storefront হলো customer-facing public ecommerce website। Default theme header, announcement bar, footer, homepage, shop, product details, cart, checkout এবং thank-you flow support করে।",
+        intro:
+          "Storefront হলো customer-facing public ecommerce website। Default theme header, announcement bar, footer, homepage, shop, product details, cart, checkout এবং thank-you flow support করে।",
         useCase: [
           "Customer-কে store browse ও order place করতে।",
           "Theme settings দিয়ে logo, colors, hero, announcement ও contact info apply করতে।",
@@ -1572,7 +1621,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "storefront/shop",
         title: "Shop Page",
-        intro: "Shop page active/public products grid দেখায়। Customer category filter এবং sort দিয়ে product browse করতে পারে।",
+        intro:
+          "Shop page active/public products grid দেখায়। Customer category filter এবং sort দিয়ে product browse করতে পারে।",
         useCase: [
           "সব live product এক জায়গায় দেখাতে।",
           "Category filter দিয়ে customer browsing সহজ করতে।",
@@ -1603,7 +1653,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "storefront/category-page",
         title: "Category Page",
-        intro: "Category/collection page নির্দিষ্ট category-এর product দেখায়। এটি customer-কে একই ধরনের product একসাথে browse করতে সাহায্য করে।",
+        intro:
+          "Category/collection page নির্দিষ্ট category-এর product দেখায়। এটি customer-কে একই ধরনের product একসাথে browse করতে সাহায্য করে।",
         useCase: [
           "Shoes, Bags, Accessories-এর মতো collection page তৈরি করতে।",
           "Homepage featured categories থেকে linked browsing দিতে।",
@@ -1633,7 +1684,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "storefront/search",
         title: "Search Page",
-        intro: "Search page product title এবং SKU দিয়ে product খুঁজতে সাহায্য করে। Customer search query দিয়ে matching active/public products দেখতে পারে।",
+        intro:
+          "Search page product title এবং SKU দিয়ে product খুঁজতে সাহায্য করে। Customer search query দিয়ে matching active/public products দেখতে পারে।",
         useCase: [
           "Customer দ্রুত product খুঁজতে।",
           "SKU জানা থাকলে exact item খুঁজতে।",
@@ -1663,7 +1715,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "storefront/product-page",
         title: "Product Page",
-        intro: "Product details page product gallery, title, SKU, category, price, compare price, stock status, short description, quantity selector এবং add-to-cart controls দেখায়।",
+        intro:
+          "Product details page product gallery, title, SKU, category, price, compare price, stock status, short description, quantity selector এবং add-to-cart controls দেখায়।",
         useCase: [
           "Customer-কে product সম্পর্কে বিস্তারিত দেখাতে।",
           "Sale price, stock এবং SKU visibility দিতে।",
@@ -1694,7 +1747,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "storefront/cart",
         title: "Cart",
-        intro: "Cart store-scoped customer basket। Customer product add করলে title, price, image snapshot, quantity এবং line total browser storage/cookie/session strategy অনুযায়ী থাকে।",
+        intro:
+          "Cart store-scoped customer basket। Customer product add করলে title, price, image snapshot, quantity এবং line total browser storage/cookie/session strategy অনুযায়ী থাকে।",
         useCase: [
           "Checkout-এর আগে selected products review করতে।",
           "Quantity update বা item remove করতে।",
@@ -1725,7 +1779,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "storefront/checkout",
         title: "Checkout",
-        intro: "Checkout page customer info, shipping address, shipping rate, payment method, payment reference/note এবং order summary নিয়ে order তৈরি করে।",
+        intro:
+          "Checkout page customer info, shipping address, shipping rate, payment method, payment reference/note এবং order summary নিয়ে order তৈরি করে।",
         useCase: [
           "Customer order place করতে।",
           "Enabled shipping rates এবং payment methods দেখাতে।",
@@ -1756,7 +1811,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "storefront/thank-you",
         title: "Thank You Page",
-        intro: "Thank You page checkout সফল হওয়ার পরে order confirmation দেখায়। এখানে order number, order summary, selected payment method এবং relevant instructions দেখা যায়।",
+        intro:
+          "Thank You page checkout সফল হওয়ার পরে order confirmation দেখায়। এখানে order number, order summary, selected payment method এবং relevant instructions দেখা যায়।",
         useCase: [
           "Customer-কে order সফল হয়েছে জানাতে।",
           "Order number future support-এর জন্য দিতে।",
@@ -1787,7 +1843,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "storefront/customer-account",
         title: "Customer Account",
-        intro: "Customer Account route storefront architecture-এর future-ready অংশ। Customer self-service order tracking/account feature পুরোপুরি চালু না থাকলে এটি placeholder/foundation হিসেবে থাকবে।",
+        intro:
+          "Customer Account route storefront architecture-এর future-ready অংশ। Customer self-service order tracking/account feature পুরোপুরি চালু না থাকলে এটি placeholder/foundation হিসেবে থাকবে।",
         useCase: [
           "ভবিষ্যতে customer login/account area প্রস্তুত রাখতে।",
           "Order history, addresses এবং profile settings-এর জায়গা পরিকল্পনা করতে।",
@@ -1822,7 +1879,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "help/faq",
         title: "FAQ",
-        intro: "FAQ পেজে Dash Commerce OS ব্যবহার নিয়ে সাধারণ প্রশ্নের সংক্ষিপ্ত উত্তর থাকবে। এটি নতুন seller-দের setup, payment, shipping, product এবং billing confusion কমানোর জন্য।",
+        intro:
+          "FAQ পেজে Dash Commerce OS ব্যবহার নিয়ে সাধারণ প্রশ্নের সংক্ষিপ্ত উত্তর থাকবে। এটি নতুন seller-দের setup, payment, shipping, product এবং billing confusion কমানোর জন্য।",
         useCase: [
           "প্রথমবার dashboard ব্যবহার করার সময় দ্রুত উত্তর পেতে।",
           "Storefront-এ product কেন দেখা যাচ্ছে না, payment pending কেন, billing approval কীভাবে হয় এসব জানতে।",
@@ -1852,7 +1910,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "help/troubleshooting",
         title: "Troubleshooting",
-        intro: "Troubleshooting guide সাধারণ সমস্যা দ্রুত পরীক্ষা করার checklist। Product missing, checkout issue, payment pending, Google login, media upload বা billing submission issue এখানে diagnose করা যায়।",
+        intro:
+          "Troubleshooting guide সাধারণ সমস্যা দ্রুত পরীক্ষা করার checklist। Product missing, checkout issue, payment pending, Google login, media upload বা billing submission issue এখানে diagnose করা যায়।",
         useCase: [
           "Storefront খালি দেখালে কী check করবেন।",
           "Checkout payment/shipping option না দেখালে কী করবেন।",
@@ -1883,7 +1942,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "help/contact-support",
         title: "Contact Support",
-        intro: "Contact Support page seller-কে support request করার আগে কী তথ্য প্রস্তুত রাখতে হবে তা বলে। এতে issue দ্রুত বুঝে সমাধান করা সহজ হয়।",
+        intro:
+          "Contact Support page seller-কে support request করার আগে কী তথ্য প্রস্তুত রাখতে হবে তা বলে। এতে issue দ্রুত বুঝে সমাধান করা সহজ হয়।",
         useCase: [
           "Login, billing, order, payment, shipping বা storefront issue report করতে।",
           "Manual subscription payment verification নিয়ে follow-up করতে।",
@@ -1914,7 +1974,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "help/changelog",
         title: "Changelog",
-        intro: "Changelog seller-facing update বুঝতে সাহায্য করে। নতুন module, UI change, billing rule, storefront update বা bug fix এখানে সংক্ষেপে রাখা যেতে পারে।",
+        intro:
+          "Changelog seller-facing update বুঝতে সাহায্য করে। নতুন module, UI change, billing rule, storefront update বা bug fix এখানে সংক্ষেপে রাখা যেতে পারে।",
         useCase: [
           "নতুন feature কখন এসেছে জানতে।",
           "Dashboard UI পরিবর্তনের কারণ বুঝতে।",
@@ -1944,7 +2005,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       page({
         slug: "profile",
         title: "Profile ও Account Settings",
-        intro: "Profile page seller account-এর personal information, security, preferences এবং connected accounts দেখায়। Topbar avatar dropdown থেকে Profile, Account Settings এবং Logout পাওয়া যায়।",
+        intro:
+          "Profile page seller account-এর personal information, security, preferences এবং connected accounts দেখায়। Topbar avatar dropdown থেকে Profile, Account Settings এবং Logout পাওয়া যায়।",
         useCase: [
           "Full name, avatar URL, phone এবং preferences update করতে।",
           "Credentials user হলে password change করতে।",
@@ -2000,8 +2062,8 @@ export function getDocsPageNeighbors(slug: string) {
   const index = docsPages.findIndex((pageItem) => pageItem.slug === slug);
 
   return {
-    next: index >= 0 ? docsPages[index + 1] ?? null : null,
-    previous: index > 0 ? docsPages[index - 1] ?? null : null
+    next: index >= 0 ? (docsPages[index + 1] ?? null) : null,
+    previous: index > 0 ? (docsPages[index - 1] ?? null) : null
   };
 }
 

@@ -29,17 +29,51 @@ import {
   type SendOrderToCourierResult
 } from "./courier.service";
 import { requireCourierProvider } from "./providers/registry";
+import { hasPlanFeature } from "../billing/subscription-limits";
+import { PLAN_FEATURE_REGISTRY, type PlanFeatureKey } from "../billing/plan-features";
 
 export type CourierActionState = {
+  /** Set when the plan refused the action, so the UI can open an upgrade dialog. */
+  lockedFeature?: PlanFeatureKey;
   message?: string;
   status: "error" | "idle" | "success" | "warning";
 };
+
+/**
+ * Courier automation is a paid feature. The pages stay readable on every plan —
+ * a seller can open Settings → Courier and see how it works — but every action
+ * that talks to a courier or writes credentials is gated here.
+ *
+ * Returns the module's own error state rather than throwing, because these
+ * actions are consumed by `useActionState` and an uncaught throw would surface
+ * as an error boundary instead of an upgrade prompt.
+ */
+async function courierPlanGate(
+  storeId: string,
+  feature: PlanFeatureKey = "courier_api"
+): Promise<CourierActionState | null> {
+  if (await hasPlanFeature(storeId, feature)) {
+    return null;
+  }
+
+  return {
+    lockedFeature: feature,
+    message: `${PLAN_FEATURE_REGISTRY[feature].label} is a paid feature. Upgrade your plan from Billing to use it.`,
+    status: "error"
+  };
+}
 
 export async function sendOrderToCourierAction(
   orderId: string,
   provider?: string
 ): Promise<CourierActionState> {
   const store = await requireStore();
+  const gate = await courierPlanGate(store.id);
+
+  if (gate) {
+    return gate;
+  }
+
   const user = await getCurrentUser();
   const parsed = sendShipmentSchema.safeParse({ orderId, ...(provider ? { provider } : {}) });
 
@@ -73,6 +107,12 @@ export async function sendOrdersToCourierAction(
   provider?: string
 ): Promise<BulkSendActionState> {
   const store = await requireStore();
+  const gate = await courierPlanGate(store.id);
+
+  if (gate) {
+    return { ...gate, result: null };
+  }
+
   const user = await getCurrentUser();
   const parsed = bulkSendShipmentsSchema.safeParse({
     orderIds,
@@ -109,6 +149,12 @@ export async function sendOrdersToCourierAction(
 
 export async function refreshActiveShipmentsAction(): Promise<CourierActionState> {
   const store = await requireStore();
+  const gate = await courierPlanGate(store.id);
+
+  if (gate) {
+    return gate;
+  }
+
 
   try {
     const { checked, failed, updated } = await refreshActiveShipments(store.id);
@@ -133,6 +179,12 @@ export async function refreshShipmentStatusAction(
   orderId?: string
 ): Promise<CourierActionState> {
   const store = await requireStore();
+  const gate = await courierPlanGate(store.id);
+
+  if (gate) {
+    return gate;
+  }
+
   const user = await getCurrentUser();
   const parsed = refreshShipmentSchema.safeParse({ shipmentId });
 
@@ -169,6 +221,13 @@ export async function checkCourierScoreAction(
   force = false
 ): Promise<CourierScoreActionState> {
   const store = await requireStore();
+  // Customer risk history is its own entitlement, not part of courier automation.
+  const gate = await courierPlanGate(store.id, "fraud_check");
+
+  if (gate) {
+    return { ...gate, score: null };
+  }
+
   const parsed = customerScoreSchema.safeParse({ force, phone });
 
   if (!parsed.success) {
@@ -188,6 +247,12 @@ export async function checkCourierScoreAction(
 
 export async function refreshCourierBalanceAction(providerKey: string): Promise<CourierActionState> {
   const store = await requireStore();
+  const gate = await courierPlanGate(store.id);
+
+  if (gate) {
+    return gate;
+  }
+
   const balance = await getCourierBalance(store.id, providerKey, { force: true });
 
   revalidateCourierPaths(store.slug);
@@ -211,6 +276,12 @@ export async function saveCourierAccountFormAction(
   formData: FormData
 ): Promise<CourierActionState> {
   const store = await requireStore();
+  const gate = await courierPlanGate(store.id);
+
+  if (gate) {
+    return gate;
+  }
+
   const providerKey = String(formData.get("provider") ?? "");
 
   try {
@@ -238,6 +309,12 @@ export async function setDefaultCourierAccountAction(
   providerKey: string
 ): Promise<CourierActionState> {
   const store = await requireStore();
+  const gate = await courierPlanGate(store.id);
+
+  if (gate) {
+    return gate;
+  }
+
 
   try {
     await setDefaultCourierAccount(store.id, providerKey);
@@ -254,6 +331,12 @@ export async function testCourierConnectionAction(
   providerKey: string
 ): Promise<CourierActionState> {
   const store = await requireStore();
+  const gate = await courierPlanGate(store.id);
+
+  if (gate) {
+    return gate;
+  }
+
 
   try {
     const result = await testCourierConnection(store.id, providerKey);

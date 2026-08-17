@@ -2,9 +2,11 @@ import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { AbandonedCartListControls, type AbandonedCartFilterKey } from "../../../modules/abandoned-carts/components/abandoned-cart-list-controls";
 import { AbandonedCartDashboard } from "../../../modules/abandoned-carts/components/abandoned-cart-dashboard";
 import {
+  countActiveCarts,
   getAbandonedCartInactivityMinutes,
   listAbandonedCarts
 } from "../../../modules/abandoned-carts/abandoned-cart.service";
+import { FeatureGate } from "../../../modules/billing/components/feature-gate";
 import { requireStore } from "../../../modules/stores/queries";
 
 type AbandonedCartsPageProps = {
@@ -17,7 +19,10 @@ export default async function AbandonedCartsPage({ searchParams }: AbandonedCart
   const activeFilter = parseFilter(singleValue(params.status));
   const search = singleValue(params.search).trim();
   const dateRange = singleValue(params.dateRange).trim();
-  const carts = await listAbandonedCarts(store, { dateRange, search });
+  const [carts, activeCartCount] = await Promise.all([
+    listAbandonedCarts(store, { dateRange, search }),
+    countActiveCarts(store.id)
+  ]);
   const counts = {
     all: carts.length,
     contacted: carts.filter((cart) => cart.status === "CONTACTED").length,
@@ -28,7 +33,10 @@ export default async function AbandonedCartsPage({ searchParams }: AbandonedCart
   return (
     <DashboardShell storeSlug={store.slug}>
       <section className="resource-page min-w-0">
-        <div className="catalog-page-heading"><h1>Abandoned Carts</h1></div>
+        <div className="catalog-page-heading">
+          <h1>Abandoned Carts</h1>
+          <FeatureGate feature="abandoned_cart" storeId={store.id} />
+        </div>
         <AbandonedCartListControls
           activeFilter={activeFilter}
           counts={counts}
@@ -36,6 +44,7 @@ export default async function AbandonedCartsPage({ searchParams }: AbandonedCart
           search={search}
         />
         <AbandonedCartDashboard
+          activeCartCount={activeCartCount}
           activeFilter={activeFilter}
           carts={carts}
           currency={store.currency}

@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PaymentMethodTypeValue } from "../../payments/payment.schema";
 import { defaultCheckoutSettings } from "../checkout-settings";
+
+const CONTACT_ENDPOINT = "/api/checkout/contact";
+const CONTACT_DEBOUNCE_MS = 900;
 
 type CheckoutPaymentMethod = {
   type: PaymentMethodTypeValue;
@@ -53,9 +56,12 @@ export function CheckoutForm({
   const settings = defaultCheckoutSettings;
   const selectedPayment = paymentMethods.find((method) => method.type === selectedPaymentMethod) ?? defaultPaymentMethod;
   const needsPaymentReference = selectedPayment ? isManualCheckoutPayment(selectedPayment.type) : false;
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useCheckoutContactCapture(formRef, storeSlug);
 
   return (
-    <form action="/api/checkout" className="sf-checkout-form" method="post">
+    <form action="/api/checkout" className="sf-checkout-form" method="post" ref={formRef}>
       <input name="storeSlug" type="hidden" value={storeSlug} />
       <input name="country" type="hidden" value="Bangladesh" />
       <input name="city" type="hidden" value={selectedShippingRate?.city ?? ""} />
@@ -166,6 +172,83 @@ export function CheckoutForm({
       </button>
     </form>
   );
+}
+
+/**
+ * Saves the shopper's contact details as they type, and once more if they leave.
+ *
+ * A shopper who fills in their details and then closes the tab is the single
+ * most recoverable kind of abandoned cart, and the form's own submit handler
+ * never runs for them — so the details are sent to a side channel that only
+ * updates the cart snapshot. `pagehide` (not `unload`) is what fires reliably
+ * on mobile, and sendBeacon survives the page going away.
+ */
+function useCheckoutContactCapture(
+  formRef: React.RefObject<HTMLFormElement | null>,
+  storeSlug: string
+) {
+  const lastSent = useRef("");
+
+  useEffect(() => {
+    const form = formRef.current;
+
+    if (!form) {
+      return;
+    }
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const send = (leaving: boolean) => {
+      const data = new FormData(form);
+      const read = (key: string) => String(data.get(key) ?? "").trim();
+      const phone = read("phone");
+      const email = read("email");
+
+      // Nothing reachable yet — a name alone gives the seller no way to follow up.
+      if (!phone && !email) {
+        return;
+      }
+
+      const body = new URLSearchParams({ email, name: read("name"), phone, storeSlug }).toString();
+
+      if (body === lastSent.current) {
+        return;
+      }
+
+      lastSent.current = body;
+
+      const payload = new Blob([body], { type: "application/x-www-form-urlencoded" });
+
+      if (leaving && navigator.sendBeacon(CONTACT_ENDPOINT, payload)) {
+        return;
+      }
+
+      void fetch(CONTACT_ENDPOINT, { body: payload, keepalive: true, method: "POST" }).catch(
+        () => undefined
+      );
+    };
+
+    const onInput = () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+
+      timer = setTimeout(() => send(false), CONTACT_DEBOUNCE_MS);
+    };
+    const onLeave = () => send(true);
+
+    form.addEventListener("input", onInput);
+    window.addEventListener("pagehide", onLeave);
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+
+      form.removeEventListener("input", onInput);
+      window.removeEventListener("pagehide", onLeave);
+    };
+  }, [formRef, storeSlug]);
 }
 
 function isManualCheckoutPayment(type: PaymentMethodTypeValue) {

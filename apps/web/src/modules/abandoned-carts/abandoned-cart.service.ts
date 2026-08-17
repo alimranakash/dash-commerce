@@ -8,6 +8,7 @@ import {
   type AbandonedCartContactInput
 } from "./abandoned-cart.schema";
 import {
+  countActiveAbandonedCarts,
   deleteActiveAbandonedCart,
   findAbandonedCartByToken,
   findCustomerIdByPhone,
@@ -147,6 +148,11 @@ export async function resolveCartAfterCheckout(
   } catch (error) {
     console.error("Failed to resolve abandoned cart after checkout", error);
   }
+}
+
+/** Carts still being shopped, which the abandoned list intentionally excludes. */
+export async function countActiveCarts(storeId: string) {
+  return countActiveAbandonedCarts(storeId, getAbandonedCartCutoff());
 }
 
 /** The stored cart behind a recovery link. */

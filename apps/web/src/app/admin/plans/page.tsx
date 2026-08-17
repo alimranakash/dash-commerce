@@ -42,6 +42,7 @@ function toPlanListItem(plan: AdminPlanRecord): AdminPlanListItem {
     aiEnabled: plan.aiEnabled,
     currency: plan.currency,
     customDomainEnabled: plan.customDomainEnabled,
+    customerLimit: plan.customerLimit,
     description: plan.description,
     id: plan.id,
     isActive: plan.isActive,

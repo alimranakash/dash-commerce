@@ -204,6 +204,22 @@ export async function getAbandonedCartReportRecords(storeId: string, start: Date
   });
 }
 
+/**
+ * Carts being shopped right now — tracked, but not yet abandoned.
+ *
+ * The list above deliberately hides these, so this is what tells a seller that
+ * tracking is alive rather than that nothing is happening.
+ */
+export async function countActiveAbandonedCarts(storeId: string, cutoff: Date) {
+  return prisma.abandonedCart.count({
+    where: {
+      lastActivityAt: { gt: cutoff },
+      status: "NOT_CONTACTED",
+      storeId
+    }
+  });
+}
+
 /** The store's own verified custom domain, when it has one. */
 export async function findPrimaryStoreDomain(storeId: string) {
   return prisma.storeDomain.findFirst({

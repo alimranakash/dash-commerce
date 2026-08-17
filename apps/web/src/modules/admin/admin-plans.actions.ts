@@ -85,6 +85,7 @@ function planInputFromFormData(formData: FormData): PlanInput {
     aiEnabled: formData.get("aiEnabled") === "on",
     currency: getValue(formData, "currency"),
     customDomainEnabled: formData.get("customDomainEnabled") === "on",
+    customerLimit: Number(formData.get("customerLimit") ?? 0),
     description: optionalValue(formData, "description"),
     isActive: formData.get("isActive") === "on",
     isFeatured: formData.get("isFeatured") === "on",

@@ -1,6 +1,12 @@
 import { prisma } from "@dash/db";
+import { PLAN_CATALOG } from "./plan-catalog";
 import type { PlanInput } from "./admin-plans.schema";
 
+/**
+ * Seeds the plan catalog into an empty table only. This deliberately stays a
+ * no-op once any plan exists, so it can never revert an admin's edits — a
+ * populated database is brought up to date by `scripts/backfill-plans.ts`.
+ */
 export async function ensureDefaultPlans() {
   const count = await prisma.plan.count();
 
@@ -8,68 +14,18 @@ export async function ensureDefaultPlans() {
     return;
   }
 
-  await prisma.plan.createMany({
-    data: [
-      {
-        aiEnabled: false,
-        currency: "BDT",
-        customDomainEnabled: false,
-        description: "Start selling with a professional storefront and core commerce tools.",
-        isActive: true,
-        isFeatured: false,
-        name: "Starter",
-        orderLimit: 200,
-        posEnabled: false,
-        priceMonthly: "990.00",
-        priceYearly: "9900.00",
-        productLimit: 100,
-        slug: "starter",
-        sortOrder: 1,
-        staffLimit: 1,
-        storeLimit: 1,
-        trialDays: 7
-      },
-      {
-        aiEnabled: true,
-        currency: "BDT",
-        customDomainEnabled: true,
-        description: "Grow with more products, AI insights, and branded storefront controls.",
-        isActive: true,
-        isFeatured: true,
-        name: "Growth",
-        orderLimit: 2000,
-        posEnabled: false,
-        priceMonthly: "2490.00",
-        priceYearly: "24900.00",
-        productLimit: 1000,
-        slug: "growth",
-        sortOrder: 2,
-        staffLimit: 5,
-        storeLimit: 2,
-        trialDays: 14
-      },
-      {
-        aiEnabled: true,
-        currency: "BDT",
-        customDomainEnabled: true,
-        description: "Scale operations with higher limits, POS readiness, and premium features.",
-        isActive: true,
-        isFeatured: false,
-        name: "Pro",
-        orderLimit: 0,
-        posEnabled: true,
-        priceMonthly: "4990.00",
-        priceYearly: "49900.00",
-        productLimit: 0,
-        slug: "pro",
-        sortOrder: 3,
-        staffLimit: 20,
-        storeLimit: 5,
-        trialDays: 14
+  // Created one at a time rather than with `createMany` so each plan's feature
+  // entitlements are written in the same nested call.
+  for (const { features, ...plan } of PLAN_CATALOG) {
+    await prisma.plan.create({
+      data: {
+        ...plan,
+        features: {
+          create: features.map((featureKey) => ({ featureKey }))
+        }
       }
-    ],
-    skipDuplicates: true
-  });
+    });
+  }
 }
 
 export async function getAdminPlans() {
@@ -193,6 +149,7 @@ function formatPlanData(data: PlanInput) {
     aiEnabled: data.aiEnabled,
     currency: data.currency.toUpperCase(),
     customDomainEnabled: data.customDomainEnabled,
+    customerLimit: data.customerLimit,
     description: data.description || null,
     isActive: data.isActive,
     isFeatured: data.isFeatured,

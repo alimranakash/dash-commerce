@@ -1,8 +1,10 @@
 "use client";
 
 import { AlertTriangle, BarChart3, Code2, ExternalLink, Globe2, Lock, Megaphone, Music2, RotateCcw, Save, Send, ShieldCheck } from "lucide-react";
-import { useActionState, useRef, useState, useTransition, type ComponentType, type ReactNode } from "react";
-import type { MarketingActionState, MetaTestEventState } from "../marketing.actions";
+import { useActionState, useEffect, useRef, useState, useTransition, type ComponentType, type ReactNode } from "react";
+import { PlanUpgradeDialog } from "../../billing/components/plan-upgrade-dialog";
+import type { PlanFeatureKey } from "../../billing/plan-features";
+import type { MarketingActionState, MarketingTestEventState } from "../marketing.actions";
 import { marketingIdHints, type MarketingIdField } from "../marketing.schema";
 import type { MarketingSettingsView } from "../marketing.schema";
 
@@ -16,12 +18,14 @@ const initialState: MarketingActionState = { status: "idle" };
 export function MarketingSettingsForm({
   action,
   canManage,
-  onSendTestEvent,
+  onSendGa4TestEvent,
+  onSendMetaTestEvent,
   settings
 }: {
   action: (state: MarketingActionState, formData: FormData) => Promise<MarketingActionState>;
   canManage: boolean;
-  onSendTestEvent: () => Promise<MetaTestEventState>;
+  onSendGa4TestEvent: () => Promise<MarketingTestEventState>;
+  onSendMetaTestEvent: () => Promise<MarketingTestEventState>;
   settings: MarketingSettingsView;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
@@ -30,22 +34,70 @@ export function MarketingSettingsForm({
   const [capiEnabled, setCapiEnabled] = useState(settings.metaCapiEnabled);
   const [replacingToken, setReplacingToken] = useState(!settings.hasCapiToken);
   const [clearToken, setClearToken] = useState(false);
-  const [testResult, setTestResult] = useState<MetaTestEventState | null>(null);
-  const [isTesting, startTest] = useTransition();
+  const [ga4MpEnabled, setGa4MpEnabled] = useState(settings.ga4MpEnabled);
+  const [replacingGa4Secret, setReplacingGa4Secret] = useState(!settings.hasGa4ApiSecret);
+  const [clearGa4Secret, setClearGa4Secret] = useState(false);
+  const [lockedFeature, setLockedFeature] = useState<PlanFeatureKey | null>(null);
   const disabled = !canManage;
+
+  // `useActionState` hands back a fresh object per submit, so re-submitting after
+  // dismissing the dialog re-opens it.
+  useEffect(() => {
+    if (state.lockedFeature) {
+      setLockedFeature(state.lockedFeature);
+    }
+  }, [state]);
 
   return (
     <form action={formAction} className="grid gap-5" ref={formRef}>
+      <PlanUpgradeDialog feature={lockedFeature} onClose={() => setLockedFeature(null)} />
       {state.status === "success" ? (
         <p className="m-0 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{state.message}</p>
       ) : null}
-      {state.status === "error" ? (
+      {state.status === "error" && !state.lockedFeature ? (
         <p className="m-0 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">{state.message}</p>
       ) : null}
 
       <div className="grid items-start gap-5 xl:grid-cols-2">
         <MarketingCard icon={Globe2} subtitle="Analytics and Tag Manager" title="Google">
           <IdField disabled={disabled} docHref="https://support.google.com/analytics/answer/9539598" error={state.fieldErrors?.ga4MeasurementId} field="ga4MeasurementId" helper="Found in Google Analytics under Admin → Data streams." label="GA4 Measurement ID" value={settings.ga4MeasurementId} />
+
+          <div className="grid gap-3 rounded-lg border border-[#e5e0f7] bg-[#faf9ff] p-4">
+            <label className="flex items-center gap-2.5 text-sm font-medium text-[#33343e]">
+              <input checked={ga4MpEnabled} className="h-4 w-4 accent-[#7548f5]" disabled={disabled} name="ga4MpEnabled" onChange={(event) => setGa4MpEnabled(event.target.checked)} type="checkbox" />
+              Enable server-side tracking
+            </label>
+            <p className="m-0 flex items-start gap-2 text-[11px] leading-5 text-[#655d78]">
+              <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#7548f5]" />
+              Sends the purchase to GA4 from our server the moment an order is placed, so sales still land even when a shopper blocks scripts. The API secret is encrypted before it is stored and never reaches the browser.
+            </p>
+
+            {settings.hasGa4ApiSecret ? (
+              <TestEventButton disabled={disabled} onSend={onSendGa4TestEvent} />
+            ) : null}
+
+            {settings.hasGa4ApiSecret && !replacingGa4Secret ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="rounded-md border border-[#dedcea] bg-white px-3 py-2 font-mono text-xs text-[#33343e]">{settings.ga4ApiSecretHint ?? "••••"}</span>
+                <button className="text-xs font-semibold text-[#7548f5] hover:underline disabled:text-[#a2a3b0]" disabled={disabled} onClick={() => setReplacingGa4Secret(true)} type="button">Replace secret</button>
+                <label className="flex items-center gap-2 text-xs text-[#655d78]">
+                  <input checked={clearGa4Secret} className="h-3.5 w-3.5 accent-[#e11d48]" disabled={disabled} name="ga4ApiSecretCleared" onChange={(event) => setClearGa4Secret(event.target.checked)} type="checkbox" />
+                  Remove stored secret
+                </label>
+              </div>
+            ) : (
+              <label className="grid gap-2 text-sm font-medium text-[#33343e]">
+                Measurement Protocol API secret
+                <input autoComplete="off" className={inputClass} disabled={disabled} name="ga4ApiSecret" placeholder="Admin → Data streams → Measurement Protocol" spellCheck={false} type="password" />
+                {state.fieldErrors?.ga4ApiSecret ? (
+                  <span className="text-[11px] font-medium text-rose-600">{state.fieldErrors.ga4ApiSecret}</span>
+                ) : (
+                  <span className="text-[11px] font-normal leading-5 text-[#858691]">Admin → Data streams → your stream → Measurement Protocol API secrets → Create. <DocLink href="https://developers.google.com/analytics/devguides/collection/protocol/ga4/sending-events" /></span>
+                )}
+              </label>
+            )}
+          </div>
+
           <IdField disabled={disabled} docHref="https://support.google.com/tagmanager/answer/6103696" error={state.fieldErrors?.gtmContainerId} field="gtmContainerId" helper="Found at the top of your Tag Manager workspace." label="GTM Container ID" value={settings.gtmContainerId} />
           <IdField disabled={disabled} docHref="https://search.google.com/search-console" error={state.fieldErrors?.googleSiteVerification} field="googleSiteVerification" helper="The content value only — paste the whole meta tag and we will pull it out." label="Google Verification" value={settings.googleSiteVerification} />
         </MarketingCard>
@@ -64,30 +116,7 @@ export function MarketingSettingsForm({
             </p>
 
             {settings.hasCapiToken ? (
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#dcd9e8] bg-white px-3 text-xs font-semibold text-[#555762] hover:bg-[#f8f7fc] disabled:opacity-60"
-                  disabled={disabled || isTesting}
-                  onClick={() =>
-                    startTest(async () => {
-                      setTestResult(await onSendTestEvent());
-                    })
-                  }
-                  type="button"
-                >
-                  <Send className="h-3.5 w-3.5" />
-                  {isTesting ? "Sending..." : "Send test event"}
-                </button>
-                {testResult ? (
-                  <span
-                    className={`text-[11px] font-medium ${testResult.ok ? "text-emerald-700" : "text-rose-600"}`}
-                  >
-                    {testResult.message}
-                  </span>
-                ) : (
-                  <span className="text-[11px] text-[#858691]">Uses the saved token.</span>
-                )}
-              </div>
+              <TestEventButton disabled={disabled} onSend={onSendMetaTestEvent} />
             ) : null}
 
             {settings.hasCapiToken && !replacingToken ? (
@@ -159,6 +188,49 @@ export function MarketingSettingsForm({
         </div>
       ) : null}
     </form>
+  );
+}
+
+/**
+ * Fires a real event with the *stored* secret, so a seller can prove the
+ * credentials work before a customer places an order. Holds its own result
+ * state — Meta and GA4 each have one, and they report independently.
+ */
+function TestEventButton({
+  disabled,
+  onSend
+}: {
+  disabled: boolean;
+  onSend: () => Promise<MarketingTestEventState>;
+}) {
+  const [result, setResult] = useState<MarketingTestEventState | null>(null);
+  const [isSending, startSend] = useTransition();
+
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <button
+        className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#dcd9e8] bg-white px-3 text-xs font-semibold text-[#555762] hover:bg-[#f8f7fc] disabled:opacity-60"
+        disabled={disabled || isSending}
+        onClick={() =>
+          startSend(async () => {
+            setResult(await onSend());
+          })
+        }
+        type="button"
+      >
+        <Send className="h-3.5 w-3.5" />
+        {isSending ? "Sending..." : "Send test event"}
+      </button>
+      {result ? (
+        <span
+          className={`text-[11px] font-medium ${result.ok ? "text-emerald-700" : "text-rose-600"}`}
+        >
+          {result.message}
+        </span>
+      ) : (
+        <span className="text-[11px] text-[#858691]">Uses the saved credentials.</span>
+      )}
+    </div>
   );
 }
 

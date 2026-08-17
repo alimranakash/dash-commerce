@@ -13,6 +13,7 @@ import {
   resumeSubscriptionAction,
   type SubscriptionActionState
 } from "../admin-subscriptions.actions";
+import { BILLING_CYCLE_DAYS } from "../admin-subscriptions.schema";
 
 export type AdminSubscriptionListItem = {
   billingCycle: "MONTHLY" | "YEARLY";
@@ -253,6 +254,9 @@ const statusActions = {
 
 function ChangePlanModal({ onClose, plans, subscription }: { onClose: () => void; plans: AdminSubscriptionPlanOption[]; subscription: AdminSubscriptionListItem }) {
   const [state, formAction, isPending] = useActionState(changeSubscriptionPlanAction.bind(null, subscription.id), initialActionState);
+  const [billingCycle, setBillingCycle] = useState(subscription.billingCycle);
+  const [startsAt, setStartsAt] = useState(todayInputValue);
+  const periodEndLabel = formatPeriodEnd(startsAt, billingCycle);
 
   useEffect(() => {
     if (state.status === "success") {
@@ -274,10 +278,30 @@ function ChangePlanModal({ onClose, plans, subscription }: { onClose: () => void
           </label>
           <label className="grid gap-2">
             <span className="text-sm font-semibold text-[#20212c]">Billing Cycle</span>
-            <select className="h-11 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10" defaultValue={subscription.billingCycle} name="billingCycle">
+            <select
+              className="h-11 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10"
+              name="billingCycle"
+              onChange={(event) => setBillingCycle(event.target.value as AdminSubscriptionListItem["billingCycle"])}
+              value={billingCycle}
+            >
               <option value="MONTHLY">Monthly</option>
               <option value="YEARLY">Yearly</option>
             </select>
+          </label>
+          <label className="grid gap-2">
+            <span className="text-sm font-semibold text-[#20212c]">Start Date</span>
+            <input
+              className="h-11 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10"
+              name="startsAt"
+              onChange={(event) => setStartsAt(event.target.value)}
+              type="date"
+              value={startsAt}
+            />
+            <span className="text-[11px] text-[#74758a]">
+              {billingCycle === "YEARLY" ? "Yearly runs 365 days" : "Monthly runs 30 days"} from this date
+              {periodEndLabel ? ` — ends ${periodEndLabel}.` : "."}
+            </span>
+            {state.fieldErrors?.startsAt ? <span className="text-xs font-medium text-red-600">{state.fieldErrors.startsAt}</span> : null}
           </label>
           {state.message && state.status === "error" ? <p className="m-0 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{state.message}</p> : null}
         </div>
@@ -472,6 +496,29 @@ function AdminSubscriptionsEmpty() {
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#74758a]">Subscriptions matching your search and filters will appear here.</p>
     </div>
   );
+}
+
+/** Today as a `yyyy-mm-dd` value for `<input type="date">`, in local time. */
+function todayInputValue() {
+  const now = new Date();
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
+/** Preview of where the period lands, using the same day counts as the server. */
+function formatPeriodEnd(startsAt: string, billingCycle: "MONTHLY" | "YEARLY") {
+  if (!startsAt) {
+    return "";
+  }
+
+  const start = new Date(startsAt);
+
+  if (Number.isNaN(start.getTime())) {
+    return "";
+  }
+
+  start.setDate(start.getDate() + (BILLING_CYCLE_DAYS[billingCycle] ?? 30));
+
+  return new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "UTC" }).format(start);
 }
 
 function titleCase(value: string) {

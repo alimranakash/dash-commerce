@@ -4,6 +4,7 @@ export const planInputSchema = z.object({
   aiEnabled: z.boolean().default(false),
   currency: z.string().trim().min(2, "Currency is required.").max(8),
   customDomainEnabled: z.boolean().default(false),
+  customerLimit: z.coerce.number().int().min(0, "Customer limit cannot be negative."),
   description: z.string().trim().max(500, "Description must be 500 characters or less.").optional(),
   isActive: z.boolean().default(false),
   isFeatured: z.boolean().default(false),

@@ -7,7 +7,10 @@ export type MarketingSettingsWriteData = {
   customEnabled: boolean;
   customFooterCode: string | null;
   customHeaderCode: string | null;
+  ga4ApiSecretCipher: string | null;
+  ga4ApiSecretHint: string | null;
   ga4MeasurementId: string | null;
+  ga4MpEnabled: boolean;
   googleAdsConversionId: string | null;
   googleSiteVerification: string | null;
   gtmContainerId: string | null;
@@ -59,6 +62,41 @@ export async function getOrderForMetaEvent(storeId: string, orderId: string) {
       shippingAddress: {
         select: {
           country: true
+        }
+      }
+    }
+  });
+}
+
+/**
+ * The order fields a GA4 `purchase` event needs.
+ *
+ * Its own read rather than a share with `getOrderForMetaEvent`: GA4 itemises the
+ * purchase (per-item price, and shipping/tax broken out of the total) where Meta
+ * only wants ids and quantities, and neither sender should start carrying fields
+ * for the other.
+ */
+export async function getOrderForGa4Event(storeId: string, orderId: string) {
+  return prisma.order.findFirst({
+    where: {
+      id: orderId,
+      storeId
+    },
+    select: {
+      currency: true,
+      customerEmail: true,
+      customerPhone: true,
+      id: true,
+      orderNumber: true,
+      shippingAmount: true,
+      taxAmount: true,
+      totalAmount: true,
+      items: {
+        select: {
+          price: true,
+          quantity: true,
+          sku: true,
+          title: true
         }
       }
     }

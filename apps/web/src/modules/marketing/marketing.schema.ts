@@ -141,13 +141,35 @@ const capiTokenSchema = z
   })
   .transform((value) => (value ? value : undefined));
 
+/**
+ * The Measurement Protocol API secret — the GA4 equivalent of the CAPI token,
+ * and handled the same way: server-side only, never echoed back to the form.
+ *
+ * Google issues these as short base64url-ish strings (typically 22 characters)
+ * from Admin → Data streams → Measurement Protocol API secrets. The range is
+ * deliberately loose; the point is to catch a pasted measurement ID or access
+ * token, not to guess at Google's exact generator.
+ */
+const ga4ApiSecretSchema = z
+  .union([z.string(), z.null(), z.undefined()])
+  .transform((value) => value?.trim() ?? "")
+  .refine((value) => value === "" || /^[A-Za-z0-9_-]{16,64}$/.test(value), {
+    message: "That does not look like a Measurement Protocol API secret."
+  })
+  .transform((value) => (value ? value : undefined));
+
 export const marketingSettingsSchema = z
   .object({
     customBodyCode: optionalCustomCode("Body code"),
     customEnabled: z.boolean(),
     customFooterCode: optionalCustomCode("Footer code"),
     customHeaderCode: optionalCustomCode("Header code"),
+    /** Blank means "keep the stored secret" — the form never receives it. */
+    ga4ApiSecret: ga4ApiSecretSchema,
+    /** Explicit opt-out, since blank cannot mean "clear it". */
+    ga4ApiSecretCleared: z.boolean(),
     ga4MeasurementId: optionalId("ga4MeasurementId"),
+    ga4MpEnabled: z.boolean(),
     googleAdsConversionId: optionalId("googleAdsConversionId"),
     googleSiteVerification: optionalId("googleSiteVerification"),
     gtmContainerId: optionalId("gtmContainerId"),
@@ -168,23 +190,35 @@ export const marketingSettingsSchema = z
         path: ["metaPixelId"]
       });
     }
+
+    if (value.ga4MpEnabled && !value.ga4MeasurementId) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Server-side tracking needs a GA4 Measurement ID — events are sent against that stream.",
+        path: ["ga4MeasurementId"]
+      });
+    }
   });
 
 /** Raw form values, before the schema trims/extracts/validates them. */
 export type MarketingSettingsFormInput = z.input<typeof marketingSettingsSchema>;
 export type MarketingSettingsInput = z.infer<typeof marketingSettingsSchema>;
 
-/** What the settings page is allowed to see: IDs plus a hint, never the token. */
+/** What the settings page is allowed to see: IDs plus a hint, never the secrets. */
 export type MarketingSettingsView = {
   customBodyCode: string;
   customEnabled: boolean;
   customFooterCode: string;
   customHeaderCode: string;
+  ga4ApiSecretHint: string | null;
   ga4MeasurementId: string;
+  ga4MpEnabled: boolean;
   googleAdsConversionId: string;
   googleSiteVerification: string;
   gtmContainerId: string;
   hasCapiToken: boolean;
+  hasGa4ApiSecret: boolean;
   metaCapiEnabled: boolean;
   metaCapiTokenHint: string | null;
   metaDomainVerification: string;

@@ -2,6 +2,7 @@ import { revalidatePath } from "next/cache";
 import { NextResponse, type NextRequest } from "next/server";
 import { ZodError } from "zod";
 import { createCheckoutOrder } from "../../../modules/checkout/checkout.service";
+import { sendGa4PurchaseEvent } from "../../../modules/marketing/ga4-mp";
 import { sendMetaPurchaseEvent } from "../../../modules/marketing/meta-capi";
 import type { PaymentMethodTypeValue } from "../../../modules/payments/payment.schema";
 import { getStorefrontBySlug } from "../../../modules/storefront/resolver";
@@ -39,18 +40,32 @@ export async function POST(request: NextRequest) {
     revalidatePath(`/s/${store.slug}/checkout`);
     revalidatePath("/dashboard/orders");
 
-    // Post-order side effect only: the order is committed and the cart cleared
-    // before this runs. `sendMetaPurchaseEvent` resolves rather than rejects, and
-    // the extra catch here guarantees a confirmed order can never be reported to
-    // the customer as a checkout failure. No-ops unless the seller enabled CAPI.
-    await sendMetaPurchaseEvent({
-      eventSourceUrl: new URL(
-        `/s/${store.slug}/thank-you/${order.orderNumber}`,
-        request.nextUrl.origin
-      ).toString(),
-      orderId: order.id,
-      storeId: store.id
-    }).catch(() => undefined);
+    const thankYouUrl = new URL(
+      `/s/${store.slug}/thank-you/${order.orderNumber}`,
+      request.nextUrl.origin
+    ).toString();
+
+    // Post-order side effects only: the order is committed and the cart cleared
+    // before these run. Both senders resolve rather than reject, and the extra
+    // catch on each guarantees a confirmed order can never be reported to the
+    // customer as a checkout failure. Each no-ops unless the seller enabled it,
+    // and because the catch is attached per sender, one being misconfigured or
+    // slow cannot suppress the other.
+    await Promise.all([
+      sendMetaPurchaseEvent({
+        eventSourceUrl: thankYouUrl,
+        orderId: order.id,
+        storeId: store.id
+      }).catch(() => undefined),
+      sendGa4PurchaseEvent({
+        // First-party cookie, readable here: it stitches the server event onto
+        // the same GA4 user as the browser session that placed the order.
+        gaCookie: request.cookies.get("_ga")?.value,
+        orderId: order.id,
+        pageLocation: thankYouUrl,
+        storeId: store.id
+      }).catch(() => undefined)
+    ]);
 
     return redirectTo(request, `/s/${store.slug}/thank-you/${order.orderNumber}`);
   } catch (error) {

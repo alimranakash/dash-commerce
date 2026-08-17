@@ -24,8 +24,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type ComponentType } from "react";
+import { createContext, useContext, useEffect, useState, type ComponentType } from "react";
 import { LogoutButton } from "../../modules/auth/logout-button";
+import { getEntitledFeaturesAction } from "../../modules/billing/billing-features.actions";
+import { isPaidFeature } from "../../modules/admin/plan-catalog";
+import { PaidBadge } from "../../modules/billing/components/paid-badge";
+import type { PlanFeatureKey } from "../../modules/billing/plan-features";
 
 type DashboardNavProps = {
   onClose: () => void;
@@ -38,6 +42,39 @@ type NavItem = {
   icon: ComponentType<{ className?: string }>;
   label: string;
 };
+
+/**
+ * Nav routes that map onto a plan feature. Only routes that actually exist are
+ * listed — an entitlement badge on a page we do not ship would advertise
+ * vapourware.
+ */
+const NAV_FEATURE_BY_HREF: Record<string, PlanFeatureKey> = {
+  "/dashboard/abandoned-cart": "abandoned_cart",
+  "/dashboard/reports/abandoned-carts": "abandoned_cart",
+  "/dashboard/settings/courier": "courier_api",
+  "/dashboard/settings/marketing": "marketing_analytics"
+};
+
+/**
+ * Entitled feature keys, or `null` while still loading. Rendering nothing until
+ * it resolves avoids flashing a "Paid" badge at sellers who do have the feature.
+ */
+const EntitledFeaturesContext = createContext<ReadonlySet<string> | null>(null);
+
+function NavFeatureBadge({ href }: { href: string }) {
+  const entitled = useContext(EntitledFeaturesContext);
+  const feature = NAV_FEATURE_BY_HREF[href];
+
+  if (!feature || !entitled || entitled.has(feature) || !isPaidFeature(feature)) {
+    return null;
+  }
+
+  return (
+    <span className="ml-1.5 align-middle">
+      <PaidBadge feature={feature} interactive={false} />
+    </span>
+  );
+}
 
 const productLinks = [
   { href: "/dashboard/products", label: "All Products" },
@@ -139,6 +176,23 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
   const [reportsOpen, setReportsOpen] = useState(reportRouteActive);
   const [storefrontOpen, setStorefrontOpen] = useState(storefrontRouteActive);
   const [settingsOpen, setSettingsOpen] = useState(settingsRouteActive);
+  const [entitledFeatures, setEntitledFeatures] = useState<ReadonlySet<string> | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getEntitledFeaturesAction()
+      .then((keys) => {
+        if (!cancelled) setEntitledFeatures(new Set(keys));
+      })
+      .catch(() => {
+        if (!cancelled) setEntitledFeatures(new Set());
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (productRouteActive) setProductsOpen(true);
@@ -161,6 +215,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
   }, [settingsRouteActive]);
 
   return (
+    <EntitledFeaturesContext.Provider value={entitledFeatures}>
     <aside
       className={`fixed inset-y-0 left-0 z-50 flex w-[248px] flex-col border-r border-[#ececf7] bg-white transition-transform duration-200 lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
     >
@@ -197,6 +252,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
                 onClick={onClose}
               >
                 <SafeNavText text={link.label} />
+                <NavFeatureBadge href={link.href} />
               </Link>
             ))}
           </div>
@@ -222,6 +278,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
                 onClick={onClose}
               >
                 <SafeNavText text={link.label} />
+                <NavFeatureBadge href={link.href} />
               </Link>
             ))}
           </div>
@@ -261,6 +318,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
                 onClick={onClose}
               >
                 <SafeNavText text={link.label} />
+                <NavFeatureBadge href={link.href} />
               </Link>
             ))}
           </div>
@@ -286,6 +344,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
                 onClick={onClose}
               >
                 <SafeNavText text={link.label} />
+                <NavFeatureBadge href={link.href} />
               </Link>
             ))}
           </div>
@@ -325,6 +384,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
                 onClick={onClose}
               >
                 <SafeNavText text={link.label} />
+                <NavFeatureBadge href={link.href} />
               </Link>
             ))}
           </div>
@@ -343,6 +403,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
         <LogoutButton />
       </div>
     </aside>
+    </EntitledFeaturesContext.Provider>
   );
 }
 
@@ -405,6 +466,7 @@ function NavLink({ href, icon: Icon, iconClassName, label, onClick, pathname }: 
     >
       <Icon className={`h-4 w-4 ${iconClassName ?? "text-[#7548f5]"}`} />
       <span suppressHydrationWarning>{navLabel}</span>
+      <NavFeatureBadge href={href} />
     </Link>
   );
 }

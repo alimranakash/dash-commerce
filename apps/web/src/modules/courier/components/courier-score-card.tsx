@@ -3,6 +3,9 @@
 import { Loader2, ShieldQuestion } from "lucide-react";
 import { useState, useTransition } from "react";
 import { checkCourierScoreAction } from "../courier.actions";
+import { minPlanForFeature } from "../../admin/plan-catalog";
+import { PaidBadge } from "../../billing/components/paid-badge";
+import { PlanUpgradeDialog } from "../../billing/components/plan-upgrade-dialog";
 import type { CourierScoreBand, CourierScoreView } from "../courier-insight.service";
 
 /**
@@ -13,18 +16,33 @@ import type { CourierScoreBand, CourierScoreView } from "../courier-insight.serv
  */
 export function CourierScoreCard({
   cached,
+  locked = false,
   phone
 }: {
   cached: CourierScoreView | null;
+  /** Resolved on the server so the card can explain itself before any click. */
+  locked?: boolean;
   phone: string;
 }) {
   const [score, setScore] = useState<CourierScoreView | null>(cached);
   const [note, setNote] = useState<string | null>(null);
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   function check(force: boolean) {
+    // Locked is known up front, so skip the round trip and explain immediately.
+    if (locked) {
+      setShowUpgrade(true);
+      return;
+    }
+
     startTransition(async () => {
       const result = await checkCourierScoreAction(phone, force);
+
+      if (result.lockedFeature) {
+        setShowUpgrade(true);
+        return;
+      }
 
       setNote(result.message ?? null);
 
@@ -42,6 +60,7 @@ export function CourierScoreCard({
         <span className="flex items-center gap-2">
           <ShieldQuestion className="h-4 w-4 text-[#7548f5]" />
           <h2 className="m-0 text-sm font-semibold text-[#20212a]">Courier Score</h2>
+          {locked ? <PaidBadge feature="fraud_check" interactive={false} showPlan /> : null}
         </span>
         <button
           className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#dcd9e8] bg-white px-3 text-[11px] font-semibold text-[#5f616d] transition hover:border-[#bdb6da] hover:bg-[#faf9ff] disabled:cursor-not-allowed disabled:opacity-60"
@@ -50,11 +69,27 @@ export function CourierScoreCard({
           type="button"
         >
           {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-          {isPending ? "Checking…" : score ? "Refresh" : "Check"}
+          {isPending ? "Checking…" : locked ? "Unlock" : score ? "Refresh" : "Check"}
         </button>
       </header>
 
-      {hasHistory ? (
+      {locked ? (
+        // Without this the card would say "no delivery history", which reads as a
+        // fact about the customer rather than a feature the plan does not include.
+        <div className="grid gap-3 rounded-lg border border-dashed border-[#dcd9e8] bg-[#faf9ff] p-3">
+          <p className="m-0 text-xs leading-6 text-[#5f616d]">
+            See how many parcels this customer has received, cancelled, or returned with other
+            stores — so you can spot a risky cash-on-delivery order before you ship it.
+          </p>
+          <button
+            className="inline-flex h-9 w-full items-center justify-center rounded-lg bg-[#7c3aed] px-3 text-[11px] font-semibold text-white transition hover:bg-[#6d28d9]"
+            onClick={() => setShowUpgrade(true)}
+            type="button"
+          >
+            Unlock with {minPlanForFeature("fraud_check") ?? "a paid"} plan
+          </button>
+        </div>
+      ) : hasHistory ? (
         <div className="grid gap-4">
           <div className="flex items-center gap-3">
             <span className="text-2xl font-semibold tabular-nums text-[#20212a]">
@@ -87,6 +122,11 @@ export function CourierScoreCard({
           {note}
         </p>
       ) : null}
+
+      <PlanUpgradeDialog
+        feature={showUpgrade ? "fraud_check" : null}
+        onClose={() => setShowUpgrade(false)}
+      />
     </section>
   );
 }

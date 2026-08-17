@@ -1,4 +1,5 @@
 import { prisma, type Prisma } from "@dash/db";
+import { BILLING_CYCLE_DAYS } from "./admin-subscriptions.schema";
 
 export type AdminPaymentStatusFilter = "all" | "cancelled" | "failed" | "paid" | "pending" | "refunded";
 export type AdminPaymentGatewayFilter = "all" | "manual" | "other" | "paddle" | "sslcommerz" | "stripe";
@@ -251,7 +252,7 @@ export async function updateAdminPaymentStatus(paymentId: string, status: "FAILE
       }
 
       const now = new Date();
-      const currentPeriodEndsAt = addMonths(now, payment.subscription.billingCycle === "YEARLY" ? 12 : 1);
+      const currentPeriodEndsAt = addDays(now, BILLING_CYCLE_DAYS[payment.subscription.billingCycle]);
 
       await tx.subscription.update({
         data: {
@@ -310,9 +311,9 @@ export async function updateAdminPaymentStatus(paymentId: string, status: "FAILE
   });
 }
 
-function addMonths(date: Date, months: number) {
+function addDays(date: Date, days: number) {
   const next = new Date(date);
-  next.setMonth(next.getMonth() + months);
+  next.setDate(next.getDate() + days);
   return next;
 }
 

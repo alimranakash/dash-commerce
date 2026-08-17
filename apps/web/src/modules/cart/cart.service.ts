@@ -1,7 +1,9 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { prisma } from "@dash/db";
 import { cookies } from "next/headers";
+import type { AbandonedCartContactInput } from "../abandoned-carts/abandoned-cart.schema";
 import {
+  captureCheckoutContact,
   discardCartSnapshot,
   findAbandonedCartSnapshot,
   trackCartActivity
@@ -31,6 +33,33 @@ export async function getCartToken(storeId: string) {
   const cart = await readStoredCart(storeId);
 
   return cart.token;
+}
+
+/**
+ * Saves what a shopper has typed into checkout, before they submit anything.
+ *
+ * Most abandoned checkouts never reach the submit handler, so waiting for the
+ * order attempt loses exactly the contact details that make a cart recoverable.
+ * The snapshot is (re)written first, both to guarantee a row exists to attach
+ * the details to and because typing is activity — a shopper mid-checkout must
+ * not age into the abandoned list while they are still there.
+ */
+export async function recordCheckoutContact(storeId: string, contact: AbandonedCartContactInput) {
+  const cart = await readStoredCart(storeId);
+
+  if (cart.items.length === 0) {
+    return false;
+  }
+
+  await trackCartActivity({
+    items: cart.items,
+    note: cart.note,
+    storeId,
+    token: cart.token
+  });
+  await captureCheckoutContact(storeId, cart.token, contact);
+
+  return true;
 }
 
 /** Order note from the cart page or mini cart drawer; carried into checkout. */

@@ -14,6 +14,8 @@
     "typecheck": "turbo typecheck --env-mode=loose",
     "format": "prettier --write .",
     "verify:demo-packs": "node scripts/verify-demo-packs.mjs",
+    "verify:plan-features": "tsx scripts/verify-plan-features.mts",
+    "db:backfill-plans": "tsx scripts/backfill-plans.mts",
     "db:generate": "npm run db:generate -w @dash/db",
     "db:push": "npm run db:push -w @dash/db",
     "db:migrate": "npm run db:migrate -w @dash/db",

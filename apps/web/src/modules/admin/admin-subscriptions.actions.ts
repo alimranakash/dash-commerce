@@ -21,10 +21,13 @@ export type SubscriptionActionState = {
 export async function changeSubscriptionPlanAction(subscriptionId: string, _state: SubscriptionActionState, formData: FormData): Promise<SubscriptionActionState> {
   await requirePlatformAdmin();
 
+  const startsAt = String(formData.get("startsAt") ?? "").trim();
+
   try {
     await changeSubscriptionPlan(subscriptionId, {
       billingCycle: String(formData.get("billingCycle") ?? "MONTHLY") as "MONTHLY" | "YEARLY",
-      planId: String(formData.get("planId") ?? "")
+      planId: String(formData.get("planId") ?? ""),
+      ...(startsAt ? { startsAt: new Date(startsAt) } : {})
     });
   } catch (error) {
     return subscriptionErrorState(error);

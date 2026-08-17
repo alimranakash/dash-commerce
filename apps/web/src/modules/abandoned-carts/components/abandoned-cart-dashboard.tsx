@@ -17,6 +17,8 @@ import {
   markAbandonedCartContactedAction,
   markAbandonedCartRecoveredAction
 } from "../abandoned-cart.actions";
+import { PlanUpgradeDialog } from "../../billing/components/plan-upgrade-dialog";
+import type { PlanFeatureKey } from "../../billing/plan-features";
 import type {
   AbandonedCartOutreachChannel,
   AbandonedCartRecord,
@@ -25,6 +27,7 @@ import type {
 import type { AbandonedCartFilterKey } from "./abandoned-cart-list-controls";
 
 type AbandonedCartDashboardProps = {
+  activeCartCount: number;
   activeFilter: AbandonedCartFilterKey;
   carts: AbandonedCartRecord[];
   currency: string;
@@ -33,11 +36,12 @@ type AbandonedCartDashboardProps = {
   storeName: string;
 };
 
-export function AbandonedCartDashboard({ activeFilter, carts, currency, inactivityMinutes, search, storeName }: AbandonedCartDashboardProps) {
+export function AbandonedCartDashboard({ activeCartCount, activeFilter, carts, currency, inactivityMinutes, search, storeName }: AbandonedCartDashboardProps) {
   const [records, setRecords] = useState(carts);
   const [loadedCarts, setLoadedCarts] = useState(carts);
   const [selectedCart, setSelectedCart] = useState<AbandonedCartRecord | null>(null);
   const [notice, setNotice] = useState("");
+  const [lockedFeature, setLockedFeature] = useState<PlanFeatureKey | null>(null);
   const [isSaving, startSaving] = useTransition();
 
   // Filtering/searching re-renders this component with a fresh server list; without
@@ -74,13 +78,23 @@ export function AbandonedCartDashboard({ activeFilter, carts, currency, inactivi
     setRecords((current) => current.map((cart) => cart.id === id ? { ...cart, status } : cart));
     startSaving(async () => {
       try {
+        const result = status === "RECOVERED"
+          ? await markAbandonedCartRecoveredAction(id)
+          : await markAbandonedCartContactedAction(id, channel);
+
+        // The plan does not include recovery: roll the optimistic change back
+        // and explain it, rather than showing a generic "could not save".
+        if (result.status === "locked") {
+          setRecords(previous);
+          setLockedFeature(result.feature);
+          return;
+        }
+
         if (status === "RECOVERED") {
-          await markAbandonedCartRecoveredAction(id);
           setNotice("Cart marked as recovered.");
           return;
         }
 
-        await markAbandonedCartContactedAction(id, channel);
         setNotice(channel === "manual" ? "Cart marked as contacted." : "Recovery message opened — cart marked as contacted.");
       } catch {
         setRecords(previous);
@@ -108,6 +122,7 @@ export function AbandonedCartDashboard({ activeFilter, carts, currency, inactivi
 
   return (
     <div className="grid min-w-0 gap-5">
+      <PlanUpgradeDialog feature={lockedFeature} onClose={() => setLockedFeature(null)} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryMetricCard icon={ShoppingCart} label="Total Abandoned Carts" value={String(records.length)} />
         <SummaryMetricCard icon={Percent} label="Recovery Rate" value={`${recoveryRate.toFixed(1)}%`} />
@@ -125,7 +140,7 @@ export function AbandonedCartDashboard({ activeFilter, carts, currency, inactivi
       <section className="min-w-0 rounded-xl border border-[#ececf5] bg-white shadow-[0_8px_24px_rgba(62,54,114,0.04)]">
         <div className="border-b border-[#ececf5] px-5 py-4">
           <h2 className="m-0 text-base font-semibold text-[#20212a]">Abandoned Cart Recovery</h2>
-          <p className="mb-0 mt-1 text-xs text-[#85869a]">Carts left untouched for more than {formatDuration(inactivityMinutes)}. Reach out from here and the cart is marked contacted.</p>
+          <p className="mb-0 mt-1 text-xs text-[#85869a]">Carts left untouched for more than {formatDuration(inactivityMinutes)}. Reach out from here and the cart is marked contacted.{activeCartCount ? ` ${formatCartCount(activeCartCount)} still being shopped right now — not abandoned yet.` : ""}</p>
         </div>
 
         {visibleRecords.length ? (
@@ -158,7 +173,7 @@ export function AbandonedCartDashboard({ activeFilter, carts, currency, inactivi
               </tbody>
             </table>
           </div>
-        ) : <AbandonedCartEmptyState inactivityMinutes={inactivityMinutes} />}
+        ) : <AbandonedCartEmptyState activeCartCount={activeCartCount} inactivityMinutes={inactivityMinutes} />}
       </section>
 
       {selectedCart ? <CartDetailsDrawer cart={selectedCart} onClose={() => setSelectedCart(null)} /> : null}
@@ -166,7 +181,7 @@ export function AbandonedCartDashboard({ activeFilter, carts, currency, inactivi
   );
 }
 
-function AbandonedCartEmptyState({ inactivityMinutes }: { inactivityMinutes: number }) {
+function AbandonedCartEmptyState({ activeCartCount, inactivityMinutes }: { activeCartCount: number; inactivityMinutes: number }) {
   return (
     <div className="flex min-h-[390px] flex-col items-center justify-center px-5 py-14 text-center">
       <div className="relative mb-5 grid h-24 w-24 place-items-center rounded-2xl bg-[#f3efff] text-[#7950f2]">
@@ -175,6 +190,9 @@ function AbandonedCartEmptyState({ inactivityMinutes }: { inactivityMinutes: num
       </div>
       <h2 className="m-0 text-xl font-semibold text-[#20212a]">No Abandoned Carts Found</h2>
       <p className="mt-3 max-w-lg text-sm leading-6 text-[#85869a]">A cart shows up here once a customer has left products in it for more than {formatDuration(inactivityMinutes)} without checking out.</p>
+      {activeCartCount ? (
+        <p className="mt-2 max-w-lg text-sm leading-6 text-[#6d3cf5]">{formatCartCount(activeCartCount)} being shopped right now. If it goes quiet for {formatDuration(inactivityMinutes)}, it will appear here.</p>
+      ) : null}
       <Link className="mt-5 rounded-lg border border-[#7548f5] px-4 py-2 text-sm font-semibold text-[#6d3cf5] transition hover:bg-[#f5f1ff]" href="/dashboard/reports/abandoned-carts">View Recovery Report</Link>
     </div>
   );
@@ -257,6 +275,10 @@ function toWhatsAppNumber(phone: string | null) {
   }
 
   return digits.startsWith("0") ? `880${digits.slice(1)}` : digits;
+}
+
+function formatCartCount(count: number) {
+  return `${count} cart${count === 1 ? " is" : "s are"}`;
 }
 
 function formatDuration(minutes: number) {

@@ -23,6 +23,7 @@ import Link from "next/link";
 import type { ComponentType, ReactNode } from "react";
 import { ParallaxStage, TypingText } from "./landing-interactions";
 import styles from "./landing-page.module.css";
+import { PLAN_CATALOG } from "../../modules/admin/plan-catalog";
 
 const features = [
   { icon: Store, title: "1 Minute Store Builder", text: "Launch a polished storefront with your brand, products, and domain." },
@@ -156,9 +157,16 @@ export function LandingPage() {
       <section className={styles.pricingSection} id="pricing">
         <SectionIntro eyebrow="Simple pricing" title="Choose the operating power you need." text="Clear plans for stores at every stage. Start lean, then expand as your volume grows." centered />
         <div className={styles.pricingGrid}>
-          <PricingCard name="Starter" price="৳0" text="For starting your first digital storefront." features={["Storefront and dashboard", "Products and orders", "COD and manual payments", "Basic reports"]} />
-          <PricingCard featured name="Growth" price="৳1,490" text="For ambitious stores building repeatable growth." features={["Everything in Starter", "Abandoned cart recovery", "Advanced reports", "StoreOS AI Assistant"]} />
-          <PricingCard name="Pro" price="৳3,990" text="For established teams scaling operations." features={["Everything in Growth", "Courier automation ready", "Priority support", "Advanced AI workflows"]} />
+          {pricingPlans.map((plan) => (
+            <PricingCard
+              featured={plan.featured}
+              features={plan.features}
+              key={plan.name}
+              name={plan.name}
+              price={plan.price}
+              text={plan.text}
+            />
+          ))}
         </div>
       </section>
 
@@ -253,4 +261,40 @@ function FeatureCard({ featured, icon: Icon, text, title }: CardProps & { featur
 function OperationTile({ icon: Icon, label, note, value }: { icon: CardProps["icon"]; label: string; note: string; value: string }) { return <div className={styles.operationTile}><span><Icon /></span><small>{label}</small><b>{value}</b><p>{note}</p></div>; }
 function MockStat({ accent, label, value }: { accent: string; label: string; value: string }) { return <div data-accent={accent}><span>{label}</span><b>{value}</b></div>; }
 function PricingCard({ featured, features, name, price, text }: { featured?: boolean; features: string[]; name: string; price: string; text: string }) { return <article className={`${styles.pricingCard} ${featured ? styles.featuredPricing : ""}`}>{featured ? <span className={styles.popular}>Most popular</span> : null}<h3>{name}</h3><p>{text}</p><div><b>{price}</b><span>/ month</span></div><ul>{features.map((item) => <li key={item}><Check /> {item}</li>)}</ul><Link href="/register">Start Free <ArrowRight /></Link></article>; }
+
+/**
+ * Capability copy per tier. Prices and limits are NOT written here — they are
+ * derived from `PLAN_CATALOG` below, so the marketing page cannot drift from the
+ * plans the product actually sells. Only bullets for capabilities that already
+ * ship are stated plainly; anything still on the roadmap is labelled.
+ */
+const pricingHighlights: Record<string, string[]> = {
+  free: ["Storefront, products and orders", "COD and manual payments"],
+  growth: ["StoreOS AI assistant and POS", "Advanced analytics and reports", "Google Ads and TikTok tracking", "API access"],
+  pro: ["Marketing, WhatsApp, email and SMS automation (coming soon)", "Affiliate tracking and advanced attribution (coming soon)"],
+  starter: ["Custom domain", "Courier API and fraud check", "Abandoned cart recovery", "Marketing analytics and pixel tracking"]
+};
+
+const pricingPlans = [...PLAN_CATALOG]
+  .sort((a, b) => a.sortOrder - b.sortOrder)
+  .map((plan, index, ordered) => {
+    const previous = ordered[index - 1];
+
+    return {
+      featured: plan.isFeatured,
+      features: [
+        ...(previous ? [`Everything in ${previous.name}`] : []),
+        `${planLimit(plan.productLimit)} products · ${planLimit(plan.orderLimit)} orders / month`,
+        `${planLimit(plan.customerLimit)} customers · ${plan.staffLimit} staff`,
+        ...(pricingHighlights[plan.slug] ?? [])
+      ],
+      name: plan.name,
+      price: `৳${Number(plan.priceMonthly).toLocaleString("en")}`,
+      text: plan.description
+    };
+  });
+
+function planLimit(value: number) {
+  return value === 0 ? "Unlimited" : value.toLocaleString("en");
+}
 type CardProps = { icon: ComponentType<{ className?: string }>; text: string; title: string };

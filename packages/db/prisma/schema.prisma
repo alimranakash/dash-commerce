@@ -454,6 +454,11 @@ model MarketingSetting {
   id                     String   @id @default(cuid())
   storeId                String   @unique
   ga4MeasurementId       String?
+  ga4MpEnabled           Boolean  @default(false)
+  /// AES-256-GCM. Measurement Protocol API secret — server-side only, never rendered into storefront HTML.
+  ga4ApiSecretCipher     String?
+  /// Last four characters, so settings can prove which secret is stored.
+  ga4ApiSecretHint       String?
   gtmContainerId         String?
   googleSiteVerification String?
   googleAdsConversionId  String?
@@ -971,6 +976,7 @@ model Plan {
   trialDays           Int      @default(0) @map("trial_days")
   productLimit        Int      @default(0) @map("product_limit")
   orderLimit          Int      @default(0) @map("order_limit")
+  customerLimit       Int      @default(0) @map("customer_limit")
   staffLimit          Int      @default(1) @map("staff_limit")
   storeLimit          Int      @default(1) @map("store_limit")
   customDomainEnabled Boolean  @default(false) @map("custom_domain_enabled")
@@ -979,6 +985,7 @@ model Plan {
   isActive            Boolean  @default(true) @map("is_active")
   isFeatured          Boolean  @default(false) @map("is_featured")
   sortOrder           Int      @default(0) @map("sort_order")
+  features            PlanFeature[]
   subscriptions       Subscription[]
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @default(now()) @updatedAt @map("updated_at")
@@ -987,6 +994,21 @@ model Plan {
   @@index([isFeatured])
   @@index([sortOrder])
   @@map("plans")
+}
+
+/// Plan entitlements, one row per granted capability. A join table rather than a
+/// boolean column per feature, so adding a feature is data, not a migration.
+/// `featureKey` is validated in application code against `PLAN_FEATURE_KEYS`.
+model PlanFeature {
+  id         String   @id @default(cuid())
+  planId     String   @map("plan_id")
+  featureKey String   @map("feature_key")
+  plan       Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([planId, featureKey])
+  @@index([featureKey])
+  @@map("plan_features")
 }
 
 model Subscription {

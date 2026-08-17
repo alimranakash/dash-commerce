@@ -1,7 +1,9 @@
 "use client";
 
 import { CheckCircle2, Loader2, PlugZap, Save, ShieldCheck, Star, XCircle } from "lucide-react";
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
+import { PlanUpgradeDialog } from "../../billing/components/plan-upgrade-dialog";
+import type { PlanFeatureKey } from "../../billing/plan-features";
 import type { CourierAccountView } from "../courier-accounts.service";
 import { CourierBalance } from "./courier-balance";
 import {
@@ -61,6 +63,15 @@ function ProviderCard({
   const [isBusy, startTransition] = useTransition();
   const disabled = !account.implemented || !encryptionReady;
   const feedback = state.status !== "idle" ? state : sideState;
+  const [lockedFeature, setLockedFeature] = useState<PlanFeatureKey | null>(null);
+
+  // Held locally so the dialog can be dismissed — `useActionState`'s result is
+  // not resettable from here.
+  useEffect(() => {
+    if (feedback.lockedFeature) {
+      setLockedFeature(feedback.lockedFeature);
+    }
+  }, [feedback]);
 
   function runTest() {
     startTransition(async () => {
@@ -165,11 +176,12 @@ function ProviderCard({
             </p>
           ) : null}
 
-          {feedback.status !== "idle" && feedback.message ? (
+          {feedback.status !== "idle" && feedback.message && !feedback.lockedFeature ? (
             <p className={`m-0 rounded-lg px-3 py-2 text-[11px] leading-5 ${toneClass(feedback.status)}`}>
               {feedback.message}
             </p>
           ) : null}
+          <PlanUpgradeDialog feature={lockedFeature} onClose={() => setLockedFeature(null)} />
 
           <div className="flex flex-wrap items-center justify-end gap-2">
             {account.hasCredentials && !account.isDefault ? (

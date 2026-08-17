@@ -18,6 +18,7 @@ export type AdminPlanListItem = {
   aiEnabled: boolean;
   currency: string;
   customDomainEnabled: boolean;
+  customerLimit: number;
   description: string | null;
   id: string;
   isActive: boolean;
@@ -142,6 +143,7 @@ export function AdminPlanManagement({ plans, search }: AdminPlanManagementProps)
                         <div className="grid gap-1 text-[11px] text-[#565762]">
                           <span>Products: {limitLabel(plan.productLimit)}</span>
                           <span>Orders: {limitLabel(plan.orderLimit)}</span>
+                          <span>Customers: {limitLabel(plan.customerLimit)}</span>
                           <span>Staff: {limitLabel(plan.staffLimit)}</span>
                           <span>Stores: {limitLabel(plan.storeLimit)}</span>
                         </div>
@@ -237,6 +239,7 @@ function PlanFormModal({ mode, onClose, plan }: { mode: "create" | "edit"; onClo
           <PlanField label="Trial Days" name="trialDays" defaultValue={plan?.trialDays ?? 0} error={state.fieldErrors?.trialDays} min="0" type="number" />
           <PlanField label="Product Limit" name="productLimit" defaultValue={plan?.productLimit ?? 0} error={state.fieldErrors?.productLimit} min="0" type="number" />
           <PlanField label="Order Limit" name="orderLimit" defaultValue={plan?.orderLimit ?? 0} error={state.fieldErrors?.orderLimit} min="0" type="number" />
+          <PlanField label="Customer Limit" name="customerLimit" defaultValue={plan?.customerLimit ?? 0} error={state.fieldErrors?.customerLimit} min="0" type="number" />
           <PlanField label="Staff Limit" name="staffLimit" defaultValue={plan?.staffLimit ?? 1} error={state.fieldErrors?.staffLimit} min="0" type="number" />
           <PlanField label="Store Limit" name="storeLimit" defaultValue={plan?.storeLimit ?? 1} error={state.fieldErrors?.storeLimit} min="0" type="number" />
           <PlanField label="Sort Order" name="sortOrder" defaultValue={plan?.sortOrder ?? 0} error={state.fieldErrors?.sortOrder} min="0" type="number" />

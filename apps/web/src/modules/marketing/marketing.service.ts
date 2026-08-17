@@ -2,11 +2,7 @@ import { cache } from "react";
 import { createSystemLog } from "../../lib/system-log";
 import { encryptSecret, isSecretEncryptionConfigured, secretHintFor } from "../../lib/secret-box";
 import { validateCustomTrackingCode } from "./marketing-code";
-import {
-  buildMarketingTags,
-  emptyMarketingTagPlan,
-  type MarketingTagPlan
-} from "./marketing-tags";
+import { buildMarketingTags, emptyMarketingTagPlan, type MarketingTagPlan } from "./marketing-tags";
 import {
   getMarketingSettingsRecord,
   upsertMarketingSettingsRecord,
@@ -34,11 +30,14 @@ const emptyView: MarketingSettingsView = {
   customEnabled: false,
   customFooterCode: "",
   customHeaderCode: "",
+  ga4ApiSecretHint: null,
   ga4MeasurementId: "",
+  ga4MpEnabled: false,
   googleAdsConversionId: "",
   googleSiteVerification: "",
   gtmContainerId: "",
   hasCapiToken: false,
+  hasGa4ApiSecret: false,
   metaCapiEnabled: false,
   metaCapiTokenHint: null,
   metaDomainVerification: "",
@@ -46,7 +45,7 @@ const emptyView: MarketingSettingsView = {
   tiktokPixelId: ""
 };
 
-/** Safe to hand to a client component: IDs and a token hint, never the token. */
+/** Safe to hand to a client component: IDs and secret hints, never the secrets. */
 export async function getMarketingSettingsView(storeId: string): Promise<MarketingSettingsView> {
   const record = await getMarketingSettingsRecord(storeId);
 
@@ -59,11 +58,14 @@ export async function getMarketingSettingsView(storeId: string): Promise<Marketi
     customEnabled: record.customEnabled,
     customFooterCode: record.customFooterCode ?? "",
     customHeaderCode: record.customHeaderCode ?? "",
+    ga4ApiSecretHint: record.ga4ApiSecretHint,
     ga4MeasurementId: record.ga4MeasurementId ?? "",
+    ga4MpEnabled: record.ga4MpEnabled,
     googleAdsConversionId: record.googleAdsConversionId ?? "",
     googleSiteVerification: record.googleSiteVerification ?? "",
     gtmContainerId: record.gtmContainerId ?? "",
     hasCapiToken: Boolean(record.metaCapiTokenCipher),
+    hasGa4ApiSecret: Boolean(record.ga4ApiSecretCipher),
     metaCapiEnabled: record.metaCapiEnabled,
     metaCapiTokenHint: record.metaCapiTokenHint,
     metaDomainVerification: record.metaDomainVerification ?? "",
@@ -90,17 +92,29 @@ export async function updateMarketingSettings(params: {
   const next = parsed.data;
   const existing = await getMarketingSettingsRecord(params.storeId);
 
-  // Blank token means "keep what is stored"; clearing is an explicit action.
+  // Blank secret means "keep what is stored"; clearing is an explicit action.
   const tokenAction = resolveTokenAction({
     cleared: next.metaCapiTokenCleared,
     hadToken: Boolean(existing?.metaCapiTokenCipher),
     submitted: next.metaCapiToken
+  });
+  const ga4SecretAction = resolveTokenAction({
+    cleared: next.ga4ApiSecretCleared,
+    hadToken: Boolean(existing?.ga4ApiSecretCipher),
+    submitted: next.ga4ApiSecret
   });
 
   if (tokenAction === "set" && !isSecretEncryptionConfigured()) {
     throw new MarketingSettingsError(
       "Set COURIER_CREDENTIALS_KEY in the root .env before saving a Conversions API token — it is stored encrypted.",
       { metaCapiToken: "Encryption key is not configured on this server." }
+    );
+  }
+
+  if (ga4SecretAction === "set" && !isSecretEncryptionConfigured()) {
+    throw new MarketingSettingsError(
+      "Set COURIER_CREDENTIALS_KEY in the root .env before saving a Measurement Protocol API secret — it is stored encrypted.",
+      { ga4ApiSecret: "Encryption key is not configured on this server." }
     );
   }
 
@@ -116,12 +130,37 @@ export async function updateMarketingSettings(params: {
     });
   }
 
+  if (next.ga4MpEnabled && ga4SecretAction === "clear") {
+    throw new MarketingSettingsError("Please fix the highlighted marketing settings.", {
+      ga4ApiSecret: "Add an API secret, or turn server-side tracking off."
+    });
+  }
+
+  if (next.ga4MpEnabled && ga4SecretAction === "keep" && !existing?.ga4ApiSecretCipher) {
+    throw new MarketingSettingsError("Please fix the highlighted marketing settings.", {
+      ga4ApiSecret: "An API secret is required to enable server-side tracking."
+    });
+  }
+
   const data: MarketingSettingsWriteData = {
     customBodyCode: next.customBodyCode ?? null,
     customEnabled: next.customEnabled,
     customFooterCode: next.customFooterCode ?? null,
     customHeaderCode: next.customHeaderCode ?? null,
+    ga4ApiSecretCipher:
+      ga4SecretAction === "set"
+        ? encryptSecret(next.ga4ApiSecret as string)
+        : ga4SecretAction === "clear"
+          ? null
+          : (existing?.ga4ApiSecretCipher ?? null),
+    ga4ApiSecretHint:
+      ga4SecretAction === "set"
+        ? secretHintFor(next.ga4ApiSecret)
+        : ga4SecretAction === "clear"
+          ? null
+          : (existing?.ga4ApiSecretHint ?? null),
     ga4MeasurementId: next.ga4MeasurementId ?? null,
+    ga4MpEnabled: next.ga4MpEnabled,
     googleAdsConversionId: next.googleAdsConversionId ?? null,
     googleSiteVerification: next.googleSiteVerification ?? null,
     gtmContainerId: next.gtmContainerId ?? null,
@@ -144,7 +183,7 @@ export async function updateMarketingSettings(params: {
     updatedById: params.userId ?? null
   };
 
-  const changes = describeChanges(existing, data, tokenAction);
+  const changes = describeChanges(existing, data, tokenAction, ga4SecretAction);
 
   await upsertMarketingSettingsRecord(params.storeId, data);
 
@@ -251,17 +290,20 @@ type MarketingChange = {
 
 /**
  * Field-level audit trail. IDs are logged before/after because they are already
- * visible to the seller; the CAPI token never is — only that it moved.
+ * visible to the seller; the CAPI token and GA4 API secret never are — only that
+ * they moved.
  */
 function describeChanges(
   existing: Awaited<ReturnType<typeof getMarketingSettingsRecord>>,
   next: MarketingSettingsWriteData,
-  tokenAction: "clear" | "keep" | "set"
+  tokenAction: "clear" | "keep" | "set",
+  ga4SecretAction: "clear" | "keep" | "set"
 ) {
   const changes: MarketingChange[] = [];
   const trackedFields = [
     "customEnabled",
     "ga4MeasurementId",
+    "ga4MpEnabled",
     "googleAdsConversionId",
     "googleSiteVerification",
     "gtmContainerId",
@@ -298,6 +340,14 @@ function describeChanges(
       field: "metaCapiToken",
       from: null,
       to: tokenAction === "set" ? `rotated (${next.metaCapiTokenHint ?? "set"})` : "removed"
+    });
+  }
+
+  if (ga4SecretAction !== "keep") {
+    changes.push({
+      field: "ga4ApiSecret",
+      from: null,
+      to: ga4SecretAction === "set" ? `rotated (${next.ga4ApiSecretHint ?? "set"})` : "removed"
     });
   }
 
