@@ -4,6 +4,7 @@ import {
   resolveCartAfterCheckout
 } from "../abandoned-carts/abandoned-cart.service";
 import { clearCart, getCart, getCartToken } from "../cart/cart.service";
+import { canCreateOrder } from "../billing/subscription-limits";
 import { assessOrderSafely } from "../fake-orders/fake-order.assessment";
 import {
   getEnabledPaymentMethodForCheckout,
@@ -36,6 +37,14 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
     name: data.name,
     phone: data.phone
   });
+
+  // After the contact capture, so a checkout blocked by the plan still leaves
+  // the seller a recoverable cart, and before any stock is touched.
+  if (!(await canCreateOrder(store.id))) {
+    throw new Error(
+      "This store has reached its monthly order limit and cannot accept new orders right now."
+    );
+  }
 
   const paymentMethod = await getEnabledPaymentMethodForCheckout(store.id, data.paymentMethod);
   const shippingRate = await getEnabledShippingRateForCheckout(store.id, data.shippingRateId);

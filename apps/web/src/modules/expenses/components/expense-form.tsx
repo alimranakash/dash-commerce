@@ -2,7 +2,8 @@
 
 import { Button } from "@dash/ui";
 import Link from "next/link";
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useEffect, type ReactNode } from "react";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import type { ExpenseActionState } from "../expense.actions";
 import type { ExpensePaymentMethod, ExpenseStatus } from "../expense.schema";
 
@@ -37,10 +38,16 @@ const initialState: ExpenseActionState = {
 
 export function ExpenseForm({ action, cancelHref, categories, expense }: ExpenseFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
+  const { openUpgrade } = useUpgradePrompt();
+
+  // A plan block opens the shared upgrade dialog instead of an inline error.
+  useEffect(() => {
+    openUpgrade(state.lockedFeature);
+  }, [openUpgrade, state]);
 
   return (
     <form action={formAction} className="resource-form compact-form catalog-create-form">
-      {state.status === "error" ? <p className="form-error">{state.message}</p> : null}
+      {state.status === "error" && !state.lockedFeature ? <p className="form-error">{state.message}</p> : null}
       <div className="form-grid">
         <FieldError errors={state.fieldErrors} name="title">
           <label>

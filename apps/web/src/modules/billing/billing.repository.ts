@@ -5,6 +5,7 @@ import {
 } from "../admin/admin-subscriptions.repository";
 import { ensureDefaultPlans } from "../admin/admin-plans.repository";
 import type { BillingSettingsInput } from "./billing.schema";
+import { countOrdersThisMonth } from "./subscription-limits";
 
 export async function getActiveBillingPlans() {
   await ensureDefaultPlans();
@@ -99,6 +100,11 @@ export async function updateBillingSettingsRecord(input: BillingSettingsInput) {
   });
 }
 
+/**
+ * `orders` is deliberately the *current month's* count, not the lifetime one:
+ * `Plan.orderLimit` is a monthly allowance, so a lifetime total would render a
+ * usage bar permanently over its limit.
+ */
 export async function getBillingStoreUsage(storeId: string) {
   const [products, orders] = await Promise.all([
     prisma.product.count({
@@ -106,11 +112,7 @@ export async function getBillingStoreUsage(storeId: string) {
         storeId
       }
     }),
-    prisma.order.count({
-      where: {
-        storeId
-      }
-    })
+    countOrdersThisMonth(storeId)
   ]);
 
   return {

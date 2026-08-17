@@ -3,7 +3,8 @@
 import { Button } from "@dash/ui";
 import { Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useMemo, useState, type ReactNode } from "react";
+import { useActionState, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import type { PurchaseActionState } from "../purchase.actions";
 import type { PurchaseStatus } from "../purchase.schema";
 
@@ -65,6 +66,12 @@ function emptyItem(): PurchaseFormItem {
 
 export function PurchaseForm({ action, cancelHref, currency, products, purchase, suppliers }: PurchaseFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
+  const { openUpgrade } = useUpgradePrompt();
+
+  // A plan block opens the shared upgrade dialog instead of an inline error.
+  useEffect(() => {
+    openUpgrade(state.lockedFeature);
+  }, [openUpgrade, state]);
   const [items, setItems] = useState<PurchaseFormItem[]>(purchase?.items?.length ? purchase.items : [emptyItem()]);
   const [discount, setDiscount] = useState(purchase?.discountAmount ?? "0.00");
   const [tax, setTax] = useState(purchase?.taxAmount ?? "0.00");
@@ -89,7 +96,7 @@ export function PurchaseForm({ action, cancelHref, currency, products, purchase,
 
   return (
     <form action={formAction} className="resource-form compact-form catalog-create-form">
-      {state.status === "error" ? <p className="form-error">{state.message}</p> : null}
+      {state.status === "error" && !state.lockedFeature ? <p className="form-error">{state.message}</p> : null}
       <div className="form-grid">
         <FieldError errors={state.fieldErrors} name="supplierId">
           <label>

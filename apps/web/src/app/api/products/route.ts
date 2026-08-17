@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { canCreateProduct } from "../../../modules/billing/subscription-limits";
 import { getCurrentStore } from "../../../modules/stores/queries";
 import { createProduct, getProductsForStore } from "../../../modules/products/product.service";
 
@@ -22,6 +23,19 @@ export async function POST(request: Request) {
 
   if (!store) {
     return unauthorizedStoreResponse();
+  }
+
+  // Same plan gate the dashboard action applies — this endpoint is another
+  // create path, so leaving it ungated would make the product limit optional.
+  if (!(await canCreateProduct(store.id))) {
+    return NextResponse.json(
+      {
+        error: "Product limit reached for your current plan."
+      },
+      {
+        status: 403
+      }
+    );
   }
 
   try {

@@ -1,7 +1,8 @@
 "use client";
 
 import { ArrowUpRight, Check, Copy, Globe2, Loader2, RefreshCw, Star, Trash2 } from "lucide-react";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import { DeleteConfirmationButton } from "../../../components/dashboard/delete-confirmation-button";
 import { DashboardCard } from "../../../components/dashboard/dashboard-card";
 import { StatusBadge } from "../../../components/dashboard/status-badge";
@@ -334,7 +335,19 @@ function CopyValue({ value }: { value: string }) {
 }
 
 function ActionMessage({ state }: { state: DomainActionState }) {
+  const { openUpgrade } = useUpgradePrompt();
+
+  // Shared by every domain action, so one hook here covers add, verify, set
+  // primary, and remove.
+  useEffect(() => {
+    openUpgrade(state.lockedFeature);
+  }, [openUpgrade, state]);
+
   const isSuccess = state.status === "success";
+
+  if (state.lockedFeature) {
+    return null;
+  }
 
   return (
     <p

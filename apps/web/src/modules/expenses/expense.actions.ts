@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
+import { PlanFeatureError, hasPlanFeature, requirePlanFeature } from "../billing/subscription-limits";
+import type { GatedResult, PlanFeatureKey } from "../billing/plan-features";
 import { requireStore } from "../stores/queries";
 import {
   archiveExpense,
@@ -15,6 +17,7 @@ import {
 import type { CreateExpenseInput, ExpenseCategoryInput } from "./expense.schema";
 
 export type ExpenseActionState = {
+  lockedFeature?: PlanFeatureKey;
   status: "idle" | "error";
   message?: string;
   fieldErrors?: Record<string, string>;
@@ -27,6 +30,7 @@ export async function createExpenseFormAction(
   const store = await requireStore();
 
   try {
+    await requirePlanFeature(store.id, "expenses");
     await createExpense(contextFromStore(store), expenseInputFromFormData(formData));
   } catch (error) {
     return expenseErrorState(error);
@@ -44,6 +48,7 @@ export async function updateExpenseFormAction(
   const store = await requireStore();
 
   try {
+    await requirePlanFeature(store.id, "expenses");
     const expense = await updateExpense(contextFromStore(store), expenseId, expenseInputFromFormData(formData));
 
     if (!expense) {
@@ -58,8 +63,13 @@ export async function updateExpenseFormAction(
   redirect(`/dashboard/expenses/${expenseId}?updated=1`);
 }
 
-export async function archiveExpenseAction(expenseId: string) {
+export async function archiveExpenseAction(expenseId: string): Promise<GatedResult> {
   const store = await requireStore();
+
+  if (!(await hasPlanFeature(store.id, "expenses"))) {
+    return { lockedFeature: "expenses" };
+  }
+
   await archiveExpense(contextFromStore(store), expenseId);
 
   revalidatePath("/dashboard/expenses");
@@ -74,6 +84,7 @@ export async function createExpenseCategoryFormAction(
   const store = await requireStore();
 
   try {
+    await requirePlanFeature(store.id, "expenses");
     await createExpenseCategory(store.organizationId, categoryInputFromFormData(formData));
   } catch (error) {
     return expenseErrorState(error);
@@ -91,6 +102,7 @@ export async function updateExpenseCategoryFormAction(
   const store = await requireStore();
 
   try {
+    await requirePlanFeature(store.id, "expenses");
     const category = await updateExpenseCategory(store.organizationId, categoryId, categoryInputFromFormData(formData));
 
     if (!category) {
@@ -104,8 +116,14 @@ export async function updateExpenseCategoryFormAction(
   redirect("/dashboard/expenses/categories?updated=1");
 }
 
-export async function deleteExpenseCategoryAction(categoryId: string) {
+export async function deleteExpenseCategoryAction(categoryId: string): Promise<GatedResult> {
   const store = await requireStore();
+
+  // Outside the try: that catch means "category still in use", and a plan block
+  // must not be reported as that.
+  if (!(await hasPlanFeature(store.id, "expenses"))) {
+    return { lockedFeature: "expenses" };
+  }
 
   try {
     await deleteExpenseCategory(store.organizationId, categoryId);
@@ -168,6 +186,7 @@ function expenseErrorState(error: unknown): ExpenseActionState {
 
   return {
     message: error instanceof Error ? error.message : "Expense operation failed.",
-    status: "error"
+    status: "error",
+    ...(error instanceof PlanFeatureError ? { lockedFeature: error.featureKey } : {})
   };
 }

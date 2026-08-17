@@ -1,5 +1,5 @@
 import { createSystemLog } from "../../lib/system-log";
-import { canUseCustomDomain } from "../billing/subscription-limits";
+import { PlanFeatureError, canUseCustomDomain } from "../billing/subscription-limits";
 import { invalidateCustomDomainRoute } from "./domain-routing";
 import {
   buildDnsInstructions,
@@ -61,10 +61,11 @@ async function assertPlanAllowsCustomDomain(scope: StoreScope) {
   }
 
   if (!(await canUseCustomDomain(scope.storeId))) {
-    throw new DomainError(
-      "Custom domains are part of the Growth plan and above. Upgrade from Billing to connect your own domain.",
-      { domain: "Your current plan does not include custom domains." }
-    );
+    // A PlanFeatureError rather than a DomainError so the dashboard shows the
+    // same upgrade dialog as every other gated feature. Entitlement still comes
+    // from `Plan.customDomainEnabled` via `canUseCustomDomain` — the registry
+    // key is only how the UI names and prices it.
+    throw new PlanFeatureError("custom_domain");
   }
 }
 

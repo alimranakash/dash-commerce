@@ -11,8 +11,9 @@ import { getStoreAccess } from "../../../../modules/stores/queries";
 
 export default async function DomainSettingsPage() {
   const access = await getStoreAccess();
+  // No platform-admin bypass here: this is the seller dashboard, so the store's
+  // own plan decides, exactly as the write path does.
   const view = await getStoreDomainsView({
-    bypassPlanGate: access.isPlatformAdmin,
     storeId: access.store.id
   });
 

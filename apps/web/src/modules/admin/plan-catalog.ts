@@ -12,8 +12,11 @@
  * Conventions inherited from the existing data, not invented here:
  * - `priceYearly` is `priceMonthly * 10` (two months free).
  * - A limit of `0` means unlimited — see `limitText`/`limitLabel` in the billing
- *   and admin UIs, and the `productLimit <= 0` short-circuit in
- *   `subscription-limits.ts`.
+ *   and admin UIs, and the `productLimit <= 0` / `orderLimit <= 0`
+ *   short-circuits in `subscription-limits.ts`.
+ * - `productLimit` counts the store's whole catalog; `orderLimit` counts orders
+ *   placed in the current calendar month, which is how the pricing cards state
+ *   it ("N orders / month").
  *
  * `isActive` and `isFeatured` are operational flags an admin owns at runtime, so
  * they are applied on create only and deliberately left alone on update.
@@ -29,9 +32,17 @@ import type { PlanFeatureKey } from "../billing/plan-features";
 const STARTER_FEATURES: PlanFeatureKey[] = [
   "abandoned_cart",
   "courier_api",
+  "custom_domain",
+  "expenses",
+  "fake_orders",
   "fraud_check",
+  "inventory",
   "marketing_analytics",
-  "pixel_tracking"
+  "order_verification",
+  "pixel_tracking",
+  "purchases",
+  "sales",
+  "suppliers"
 ];
 
 const GROWTH_FEATURES: PlanFeatureKey[] = [
@@ -94,11 +105,11 @@ export const PLAN_CATALOG: PlanCatalogEntry[] = [
     isActive: true,
     isFeatured: false,
     name: "Free",
-    orderLimit: 50,
+    orderLimit: 36,
     posEnabled: false,
     priceMonthly: "0.00",
     priceYearly: "0.00",
-    productLimit: 20,
+    productLimit: 12,
     slug: "free",
     sortOrder: 0,
     staffLimit: 1,

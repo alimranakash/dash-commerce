@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { Prisma } from "@dash/db";
+import { getRemainingProductAllowance } from "../billing/subscription-limits";
 import { ensureProductTaxonomySchema } from "../products/product-taxonomy.service";
 import { normalizeAdvancedSettings } from "../storefront/customization";
 import { ensureDemoContentSchema, getDatabaseSchemaName } from "./demo-schema";
@@ -25,9 +26,13 @@ export async function seedDemoPack(tx: Prisma.TransactionClient, context: DemoPa
     context.organizationId
   );
 
-  if (demoPack.content.categories.length > 0 || demoPack.content.products.length > 0) {
-    await seedCatalogDemoPack(tx, context, demoPack);
-  }
+  // What the pack holds and what the store ends up with are no longer the same
+  // number — a plan's product limit can cut the catalog short — so the counts
+  // below are reported from the products actually written.
+  const seededProducts =
+    demoPack.content.categories.length > 0 || demoPack.content.products.length > 0
+      ? await seedCatalogDemoPack(tx, context, demoPack)
+      : [];
 
   return {
     demoPackId: demoPack.id,
@@ -38,11 +43,11 @@ export async function seedDemoPack(tx: Prisma.TransactionClient, context: DemoPa
       media: demoPack.content.media.length,
       navigation: demoPack.content.navigation.length,
       pages: demoPack.content.pages.length,
-      productImages: demoPack.content.products.reduce(
+      productImages: seededProducts.reduce(
         (total, product) => total + productImages(product).length,
         0
       ),
-      products: demoPack.content.products.length,
+      products: seededProducts.length,
       tags: demoPack.content.tags?.length ?? 0
     }
   };
@@ -54,6 +59,11 @@ async function seedCatalogDemoPack(
   demoPack: DemoPack
 ) {
   const categoryBySlug = new Map<string, { id: string; slug: string }>();
+  const seededProducts: DemoPackProduct[] = [];
+  // A pack carries more products than the smaller plans allow, so the import is
+  // capped at what the store's plan still permits rather than seeding a catalog
+  // the seller is immediately over the limit on. `null` means uncapped.
+  let remainingProducts = await getRemainingProductAllowance(context.storeId, tx);
 
   for (const category of demoPack.content.categories) {
     const record = await upsertCategory(tx, context.storeId, demoPack.id, category);
@@ -91,6 +101,16 @@ async function seedCatalogDemoPack(
 
     if (existingProduct && !(await isDemoProduct(tx, existingProduct.id, context.storeId))) {
       continue;
+    }
+
+    // Only a new row spends the allowance; a demo product already in the store
+    // is updated in place and is therefore already counted against the limit.
+    if (!existingProduct && remainingProducts !== null) {
+      if (remainingProducts === 0) {
+        continue;
+      }
+
+      remainingProducts -= 1;
     }
 
     const productRecord = existingProduct
@@ -159,6 +179,8 @@ async function seedCatalogDemoPack(
       "TAG",
       resolveIds(tagIdBySlug, product.tagSlugs ?? [])
     );
+
+    seededProducts.push(product);
   }
 
   await tx.storeSetting.upsert({
@@ -202,6 +224,8 @@ async function seedCatalogDemoPack(
 
   await seedMediaLibrary(tx, context.storeId, demoPack);
   await seedAdvancedSettings(tx, context.storeId, demoPack);
+
+  return seededProducts;
 }
 
 /**

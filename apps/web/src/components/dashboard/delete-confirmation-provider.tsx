@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useTransition, type ReactNode } from "react";
 
 type DeleteAction = (formData: FormData) => void | Promise<void>;
 
@@ -14,6 +14,7 @@ export function DeleteConfirmationProvider({ children }: { children: ReactNode }
   const [pendingAction, setPendingAction] = useState<DeleteAction | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
   const open = pendingAction !== null;
 
   useEffect(() => {
@@ -40,23 +41,33 @@ export function DeleteConfirmationProvider({ children }: { children: ReactNode }
     }
   }
 
-  async function executeDelete() {
+  /**
+   * The work runs inside a transition because some callers hand us a
+   * `useActionState` dispatch (the domains list does), and React requires those
+   * to be called within one — otherwise it warns and `isPending` never updates.
+   */
+  function executeDelete() {
     if (!pendingAction || submitting) return;
+
+    const action = pendingAction;
 
     setSubmitting(true);
     setError(null);
-    try {
-      await pendingAction(new FormData());
-      setPendingAction(null);
-    } catch (deleteError) {
-      if (isRedirectError(deleteError)) {
+
+    startTransition(async () => {
+      try {
+        await action(new FormData());
         setPendingAction(null);
-      } else {
-        setError(deleteError instanceof Error ? deleteError.message : "This item could not be deleted.");
+      } catch (deleteError) {
+        if (isRedirectError(deleteError)) {
+          setPendingAction(null);
+        } else {
+          setError(deleteError instanceof Error ? deleteError.message : "This item could not be deleted.");
+        }
+      } finally {
+        setSubmitting(false);
       }
-    } finally {
-      setSubmitting(false);
-    }
+    });
   }
 
   return (

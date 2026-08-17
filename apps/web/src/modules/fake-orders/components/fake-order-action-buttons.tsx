@@ -1,3 +1,8 @@
+"use client";
+
+import { useTransition } from "react";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
+import type { GatedResult } from "../../billing/plan-features";
 import {
   blockCustomerAndRedirectAction,
   blockCustomerAction,
@@ -31,18 +36,29 @@ export function FakeOrderActionButtons({ compact = false, orderId, redirectToQue
   );
 }
 
-function ActionForm({ action, label, tone }: { action: () => Promise<void>; label: string; tone: "green" | "purple" | "red" }) {
+function ActionForm({ action, label, tone }: { action: () => Promise<GatedResult>; label: string; tone: "green" | "purple" | "red" }) {
+  const { openUpgrade } = useUpgradePrompt();
+  const [isPending, startTransition] = useTransition();
   const toneClass = {
     green: "border-emerald-200 text-emerald-700 hover:bg-emerald-50",
     purple: "border-[#ddd6fe] text-[#6d3cf5] hover:bg-[#f3f0ff]",
     red: "border-red-200 text-red-700 hover:bg-red-50"
   }[tone];
 
+  // A button rather than a form action, so a plan-blocked result can open the
+  // upgrade dialog instead of the click silently doing nothing.
   return (
-    <form action={action}>
-      <button className={`h-8 rounded-lg border px-3 text-[11px] font-semibold transition ${toneClass}`} type="submit">
-        {label}
-      </button>
-    </form>
+    <button
+      className={`h-8 rounded-lg border px-3 text-[11px] font-semibold transition disabled:opacity-60 ${toneClass}`}
+      disabled={isPending}
+      onClick={() =>
+        startTransition(async () => {
+          openUpgrade((await action()).lockedFeature);
+        })
+      }
+      type="button"
+    >
+      {label}
+    </button>
   );
 }

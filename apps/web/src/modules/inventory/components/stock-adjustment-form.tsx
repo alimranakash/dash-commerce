@@ -2,7 +2,8 @@
 
 import { Button } from "@dash/ui";
 import Link from "next/link";
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useEffect, type ReactNode } from "react";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import type { StockAdjustmentActionState } from "../inventory.actions";
 
 type ProductOption = {
@@ -29,10 +30,16 @@ const textareaClass =
 
 export function StockAdjustmentForm({ action, products }: StockAdjustmentFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
+  const { openUpgrade } = useUpgradePrompt();
+
+  // A plan block opens the shared upgrade dialog instead of an inline error.
+  useEffect(() => {
+    openUpgrade(state.lockedFeature);
+  }, [openUpgrade, state]);
 
   return (
     <form action={formAction} className="resource-form compact-form catalog-create-form space-y-5">
-      {state.status === "error" ? <p className="form-error">{state.message}</p> : null}
+      {state.status === "error" && !state.lockedFeature ? <p className="form-error">{state.message}</p> : null}
 
       <div className="grid gap-5 md:grid-cols-2">
         <FieldError errors={state.fieldErrors} name="productId">

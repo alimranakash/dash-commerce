@@ -3,11 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
+import { PlanFeatureError, hasPlanFeature, requirePlanFeature } from "../billing/subscription-limits";
+import type { GatedResult, PlanFeatureKey } from "../billing/plan-features";
 import { requireStore } from "../stores/queries";
 import { createSale, updateSale, voidSale } from "./sale.service";
 import type { CreateSaleInput } from "./sale.schema";
 
 export type SaleActionState = {
+  lockedFeature?: PlanFeatureKey;
   status: "idle" | "error";
   message?: string;
   fieldErrors?: Record<string, string>;
@@ -20,6 +23,7 @@ export async function createSaleFormAction(
   const store = await requireStore();
 
   try {
+    await requirePlanFeature(store.id, "sales");
     await createSale(contextFromStore(store), saleInputFromFormData(formData));
   } catch (error) {
     return saleErrorState(error);
@@ -38,6 +42,7 @@ export async function updateSaleFormAction(
   const store = await requireStore();
 
   try {
+    await requirePlanFeature(store.id, "sales");
     const sale = await updateSale(contextFromStore(store), saleId, saleInputFromFormData(formData));
 
     if (!sale) {
@@ -53,8 +58,13 @@ export async function updateSaleFormAction(
   redirect(`/dashboard/sales/${saleId}?updated=1`);
 }
 
-export async function voidSaleAction(saleId: string) {
+export async function voidSaleAction(saleId: string): Promise<GatedResult> {
   const store = await requireStore();
+
+  if (!(await hasPlanFeature(store.id, "sales"))) {
+    return { lockedFeature: "sales" };
+  }
+
   await voidSale(contextFromStore(store), saleId);
 
   revalidatePath("/dashboard/sales");
@@ -119,6 +129,7 @@ function saleErrorState(error: unknown): SaleActionState {
 
   return {
     message: error instanceof Error ? error.message : "Sale operation failed.",
-    status: "error"
+    status: "error",
+    ...(error instanceof PlanFeatureError ? { lockedFeature: error.featureKey } : {})
   };
 }

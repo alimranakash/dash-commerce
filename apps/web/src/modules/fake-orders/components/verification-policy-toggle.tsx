@@ -1,4 +1,8 @@
+"use client";
+
 import { ShieldCheck, ShieldOff } from "lucide-react";
+import { useTransition } from "react";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import { setCourierVerificationRequiredAction } from "../fake-order.actions";
 
 /**
@@ -6,20 +10,27 @@ import { setCourierVerificationRequiredAction } from "../fake-order.actions";
  * seller opts into "nothing ships until it is verified".
  */
 export function VerificationPolicyToggle({ required }: { required: boolean }) {
+  const { openUpgrade } = useUpgradePrompt();
+  const [isPending, startTransition] = useTransition();
+
   return (
-    <form action={setCourierVerificationRequiredAction.bind(null, !required)}>
-      <button
-        className={`inline-flex h-10 items-center gap-2 rounded-lg border px-4 text-sm font-semibold transition ${
-          required
-            ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-            : "border-[#e4e3ee] text-[#565762] hover:bg-[#f7f7fa]"
-        }`}
-        type="submit"
-      >
-        {required ? <ShieldCheck className="h-4 w-4" /> : <ShieldOff className="h-4 w-4" />}
-        {required ? "Verification required before courier" : "Require verification before courier"}
-      </button>
-    </form>
+    <button
+      className={`inline-flex h-10 items-center gap-2 rounded-lg border px-4 text-sm font-semibold transition disabled:opacity-60 ${
+        required
+          ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+          : "border-[#e4e3ee] text-[#565762] hover:bg-[#f7f7fa]"
+      }`}
+      disabled={isPending}
+      onClick={() =>
+        startTransition(async () => {
+          openUpgrade((await setCourierVerificationRequiredAction(!required)).lockedFeature);
+        })
+      }
+      type="button"
+    >
+      {required ? <ShieldCheck className="h-4 w-4" /> : <ShieldOff className="h-4 w-4" />}
+      {required ? "Verification required before courier" : "Require verification before courier"}
+    </button>
   );
 }
 

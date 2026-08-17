@@ -25,14 +25,22 @@ export const PLAN_FEATURE_KEYS = [
   "affiliate_tracking",
   "api_access",
   "courier_api",
+  "custom_domain",
   "email_automation",
+  "expenses",
   "facebook_automation",
+  "fake_orders",
   "fraud_check",
   "google_ads_tracking",
+  "inventory",
   "marketing_analytics",
   "marketing_automation",
+  "order_verification",
   "pixel_tracking",
+  "purchases",
+  "sales",
   "sms_automation",
+  "suppliers",
   "tiktok_tracking",
   "whatsapp_automation"
 ] as const;
@@ -79,15 +87,35 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
     label: "Courier API",
     status: "available"
   },
+  /**
+   * Display/entitlement metadata only. Enforcement for custom domains predates
+   * this registry and still lives on the `Plan.customDomainEnabled` column via
+   * `canUseCustomDomain` — keep the two in step when changing which tier gets it.
+   */
+  custom_domain: {
+    description: "Connect your own domain to the storefront.",
+    label: "Custom Domain",
+    status: "available"
+  },
   email_automation: {
     description: "Automated email campaigns and lifecycle flows.",
     label: "Email Automation",
     status: "planned"
   },
+  expenses: {
+    description: "Business expense tracking and expense categories.",
+    label: "Expenses",
+    status: "available"
+  },
   facebook_automation: {
     description: "Facebook and Messenger conversation automation.",
     label: "Facebook Automation",
     status: "planned"
+  },
+  fake_orders: {
+    description: "Fake order detection, customer blocking, and order triage.",
+    label: "Fake Order Detection",
+    status: "available"
   },
   fraud_check: {
     description: "Courier-backed delivery risk and fraud signals.",
@@ -97,6 +125,11 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
   google_ads_tracking: {
     description: "Google Ads conversion tracking.",
     label: "Google Ads Tracking",
+    status: "available"
+  },
+  inventory: {
+    description: "Stock adjustments and inventory movement history.",
+    label: "Inventory",
     status: "available"
   },
   marketing_analytics: {
@@ -109,15 +142,35 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
     label: "Marketing Automation",
     status: "planned"
   },
+  order_verification: {
+    description: "Courier verification queue for orders before dispatch.",
+    label: "Verification Queue",
+    status: "available"
+  },
   pixel_tracking: {
     description: "Meta, TikTok, and GA4 pixel tracking on the storefront.",
     label: "Pixel Tracking",
+    status: "available"
+  },
+  purchases: {
+    description: "Purchase orders and supplier restocking.",
+    label: "Purchases",
+    status: "available"
+  },
+  sales: {
+    description: "Manual sales entry and counter-sale records.",
+    label: "Sales",
     status: "available"
   },
   sms_automation: {
     description: "Automated transactional and campaign SMS.",
     label: "SMS Automation",
     status: "planned"
+  },
+  suppliers: {
+    description: "Supplier records and purchasing contacts.",
+    label: "Suppliers",
+    status: "available"
   },
   tiktok_tracking: {
     description: "TikTok pixel and conversion tracking.",
@@ -129,6 +182,15 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
     label: "WhatsApp Automation",
     status: "planned"
   }
+};
+
+/**
+ * What a gated server action hands back when the plan refused it. Returned
+ * rather than thrown so the UI can tell "your plan does not include this" apart
+ * from a genuine failure and open the upgrade dialog.
+ */
+export type GatedResult = {
+  lockedFeature?: PlanFeatureKey | undefined;
 };
 
 const PLAN_FEATURE_KEY_SET: ReadonlySet<string> = new Set(PLAN_FEATURE_KEYS);

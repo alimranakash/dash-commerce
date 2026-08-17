@@ -3,11 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
+import { PlanFeatureError, hasPlanFeature, requirePlanFeature } from "../billing/subscription-limits";
+import type { GatedResult, PlanFeatureKey } from "../billing/plan-features";
 import { requireStore } from "../stores/queries";
 import { createSupplier, deleteSupplier, updateSupplier } from "./supplier.service";
 import type { CreateSupplierInput } from "./supplier.schema";
 
 export type SupplierActionState = {
+  lockedFeature?: PlanFeatureKey;
   status: "idle" | "error";
   message?: string;
   fieldErrors?: Record<string, string>;
@@ -20,6 +23,7 @@ export async function createSupplierFormAction(
   const store = await requireStore();
 
   try {
+    await requirePlanFeature(store.id, "suppliers");
     await createSupplier(store.organizationId, supplierInputFromFormData(formData));
   } catch (error) {
     return supplierErrorState(error);
@@ -37,6 +41,7 @@ export async function updateSupplierFormAction(
   const store = await requireStore();
 
   try {
+    await requirePlanFeature(store.id, "suppliers");
     const supplier = await updateSupplier(store.organizationId, supplierId, supplierInputFromFormData(formData));
 
     if (!supplier) {
@@ -54,8 +59,14 @@ export async function updateSupplierFormAction(
   redirect("/dashboard/suppliers?updated=1");
 }
 
-export async function deleteSupplierFormAction(supplierId: string) {
+export async function deleteSupplierFormAction(supplierId: string): Promise<GatedResult> {
   const store = await requireStore();
+
+  // Outside the try: that catch means "supplier still referenced", and a plan
+  // block must not be reported as that.
+  if (!(await hasPlanFeature(store.id, "suppliers"))) {
+    return { lockedFeature: "suppliers" };
+  }
 
   try {
     await deleteSupplier(store.organizationId, supplierId);
@@ -102,6 +113,7 @@ function supplierErrorState(error: unknown): SupplierActionState {
 
   return {
     status: "error",
-    message: error instanceof Error ? error.message : "Supplier operation failed."
+    message: error instanceof Error ? error.message : "Supplier operation failed.",
+    ...(error instanceof PlanFeatureError ? { lockedFeature: error.featureKey } : {})
   };
 }

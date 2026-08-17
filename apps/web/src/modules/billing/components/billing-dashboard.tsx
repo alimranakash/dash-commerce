@@ -127,7 +127,7 @@ export function BillingDashboard({
         <BillingCard icon={<CheckCircle2 className="h-5 w-5" />} title="Usage">
           <div className="grid gap-4">
             <UsageBar label="Products" limit={currentPlan?.productLimit ?? 0} value={usage.products} />
-            <UsageBar label="Orders" limit={currentPlan?.orderLimit ?? 0} value={usage.orders} />
+            <UsageBar label="Orders (this month)" limit={currentPlan?.orderLimit ?? 0} value={usage.orders} />
             <UsageBar label="Staff" limit={currentPlan?.staffLimit ?? 0} value={usage.staff} />
             <UsageBar label="Stores" limit={currentPlan?.storeLimit ?? 0} value={usage.stores} />
             <UsageBar label="Storage" limit={0} suffix="MB" value={usage.storage} />
@@ -158,7 +158,7 @@ export function BillingDashboard({
                 <strong className="mt-4 block text-2xl text-[#20212c]">{plan.currency} {formatMoney(billingCycle === "YEARLY" ? plan.priceYearly : plan.priceMonthly)}</strong>
                 <div className="mt-4 grid gap-1 text-xs text-[#626370]">
                   <span>{limitText(plan.productLimit)} products</span>
-                  <span>{limitText(plan.orderLimit)} orders</span>
+                  <span>{limitText(plan.orderLimit)} orders / month</span>
                   <span>{limitText(plan.staffLimit)} staff</span>
                   <span>{plan.aiEnabled ? "AI Assistant included" : "AI Assistant not included"}</span>
                 </div>

@@ -1,5 +1,13 @@
-import { prisma } from "@dash/db";
+import { prisma, type Prisma } from "@dash/db";
 import { PLAN_FEATURE_REGISTRY, isPlanFeatureKey, type PlanFeatureKey } from "./plan-features";
+
+/**
+ * Anything that can read a subscription and count products: the global `prisma`
+ * for ordinary reads, or a transaction client for a caller that must see rows
+ * written earlier in its own transaction — store onboarding creates the
+ * subscription and seeds the demo catalog inside one.
+ */
+type ProductLimitClient = Prisma.TransactionClient | typeof prisma;
 
 /**
  * Subscription states that carry entitlements. PAST_DUE is deliberately absent:
@@ -38,20 +46,88 @@ export async function getPlanLimits(storeId: string) {
   };
 }
 
-export async function canCreateProduct(storeId: string) {
-  const limits = await getPlanLimits(storeId);
-
-  if (!limits || limits.productLimit <= 0) {
-    return true;
-  }
-
-  const productCount = await prisma.product.count({
+/**
+ * How many more products the store's plan allows, or `null` when nothing caps
+ * it — an unlimited plan, or a store with no subscription row, which stays
+ * fail-open exactly as `canCreateProduct` always has.
+ *
+ * Callers that write several products at once (the demo-pack seeder) take the
+ * number and spend it down; callers adding one product just ask whether it is
+ * zero.
+ */
+export async function getRemainingProductAllowance(
+  storeId: string,
+  client: ProductLimitClient = prisma
+) {
+  const subscription = await client.subscription.findUnique({
+    select: {
+      plan: {
+        select: {
+          productLimit: true
+        }
+      }
+    },
     where: {
       storeId
     }
   });
 
-  return productCount < limits.productLimit;
+  if (!subscription || subscription.plan.productLimit <= 0) {
+    return null;
+  }
+
+  const productCount = await client.product.count({
+    where: {
+      storeId
+    }
+  });
+
+  return Math.max(0, subscription.plan.productLimit - productCount);
+}
+
+export async function canCreateProduct(storeId: string) {
+  return (await getRemainingProductAllowance(storeId)) !== 0;
+}
+
+/**
+ * First instant of the current calendar month, in the server's local timezone —
+ * the same boundary `analytics.repository.ts` and `report.service.ts` use for
+ * "this month", so the billing usage bar cannot disagree with the dashboard.
+ */
+export function startOfCurrentMonth(now = new Date()) {
+  return new Date(now.getFullYear(), now.getMonth(), 1);
+}
+
+/**
+ * Orders placed by this store since the month began. `orderLimit` is a monthly
+ * allowance rather than a lifetime cap — the pricing cards say "N orders /
+ * month" — so every count against it goes through here.
+ */
+export async function countOrdersThisMonth(storeId: string) {
+  return prisma.order.count({
+    where: {
+      createdAt: {
+        gte: startOfCurrentMonth()
+      },
+      storeId
+    }
+  });
+}
+
+/**
+ * Whether the store may accept one more order this month. Mirrors
+ * `canCreateProduct`, including its fail-open behaviour on a missing
+ * subscription: a storefront must not stop selling because its billing row is
+ * absent.
+ */
+export async function canCreateOrder(storeId: string) {
+  const limits = await getPlanLimits(storeId);
+
+  if (!limits || limits.orderLimit <= 0) {
+    return true;
+  }
+
+  return (await countOrdersThisMonth(storeId)) < limits.orderLimit;
 }
 
 export async function canUseAI(storeId: string) {

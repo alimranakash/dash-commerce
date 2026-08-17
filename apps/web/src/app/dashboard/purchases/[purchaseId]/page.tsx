@@ -1,6 +1,7 @@
 import { CalendarClock, CheckCircle2, Edit3, FileText, PackageCheck, ReceiptText, Trash2, Truck, WalletCards } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { GatedActionButton } from "../../../../modules/billing/components/gated-action-button";
 import { DeleteConfirmationButton } from "../../../../components/dashboard/delete-confirmation-button";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
 import { cancelPurchaseAction, markPurchaseReceivedAction } from "../../../../modules/purchases/purchase.actions";
@@ -42,11 +43,12 @@ export default async function PurchaseDetailsPage({ params, searchParams }: Purc
               <Edit3 className="h-3.5 w-3.5" /> Edit
             </Link>
             {purchase.status !== "RECEIVED" && purchase.status !== "CANCELLED" ? (
-              <form action={markPurchaseReceivedAction.bind(null, purchase.id)}>
-                <button className="inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-xs font-semibold text-white" type="submit">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Mark as Received
-                </button>
-              </form>
+              <GatedActionButton
+                action={markPurchaseReceivedAction.bind(null, purchase.id)}
+                className="inline-flex h-10 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-xs font-semibold text-white disabled:opacity-60"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" /> Mark as Received
+              </GatedActionButton>
             ) : null}
             {purchase.status !== "CANCELLED" ? (
               <DeleteConfirmationButton action={cancelPurchaseAction.bind(null, purchase.id)} ariaLabel={`Cancel ${purchase.purchaseNumber}`} className="inline-flex h-10 items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 text-xs font-semibold text-rose-700" title="Cancel purchase">

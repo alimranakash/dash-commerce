@@ -3,11 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
+import { PlanFeatureError, hasPlanFeature, requirePlanFeature } from "../billing/subscription-limits";
+import type { GatedResult, PlanFeatureKey } from "../billing/plan-features";
 import { requireStore } from "../stores/queries";
 import { cancelPurchase, createPurchase, markPurchaseReceived, updatePurchase } from "./purchase.service";
 import type { CreatePurchaseInput } from "./purchase.schema";
 
 export type PurchaseActionState = {
+  lockedFeature?: PlanFeatureKey;
   status: "idle" | "error";
   message?: string;
   fieldErrors?: Record<string, string>;
@@ -21,6 +24,7 @@ export async function createPurchaseFormAction(
   const context = { organizationId: store.organizationId, storeId: store.id };
 
   try {
+    await requirePlanFeature(store.id, "purchases");
     await createPurchase(context, purchaseInputFromFormData(formData));
   } catch (error) {
     return purchaseErrorState(error);
@@ -40,6 +44,7 @@ export async function updatePurchaseFormAction(
   const context = { organizationId: store.organizationId, storeId: store.id };
 
   try {
+    await requirePlanFeature(store.id, "purchases");
     const purchase = await updatePurchase(context, purchaseId, purchaseInputFromFormData(formData));
 
     if (!purchase) {
@@ -58,8 +63,13 @@ export async function updatePurchaseFormAction(
   redirect(`/dashboard/purchases/${purchaseId}?updated=1`);
 }
 
-export async function markPurchaseReceivedAction(purchaseId: string) {
+export async function markPurchaseReceivedAction(purchaseId: string): Promise<GatedResult> {
   const store = await requireStore();
+
+  if (!(await hasPlanFeature(store.id, "purchases"))) {
+    return { lockedFeature: "purchases" };
+  }
+
   await markPurchaseReceived({ organizationId: store.organizationId, storeId: store.id }, purchaseId);
 
   revalidatePath("/dashboard/purchases");
@@ -68,8 +78,13 @@ export async function markPurchaseReceivedAction(purchaseId: string) {
   redirect(`/dashboard/purchases/${purchaseId}?received=1`);
 }
 
-export async function cancelPurchaseAction(purchaseId: string) {
+export async function cancelPurchaseAction(purchaseId: string): Promise<GatedResult> {
   const store = await requireStore();
+
+  if (!(await hasPlanFeature(store.id, "purchases"))) {
+    return { lockedFeature: "purchases" };
+  }
+
   await cancelPurchase({ organizationId: store.organizationId, storeId: store.id }, purchaseId);
 
   revalidatePath("/dashboard/purchases");
@@ -127,6 +142,7 @@ function purchaseErrorState(error: unknown): PurchaseActionState {
 
   return {
     status: "error",
-    message: error instanceof Error ? error.message : "Purchase operation failed."
+    message: error instanceof Error ? error.message : "Purchase operation failed.",
+    ...(error instanceof PlanFeatureError ? { lockedFeature: error.featureKey } : {})
   };
 }

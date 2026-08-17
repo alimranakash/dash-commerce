@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { PlanFeatureError } from "../billing/subscription-limits";
+import type { PlanFeatureKey } from "../billing/plan-features";
 import { StoreAccessError, requireStoreManager } from "../stores/queries";
 import {
   DomainError,
@@ -12,6 +14,8 @@ import {
 
 export type DomainActionState = {
   fieldErrors?: Record<string, string>;
+  /** Set when the plan refused the action, so the UI can open the upgrade dialog. */
+  lockedFeature?: PlanFeatureKey;
   message?: string;
   status: "error" | "idle" | "success";
 };
@@ -106,7 +110,10 @@ export async function setPrimaryDomainAction(
 
 function scopeFrom(access: Awaited<ReturnType<typeof requireStoreManager>>) {
   return {
-    bypassPlanGate: access.isPlatformAdmin,
+    // Deliberately not bypassed for platform admins. These actions are only
+    // reachable from the seller dashboard, and the platform owner is a seller
+    // there like anyone else — bypassing meant that account silently got paid
+    // features on its own free store.
     storeId: access.store.id,
     ...(access.organizationId ? { organizationId: access.organizationId } : {}),
     ...(access.userId ? { userId: access.userId } : {})
@@ -118,6 +125,10 @@ function revalidateDomains() {
 }
 
 function toErrorState(error: unknown, fallback: string): DomainActionState {
+  if (error instanceof PlanFeatureError) {
+    return { lockedFeature: error.featureKey, message: error.message, status: "error" };
+  }
+
   if (error instanceof StoreAccessError) {
     return { message: error.message, status: "error" };
   }

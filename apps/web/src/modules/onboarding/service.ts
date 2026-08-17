@@ -124,16 +124,19 @@ export async function createOnboardingWorkspace(userId: string, input: Onboardin
       activeTemplate,
       store.id
     );
+    // Before the demo pack, not after: the seeder caps how many products it
+    // imports at the plan's product limit, and it can only read that limit once
+    // the subscription row exists in this transaction.
+    await createDefaultSubscriptionRecord(tx, {
+      organizationId: organization.id,
+      storeId: store.id
+    });
     await seedDemoPack(tx, {
       demoPackId: activeDemoPack,
       organizationId: organization.id,
       storeId: store.id
     });
     await createDefaultShippingRecords(tx, store.id);
-    await createDefaultSubscriptionRecord(tx, {
-      organizationId: organization.id,
-      storeId: store.id
-    });
 
     return {
       organization,

@@ -51,10 +51,18 @@ type NavItem = {
  */
 const NAV_FEATURE_BY_HREF: Record<string, PlanFeatureKey> = {
   "/dashboard/abandoned-cart": "abandoned_cart",
+  "/dashboard/expenses": "expenses",
   "/dashboard/fraud-check": "fraud_check",
+  "/dashboard/inventory": "inventory",
+  "/dashboard/orders/fake": "fake_orders",
+  "/dashboard/orders/verification": "order_verification",
+  "/dashboard/purchases": "purchases",
   "/dashboard/reports/abandoned-carts": "abandoned_cart",
+  "/dashboard/sales": "sales",
   "/dashboard/settings/courier": "courier_api",
-  "/dashboard/settings/marketing": "marketing_analytics"
+  "/dashboard/settings/domains": "custom_domain",
+  "/dashboard/settings/marketing": "marketing_analytics",
+  "/dashboard/suppliers": "suppliers"
 };
 
 /**

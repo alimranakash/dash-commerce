@@ -5,6 +5,7 @@ import { SessionProvider } from "next-auth/react";
 import { DashboardNav } from "./dashboard-nav";
 import { DashboardTopbar } from "./dashboard-topbar";
 import { DeleteConfirmationProvider } from "./delete-confirmation-provider";
+import { PlanUpgradeProvider } from "../../modules/billing/components/plan-upgrade-provider";
 
 type DashboardShellProps = {
   children: ReactNode;
@@ -16,6 +17,7 @@ export function DashboardShell({ children, storeSlug }: DashboardShellProps) {
 
   return (
     <SessionProvider>
+      <PlanUpgradeProvider>
       <DeleteConfirmationProvider>
         <main className="dash-dashboard min-h-screen bg-[#f5f6ff] text-[#18181b]">
           <DashboardNav
@@ -37,6 +39,7 @@ export function DashboardShell({ children, storeSlug }: DashboardShellProps) {
           </div>
         </main>
       </DeleteConfirmationProvider>
+      </PlanUpgradeProvider>
     </SessionProvider>
   );
 }

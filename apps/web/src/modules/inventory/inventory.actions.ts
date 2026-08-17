@@ -3,11 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
+import { PlanFeatureError, requirePlanFeature } from "../billing/subscription-limits";
+import type { PlanFeatureKey } from "../billing/plan-features";
 import { requireStore } from "../stores/queries";
 import { adjustProductStock } from "./inventory.service";
 import type { StockAdjustmentInput } from "./inventory.schema";
 
 export type StockAdjustmentActionState = {
+  lockedFeature?: PlanFeatureKey;
   fieldErrors?: Record<string, string>;
   message?: string;
   status: "idle" | "error";
@@ -22,6 +25,7 @@ export async function adjustStockFormAction(
   const store = await requireStore();
 
   try {
+    await requirePlanFeature(store.id, "inventory");
     await adjustProductStock(
       {
         organizationId: store.organizationId,
@@ -69,6 +73,7 @@ function stockAdjustmentErrorState(error: unknown): StockAdjustmentActionState {
 
   return {
     message: error instanceof Error ? error.message : "Stock adjustment failed.",
-    status: "error"
+    status: "error",
+    ...(error instanceof PlanFeatureError ? { lockedFeature: error.featureKey } : {})
   };
 }
