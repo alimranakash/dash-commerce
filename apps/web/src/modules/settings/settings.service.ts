@@ -13,11 +13,13 @@ import {
   socialProfileLinksSchema,
   storeSettingsSchema,
   themeSettingsSchema,
+  verificationSettingsSchema,
   type InvoiceSettingsInput,
   type SocialLoginSettingsInput,
   type SocialProfileLinksInput,
   type StoreSettingsInput,
-  type ThemeSettingsInput
+  type ThemeSettingsInput,
+  type VerificationSettingsInput
 } from "./settings.schema";
 
 export async function ensureDefaultSettingsForStore(storeId: string) {
@@ -84,5 +86,14 @@ export async function updateSocialProfileLinks(storeId: string, input: SocialPro
   return updateModuleSettingsRecord(storeId, {
     ...current,
     socialProfiles: socialProfileLinksSchema.parse(input)
+  });
+}
+
+export async function updateVerificationSettings(storeId: string, input: VerificationSettingsInput) {
+  const current = await getModuleSettingsRecord(storeId);
+
+  return updateModuleSettingsRecord(storeId, {
+    ...current,
+    verification: verificationSettingsSchema.parse(input)
   });
 }

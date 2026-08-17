@@ -9,6 +9,7 @@ import {
   markOrderVerified,
   returnOrderToNormalQueue
 } from "./fake-order.service";
+import { setCourierVerificationRequired } from "./fake-order.verification";
 
 export async function markOrderVerifiedAction(orderId: string) {
   const store = await requireStore();
@@ -52,6 +53,21 @@ export async function blockCustomerAndRedirectAction(orderId: string) {
 export async function returnToNormalQueueAndRedirectAction(orderId: string) {
   await returnToNormalQueueAction(orderId);
   redirect("/dashboard/orders/verification?updated=1");
+}
+
+/**
+ * Turns the courier gate on or off for this store. Off by default — a store that
+ * never touches this keeps booking exactly as before.
+ */
+export async function setCourierVerificationRequiredAction(required: boolean) {
+  const store = await requireStore();
+
+  await setCourierVerificationRequired(store.id, required);
+
+  revalidatePath("/dashboard/orders/verification");
+  revalidatePath("/dashboard/orders");
+
+  redirect(`/dashboard/orders/verification?policy=${required ? "on" : "off"}`);
 }
 
 function revalidateFakeOrderPaths(orderId: string) {

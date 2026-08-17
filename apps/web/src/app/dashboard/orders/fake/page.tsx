@@ -6,7 +6,7 @@ import { FakeOrderEmpty } from "../../../../modules/fake-orders/components/fake-
 import { FakeOrderSummaryCard } from "../../../../modules/fake-orders/components/fake-order-summary-card";
 import { RiskLevelBadge, VerificationStatusBadge } from "../../../../modules/fake-orders/components/fake-order-badges";
 import { getFakeOrderDashboard } from "../../../../modules/fake-orders/fake-order.service";
-import type { FakeOrderFilter, VerificationStatus } from "../../../../modules/fake-orders/fake-order.types";
+import type { FakeOrderFilter } from "../../../../modules/fake-orders/fake-order.types";
 import { requireStore } from "../../../../modules/stores/queries";
 
 type FakeOrdersPageProps = {
@@ -103,7 +103,7 @@ export default async function FakeOrdersPage({ searchParams }: FakeOrdersPagePro
                         <td className="whitespace-nowrap px-4 py-4 text-[#30313d]">{formatMoney(order.totalAmount, order.currency)}</td>
                         <td className="px-4 py-4 font-semibold text-[#20212c]">{assessment.score}/100</td>
                         <td className="px-4 py-4"><RiskLevelBadge level={assessment.level} /></td>
-                        <td className="px-4 py-4"><VerificationStatusBadge status={order.verificationStatus as VerificationStatus} /></td>
+                        <td className="px-4 py-4"><VerificationStatusBadge status={order.verificationStatus} /></td>
                         <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{formatDate(order.createdAt)}</td>
                         <td className="px-4 py-4 text-right">
                           <Link className="inline-flex h-8 items-center rounded-lg border border-[#ddd6fe] px-3 text-xs font-semibold text-[#6d3cf5] hover:bg-[#f3f0ff]" href={`/dashboard/orders/fake/${order.id}`}>

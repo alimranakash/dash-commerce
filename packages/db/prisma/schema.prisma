@@ -124,11 +124,29 @@ enum PaymentMethodType {
   ROCKET_MANUAL
 }
 
+/// Verification lifecycle for one order.
+///
+/// NORMAL         — assessed, not risky enough to review (or manually released).
+/// PENDING_REVIEW — assessed as risky and waiting for a seller decision.
+/// VERIFIED       — seller confirmed the order is real.
+/// FAKE           — seller rejected the order.
+/// BLOCKED        — seller rejected the order and blocked the customer.
+///
+/// QUEUED is a legacy value that no code path ever wrote. It is kept so the
+/// enum stays additive, and is read as PENDING_REVIEW everywhere.
 enum OrderVerificationStatus {
   NORMAL
   QUEUED
+  PENDING_REVIEW
   VERIFIED
   FAKE
+  BLOCKED
+}
+
+enum OrderRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
 }
 
 enum CustomerFlagStatus {
@@ -1230,6 +1248,18 @@ model Order {
   notes             String?
   verifiedAt        DateTime?
   markedFakeAt      DateTime?
+  /// Stored output of the rule-based risk engine (modules/fake-orders).
+  /// Written whenever the order or its customer history changes, never on read.
+  riskScore         Int               @default(0)
+  riskLevel         OrderRiskLevel    @default(LOW)
+  /// The `RiskFactor[]` that produced `riskScore`, so the review page can show
+  /// the breakdown without re-running the engine.
+  riskFactors       Json?
+  riskAssessedAt    DateTime?
+  /// Set by every manual verification action. While it is null the engine owns
+  /// `verificationStatus`; once set, a seller decision is final and re-assessment
+  /// will never move the order back into the queue on the same signals.
+  verificationDecidedAt DateTime?
   store             Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
   customer          Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
   shippingAddress   Address?          @relation("OrderShippingAddress", fields: [shippingAddressId], references: [id], onDelete: SetNull)
@@ -1243,6 +1273,9 @@ model Order {
   @@index([storeId])
   @@index([customerId])
   @@index([verificationStatus])
+  @@index([storeId, verificationStatus])
+  @@index([storeId, riskLevel])
+  @@index([storeId, riskAssessedAt])
   @@index([shippingAddressId])
   @@index([billingAddressId])
 }

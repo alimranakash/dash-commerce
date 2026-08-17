@@ -1,5 +1,9 @@
 import { createHash } from "node:crypto";
 import { createSystemLog } from "../../lib/system-log";
+import {
+  courierVerificationBlockReason,
+  isCourierVerificationRequired
+} from "../fake-orders/fake-order.verification";
 import { getOrderByIdForStore, getOrdersByIdsForStore } from "../orders/order.repository";
 import { resolveCourierAccount, toCourierContext } from "./courier-accounts.service";
 import { CourierError, courierErrorMessage, toCourierError } from "./courier-errors";
@@ -264,6 +268,17 @@ export async function sendOrderToCourier(input: {
     return { kind: "FAILED", message: "Order not found." };
   }
 
+  // Before the rate limiter and before any row is reserved: a blocked booking
+  // must leave no trace, so the seller can verify and send again cleanly.
+  const blocked = courierVerificationBlockReason(
+    order,
+    await isCourierVerificationRequired(input.storeId)
+  );
+
+  if (blocked) {
+    return { kind: "FAILED", message: blocked };
+  }
+
   let providerKey = input.provider ?? "";
 
   try {
@@ -465,7 +480,10 @@ export async function sendOrdersToCourier(input: {
     existing.filter((shipment) => shipment.provider === account.provider).map((s) => [s.orderId, s])
   );
 
-  // 1 · Filter — already sent, and orders that do not belong to this store.
+  // The store policy is read once for the whole batch, not once per order.
+  const verificationRequired = await isCourierVerificationRequired(input.storeId);
+
+  // 1 · Filter — already sent, unverified, and orders that do not belong here.
   const candidates = orders.filter((order) => {
     const shipment = existingByOrder.get(order.id);
 
@@ -474,6 +492,14 @@ export async function sendOrdersToCourier(input: {
         orderNumber: order.orderNumber,
         reason: shipment.status === "REQUESTED" ? "Awaiting confirmation from a previous send." : `Already booked with ${provider.label}.`
       });
+
+      return false;
+    }
+
+    const blocked = courierVerificationBlockReason(order, verificationRequired);
+
+    if (blocked) {
+      result.failed.push({ message: blocked, orderNumber: order.orderNumber });
 
       return false;
     }

@@ -6,7 +6,8 @@ import { DashboardShell } from "../../../../../components/dashboard/dashboard-sh
 import { FakeOrderActionButtons } from "../../../../../modules/fake-orders/components/fake-order-action-buttons";
 import { CustomerFlagBadge, RiskLevelBadge, VerificationStatusBadge } from "../../../../../modules/fake-orders/components/fake-order-badges";
 import { getFakeOrderDetails } from "../../../../../modules/fake-orders/fake-order.service";
-import type { CustomerFlagStatus, VerificationStatus } from "../../../../../modules/fake-orders/fake-order.types";
+import { isCourierVerificationRequired } from "../../../../../modules/fake-orders/fake-order.verification";
+import type { CustomerFlagStatus } from "../../../../../modules/fake-orders/fake-order.types";
 import { requireStore } from "../../../../../modules/stores/queries";
 
 type FakeOrderDetailsPageProps = {
@@ -18,7 +19,10 @@ type FakeOrderDetailsPageProps = {
 export default async function FakeOrderDetailsPage({ params }: FakeOrderDetailsPageProps) {
   const store = await requireStore();
   const { orderId } = await params;
-  const details = await getFakeOrderDetails(store.id, orderId);
+  const [details, verificationRequired] = await Promise.all([
+    getFakeOrderDetails(store.id, orderId),
+    isCourierVerificationRequired(store.id)
+  ]);
 
   if (!details) {
     notFound();
@@ -36,7 +40,7 @@ export default async function FakeOrderDetailsPage({ params }: FakeOrderDetailsP
               <h1 className="mt-1.5 text-[1.75rem] font-semibold leading-tight text-[#20212a]">{order.orderNumber}</h1>
               <div className="mt-3 flex flex-wrap gap-2">
                 <RiskLevelBadge level={assessment.level} />
-                <VerificationStatusBadge status={order.verificationStatus as VerificationStatus} />
+                <VerificationStatusBadge status={order.verificationStatus} />
                 <CustomerFlagBadge status={(order.customer?.flagStatus ?? "NORMAL") as CustomerFlagStatus} />
               </div>
             </div>
@@ -92,7 +96,11 @@ export default async function FakeOrderDetailsPage({ params }: FakeOrderDetailsP
 
           <section className="panel-card p-5">
             <h2 className="m-0 text-base font-semibold text-[#20212c]">Verification Actions</h2>
-            <p className="mt-2 text-sm text-[#74758a]">Manual actions update only this review workflow and do not alter checkout behavior.</p>
+            <p className="mt-2 text-sm text-[#74758a]">
+              {verificationRequired
+                ? "Checkout is unaffected, but this store blocks courier booking until an order is marked verified."
+                : "Manual actions update only this review workflow and do not alter checkout or courier behavior."}
+            </p>
             <div className="mt-5">
               <FakeOrderActionButtons orderId={order.id} />
             </div>

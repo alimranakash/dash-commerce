@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "../../lib/auth";
+import { assessOrdersForCustomerSafely } from "../fake-orders/fake-order.assessment";
 import { requireStore } from "../stores/queries";
 import {
   saveCourierAccount,
@@ -237,6 +238,15 @@ export async function checkCourierScoreAction(
   const score = await checkCourierCustomerScore(store.id, parsed.data.phone, {
     force: parsed.data.force
   });
+
+  // A refreshed delivery history feeds the "courier delivery history" risk
+  // factor, so the stored scores for this customer's orders are brought back in
+  // line here rather than drifting until the next order.
+  if (!score.error) {
+    await assessOrdersForCustomerSafely(store.id, { phone: parsed.data.phone });
+    revalidatePath("/dashboard/orders/verification");
+    revalidatePath("/dashboard/orders/fake");
+  }
 
   return {
     score,

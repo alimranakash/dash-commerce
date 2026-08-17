@@ -4,6 +4,7 @@ import {
   resolveCartAfterCheckout
 } from "../abandoned-carts/abandoned-cart.service";
 import { clearCart, getCart, getCartToken } from "../cart/cart.service";
+import { assessOrderSafely } from "../fake-orders/fake-order.assessment";
 import {
   getEnabledPaymentMethodForCheckout,
   isManualPaymentType
@@ -197,6 +198,11 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
   // and a cart that converted while still active is not a recovery.
   await resolveCartAfterCheckout(store.id, cartToken, order);
   await clearCart(store.id);
+
+  // Outside the transaction and non-throwing: the fraud score is a review aid,
+  // so it must never be able to fail a checkout the shopper already completed.
+  // An unassessed order is picked up by the dashboard backfill.
+  await assessOrderSafely(store.id, order.id);
 
   return order;
 }

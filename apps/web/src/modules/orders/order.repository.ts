@@ -68,6 +68,21 @@ export async function getOrdersByIdsForStore(storeId: string, orderIds: string[]
   });
 }
 
+/** Minimal read for the risk engine's cancellation hook. */
+export async function getOrderRiskKeyForStore(storeId: string, orderId: string) {
+  return prisma.order.findFirst({
+    where: {
+      id: orderId,
+      storeId
+    },
+    select: {
+      customerId: true,
+      customerPhone: true,
+      status: true
+    }
+  });
+}
+
 export async function updateOrderStatusForStore(
   storeId: string,
   orderId: string,

@@ -5,7 +5,11 @@ import { FakeOrderActionButtons } from "../../../../modules/fake-orders/componen
 import { FakeOrderEmpty } from "../../../../modules/fake-orders/components/fake-order-empty";
 import { RiskLevelBadge, VerificationStatusBadge } from "../../../../modules/fake-orders/components/fake-order-badges";
 import { getVerificationQueue } from "../../../../modules/fake-orders/fake-order.service";
-import type { VerificationStatus } from "../../../../modules/fake-orders/fake-order.types";
+import { isCourierVerificationRequired } from "../../../../modules/fake-orders/fake-order.verification";
+import {
+  VerificationPolicyNotice,
+  VerificationPolicyToggle
+} from "../../../../modules/fake-orders/components/verification-policy-toggle";
 import { requireStore } from "../../../../modules/stores/queries";
 
 type VerificationQueuePageProps = {
@@ -16,7 +20,10 @@ export default async function VerificationQueuePage({ searchParams }: Verificati
   const store = await requireStore();
   const params = await searchParams;
   const search = singleValue(params.search).trim();
-  const orders = await getVerificationQueue(store.id, search);
+  const [orders, verificationRequired] = await Promise.all([
+    getVerificationQueue(store.id, search),
+    isCourierVerificationRequired(store.id)
+  ]);
 
   return (
     <DashboardShell storeSlug={store.slug}>
@@ -27,12 +34,22 @@ export default async function VerificationQueuePage({ searchParams }: Verificati
             <h1>Verification Queue</h1>
             <p className="auth-copy">Manually verify suspicious orders before fulfillment.</p>
           </div>
-          <Link className="secondary link-button" href="/dashboard/orders/fake">
-            Fake Orders
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <VerificationPolicyToggle required={verificationRequired} />
+            <Link className="secondary link-button" href="/dashboard/orders/fake">
+              Fake Orders
+            </Link>
+          </div>
         </div>
 
         {params.updated ? <p className="success-message">Verification status updated.</p> : null}
+        {params.policy ? (
+          <p className="success-message">
+            Courier verification is now {params.policy === "on" ? "required" : "off"} for this store.
+          </p>
+        ) : null}
+
+        <VerificationPolicyNotice required={verificationRequired} />
 
         <div className="panel-card p-4 sm:p-5">
           <DashboardQueryForm actionPath="/dashboard/orders/verification" className="mb-5 flex w-full gap-2 sm:max-w-md sm:ml-auto">
@@ -69,7 +86,7 @@ export default async function VerificationQueuePage({ searchParams }: Verificati
                         <td className="whitespace-nowrap px-4 py-4 text-[#30313d]">{formatMoney(order.totalAmount, order.currency)}</td>
                         <td className="px-4 py-4 font-semibold text-[#20212c]">{assessment.score}/100</td>
                         <td className="px-4 py-4"><RiskLevelBadge level={assessment.level} /></td>
-                        <td className="px-4 py-4"><VerificationStatusBadge status={order.verificationStatus as VerificationStatus} /></td>
+                        <td className="px-4 py-4"><VerificationStatusBadge status={order.verificationStatus} /></td>
                         <td className="px-4 py-4">
                           <FakeOrderActionButtons compact orderId={order.id} redirectToQueue />
                         </td>

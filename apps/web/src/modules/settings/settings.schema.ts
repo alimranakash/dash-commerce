@@ -146,6 +146,14 @@ export const socialProfileLinksSchema = z.object({
   youtubeUrl: optionalUrlSchema
 });
 
+/**
+ * Order-verification policy. Off by default, so a store that does not use the
+ * Verification Queue is unaffected by the courier guard.
+ */
+export const verificationSettingsSchema = z.object({
+  blockCourierUntilVerified: z.boolean()
+});
+
 export const DEFAULT_INVOICE_SETTINGS: InvoiceSettingsInput = {
   autoGenerateNumber: true,
   companyLogoUrl: undefined,
@@ -177,6 +185,10 @@ export const DEFAULT_SOCIAL_LOGIN_SETTINGS: SocialLoginSettingsInput = {
   googleEnabled: false
 };
 
+export const DEFAULT_VERIFICATION_SETTINGS: VerificationSettingsInput = {
+  blockCourierUntilVerified: false
+};
+
 export const DEFAULT_MODULE_SETTINGS: ModuleSettings = {
   courier: { providers: [] },
   invoice: DEFAULT_INVOICE_SETTINGS,
@@ -186,7 +198,8 @@ export const DEFAULT_MODULE_SETTINGS: ModuleSettings = {
     tiktokUrl: undefined,
     twitterUrl: undefined,
     youtubeUrl: undefined
-  }
+  },
+  verification: DEFAULT_VERIFICATION_SETTINGS
 };
 
 export function normalizeModuleSettings(value: unknown): ModuleSettings {
@@ -196,7 +209,8 @@ export function normalizeModuleSettings(value: unknown): ModuleSettings {
     courier: parseSection(courierSettingsSchema, source.courier, DEFAULT_MODULE_SETTINGS.courier),
     invoice: parseSection(invoiceSettingsSchema, source.invoice, DEFAULT_INVOICE_SETTINGS),
     socialLogin: parseSection(socialLoginSettingsSchema, source.socialLogin, DEFAULT_SOCIAL_LOGIN_SETTINGS),
-    socialProfiles: parseSection(socialProfileLinksSchema, source.socialProfiles, DEFAULT_MODULE_SETTINGS.socialProfiles)
+    socialProfiles: parseSection(socialProfileLinksSchema, source.socialProfiles, DEFAULT_MODULE_SETTINGS.socialProfiles),
+    verification: parseSection(verificationSettingsSchema, source.verification, DEFAULT_VERIFICATION_SETTINGS)
   };
 }
 
@@ -213,10 +227,12 @@ export type SocialLoginSettingsInput = z.infer<typeof socialLoginSettingsSchema>
 export type SocialProfileLinksInput = z.infer<typeof socialProfileLinksSchema>;
 export type StoreSettingsInput = z.infer<typeof storeSettingsSchema>;
 export type ThemeSettingsInput = z.infer<typeof themeSettingsSchema>;
+export type VerificationSettingsInput = z.infer<typeof verificationSettingsSchema>;
 
 export type ModuleSettings = {
   courier: CourierSettingsInput;
   invoice: InvoiceSettingsInput;
   socialLogin: SocialLoginSettingsInput;
   socialProfiles: SocialProfileLinksInput;
+  verification: VerificationSettingsInput;
 };

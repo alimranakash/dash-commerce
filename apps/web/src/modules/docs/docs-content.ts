@@ -622,7 +622,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         ],
         important: [
           "এটি AI model নয়; বর্তমানে rule-based score।",
-          "Checkout flow পরিবর্তন করে না, শুধু review dashboard দেয়।",
+          "Checkout flow অপরিবর্তিত রাখে; risk score order তৈরির সময় হিসাব হয়ে order-এর সাথে save থাকে।",
+          "Verification Queue-তে Require verification before courier চালু করলে VERIFIED না হওয়া পর্যন্ত courier booking blocked থাকবে। Default-এ এটি বন্ধ।",
           "Action নেয়ার আগে customer phone/address manually verify করুন।"
         ],
         tips: [

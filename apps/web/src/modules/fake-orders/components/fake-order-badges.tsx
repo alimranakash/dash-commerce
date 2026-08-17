@@ -1,4 +1,5 @@
-import type { CustomerFlagStatus, RiskLevel, VerificationStatus } from "../fake-order.types";
+import { toVerificationStatus } from "../fake-order.types";
+import type { CustomerFlagStatus, RiskLevel, StoredVerificationStatus, VerificationStatus } from "../fake-order.types";
 import type { ReactNode } from "react";
 
 const riskStyles: Record<RiskLevel, string> = {
@@ -8,9 +9,10 @@ const riskStyles: Record<RiskLevel, string> = {
 };
 
 const verificationStyles: Record<VerificationStatus, string> = {
+  BLOCKED: "bg-red-50 text-red-700 ring-red-100",
   FAKE: "bg-red-50 text-red-700 ring-red-100",
   NORMAL: "bg-slate-50 text-slate-700 ring-slate-200",
-  QUEUED: "bg-blue-50 text-blue-700 ring-blue-100",
+  PENDING_REVIEW: "bg-blue-50 text-blue-700 ring-blue-100",
   VERIFIED: "bg-emerald-50 text-emerald-700 ring-emerald-100"
 };
 
@@ -24,8 +26,11 @@ export function RiskLevelBadge({ level }: { level: RiskLevel }) {
   return <Badge className={riskStyles[level]}>{titleCase(level)}</Badge>;
 }
 
-export function VerificationStatusBadge({ status }: { status: VerificationStatus }) {
-  return <Badge className={verificationStyles[status]}>{titleCase(status)}</Badge>;
+/** Accepts the stored value, including the legacy `QUEUED`. */
+export function VerificationStatusBadge({ status }: { status: StoredVerificationStatus | string }) {
+  const normalized = toVerificationStatus(String(status));
+
+  return <Badge className={verificationStyles[normalized] ?? verificationStyles.NORMAL}>{titleCase(normalized)}</Badge>;
 }
 
 export function CustomerFlagBadge({ status }: { status: CustomerFlagStatus }) {
