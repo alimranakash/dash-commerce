@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireStore } from "../../stores/queries";
+import { StoreAccessError, requireStoreManager } from "../../stores/queries";
 import { storefrontTemplateRegistry } from "./registry";
 import { updateStoreActiveTemplate } from "./template-store";
 
@@ -9,12 +9,31 @@ export type ApplyStorefrontTemplateResult =
   | { ok: true; templateId: string }
   | { error: string; ok: false };
 
+/**
+ * Switching the template changes the storefront every customer sees, so it is
+ * manager-only. This action reports failure as a value rather than throwing, so
+ * the refusal is converted into one instead of escaping as an unhandled error.
+ */
 export async function applyStorefrontTemplateAction(
   templateId: string
 ): Promise<ApplyStorefrontTemplateResult> {
-  const store = await requireStore();
+  let store: Awaited<ReturnType<typeof requireStoreManager>>["store"];
 
-  const templateExists = Object.values(storefrontTemplateRegistry).some((template) => template.id === templateId);
+  try {
+    ({ store } = await requireStoreManager());
+  } catch (error) {
+    return {
+      error:
+        error instanceof StoreAccessError
+          ? error.message
+          : "Could not apply that template. Try again.",
+      ok: false
+    };
+  }
+
+  const templateExists = Object.values(storefrontTemplateRegistry).some(
+    (template) => template.id === templateId
+  );
 
   if (!templateExists) {
     return {

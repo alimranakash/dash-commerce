@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
-import { requireStore } from "../stores/queries";
+import { requireStoreManager } from "../stores/queries";
 import type {
   ShippingRateInput,
   ShippingSettingsInput,
@@ -21,16 +21,22 @@ export async function updateShippingSettingsFormAction(
   _state: ShippingSettingsActionState,
   formData: FormData
 ): Promise<ShippingSettingsActionState> {
-  const store = await requireStore();
+  let storeSlug: string;
 
   try {
+    // Shipping zones and rates set what every customer is charged, so this is
+    // manager-only. The guard throws rather than redirecting, hence its place
+    // inside the `try`.
+    const { store } = await requireStoreManager();
+
+    storeSlug = store.slug;
     await updateShippingSettings(store.id, settingsFromFormData(formData));
   } catch (error) {
     return shippingErrorState(error);
   }
 
   revalidatePath("/dashboard/shipping");
-  revalidatePath(`/s/${store.slug}/checkout`);
+  revalidatePath(`/s/${storeSlug}/checkout`);
   redirect("/dashboard/shipping?updated=1");
 }
 
@@ -94,7 +100,10 @@ function newRateFromFormData(formData: FormData): ShippingRateInput | undefined 
 }
 
 function getAll(formData: FormData, key: string) {
-  return formData.getAll(key).map((value) => String(value).trim()).filter(Boolean);
+  return formData
+    .getAll(key)
+    .map((value) => String(value).trim())
+    .filter(Boolean);
 }
 
 function getValue(formData: FormData, key: string) {

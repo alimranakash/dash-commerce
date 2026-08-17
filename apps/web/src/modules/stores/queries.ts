@@ -49,6 +49,22 @@ export async function requireStore() {
  * visitor — marketing tags, tracking code — where a MEMBER should be able to
  * look but not touch. Platform admins pass regardless of org role.
  */
+/**
+ * The single definition of "manager". Shared by `getStoreAccess()` and
+ * `getViewerCanManageStore()` so the pages, the server actions, and the
+ * navigation cannot drift into disagreeing about who may change what.
+ */
+export function isStoreManager(params: {
+  organizationRole: string | undefined;
+  platformRole: string | undefined;
+}) {
+  return (
+    params.platformRole === "ADMIN" ||
+    params.organizationRole === "OWNER" ||
+    params.organizationRole === "ADMIN"
+  );
+}
+
 export async function getStoreAccess() {
   const [organization, store, user] = await Promise.all([
     getCurrentOrganization(),
@@ -59,13 +75,29 @@ export async function getStoreAccess() {
   const role = organization?.role ?? "MEMBER";
 
   return {
-    canManage: isPlatformAdmin || role === "OWNER" || role === "ADMIN",
+    canManage: isStoreManager({ organizationRole: role, platformRole: user?.role }),
     isPlatformAdmin,
     role,
     store,
     ...(organization?.id ? { organizationId: organization.id } : {}),
     ...(user?.id ? { userId: user.id } : {})
   };
+}
+
+/**
+ * The same question as `getStoreAccess().canManage`, without requiring a store
+ * and without redirecting — for the navigation, which only needs to decide which
+ * sections to draw and runs on every dashboard page.
+ *
+ * Fails *open*. Every action and page behind these links checks for itself and
+ * fails closed, so the worst a wrong `true` causes is a link that then explains
+ * it is read-only; a wrong `false` would hide an owner's entire settings menu
+ * over a transient error.
+ */
+export async function getViewerCanManageStore() {
+  const [organization, user] = await Promise.all([getCurrentOrganization(), getCurrentUser()]);
+
+  return isStoreManager({ organizationRole: organization?.role, platformRole: user?.role });
 }
 
 /**

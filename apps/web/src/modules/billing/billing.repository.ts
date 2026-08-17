@@ -5,7 +5,7 @@ import {
 } from "../admin/admin-subscriptions.repository";
 import { ensureDefaultPlans } from "../admin/admin-plans.repository";
 import type { BillingSettingsInput } from "./billing.schema";
-import { countOrdersThisMonth } from "./subscription-limits";
+import { countOrdersThisMonth, getStaffSeatUsage } from "./subscription-limits";
 
 export async function getActiveBillingPlans() {
   await ensureDefaultPlans();
@@ -104,22 +104,29 @@ export async function updateBillingSettingsRecord(input: BillingSettingsInput) {
  * `orders` is deliberately the *current month's* count, not the lifetime one:
  * `Plan.orderLimit` is a monthly allowance, so a lifetime total would render a
  * usage bar permanently over its limit.
+ *
+ * `staff` comes from the same `getStaffSeatUsage` the team page reads, so the
+ * two screens cannot disagree — which means it counts pending invites as well as
+ * members, because that is what the plan actually caps. It needs the
+ * organization rather than the store: staff belong to the organization.
  */
-export async function getBillingStoreUsage(storeId: string) {
-  const [products, orders] = await Promise.all([
+export async function getBillingStoreUsage(params: { organizationId: string; storeId: string }) {
+  const [products, orders, seats] = await Promise.all([
     prisma.product.count({
       where: {
-        storeId
+        storeId: params.storeId
       }
     }),
-    countOrdersThisMonth(storeId)
+    countOrdersThisMonth(params.storeId),
+    getStaffSeatUsage(params.organizationId)
   ]);
 
   return {
     aiUsage: 0,
     orders,
     products,
-    staff: 1,
+    staff: seats.used,
+    staffSeats: seats,
     storage: 0,
     stores: 1
   };

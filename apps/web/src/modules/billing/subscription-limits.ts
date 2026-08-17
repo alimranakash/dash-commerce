@@ -1,13 +1,16 @@
 import { prisma, type Prisma } from "@dash/db";
+import { countOrganizationMembers, countPendingStaffInvites } from "../staff/staff.repository";
+import type { StaffSeatUsage } from "../staff/staff.schema";
 import { PLAN_FEATURE_REGISTRY, isPlanFeatureKey, type PlanFeatureKey } from "./plan-features";
 
 /**
- * Anything that can read a subscription and count products: the global `prisma`
- * for ordinary reads, or a transaction client for a caller that must see rows
- * written earlier in its own transaction — store onboarding creates the
- * subscription and seeds the demo catalog inside one.
+ * Anything that can read a subscription and count what it caps: the global
+ * `prisma` for ordinary reads, or a transaction client for a caller that must
+ * see rows written earlier in its own transaction — store onboarding creates the
+ * subscription and seeds the demo catalog inside one, and invite acceptance
+ * re-checks the seat count after claiming the invite.
  */
-type ProductLimitClient = Prisma.TransactionClient | typeof prisma;
+type LimitClient = Prisma.TransactionClient | typeof prisma;
 
 /**
  * Subscription states that carry entitlements. PAST_DUE is deliberately absent:
@@ -55,10 +58,7 @@ export async function getPlanLimits(storeId: string) {
  * number and spend it down; callers adding one product just ask whether it is
  * zero.
  */
-export async function getRemainingProductAllowance(
-  storeId: string,
-  client: ProductLimitClient = prisma
-) {
+export async function getRemainingProductAllowance(storeId: string, client: LimitClient = prisma) {
   const subscription = await client.subscription.findUnique({
     select: {
       plan: {
@@ -128,6 +128,93 @@ export async function canCreateOrder(storeId: string) {
   }
 
   return (await countOrdersThisMonth(storeId)) < limits.orderLimit;
+}
+
+/**
+ * Seats the organization's plan grants and how many are spoken for.
+ *
+ * Three things about this differ from the product and order limits above, each
+ * on purpose:
+ *
+ * - It is scoped by **organization**, not store. Members hang off the
+ *   organization, so the allowance they are counted against has to be read the
+ *   same way. `Subscription` carries both ids; today an organization has exactly
+ *   one store so the two agree, but the counting unit should not depend on that.
+ * - It **fails closed** when there is no subscription row, where
+ *   `canCreateProduct` fails open. A storefront must not stop selling because
+ *   billing is missing; adding a teammate can wait, and no revenue is lost by
+ *   making the seller sort their plan out first.
+ * - **Pending invites count against the allowance.** Counting only members would
+ *   let a two-seat store send ten invites and end up with ten members, since
+ *   each acceptance would look like the first.
+ *
+ * `limit: null` means unlimited — the `0 = unlimited` convention shared with
+ * every other plan limit, resolved here so no caller repeats it.
+ */
+export async function getStaffSeatUsage(
+  organizationId: string,
+  client: LimitClient = prisma
+): Promise<StaffSeatUsage> {
+  const now = new Date();
+  const [subscription, members, pendingInvites] = await Promise.all([
+    client.subscription.findFirst({
+      // An organization has one store, and therefore one subscription, today.
+      // Ordering makes the read deterministic if that ever stops being true.
+      orderBy: {
+        createdAt: "asc"
+      },
+      select: {
+        plan: {
+          select: {
+            staffLimit: true
+          }
+        }
+      },
+      where: {
+        organizationId
+      }
+    }),
+    countOrganizationMembers(organizationId, client),
+    countPendingStaffInvites(organizationId, client, now)
+  ]);
+  const used = members + pendingInvites;
+
+  if (!subscription) {
+    return {
+      limit: 0,
+      members,
+      pendingInvites,
+      remaining: 0,
+      used
+    };
+  }
+
+  const staffLimit = subscription.plan.staffLimit;
+
+  if (staffLimit <= 0) {
+    return {
+      limit: null,
+      members,
+      pendingInvites,
+      remaining: null,
+      used
+    };
+  }
+
+  return {
+    limit: staffLimit,
+    members,
+    pendingInvites,
+    remaining: Math.max(0, staffLimit - used),
+    used
+  };
+}
+
+/** Whether one more seat can be spent — on an invite now, or its acceptance later. */
+export async function canAddStaffSeat(organizationId: string, client: LimitClient = prisma) {
+  const seats = await getStaffSeatUsage(organizationId, client);
+
+  return seats.remaining === null || seats.remaining > 0;
 }
 
 export async function canUseAI(storeId: string) {

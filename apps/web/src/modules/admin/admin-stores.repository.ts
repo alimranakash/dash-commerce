@@ -123,7 +123,8 @@ export async function getAdminStores(filters: { search?: string; status?: AdminS
         include: {
           plan: {
             select: {
-              name: true
+              name: true,
+              staffLimit: true
             }
           }
         }

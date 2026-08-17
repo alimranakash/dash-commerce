@@ -4,11 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import { requirePlatformAdmin } from "../admin/admin.auth";
-import { requireStore } from "../stores/queries";
-import {
-  submitManualSubscriptionPayment,
-  updateBillingSettings
-} from "./billing.service";
+import { requireStoreManager } from "../stores/queries";
+import { submitManualSubscriptionPayment, updateBillingSettings } from "./billing.service";
 import type { BillingSettingsInput, SubmitManualPaymentInput } from "./billing.schema";
 
 export type BillingActionState = {
@@ -21,9 +18,12 @@ export async function submitManualPaymentAction(
   _state: BillingActionState,
   formData: FormData
 ): Promise<BillingActionState> {
-  const store = await requireStore();
-
   try {
+    // Paying for the store's plan is an owner/admin decision, not day-to-day
+    // work. The guard sits inside the `try` because it throws rather than
+    // redirecting, and `billingErrorState` already surfaces its message.
+    const { store } = await requireStoreManager();
+
     await submitManualSubscriptionPayment(store, manualPaymentFromFormData(formData));
   } catch (error) {
     if (process.env.NODE_ENV !== "production") {

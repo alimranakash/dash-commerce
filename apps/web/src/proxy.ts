@@ -3,7 +3,7 @@ import { resolveStoreFromHost } from "./lib/host-routing";
 import { resolveCustomDomainRoute } from "./modules/domains/domain-routing";
 
 const PUBLIC_FILE = /\.(.*)$/;
-const SELLER_APP_PATHS = ["/admin", "/dashboard", "/login", "/register"];
+const SELLER_APP_PATHS = ["/admin", "/dashboard", "/invite", "/login", "/register"];
 /** Where an unknown or unverified custom domain lands. */
 const DOMAIN_NOT_CONFIGURED_PATH = "/domain-not-configured";
 

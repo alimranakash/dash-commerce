@@ -31,6 +31,7 @@ import { getEntitledFeaturesAction } from "../../modules/billing/billing-feature
 import { isPaidFeature } from "../../modules/admin/plan-catalog";
 import { PaidBadge } from "../../modules/billing/components/paid-badge";
 import type { PlanFeatureKey } from "../../modules/billing/plan-features";
+import { getViewerCanManageStoreAction } from "../../modules/stores/store-access.actions";
 
 type DashboardNavProps = {
   onClose: () => void;
@@ -113,6 +114,7 @@ const reportLinks = [
 
 const settingsLinks = [
   { href: "/dashboard/settings/general", label: "General" },
+  { href: "/dashboard/settings/team", label: "Team" },
   { href: "/dashboard/settings/domains", label: "Domains" },
   { href: "/dashboard/settings/marketing", label: "Marketing" },
   { href: "/dashboard/settings/courier", label: "Courier" },
@@ -153,6 +155,38 @@ const trailingLinks: NavItem[] = [
   { href: "/dashboard/abandoned-cart", icon: ShoppingCart, label: "Abandoned cart" }
 ];
 
+/**
+ * Sections only an owner or admin can act on, hidden from members so the sidebar
+ * matches what they can actually do.
+ *
+ * This is presentation, not protection — every page and action behind these
+ * links checks the role again and refuses on its own. Storefront links are not
+ * listed individually because the whole group is manager-only; see
+ * `isManagerOnlyHref`.
+ *
+ * Team and StoreOS / AI are deliberately absent: a member may open the team page
+ * read-only, and asking the assistant a question is ordinary work.
+ */
+const MANAGER_ONLY_HREFS: ReadonlySet<string> = new Set([
+  "/dashboard/billing",
+  "/dashboard/payments",
+  "/dashboard/settings/courier",
+  "/dashboard/settings/domains",
+  "/dashboard/settings/general",
+  "/dashboard/settings/invoice",
+  "/dashboard/settings/marketing",
+  "/dashboard/settings/social",
+  "/dashboard/shipping"
+]);
+
+function isManagerOnlyHref(href: string) {
+  return (
+    MANAGER_ONLY_HREFS.has(href) ||
+    href.startsWith("/dashboard/storefront") ||
+    href.startsWith("/dashboard/theme")
+  );
+}
+
 const iconColors: Record<string, string> = {
   "Abandoned cart": "text-fuchsia-500",
   Billing: "text-violet-600",
@@ -188,6 +222,13 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
   const [storefrontOpen, setStorefrontOpen] = useState(storefrontRouteActive);
   const [settingsOpen, setSettingsOpen] = useState(settingsRouteActive);
   const [entitledFeatures, setEntitledFeatures] = useState<ReadonlySet<string> | null>(null);
+  // Starts `true` so an owner never sees their settings menu flash away on load.
+  // The server refuses members regardless of what is drawn here.
+  const [canManage, setCanManage] = useState(true);
+  const visibleMainLinks = mainLinks.filter((link) => canManage || !isManagerOnlyHref(link.href));
+  const visibleSettingsLinks = settingsLinks.filter(
+    (link) => canManage || !isManagerOnlyHref(link.href)
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -198,6 +239,14 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
       })
       .catch(() => {
         if (!cancelled) setEntitledFeatures(new Set());
+      });
+
+    getViewerCanManageStoreAction()
+      .then((allowed) => {
+        if (!cancelled) setCanManage(allowed);
+      })
+      .catch(() => {
+        if (!cancelled) setCanManage(true);
       });
 
     return () => {
@@ -296,7 +345,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
         ) : null}
 
         <div className="mt-1 space-y-1">
-          {mainLinks.map((link) => (
+          {visibleMainLinks.map((link) => (
             <NavLink
               href={link.href}
               icon={link.icon}
@@ -335,6 +384,9 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
           </div>
         ) : null}
 
+        {/* The whole group edits the customer-facing storefront, so members do
+            not get it at all rather than an expandable section of dead ends. */}
+        {canManage ? (
         <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${storefrontRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
           <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/storefront/themes" onClick={onClose}>
             <Store className="h-4 w-4 text-violet-600" />
@@ -344,7 +396,8 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
             <ChevronDown className={`h-3.5 w-3.5 transition-transform ${storefrontOpen ? "rotate-180" : ""}`} />
           </button>
         </div>
-        {storefrontOpen ? (
+        ) : null}
+        {canManage && storefrontOpen ? (
           <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
             {storefrontLinks.map((link) => (
               <Link
@@ -386,7 +439,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
         </div>
         {settingsOpen ? (
           <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
-            {settingsLinks.map((link) => (
+            {visibleSettingsLinks.map((link) => (
               <Link
                 aria-current={isSettingsLinkActive(pathname, link.href) ? "page" : undefined}
                 className={`block rounded-md px-3 py-2 text-[12px] transition ${isSettingsLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}

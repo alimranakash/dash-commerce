@@ -23,7 +23,7 @@ export async function getBillingDashboardData(store: { id: string; organizationI
       storeId: store.id
     }),
     getBillingSettingsRecord(),
-    getBillingStoreUsage(store.id)
+    getBillingStoreUsage({ organizationId: store.organizationId, storeId: store.id })
   ]);
 
   return {

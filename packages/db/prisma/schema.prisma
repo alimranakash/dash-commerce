@@ -274,6 +274,8 @@ model User {
   accounts    Account[]
   sessions    Session[]
   memberships OrganizationMember[]
+  staffInvitesSent     StaffInvite[] @relation("StaffInviteSender")
+  staffInvitesAccepted StaffInvite[] @relation("StaffInviteRecipient")
   supportTickets SupportTicket[]    @relation("SupportTicketUser")
   assignedSupportTickets SupportTicket[] @relation("SupportTicketAssignee")
   supportTicketReplies SupportTicketReply[]
@@ -325,6 +327,7 @@ model Organization {
   name      String
   slug      String               @unique
   members   OrganizationMember[]
+  staffInvites StaffInvite[]
   stores    Store[]
   suppliers Supplier[]
   purchases Purchase[]
@@ -352,6 +355,35 @@ model OrganizationMember {
 
   @@unique([userId, organizationId])
   @@index([organizationId])
+}
+
+/// One staff invitation. The raw token never reaches the database — only its
+/// SHA-256 hash — so neither a dump nor the admin panel can be turned back into
+/// a working invite link; the link is shown once, when the invite is created.
+///
+/// Rows are kept after they are accepted or revoked rather than deleted, so the
+/// team page can answer "who invited this person, and when". A pending invite is
+/// therefore expressed as a filter (`acceptedAt`/`revokedAt` null, `expiresAt`
+/// in the future), not by the row's existence — see `pendingStaffInviteFilter`.
+model StaffInvite {
+  id             String       @id @default(cuid())
+  organizationId String
+  email          String
+  role           UserRole     @default(MEMBER)
+  tokenHash      String       @unique
+  invitedById    String
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  acceptedById   String?
+  revokedAt      DateTime?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy      User         @relation("StaffInviteSender", fields: [invitedById], references: [id], onDelete: Cascade)
+  acceptedBy     User?        @relation("StaffInviteRecipient", fields: [acceptedById], references: [id], onDelete: SetNull)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @default(now()) @updatedAt
+
+  @@index([organizationId])
+  @@index([email])
 }
 
 model Store {

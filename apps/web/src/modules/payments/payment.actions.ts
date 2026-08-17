@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
-import { requireStore } from "../stores/queries";
+import { requireStoreManager } from "../stores/queries";
 import { paymentMethodTypes, type PaymentMethodInput } from "./payment.schema";
 import { updatePaymentMethods } from "./payment.service";
 
@@ -17,18 +17,26 @@ export async function updatePaymentSettingsFormAction(
   _state: PaymentSettingsActionState,
   formData: FormData
 ): Promise<PaymentSettingsActionState> {
-  const store = await requireStore();
+  let storeSlug: string;
 
   try {
+    // Which payment methods a customer sees at checkout is a store-level
+    // decision, so this is manager-only. The guard throws rather than
+    // redirecting, hence its place inside the `try`.
+    const { store } = await requireStoreManager();
+
+    storeSlug = store.slug;
     await updatePaymentMethods(store.id, {
-      methods: paymentMethodTypes.map((type, sortOrder) => methodFromFormData(formData, type, sortOrder))
+      methods: paymentMethodTypes.map((type, sortOrder) =>
+        methodFromFormData(formData, type, sortOrder)
+      )
     });
   } catch (error) {
     return paymentErrorState(error);
   }
 
   revalidatePath("/dashboard/payments");
-  revalidatePath(`/s/${store.slug}/checkout`);
+  revalidatePath(`/s/${storeSlug}/checkout`);
   redirect("/dashboard/payments?updated=1");
 }
 

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "../../lib/auth";
 import { assessOrdersForCustomerSafely } from "../fake-orders/fake-order.assessment";
-import { requireStore } from "../stores/queries";
+import { StoreAccessError, requireStore, requireStoreManager } from "../stores/queries";
 import {
   saveCourierAccount,
   setDefaultCourierAccount,
@@ -62,6 +62,36 @@ async function courierPlanGate(
     message: `${PLAN_FEATURE_REGISTRY[feature].label} is a paid feature. Upgrade your plan from Billing to use it.`,
     status: "error"
   };
+}
+
+/**
+ * Manager check for the three credential actions, shaped like `courierPlanGate`:
+ * a refusal comes back as this module's error state rather than throwing,
+ * because these actions feed `useActionState` too.
+ *
+ * Booking parcels and refreshing their status deliberately stay on
+ * `requireStore()` — that is the daily job of whoever packs orders. Only the
+ * credentials, the default carrier, and the connection test are restricted.
+ * `messageFor` is not used here: it routes everything through the courier error
+ * vocabulary, which would rewrite a permission refusal into a carrier problem.
+ */
+async function requireCourierManagerStore() {
+  try {
+    const { store } = await requireStoreManager();
+
+    return { ok: true as const, store };
+  } catch (error) {
+    return {
+      ok: false as const,
+      state: {
+        message:
+          error instanceof StoreAccessError
+            ? error.message
+            : "Could not verify your access. Sign in again.",
+        status: "error" as const
+      }
+    };
+  }
 }
 
 export async function sendOrderToCourierAction(
@@ -141,7 +171,8 @@ export async function sendOrdersToCourierAction(
     return {
       message: `${result.sent.length} sent · ${result.skipped.length} skipped · ${result.failed.length} failed`,
       result,
-      status: result.failed.length > 0 || result.needsReconciliation.length > 0 ? "warning" : "success"
+      status:
+        result.failed.length > 0 || result.needsReconciliation.length > 0 ? "warning" : "success"
     };
   } catch (error) {
     return { message: messageFor(error), result: null, status: "error" };
@@ -155,7 +186,6 @@ export async function refreshActiveShipmentsAction(): Promise<CourierActionState
   if (gate) {
     return gate;
   }
-
 
   try {
     const { checked, failed, updated } = await refreshActiveShipments(store.id);
@@ -255,7 +285,9 @@ export async function checkCourierScoreAction(
   };
 }
 
-export async function refreshCourierBalanceAction(providerKey: string): Promise<CourierActionState> {
+export async function refreshCourierBalanceAction(
+  providerKey: string
+): Promise<CourierActionState> {
   const store = await requireStore();
   const gate = await courierPlanGate(store.id);
 
@@ -285,7 +317,13 @@ export async function saveCourierAccountFormAction(
   _state: CourierActionState,
   formData: FormData
 ): Promise<CourierActionState> {
-  const store = await requireStore();
+  const access = await requireCourierManagerStore();
+
+  if (!access.ok) {
+    return access.state;
+  }
+
+  const store = access.store;
   const gate = await courierPlanGate(store.id);
 
   if (gate) {
@@ -318,13 +356,18 @@ export async function saveCourierAccountFormAction(
 export async function setDefaultCourierAccountAction(
   providerKey: string
 ): Promise<CourierActionState> {
-  const store = await requireStore();
+  const access = await requireCourierManagerStore();
+
+  if (!access.ok) {
+    return access.state;
+  }
+
+  const store = access.store;
   const gate = await courierPlanGate(store.id);
 
   if (gate) {
     return gate;
   }
-
 
   try {
     await setDefaultCourierAccount(store.id, providerKey);
@@ -340,13 +383,18 @@ export async function setDefaultCourierAccountAction(
 export async function testCourierConnectionAction(
   providerKey: string
 ): Promise<CourierActionState> {
-  const store = await requireStore();
+  const access = await requireCourierManagerStore();
+
+  if (!access.ok) {
+    return access.state;
+  }
+
+  const store = access.store;
   const gate = await courierPlanGate(store.id);
 
   if (gate) {
     return gate;
   }
-
 
   try {
     const result = await testCourierConnection(store.id, providerKey);

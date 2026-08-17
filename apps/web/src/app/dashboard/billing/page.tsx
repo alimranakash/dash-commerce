@@ -1,7 +1,10 @@
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { submitManualPaymentAction } from "../../../modules/billing/billing.actions";
 import { BillingDashboard } from "../../../modules/billing/components/billing-dashboard";
-import { getBillingDashboardData, getTrialRemaining } from "../../../modules/billing/billing.service";
+import {
+  getBillingDashboardData,
+  getTrialRemaining
+} from "../../../modules/billing/billing.service";
 import { requireStore } from "../../../modules/stores/queries";
 
 export default async function BillingPage() {
@@ -13,7 +16,9 @@ export default async function BillingPage() {
       <section className="mx-auto grid max-w-[1480px] gap-5">
         <div>
           <h1 className="m-0 text-2xl font-semibold tracking-tight text-[#20212a]">Billing</h1>
-          <p className="mt-2 text-sm text-[#737582]">Manage your plan, manual payments, invoices, and subscription status.</p>
+          <p className="mt-2 text-sm text-[#737582]">
+            Manage your plan, manual payments, invoices, and subscription status.
+          </p>
         </div>
         <BillingDashboard
           action={submitManualPaymentAction}
@@ -60,7 +65,15 @@ export default async function BillingPage() {
             status: data.subscription.status,
             trialRemaining: getTrialRemaining(data.subscription)
           }}
-          usage={data.usage}
+          usage={{
+            aiUsage: data.usage.aiUsage,
+            orders: data.usage.orders,
+            products: data.usage.products,
+            staff: data.usage.staff,
+            staffSeats: data.usage.staffSeats,
+            storage: data.usage.storage,
+            stores: data.usage.stores
+          }}
         />
       </section>
     </DashboardShell>

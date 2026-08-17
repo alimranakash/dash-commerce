@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
-import { requireStore } from "../stores/queries";
+import { requireStoreManager } from "../stores/queries";
 import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
   FOOTER_COLUMN_SLOTS,
@@ -36,39 +36,56 @@ export type SettingsActionState = {
   fieldErrors?: Record<string, string>;
 };
 
+/**
+ * Every action in this file changes how the store presents itself to customers,
+ * so all of them are manager-only. `requireStoreManager()` throws rather than
+ * redirecting, which is why each guard sits inside the `try` — the seller sees
+ * the refusal in the form instead of a blank error page. `settingsErrorState`
+ * already reports any `Error.message`, and `StoreAccessError` carries the
+ * explanation, so it needs no special case.
+ */
 export async function updateStoreSettingsFormAction(
   _state: SettingsActionState,
   formData: FormData
 ): Promise<SettingsActionState> {
-  const store = await requireStore();
+  let storeSlug: string;
 
   try {
+    const { store } = await requireStoreManager();
+
+    storeSlug = store.slug;
     await updateStoreSettings(store.id, storeSettingsFromFormData(formData));
   } catch (error) {
     return settingsErrorState(error, "Please fix the highlighted store settings.");
   }
 
-  revalidateSettingsPaths(store.slug);
+  revalidateSettingsPaths(storeSlug);
   redirect("/dashboard/settings?updated=1");
 }
 
-export async function updateGeneralSettingsFormAction(_state: SettingsActionState, formData: FormData) {
-  const store = await requireStore();
-  const current = await getStoreSettings(store.id);
-  const next: StoreSettingsInput = {
-    logoUrl: current.logoUrl ?? undefined,
-    faviconUrl: current.faviconUrl ?? undefined,
-    tagline: current.tagline ?? undefined,
-    contactEmail: current.contactEmail ?? undefined,
-    contactPhone: current.contactPhone ?? undefined,
-    supportPhone: current.supportPhone ?? undefined,
-    businessAddress: current.businessAddress ?? undefined,
-    facebookUrl: current.facebookUrl ?? undefined,
-    instagramUrl: current.instagramUrl ?? undefined,
-    whatsappNumber: current.whatsappNumber ?? undefined
-  };
+export async function updateGeneralSettingsFormAction(
+  _state: SettingsActionState,
+  formData: FormData
+) {
+  let storeSlug: string;
 
   try {
+    const { store } = await requireStoreManager();
+    const current = await getStoreSettings(store.id);
+    const next: StoreSettingsInput = {
+      logoUrl: current.logoUrl ?? undefined,
+      faviconUrl: current.faviconUrl ?? undefined,
+      tagline: current.tagline ?? undefined,
+      contactEmail: current.contactEmail ?? undefined,
+      contactPhone: current.contactPhone ?? undefined,
+      supportPhone: current.supportPhone ?? undefined,
+      businessAddress: current.businessAddress ?? undefined,
+      facebookUrl: current.facebookUrl ?? undefined,
+      instagramUrl: current.instagramUrl ?? undefined,
+      whatsappNumber: current.whatsappNumber ?? undefined
+    };
+
+    storeSlug = store.slug;
     next.logoUrl = getValue(formData, "logoUrl");
     next.faviconUrl = getValue(formData, "faviconUrl");
     next.tagline = getValue(formData, "tagline");
@@ -82,27 +99,33 @@ export async function updateGeneralSettingsFormAction(_state: SettingsActionStat
     return settingsErrorState(error, "Please fix the highlighted general settings.");
   }
 
-  revalidateSettingsPaths(store.slug);
+  revalidateSettingsPaths(storeSlug);
   redirect("/dashboard/settings?updated=1");
 }
 
-export async function updateBrandSettingsFormAction(_state: SettingsActionState, formData: FormData) {
-  const store = await requireStore();
-  const current = await getStoreSettings(store.id);
-  const next: StoreSettingsInput = {
-    logoUrl: current.logoUrl ?? undefined,
-    faviconUrl: current.faviconUrl ?? undefined,
-    tagline: current.tagline ?? undefined,
-    contactEmail: current.contactEmail ?? undefined,
-    contactPhone: current.contactPhone ?? undefined,
-    supportPhone: current.supportPhone ?? undefined,
-    businessAddress: current.businessAddress ?? undefined,
-    facebookUrl: current.facebookUrl ?? undefined,
-    instagramUrl: current.instagramUrl ?? undefined,
-    whatsappNumber: current.whatsappNumber ?? undefined
-  };
+export async function updateBrandSettingsFormAction(
+  _state: SettingsActionState,
+  formData: FormData
+) {
+  let storeSlug: string;
 
   try {
+    const { store } = await requireStoreManager();
+    const current = await getStoreSettings(store.id);
+    const next: StoreSettingsInput = {
+      logoUrl: current.logoUrl ?? undefined,
+      faviconUrl: current.faviconUrl ?? undefined,
+      tagline: current.tagline ?? undefined,
+      contactEmail: current.contactEmail ?? undefined,
+      contactPhone: current.contactPhone ?? undefined,
+      supportPhone: current.supportPhone ?? undefined,
+      businessAddress: current.businessAddress ?? undefined,
+      facebookUrl: current.facebookUrl ?? undefined,
+      instagramUrl: current.instagramUrl ?? undefined,
+      whatsappNumber: current.whatsappNumber ?? undefined
+    };
+
+    storeSlug = store.slug;
     next.logoUrl = getValue(formData, "logoUrl");
     next.faviconUrl = getValue(formData, "faviconUrl");
     await updateStoreSettings(store.id, next);
@@ -110,27 +133,33 @@ export async function updateBrandSettingsFormAction(_state: SettingsActionState,
     return settingsErrorState(error, "Please fix the highlighted branding settings.");
   }
 
-  revalidateSettingsPaths(store.slug);
+  revalidateSettingsPaths(storeSlug);
   return settingsSuccessState("Store branding updated.");
 }
 
-export async function updateSocialProfilesFormAction(_state: SettingsActionState, formData: FormData) {
-  const store = await requireStore();
-  const current = await getStoreSettings(store.id);
-  const next: StoreSettingsInput = {
-    logoUrl: current.logoUrl ?? undefined,
-    faviconUrl: current.faviconUrl ?? undefined,
-    tagline: current.tagline ?? undefined,
-    contactEmail: current.contactEmail ?? undefined,
-    contactPhone: current.contactPhone ?? undefined,
-    supportPhone: current.supportPhone ?? undefined,
-    businessAddress: current.businessAddress ?? undefined,
-    facebookUrl: getValue(formData, "facebookUrl"),
-    instagramUrl: getValue(formData, "instagramUrl"),
-    whatsappNumber: getValue(formData, "whatsappNumber")
-  };
+export async function updateSocialProfilesFormAction(
+  _state: SettingsActionState,
+  formData: FormData
+) {
+  let storeSlug: string;
 
   try {
+    const { store } = await requireStoreManager();
+    const current = await getStoreSettings(store.id);
+    const next: StoreSettingsInput = {
+      logoUrl: current.logoUrl ?? undefined,
+      faviconUrl: current.faviconUrl ?? undefined,
+      tagline: current.tagline ?? undefined,
+      contactEmail: current.contactEmail ?? undefined,
+      contactPhone: current.contactPhone ?? undefined,
+      supportPhone: current.supportPhone ?? undefined,
+      businessAddress: current.businessAddress ?? undefined,
+      facebookUrl: getValue(formData, "facebookUrl"),
+      instagramUrl: getValue(formData, "instagramUrl"),
+      whatsappNumber: getValue(formData, "whatsappNumber")
+    };
+
+    storeSlug = store.slug;
     await updateStoreSettings(store.id, next);
     await updateSocialProfileLinks(store.id, {
       linkedinUrl: getValue(formData, "linkedinUrl"),
@@ -142,7 +171,7 @@ export async function updateSocialProfilesFormAction(_state: SettingsActionState
     return settingsErrorState(error, "Please fix the highlighted social profiles.");
   }
 
-  revalidateSettingsPaths(store.slug);
+  revalidateSettingsPaths(storeSlug);
   redirect("/dashboard/settings/social?updated=1");
 }
 
@@ -154,10 +183,16 @@ export async function updateSocialProfilesFormAction(_state: SettingsActionState
 // CourierAccount table and are saved through modules/courier/courier.actions.ts,
 // so there is exactly one write path and it cannot store plaintext secrets.
 
-export async function updateInvoiceSettingsFormAction(_state: SettingsActionState, formData: FormData) {
-  const store = await requireStore();
+export async function updateInvoiceSettingsFormAction(
+  _state: SettingsActionState,
+  formData: FormData
+) {
+  let storeSlug: string;
 
   try {
+    const { store } = await requireStoreManager();
+
+    storeSlug = store.slug;
     await updateInvoiceSettings(store.id, {
       autoGenerateNumber: checkbox(formData, "autoGenerateNumber"),
       companyLogoUrl: getValue(formData, "companyLogoUrl"),
@@ -183,14 +218,20 @@ export async function updateInvoiceSettingsFormAction(_state: SettingsActionStat
     return settingsErrorState(error, "Please fix the highlighted invoice settings.");
   }
 
-  revalidateSettingsPaths(store.slug);
+  revalidateSettingsPaths(storeSlug);
   return settingsSuccessState("Invoice settings saved.");
 }
 
-export async function updateSocialLoginSettingsFormAction(_state: SettingsActionState, formData: FormData) {
-  const store = await requireStore();
+export async function updateSocialLoginSettingsFormAction(
+  _state: SettingsActionState,
+  formData: FormData
+) {
+  let storeSlug: string;
 
   try {
+    const { store } = await requireStoreManager();
+
+    storeSlug = store.slug;
     await updateSocialLoginSettings(store.id, {
       facebookAppId: getValue(formData, "facebookAppId"),
       facebookAppSecret: getValue(formData, "facebookAppSecret"),
@@ -203,7 +244,7 @@ export async function updateSocialLoginSettingsFormAction(_state: SettingsAction
     return settingsErrorState(error, "Please fix the highlighted social login settings.");
   }
 
-  revalidateSettingsPaths(store.slug);
+  revalidateSettingsPaths(storeSlug);
   return settingsSuccessState("Social login settings saved.");
 }
 
@@ -211,15 +252,18 @@ export async function updateThemeSettingsFormAction(
   _state: SettingsActionState,
   formData: FormData
 ): Promise<SettingsActionState> {
-  const store = await requireStore();
+  let storeSlug: string;
 
   try {
+    const { store } = await requireStoreManager();
+
+    storeSlug = store.slug;
     await updateThemeSettings(store.id, themeSettingsFromFormData(formData));
   } catch (error) {
     return settingsErrorState(error, "Please fix the highlighted theme settings.");
   }
 
-  revalidateSettingsPaths(store.slug);
+  revalidateSettingsPaths(storeSlug);
   return settingsSuccessState("Theme settings updated.");
 }
 
@@ -417,7 +461,9 @@ function advancedSettingsFromFormData(formData: FormData, heroImageUrl: string) 
       editorialSplitHeading: getValue(formData, "fashionEditorialSplitHeading"),
       editorialSplitHeight: Number(getValue(formData, "fashionEditorialSplitHeight")),
       editorialSplitLeftImageUrl: getValue(formData, "fashionEditorialSplitLeftImageUrl"),
-      editorialSplitOverlayOpacity: Number(getValue(formData, "fashionEditorialSplitOverlayOpacity")),
+      editorialSplitOverlayOpacity: Number(
+        getValue(formData, "fashionEditorialSplitOverlayOpacity")
+      ),
       editorialSplitRightImageUrl: getValue(formData, "fashionEditorialSplitRightImageUrl"),
       featuredLookCtaLink: getValue(formData, "fashionFeaturedLookCtaLink"),
       featuredLookCtaText: getValue(formData, "fashionFeaturedLookCtaText"),
@@ -536,7 +582,9 @@ function parseElectronicsPromoCards(value: string): StorefrontElectronicsPromoCa
   return value
     .split(/\r?\n/)
     .map((line): StorefrontElectronicsPromoCardSettings | null => {
-      const [title, badge, description, imageUrl, ctaText, ctaLink, backgroundColor] = line.split("|").map((part) => part.trim());
+      const [title, badge, description, imageUrl, ctaText, ctaLink, backgroundColor] = line
+        .split("|")
+        .map((part) => part.trim());
 
       if (!title) {
         return null;
@@ -563,7 +611,9 @@ function parseTrustItems(value: string): StorefrontElectronicsHomepageSettings["
 
       return title ? { title, description: description || "" } : null;
     })
-    .filter((item): item is StorefrontElectronicsHomepageSettings["trustItems"][number] => Boolean(item));
+    .filter((item): item is StorefrontElectronicsHomepageSettings["trustItems"][number] =>
+      Boolean(item)
+    );
 }
 
 function parseTextList(value: string): StorefrontFashionHomepageSettings["collectionCtas"] {
@@ -593,7 +643,8 @@ function productSectionFromFormData(
     enableComparePrice: checkbox(formData, `productSection_${key}_enableComparePrice`),
     enableHoverImage: checkbox(formData, `productSection_${key}_enableHoverImage`),
     enableVariants: checkbox(formData, `productSection_${key}_enableVariants`),
-    mode: (getValue(formData, `productSection_${key}_mode`) || fallback.mode) as StorefrontProductSectionSettings["mode"],
+    mode: (getValue(formData, `productSection_${key}_mode`) ||
+      fallback.mode) as StorefrontProductSectionSettings["mode"],
     source: (getValue(formData, `productSection_${key}_source`) ||
       fallback.source) as StorefrontProductSectionSettings["source"],
     subtitle: getValue(formData, `productSection_${key}_subtitle`) || fallback.subtitle,
@@ -632,7 +683,9 @@ function parseMessages(value: string): StorefrontMessage[] {
     })
     .filter((item): item is StorefrontMessage => Boolean(item));
 
-  return messages.length > 0 ? messages : DEFAULT_STOREFRONT_ADVANCED_SETTINGS.announcement.messages;
+  return messages.length > 0
+    ? messages
+    : DEFAULT_STOREFRONT_ADVANCED_SETTINGS.announcement.messages;
 }
 
 function parseTabbedProductTabs(value: string): StorefrontTabbedProductTab[] {
@@ -648,7 +701,9 @@ function parseTabbedProductTabs(value: string): StorefrontTabbedProductTab[] {
       return {
         enabled: enabled ? enabled.toLowerCase() !== "false" : true,
         label,
-        productCount: Number(count) || DEFAULT_STOREFRONT_ADVANCED_SETTINGS.tabbedProductShowcase.productsPerTab,
+        productCount:
+          Number(count) ||
+          DEFAULT_STOREFRONT_ADVANCED_SETTINGS.tabbedProductShowcase.productsPerTab,
         source: source as StorefrontTabbedProductTab["source"]
       };
     })

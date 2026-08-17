@@ -11,6 +11,13 @@ import {
   suspendAdminStoreAction
 } from "../admin-stores.actions";
 
+export type AdminStoreTeamMember = {
+  email: string;
+  joinedAt: string;
+  name: string;
+  role: string;
+};
+
 export type AdminStoreListItem = {
   createdAt: string;
   customersCount: number;
@@ -26,8 +33,11 @@ export type AdminStoreListItem = {
   plan: string;
   productsCount: number;
   slug: string;
+  /** `null` when the plan is unlimited, matching the `0 = unlimited` convention. */
+  staffLimit: number | null;
   status: "ACTIVE" | "DRAFT" | "SUSPENDED";
   storeUrl: string;
+  team: AdminStoreTeamMember[];
 };
 
 type AdminStoreManagementProps = {
@@ -48,9 +58,16 @@ export function AdminStoreManagement({ activeStatus, search, stores }: AdminStor
   const [deleteTarget, setDeleteTarget] = useState<AdminStoreListItem | null>(null);
   const [pending, startTransition] = useTransition();
   const hasStores = stores.length > 0;
-  const statusLabel = useMemo(() => statusOptions.find((option) => option.value === activeStatus)?.label ?? "All", [activeStatus]);
+  const statusLabel = useMemo(
+    () => statusOptions.find((option) => option.value === activeStatus)?.label ?? "All",
+    [activeStatus]
+  );
 
-  function runAction(action: (storeId: string) => Promise<void>, storeId: string, onDone?: () => void) {
+  function runAction(
+    action: (storeId: string) => Promise<void>,
+    storeId: string,
+    onDone?: () => void
+  ) {
     startTransition(async () => {
       await action(storeId);
       onDone?.();
@@ -63,10 +80,15 @@ export function AdminStoreManagement({ activeStatus, search, stores }: AdminStor
         <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div>
             <h2 className="m-0 text-base font-semibold text-[#20212c]">Stores</h2>
-            <p className="m-0 mt-1 text-sm text-[#74758a]">Showing {statusLabel.toLowerCase()} stores across the platform.</p>
+            <p className="m-0 mt-1 text-sm text-[#74758a]">
+              Showing {statusLabel.toLowerCase()} stores across the platform.
+            </p>
           </div>
 
-          <DashboardQueryForm actionPath="/admin/stores" className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_160px_44px] xl:w-[560px]">
+          <DashboardQueryForm
+            actionPath="/admin/stores"
+            className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_160px_44px] xl:w-[560px]"
+          >
             <input
               className="h-11 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none placeholder:text-[#a2a3b0] focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10"
               defaultValue={search}
@@ -80,10 +102,16 @@ export function AdminStoreManagement({ activeStatus, search, stores }: AdminStor
               name="status"
             >
               {statusOptions.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
               ))}
             </select>
-            <button aria-label="Search stores" className="grid h-11 place-items-center rounded-lg bg-[#7c3aed] text-white hover:bg-[#6d28d9]" type="submit">
+            <button
+              aria-label="Search stores"
+              className="grid h-11 place-items-center rounded-lg bg-[#7c3aed] text-white hover:bg-[#6d28d9]"
+              type="submit"
+            >
               <Search className="h-4 w-4" />
             </button>
           </DashboardQueryForm>
@@ -118,32 +146,70 @@ export function AdminStoreManagement({ activeStatus, search, stores }: AdminStor
                         <div className="mt-1 text-[11px] text-[#74758a]">{store.ownerEmail}</div>
                       </td>
                       <td className="px-4 py-4">{store.plan}</td>
-                      <td className="px-4 py-4"><StoreStatusBadge status={store.status} /></td>
+                      <td className="px-4 py-4">
+                        <StoreStatusBadge status={store.status} />
+                      </td>
                       <td className="px-4 py-4">{store.productsCount}</td>
                       <td className="px-4 py-4">{store.ordersCount}</td>
-                      <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{store.createdAt}</td>
-                      <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{store.lastActivity}</td>
+                      <td className="whitespace-nowrap px-4 py-4 text-[#565762]">
+                        {store.createdAt}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-4 text-[#565762]">
+                        {store.lastActivity}
+                      </td>
                       <td className="px-4 py-4">
                         <div className="flex justify-end gap-1.5">
-                          <button className="grid h-8 w-8 place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]" onClick={() => setSelectedStore(store)} title="View details" type="button">
+                          <button
+                            className="grid h-8 w-8 place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]"
+                            onClick={() => setSelectedStore(store)}
+                            title="View details"
+                            type="button"
+                          >
                             <Eye className="h-4 w-4" />
                           </button>
-                          <Link className="grid h-8 w-8 place-items-center rounded-lg text-[#2563eb] hover:bg-blue-50" href={store.storeUrl} target="_blank" title="View store">
+                          <Link
+                            className="grid h-8 w-8 place-items-center rounded-lg text-[#2563eb] hover:bg-blue-50"
+                            href={store.storeUrl}
+                            target="_blank"
+                            title="View store"
+                          >
                             <Store className="h-4 w-4" />
                           </Link>
-                          <button className="grid h-8 w-8 place-items-center rounded-lg text-[#7c3aed] hover:bg-[#f3f0ff]" onClick={() => setSelectedStore(store)} title="Impersonate placeholder" type="button">
+                          <button
+                            className="grid h-8 w-8 place-items-center rounded-lg text-[#7c3aed] hover:bg-[#f3f0ff]"
+                            onClick={() => setSelectedStore(store)}
+                            title="Impersonate placeholder"
+                            type="button"
+                          >
                             <UserCog className="h-4 w-4" />
                           </button>
                           {store.status === "SUSPENDED" ? (
-                            <button className="grid h-8 w-8 place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50" disabled={pending} onClick={() => runAction(activateAdminStoreAction, store.id)} title="Activate" type="button">
+                            <button
+                              className="grid h-8 w-8 place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50"
+                              disabled={pending}
+                              onClick={() => runAction(activateAdminStoreAction, store.id)}
+                              title="Activate"
+                              type="button"
+                            >
                               <Power className="h-4 w-4" />
                             </button>
                           ) : (
-                            <button className="grid h-8 w-8 place-items-center rounded-lg text-amber-700 hover:bg-amber-50" disabled={pending} onClick={() => runAction(suspendAdminStoreAction, store.id)} title="Suspend" type="button">
+                            <button
+                              className="grid h-8 w-8 place-items-center rounded-lg text-amber-700 hover:bg-amber-50"
+                              disabled={pending}
+                              onClick={() => runAction(suspendAdminStoreAction, store.id)}
+                              title="Suspend"
+                              type="button"
+                            >
                               <ShieldAlert className="h-4 w-4" />
                             </button>
                           )}
-                          <button className="grid h-8 w-8 place-items-center rounded-lg text-red-600 hover:bg-red-50" onClick={() => setDeleteTarget(store)} title="Delete" type="button">
+                          <button
+                            className="grid h-8 w-8 place-items-center rounded-lg text-red-600 hover:bg-red-50"
+                            onClick={() => setDeleteTarget(store)}
+                            title="Delete"
+                            type="button"
+                          >
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -159,12 +225,16 @@ export function AdminStoreManagement({ activeStatus, search, stores }: AdminStor
         )}
       </section>
 
-      {selectedStore ? <StoreDetailsModal onClose={() => setSelectedStore(null)} store={selectedStore} /> : null}
+      {selectedStore ? (
+        <StoreDetailsModal onClose={() => setSelectedStore(null)} store={selectedStore} />
+      ) : null}
       {deleteTarget ? (
         <DeleteStoreModal
           disabled={pending}
           onClose={() => setDeleteTarget(null)}
-          onConfirm={() => runAction(archiveAdminStoreAction, deleteTarget.id, () => setDeleteTarget(null))}
+          onConfirm={() =>
+            runAction(archiveAdminStoreAction, deleteTarget.id, () => setDeleteTarget(null))
+          }
           store={deleteTarget}
         />
       ) : null}
@@ -180,7 +250,9 @@ function StoreStatusBadge({ status }: { status: AdminStoreListItem["status"] }) 
   }[status];
 
   return (
-    <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${styles}`}>
+    <span
+      className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${styles}`}
+    >
       {status === "DRAFT" ? "Trial" : titleCase(status)}
     </span>
   );
@@ -188,15 +260,26 @@ function StoreStatusBadge({ status }: { status: AdminStoreListItem["status"] }) 
 
 function StoreDetailsModal({ onClose, store }: { onClose: () => void; store: AdminStoreListItem }) {
   return (
-    <div aria-modal="true" className="fixed inset-0 z-[100] flex justify-end bg-[#20212a]/45" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
+    <div
+      aria-modal="true"
+      className="fixed inset-0 z-[100] flex justify-end bg-[#20212a]/45"
+      onMouseDown={(event) => event.target === event.currentTarget && onClose()}
+      role="dialog"
+    >
       <aside className="h-full w-full max-w-xl overflow-y-auto bg-white p-5 shadow-2xl">
         <div className="mb-5 flex items-start justify-between gap-4 border-b border-[#efeff5] pb-4">
           <div>
-            <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7c3aed]">Store Details</p>
+            <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7c3aed]">
+              Store Details
+            </p>
             <h2 className="m-0 mt-1 text-xl font-semibold text-[#20212c]">{store.name}</h2>
             <p className="m-0 mt-1 text-sm text-[#74758a]">{store.domain}</p>
           </div>
-          <button className="grid h-9 w-9 place-items-center rounded-lg border border-[#e6e4ef] text-[#626370] hover:bg-[#f7f5ff]" onClick={onClose} type="button">
+          <button
+            className="grid h-9 w-9 place-items-center rounded-lg border border-[#e6e4ef] text-[#626370] hover:bg-[#f7f5ff]"
+            onClick={onClose}
+            type="button"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -215,7 +298,9 @@ function StoreDetailsModal({ onClose, store }: { onClose: () => void; store: Adm
           </DetailSection>
           <DetailSection title="Current Plan">
             <DetailRow label="Plan" value={store.plan} />
-            <div className="mt-3"><StoreStatusBadge status={store.status} /></div>
+            <div className="mt-3">
+              <StoreStatusBadge status={store.status} />
+            </div>
           </DetailSection>
           <DetailSection title="Statistics">
             <div className="grid gap-3 sm:grid-cols-3">
@@ -224,10 +309,55 @@ function StoreDetailsModal({ onClose, store }: { onClose: () => void; store: Adm
               <Stat label="Customers" value={store.customersCount.toString()} />
             </div>
           </DetailSection>
+          <DetailSection
+            title={`Team (${store.team.length}${store.staffLimit === null ? "" : ` of ${store.staffLimit}`})`}
+          >
+            {/* Seats here count members only. Pending invites hold a seat in the
+                seller's own view, but support is looking at who can actually
+                sign in right now. */}
+            <div className="grid gap-2">
+              {store.team.map((member) => (
+                <div
+                  className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-[#eeecf7] bg-[#fbfaff] px-3 py-2"
+                  key={member.email}
+                >
+                  <div>
+                    <div className="text-xs font-semibold text-[#30313d]">{member.name}</div>
+                    <div className="mt-0.5 text-[11px] text-[#74758a]">{member.email}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[11px] font-semibold uppercase tracking-wide text-[#6d3cf5]">
+                      {member.role}
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-[#8a8b99]">
+                      joined {member.joinedAt}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {store.staffLimit !== null && store.team.length > store.staffLimit ? (
+                <p className="m-0 rounded-lg border border-[#f4e6d8] bg-[#fffaf4] px-3 py-2 text-[11px] text-[#8a6134]">
+                  This team is over what its plan allows. Nobody is removed automatically — the
+                  store simply cannot add anyone else.
+                </p>
+              ) : null}
+            </div>
+          </DetailSection>
           <DetailSection title="Actions">
             <div className="flex flex-wrap gap-2">
-              <Link className="inline-flex h-9 items-center rounded-lg border border-[#ddd6fe] px-3 text-xs font-semibold text-[#6d3cf5] hover:bg-[#f3f0ff]" href={store.storeUrl} target="_blank">View Store</Link>
-              <button className="inline-flex h-9 items-center rounded-lg border border-[#ddd6fe] px-3 text-xs font-semibold text-[#6d3cf5] hover:bg-[#f3f0ff]" type="button">Impersonate Store</button>
+              <Link
+                className="inline-flex h-9 items-center rounded-lg border border-[#ddd6fe] px-3 text-xs font-semibold text-[#6d3cf5] hover:bg-[#f3f0ff]"
+                href={store.storeUrl}
+                target="_blank"
+              >
+                View Store
+              </Link>
+              <button
+                className="inline-flex h-9 items-center rounded-lg border border-[#ddd6fe] px-3 text-xs font-semibold text-[#6d3cf5] hover:bg-[#f3f0ff]"
+                type="button"
+              >
+                Impersonate Store
+              </button>
             </div>
           </DetailSection>
         </div>
@@ -248,18 +378,36 @@ function DeleteStoreModal({
   store: AdminStoreListItem;
 }) {
   return (
-    <div aria-modal="true" className="fixed inset-0 z-[110] grid place-items-center bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
+    <div
+      aria-modal="true"
+      className="fixed inset-0 z-[110] grid place-items-center bg-[#20212a]/45 p-4"
+      onMouseDown={(event) => event.target === event.currentTarget && onClose()}
+      role="dialog"
+    >
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-red-50 text-red-600">
           <Trash2 className="h-6 w-6" />
         </div>
         <h2 className="mt-5 text-center text-xl font-semibold text-[#20212c]">Delete Store</h2>
         <p className="mt-2 text-center text-sm leading-6 text-[#74758a]">
-          Are you sure you want to delete {store.name}? This will archive the store from admin views. Tenant data will not be permanently deleted.
+          Are you sure you want to delete {store.name}? This will archive the store from admin
+          views. Tenant data will not be permanently deleted.
         </p>
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <button className="h-11 rounded-lg border border-[#dedcf0] font-semibold text-[#30313d] hover:bg-[#f7f5ff]" disabled={disabled} onClick={onClose} type="button">Cancel</button>
-          <Button className="h-11 rounded-lg bg-red-600 font-semibold text-white hover:bg-red-700 disabled:opacity-60" disabled={disabled} onClick={onConfirm} type="button">
+          <button
+            className="h-11 rounded-lg border border-[#dedcf0] font-semibold text-[#30313d] hover:bg-[#f7f5ff]"
+            disabled={disabled}
+            onClick={onClose}
+            type="button"
+          >
+            Cancel
+          </button>
+          <Button
+            className="h-11 rounded-lg bg-red-600 font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+            disabled={disabled}
+            onClick={onConfirm}
+            type="button"
+          >
             {disabled ? "Deleting..." : "Delete"}
           </Button>
         </div>
@@ -302,7 +450,9 @@ function AdminStoresEmpty() {
         <Store className="h-6 w-6" />
       </div>
       <h3 className="m-0 text-lg font-semibold text-[#20212c]">No stores found</h3>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#74758a]">Stores matching your search and filters will appear here.</p>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#74758a]">
+        Stores matching your search and filters will appear here.
+      </p>
     </div>
   );
 }
