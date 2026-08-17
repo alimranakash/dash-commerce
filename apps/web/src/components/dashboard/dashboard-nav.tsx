@@ -12,6 +12,7 @@ import {
   Package,
   Percent,
   Receipt,
+  ShieldQuestion,
   ReceiptText,
   ShoppingBag,
   Settings,
@@ -50,6 +51,7 @@ type NavItem = {
  */
 const NAV_FEATURE_BY_HREF: Record<string, PlanFeatureKey> = {
   "/dashboard/abandoned-cart": "abandoned_cart",
+  "/dashboard/fraud-check": "fraud_check",
   "/dashboard/reports/abandoned-carts": "abandoned_cart",
   "/dashboard/settings/courier": "courier_api",
   "/dashboard/settings/marketing": "marketing_analytics"
@@ -129,6 +131,7 @@ const mainLinks: NavItem[] = [
   { href: "/dashboard/sales", icon: ShoppingBag, label: "Sales" },
   { href: "/dashboard/transactions", icon: CircleDollarSign, label: "Transactions" },
   { href: "/dashboard/customers", icon: Users, label: "Customers" },
+  { href: "/dashboard/fraud-check", icon: ShieldQuestion, label: "Fraud check" },
   { href: "/dashboard/suppliers", icon: Truck, label: "Suppliers" },
   { href: "/dashboard/purchases", icon: ClipboardList, label: "Purchases" },
   { href: "/dashboard/inventory", icon: Boxes, label: "Inventory" },

@@ -10,6 +10,8 @@ import {
   sendOrderToCourierAction,
   sendOrdersToCourierAction
 } from "../courier.actions";
+import { PlanUpgradeDialog } from "../../billing/components/plan-upgrade-dialog";
+import type { PlanFeatureKey } from "../../billing/plan-features";
 import type { BulkSendResult } from "../courier.service";
 
 /**
@@ -56,6 +58,7 @@ export function OrdersCourierTable({
   const [confirming, setConfirming] = useState(false);
   const [result, setResult] = useState<BulkSendResult | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [lockedFeature, setLockedFeature] = useState<PlanFeatureKey | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const selectedRows = useMemo(() => rows.filter((row) => selected.has(row.id)), [rows, selected]);
@@ -111,8 +114,54 @@ export function OrdersCourierTable({
     });
   }
 
+  /**
+   * Scores every selected customer in one go. Sequential rather than parallel so
+   * it stays inside the provider rate limiter, and de-duplicated because the same
+   * customer often has several open orders.
+   */
+  function runBulkFraudCheck() {
+    const phones = [...new Set(selectedRows.map((row) => row.customerPhone).filter(Boolean))];
+
+    startTransition(async () => {
+      let withHistory = 0;
+      let risky = 0;
+      let caution = 0;
+      let unknown = 0;
+
+      for (const phone of phones) {
+        const response = await checkCourierScoreAction(phone);
+
+        if (response.lockedFeature) {
+          setLockedFeature(response.lockedFeature);
+          return;
+        }
+
+        const score = response.score;
+
+        if (!score || score.totalParcels === 0) {
+          unknown += 1;
+          continue;
+        }
+
+        withHistory += 1;
+
+        if (score.band === "RISKY") {
+          risky += 1;
+        } else if (score.band === "CAUTION") {
+          caution += 1;
+        }
+      }
+
+      setNote(
+        `Fraud check on ${phones.length} customer(s): ${risky} risky, ${caution} caution, ` +
+          `${withHistory - risky - caution} reliable, ${unknown} with no history.`
+      );
+    });
+  }
+
   return (
     <>
+      <PlanUpgradeDialog feature={lockedFeature} onClose={() => setLockedFeature(null)} />
       <div className="table-card">
         <table className="resource-table">
           <thead>
@@ -227,6 +276,15 @@ export function OrdersCourierTable({
             Refresh status
           </button>
           <button
+            className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#dcd9e8] bg-white px-3.5 text-xs font-semibold text-[#5f616d] hover:bg-[#faf9ff] disabled:opacity-60"
+            disabled={isPending}
+            onClick={runBulkFraudCheck}
+            type="button"
+          >
+            <ShieldQuestion className="h-3.5 w-3.5" />
+            Fraud check
+          </button>
+          <button
             className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-[#777985] hover:text-[#20212a]"
             onClick={() => setSelected(new Set())}
             type="button"
@@ -293,7 +351,7 @@ function RowActions({
       )}
       <IconButton
         disabled={isPending}
-        label="Check courier score"
+        label="Fraud check"
         onClick={() =>
           run(async () => {
             const response = await checkCourierScoreAction(row.customerPhone);

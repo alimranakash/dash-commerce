@@ -16,16 +16,20 @@ import type { CourierScoreBand, CourierScoreView } from "../courier-insight.serv
  */
 export function CourierScoreCard({
   cached,
+  editable = false,
   locked = false,
   phone
 }: {
   cached: CourierScoreView | null;
+  /** Renders a phone field so any number can be checked, not just this order's. */
+  editable?: boolean;
   /** Resolved on the server so the card can explain itself before any click. */
   locked?: boolean;
   phone: string;
 }) {
   const [score, setScore] = useState<CourierScoreView | null>(cached);
   const [note, setNote] = useState<string | null>(null);
+  const [phoneValue, setPhoneValue] = useState(phone);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -37,7 +41,7 @@ export function CourierScoreCard({
     }
 
     startTransition(async () => {
-      const result = await checkCourierScoreAction(phone, force);
+      const result = await checkCourierScoreAction(phoneValue, force);
 
       if (result.lockedFeature) {
         setShowUpgrade(true);
@@ -59,12 +63,15 @@ export function CourierScoreCard({
       <header className="mb-4 flex items-center justify-between gap-2">
         <span className="flex items-center gap-2">
           <ShieldQuestion className="h-4 w-4 text-[#7548f5]" />
-          <h2 className="m-0 text-sm font-semibold text-[#20212a]">Courier Score</h2>
+          <span className="grid">
+            <h2 className="m-0 text-sm font-semibold text-[#20212a]">Fraud Check</h2>
+            <span className="text-[10px] text-[#858691]">Customer delivery history</span>
+          </span>
           {locked ? <PaidBadge feature="fraud_check" interactive={false} showPlan /> : null}
         </span>
         <button
           className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#dcd9e8] bg-white px-3 text-[11px] font-semibold text-[#5f616d] transition hover:border-[#bdb6da] hover:bg-[#faf9ff] disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={isPending}
+          disabled={isPending || (editable && !locked && !phoneValue.trim())}
           onClick={() => check(score !== null)}
           type="button"
         >
@@ -72,6 +79,19 @@ export function CourierScoreCard({
           {isPending ? "Checking…" : locked ? "Unlock" : score ? "Refresh" : "Check"}
         </button>
       </header>
+
+      {editable ? (
+        <label className="mb-4 grid gap-1.5">
+          <span className="text-[11px] font-semibold text-[#5f616d]">Customer phone</span>
+          <input
+            className="h-10 rounded-lg border border-[#e5e3f1] bg-white px-3 text-sm outline-none placeholder:text-[#a2a3b0] focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10"
+            inputMode="tel"
+            onChange={(event) => setPhoneValue(event.target.value)}
+            placeholder="01XXXXXXXXX"
+            value={phoneValue}
+          />
+        </label>
+      ) : null}
 
       {locked ? (
         // Without this the card would say "no delivery history", which reads as a
