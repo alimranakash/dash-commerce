@@ -3,11 +3,19 @@
  * string for full-text matching and the untouched text for boosts.
  *
  * `to_tsquery` parses operators (`&`, `|`, `!`, `:`, parentheses) and throws on
- * malformed input, so tokens are stripped down to letters and digits before
- * they are ever concatenated into one. `\p{L}` keeps Bangla intact, which
- * `\w` would not.
+ * malformed input, so tokens are reduced to word characters before they are
+ * ever concatenated into one.
+ *
+ * Marks (`\p{M}`) and the two joiners have to survive alongside letters and
+ * digits, or Bangla is destroyed rather than tokenised: its vowel signs are
+ * combining marks, not letters, so a letters-only filter turns "কেটলি" into
+ * "ক টল" — three fragments that match nothing. The joiners do the same job for
+ * conjuncts — written as \u200C/\u200D escapes rather than as the characters
+ * themselves, which are invisible in the source and which an editor or a
+ * careless paste can drop without leaving a trace in the diff. None of them
+ * are `tsquery` operators, so keeping them is safe.
  */
-const DISALLOWED_CHARACTERS = /[^\p{L}\p{N}]+/gu;
+const DISALLOWED_CHARACTERS = /[^\p{L}\p{N}\p{M}\u200C\u200D]+/gu;
 
 export type SearchTokens = {
   /** Every word the shopper typed, sanitised, in order. */
