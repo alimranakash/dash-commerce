@@ -65,7 +65,9 @@ export function GeneralProductPage({
   const hasVariants = variantConfiguration.variants.length > 0;
 
   return (
-    <>
+    // Every band below shares one measure through this wrapper, so the
+    // breadcrumb, the detail row and the rails under it line up on one grid.
+    <div className="general-product-page">
       {productPage.breadcrumbEnabled ? <GeneralProductBreadcrumb product={product} store={store} /> : null}
 
       <article className="general-product-detail" aria-labelledby="product-title">
@@ -186,7 +188,7 @@ export function GeneralProductPage({
       {productPage.promoBlocksEnabled ? (
         <GeneralProductPromoBlocks product={product} relatedProducts={relatedProducts} store={store} />
       ) : null}
-    </>
+    </div>
   );
 }
 

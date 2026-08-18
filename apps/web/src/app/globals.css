@@ -2724,6 +2724,10 @@ textarea {
   color: var(--store-text, #171717);
   min-height: 100vh;
   --sf-primary: var(--store-primary, #135d66);
+  /* Shared measure for the product page bands. Site width mode stays "full",
+     but the detail row is capped so the gallery cannot grow to the width of an
+     ultrawide monitor and strand the buy panel against the right edge. */
+  --general-product-width: 1480px;
 }
 
 .sf-theme-scope {
@@ -8556,6 +8560,8 @@ textarea {
   flex-wrap: wrap;
   font-size: 0.76rem;
   gap: 8px;
+  margin-inline: auto;
+  max-width: var(--general-product-width, 1480px);
   padding: 18px clamp(20px, 3vw, 32px) 10px;
   width: 100%;
 }
@@ -8571,13 +8577,32 @@ textarea {
   color: #000000;
 }
 
+/* The rails at the bottom of the product page carry .general-product-section,
+   which is full-bleed on the homepage. Scoping the measure to the product page
+   wrapper lines them up with the detail row without touching the homepage. */
+.general-product-page .general-product-section {
+  margin-inline: auto;
+  max-width: var(--general-product-width, 1480px);
+  padding-block: clamp(20px, 3vw, 48px) clamp(48px, 6vw, 80px);
+  padding-inline: clamp(20px, 3vw, 32px);
+  width: 100%;
+}
+
+/* The homepage rails headline at up to 3.5rem, which would tower over this
+   page's own 1.22rem product title. */
+.general-product-page .general-product-section-header h2 {
+  font-size: clamp(1.35rem, 1.9vw, 1.9rem);
+}
+
 .general-product-detail {
   align-items: start;
   background: #ffffff;
   display: grid;
-  gap: clamp(28px, 4vw, 96px);
-  grid-template-columns: minmax(0, 1.9fr) minmax(320px, 0.72fr);
-  padding: 0 clamp(20px, 3vw, 32px) clamp(76px, 9vw, 132px);
+  gap: clamp(28px, 3vw, 56px);
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  margin-inline: auto;
+  max-width: var(--general-product-width, 1480px);
+  padding: 0 clamp(20px, 3vw, 32px) clamp(48px, 6vw, 88px);
   width: 100%;
 }
 
@@ -8639,7 +8664,7 @@ textarea {
   cursor: zoom-in;
   display: flex;
   justify-content: center;
-  min-height: clamp(420px, 48vw, 760px);
+  min-height: clamp(360px, 32vw, 620px);
   overflow: hidden;
   padding: 0;
   position: relative;
@@ -8648,7 +8673,7 @@ textarea {
 
 .general-product-gallery-portrait .general-product-gallery-item {
   aspect-ratio: 4 / 5;
-  max-height: min(820px, 82vh);
+  max-height: min(760px, 80vh);
   min-height: auto;
 }
 
@@ -8729,7 +8754,7 @@ textarea {
   align-self: start;
   display: grid;
   gap: 18px;
-  padding-top: clamp(48px, 5vw, 78px);
+  padding-top: clamp(4px, 1.2vw, 18px);
   position: sticky;
   top: 96px;
 }
@@ -8950,9 +8975,10 @@ textarea {
 .general-product-description-block {
   display: grid;
   gap: 22px;
-  margin: 0 auto;
-  max-width: 520px;
-  padding: clamp(28px, 5vw, 72px) 20px clamp(80px, 10vw, 140px);
+  margin-inline: auto;
+  max-width: var(--general-product-width, 1480px);
+  padding: clamp(24px, 3vw, 44px) clamp(20px, 3vw, 32px) clamp(48px, 6vw, 88px);
+  width: 100%;
 }
 
 .general-product-description-block h2 {
@@ -8967,17 +8993,17 @@ textarea {
   font-size: 0.86rem;
   line-height: 1.7;
   margin: 0;
-}
-
-.general-product-related {
-  padding-block: clamp(20px, 3vw, 48px) clamp(54px, 7vw, 92px);
+  max-width: 68ch;
 }
 
 .general-product-promo-grid {
   display: grid;
   gap: 4px;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  margin-inline: auto;
+  max-width: var(--general-product-width, 1480px);
   padding: 0 clamp(20px, 3vw, 32px) clamp(76px, 8vw, 120px);
+  width: 100%;
 }
 
 .general-product-promo-grid > div {
@@ -8991,7 +9017,7 @@ textarea {
   color: #ffffff;
   display: flex;
   justify-content: center;
-  min-height: clamp(260px, 32vw, 560px);
+  min-height: clamp(240px, 26vw, 424px);
   overflow: hidden;
   position: relative;
   text-align: center;
@@ -8999,7 +9025,7 @@ textarea {
 }
 
 .general-product-promo-grid > div .general-product-promo-block {
-  min-height: clamp(160px, 15.85vw, 278px);
+  min-height: clamp(118px, 12.8vw, 210px);
 }
 
 .general-product-promo-block::after {
@@ -12241,7 +12267,6 @@ textarea {
   .general-product-detail {
     gap: 34px;
     grid-template-columns: 1fr;
-    padding-inline: clamp(16px, 4vw, 28px);
   }
 
   .general-product-info {
@@ -12301,7 +12326,7 @@ textarea {
   }
 
   .general-product-promo-grid {
-    padding-inline: 16px;
+    padding-bottom: 56px;
   }
 }
 
