@@ -1872,6 +1872,16 @@ textarea {
   margin: 0;
 }
 
+/* Explains what a Search & Discovery rule does, under the card title. */
+.dash-dashboard .catalog-card-subtitle {
+  border-bottom: 1px solid #ececf5;
+  color: #6b6b86;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  margin: 0;
+  padding: 14px 24px;
+}
+
 .dash-dashboard .catalog-table-wrap {
   overflow-x: auto;
   padding: 20px 24px 28px;

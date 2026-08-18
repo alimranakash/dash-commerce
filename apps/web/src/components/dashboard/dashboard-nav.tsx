@@ -134,6 +134,7 @@ const storefrontLinks = [
   { href: "/dashboard/storefront/themes#header", label: "Navigation" },
   { href: "/dashboard/storefront/themes#colors-layout", label: "Colors & Typography" },
   { href: "/dashboard/storefront/themes#shop-collection-page", label: "Pages" },
+  { href: "/dashboard/storefront/search", label: "Search & Discovery" },
   { href: "/dashboard/storefront/demo-content", label: "Demo Content" }
 ];
 
