@@ -1,8 +1,9 @@
 "use client";
 
-import { Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
+import { Menu, ShoppingBag, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, type CSSProperties } from "react";
+import { PredictiveSearchTrigger } from "../../../search/components/predictive-search-trigger";
 import { MiniCartDrawer } from "../../../cart/components/mini-cart-drawer";
 import type { Cart } from "../../../cart/cart.types";
 import {
@@ -135,9 +136,11 @@ export function FashionStorefrontHeader({
               </Link>
             ) : null}
             {settings.header.showSearch ? (
-              <Link aria-label="Search" href={`${homeHref}/search`}>
-                <Search className="h-5 w-5" />
-              </Link>
+              <PredictiveSearchTrigger
+                currency={currency}
+                iconClassName="h-5 w-5"
+                storeSlug={storeSlug}
+              />
             ) : null}
             {settings.header.showCart ? (
               <MiniCartDrawer

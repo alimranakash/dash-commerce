@@ -1,8 +1,9 @@
 "use client";
 
-import { Menu, Search, UserRound, X } from "lucide-react";
+import { Menu, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { useState, type CSSProperties } from "react";
+import { PredictiveSearchTrigger } from "../../../../search/components/predictive-search-trigger";
 import { MiniCartDrawer } from "../../../../cart/components/mini-cart-drawer";
 import type { Cart } from "../../../../cart/cart.types";
 import {
@@ -89,9 +90,14 @@ export function DefaultStorefrontHeader({
 
         <div className="sf-header-actions">
           {settings.header.showCurrency ? <span className="sf-currency-label">BDT - EN</span> : null}
-          {settings.header.showSearch ? <Link aria-label="Search" className="sf-icon-action" href={`${homeHref}/search`}>
-            <Search className="h-4 w-4" />
-          </Link> : null}
+          {settings.header.showSearch ? (
+            <PredictiveSearchTrigger
+              className="sf-icon-action"
+              currency={currency}
+              iconClassName="h-4 w-4"
+              storeSlug={storeSlug}
+            />
+          ) : null}
           {settings.header.showAccount ? <Link aria-label="Account" className="sf-icon-action" href={`${homeHref}/account`}>
             <UserRound className="h-4 w-4" />
           </Link> : null}

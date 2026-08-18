@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Menu, Search, UserRound, X } from "lucide-react";
+import { ChevronDown, Menu, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import {
   useEffect,
@@ -10,6 +10,7 @@ import {
   type KeyboardEvent,
   type ReactNode
 } from "react";
+import { PredictiveSearch } from "../../../search/components/predictive-search";
 import { MiniCartDrawer } from "../../../cart/components/mini-cart-drawer";
 import type { Cart } from "../../../cart/cart.types";
 import {
@@ -233,12 +234,12 @@ export function ElectronicsStorefrontHeader({
           </div>
 
           {settings.header.showSearch ? (
-            <form action={`${homeHref}/search`} className={styles.searchForm}>
-              <input name="q" placeholder="What are You looking for ..." type="search" />
-              <button aria-label="Search products" type="submit">
-                <Search size={21} strokeWidth={2.1} />
-              </button>
-            </form>
+            <PredictiveSearch
+              className={styles.searchSlot}
+              currency={currency}
+              placeholder="What are You looking for ..."
+              storeSlug={storeSlug}
+            />
           ) : <span />}
 
           <div className={styles.utilities}>

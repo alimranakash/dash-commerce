@@ -15495,3 +15495,224 @@ textarea {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Predictive search --------------------------------------------------- */
+
+.sf-predictive {
+  position: relative;
+  width: 100%;
+}
+
+.sf-predictive-form {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid rgba(23, 23, 23, 0.14);
+  border-radius: 999px;
+  display: flex;
+  gap: 8px;
+  padding: 0 6px 0 14px;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.sf-predictive-form:focus-within {
+  border-color: var(--store-primary, #135d66);
+  box-shadow: 0 0 0 3px rgba(19, 93, 102, 0.12);
+}
+
+.sf-predictive-icon {
+  color: rgba(23, 23, 23, 0.4);
+  flex-shrink: 0;
+}
+
+.sf-predictive-input {
+  background: transparent;
+  border: 0;
+  color: var(--store-text, #171717);
+  flex: 1;
+  font-size: 0.92rem;
+  min-width: 0;
+  outline: none;
+  padding: 11px 0;
+}
+
+/* The native clear affordance would sit on top of our own button. */
+.sf-predictive-input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.sf-predictive-clear {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: rgba(23, 23, 23, 0.45);
+  cursor: pointer;
+  display: flex;
+  flex-shrink: 0;
+  padding: 4px;
+}
+
+.sf-predictive-clear:hover {
+  color: var(--store-text, #171717);
+}
+
+.sf-predictive-submit {
+  background: var(--store-primary, #135d66);
+  border: 0;
+  border-radius: 999px;
+  color: #ffffff;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 9px 18px;
+}
+
+.sf-predictive-panel {
+  background: #ffffff;
+  border: 1px solid rgba(23, 23, 23, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 24px 48px rgba(23, 23, 23, 0.14);
+  left: 0;
+  margin-top: 8px;
+  max-height: min(70vh, 520px);
+  overflow-y: auto;
+  padding: 8px;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 60;
+}
+
+.sf-predictive-group + .sf-predictive-group {
+  border-top: 1px solid rgba(23, 23, 23, 0.07);
+  margin-top: 6px;
+  padding-top: 6px;
+}
+
+.sf-predictive-group-title {
+  color: rgba(23, 23, 23, 0.45);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  padding: 8px 10px 4px;
+  text-transform: uppercase;
+}
+
+.sf-predictive-recent,
+.sf-predictive-category {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  color: var(--store-text, #171717);
+  cursor: pointer;
+  display: flex;
+  font-size: 0.88rem;
+  gap: 9px;
+  padding: 9px 10px;
+  text-align: left;
+  text-decoration: none;
+  width: 100%;
+}
+
+.sf-predictive-recent:hover,
+.sf-predictive-category:hover {
+  background: rgba(23, 23, 23, 0.05);
+}
+
+.sf-predictive-product {
+  align-items: center;
+  border-radius: 10px;
+  color: var(--store-text, #171717);
+  display: flex;
+  gap: 12px;
+  padding: 8px 10px;
+  text-decoration: none;
+}
+
+.sf-predictive-product.is-active {
+  background: rgba(23, 23, 23, 0.05);
+}
+
+.sf-predictive-thumb {
+  background: rgba(23, 23, 23, 0.05);
+  border-radius: 8px;
+  flex-shrink: 0;
+  height: 46px;
+  overflow: hidden;
+  width: 46px;
+}
+
+.sf-predictive-thumb img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.sf-predictive-product-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sf-predictive-product-title {
+  font-size: 0.88rem;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sf-predictive-product-price {
+  color: var(--store-primary, #135d66);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.sf-predictive-all {
+  background: transparent;
+  border: 0;
+  border-top: 1px solid rgba(23, 23, 23, 0.07);
+  color: var(--store-primary, #135d66);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 800;
+  margin-top: 6px;
+  padding: 11px 10px;
+  text-align: center;
+  width: 100%;
+}
+
+.sf-predictive-empty {
+  color: rgba(23, 23, 23, 0.5);
+  font-size: 0.87rem;
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.sf-search-overlay {
+  inset: 0;
+  position: fixed;
+  z-index: 80;
+}
+
+.sf-search-overlay-backdrop {
+  background: rgba(10, 12, 16, 0.42);
+  inset: 0;
+  position: absolute;
+}
+
+.sf-search-overlay-panel {
+  background: #ffffff;
+  border-bottom: 1px solid rgba(23, 23, 23, 0.1);
+  padding: 18px clamp(16px, 5vw, 60px);
+  position: relative;
+}
+
+/* The panel hosts its own dropdown, which must escape the panel's box. */
+.sf-search-overlay-panel .sf-predictive {
+  margin: 0 auto;
+  max-width: 720px;
+}
