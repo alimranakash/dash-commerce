@@ -3,8 +3,14 @@
 import { Check, ImagePlus, Trash2, Upload, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { describeStoredAsset, useMediaFileDetails } from "../media-file-details";
 import { listMediaAssetsAction, uploadMediaAction } from "../media.actions";
-import { acceptAttributeForUsage, mediaUsageTypes, type MediaUsageType } from "../media.schema";
+import {
+  acceptAttributeForUsage,
+  mediaUploadHintForUsage,
+  mediaUsageTypes,
+  type MediaUsageType
+} from "../media.schema";
 import type { MediaPickerAsset } from "../media.types";
 
 type MediaPickerProps = {
@@ -64,7 +70,11 @@ export function MediaPicker({
   const [altText, setAltText] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  // Upload jumps back to the library tab, so what the optimiser produced is
+  // reported there rather than on the form the seller just left.
+  const [uploadNotice, setUploadNotice] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+  const fileDetails = useMediaFileDetails(pendingFile, usageType);
 
   useEffect(() => {
     setMounted(true);
@@ -83,6 +93,7 @@ export function MediaPicker({
     setPendingFile(null);
     setAltText("");
     setUploadError(null);
+    setUploadNotice(null);
   }, [open]);
 
   useEffect(() => {
@@ -186,7 +197,7 @@ export function MediaPicker({
   }
 
   async function handleUpload() {
-    if (!pendingFile || uploading) {
+    if (!pendingFile || uploading || fileDetails.error) {
       return;
     }
 
@@ -213,6 +224,7 @@ export function MediaPicker({
 
       setAssets((current) => [asset, ...current.filter((entry) => entry.id !== asset.id)]);
       setSelectedIds((current) => (multiple ? [...current, asset.id] : [asset.id]));
+      setUploadNotice(describeStoredAsset(asset, pendingFile.size));
       setPendingFile(null);
       setAltText("");
       setTab("library");
@@ -298,6 +310,7 @@ export function MediaPicker({
             </div>
 
             <div className="media-picker-body">
+              {uploadNotice ? <p className="media-picker-notice">{uploadNotice}</p> : null}
               {listError ? <p className="form-error">{listError}</p> : null}
               {loading ? <p className="media-picker-status">Loading media...</p> : null}
               {!loading && assets.length === 0 ? (
@@ -374,7 +387,10 @@ export function MediaPicker({
             >
               <Upload className="h-6 w-6" />
               <strong>{pendingFile ? pendingFile.name : "Drop an image here or browse"}</strong>
-              <span>Up to 5MB.</span>
+              <span>{mediaUploadHintForUsage(usageType)}</span>
+              {fileDetails.summary ? (
+                <span className="media-picker-file-summary">{fileDetails.summary}</span>
+              ) : null}
               <input
                 accept={acceptAttributeForUsage(usageType)}
                 onChange={(event) => {
@@ -397,9 +413,17 @@ export function MediaPicker({
                 value={altText}
               />
             </label>
+            {fileDetails.error ? <p className="form-error">{fileDetails.error}</p> : null}
+            {fileDetails.warning ? (
+              <p className="media-picker-file-warning">{fileDetails.warning}</p>
+            ) : null}
             {uploadError ? <p className="form-error">{uploadError}</p> : null}
             <div className="media-picker-more">
-              <button disabled={!pendingFile || uploading} onClick={handleUpload} type="button">
+              <button
+                disabled={!pendingFile || uploading || Boolean(fileDetails.error)}
+                onClick={handleUpload}
+                type="button"
+              >
                 {uploading ? "Uploading..." : "Upload image"}
               </button>
             </div>

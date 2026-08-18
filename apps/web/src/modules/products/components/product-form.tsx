@@ -3,6 +3,7 @@
 import { Button } from "@dash/ui";
 import { useActionState, useMemo, useState, type ReactNode } from "react";
 import { normalizeSlug } from "../../../lib/slug";
+import { mediaUploadHintForUsage } from "../../media/media.schema";
 import {
   quickCreateProductBrandAction,
   quickCreateProductCategoryAction,
@@ -217,6 +218,7 @@ export function ProductForm({
             {state.fieldErrors?.images ? <p className="field-error">{state.fieldErrors.images}</p> : null}
             <ProductImageSlots imageUrls={imageUrls} />
             <p className="product-editor-hint">Gallery limit: 3 images. The storefront shows 4 images total including the main image.</p>
+            <p className="product-editor-hint">{mediaUploadHintForUsage("PRODUCT")}</p>
           </ProductEditorCard>
 
           <ProductEditorCard

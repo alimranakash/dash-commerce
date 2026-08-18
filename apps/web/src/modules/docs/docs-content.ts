@@ -1017,7 +1017,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         ],
         important: [
           "SVG logo/favicon safe হলে allow করা হতে পারে, তবে image type validation আছে।",
-          "Max upload size সাধারণত 5MB।",
+          "Logo max 6MB (server-এ 512x512 WebP-তে convert হয়), favicon max 512KB এবং যে format দিবেন সেটাই থাকবে।",
           "Favicon ছোট square image হলে ভালো দেখায়।"
         ],
         tips: [
@@ -1341,7 +1341,8 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
           "Media card থেকে Copy URL নিয়ে product/settings form-এ ব্যবহার করুন।"
         ],
         important: [
-          "Images only; সাধারণ max size 5MB।",
+          "Upload হওয়া image server-এ নিজে থেকেই resize হয়ে WebP-তে convert হয় — product 1200x1200 px, category 1200x900, hero 1920x1080, logo 512x512।",
+          "Upload limit: image প্রতি 6MB, favicon 512KB (favicon convert হয় না, যেমন আছে তেমনই থাকে)।",
           "Local development storage এবং production S3/R2-compatible placeholder architecture আছে।",
           "Media asset store-scoped; অন্য tenant-এর media দেখা যাবে না।"
         ],

@@ -3,12 +3,14 @@ import { prisma } from "@dash/db";
 type CreateMediaAssetInput = {
   alt?: string;
   filename: string;
+  height?: number;
   key: string;
   mimeType: string;
   size: number;
   storeId: string;
   usageType?: string;
   url: string;
+  width?: number;
 };
 
 export async function createMediaAssetRecord(input: CreateMediaAssetInput) {
@@ -16,12 +18,14 @@ export async function createMediaAssetRecord(input: CreateMediaAssetInput) {
     data: {
       alt: input.alt ?? null,
       filename: input.filename,
+      height: input.height ?? null,
       key: input.key,
       mimeType: input.mimeType,
       size: input.size,
       storeId: input.storeId,
       usageType: input.usageType ?? null,
-      url: input.url
+      url: input.url,
+      width: input.width ?? null
     }
   });
 }

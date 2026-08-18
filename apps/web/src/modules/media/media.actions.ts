@@ -48,10 +48,13 @@ export async function uploadMediaAction(formData: FormData): Promise<MediaUpload
       asset: {
         alt: asset.alt,
         filename: asset.filename,
+        height: asset.height,
         id: asset.id,
         mimeType: asset.mimeType,
+        size: asset.size,
         url: asset.url,
-        usageType: asset.usageType
+        usageType: asset.usageType,
+        width: asset.width
       },
       status: "success"
     };

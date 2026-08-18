@@ -11247,6 +11247,20 @@ textarea {
   box-shadow: none;
 }
 
+.media-upload-guide {
+  color: #6b6d7c;
+  font-size: 0.76rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.media-upload-file-summary {
+  color: #5b21b6;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin: 0;
+}
+
 .media-grid {
   display: grid;
   gap: 16px;
@@ -15335,6 +15349,35 @@ textarea {
 .media-picker-dropzone span {
   color: #6b6d7c;
   font-size: 0.8rem;
+}
+
+.media-picker-dropzone span.media-picker-file-summary {
+  background: #f4f1ff;
+  border-radius: 999px;
+  color: #5b21b6;
+  font-weight: 700;
+  padding: 3px 10px;
+}
+
+.media-picker-notice {
+  background: #f1fbf4;
+  border: 1px solid #b7e3c6;
+  border-radius: 8px;
+  color: #1f6b3a;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin: 0;
+  padding: 10px 12px;
+}
+
+.media-picker-file-warning {
+  background: #fff8ec;
+  border: 1px solid #f3ddb0;
+  border-radius: 8px;
+  color: #8a5a10;
+  font-size: 0.8rem;
+  margin: 0;
+  padding: 10px 12px;
 }
 
 .media-picker-dropzone input[type="file"] {

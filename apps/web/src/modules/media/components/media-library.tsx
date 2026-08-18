@@ -27,7 +27,10 @@ export function MediaLibrary({ assets }: MediaLibraryProps) {
           <div className="media-card-body">
             <strong>{asset.filename}</strong>
             <span>{asset.usageType?.toLowerCase() ?? "general"}</span>
-            <span>{formatBytes(asset.size)}</span>
+            <span>
+              {asset.width && asset.height ? `${asset.width} x ${asset.height} px - ` : ""}
+              {formatBytes(asset.size)}
+            </span>
           </div>
           <div className="table-actions media-actions">
             <MediaCopyButton url={asset.url} />

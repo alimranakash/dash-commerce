@@ -5,11 +5,12 @@ import {
   getMediaAssetsForStoreRecord,
   listMediaAssetsRecord
 } from "./media.repository";
+import { optimizeMediaUpload } from "./media-optimizer";
 import {
   allowedMimeTypesForUsage,
   listMediaAssetsSchema,
-  maxMediaUploadSize,
   mediaMimeRuleMessage,
+  mediaSizeErrorForUsage,
   mediaSvgMimeType,
   type ListMediaAssetsInput,
   type MediaUsageType
@@ -47,42 +48,70 @@ export async function listMediaAssets(
 function toPickerAsset(asset: {
   alt: string | null;
   filename: string;
+  height: number | null;
   id: string;
   mimeType: string;
+  size: number;
   url: string;
   usageType: string | null;
+  width: number | null;
 }): MediaPickerAsset {
   return {
     alt: asset.alt,
     filename: asset.filename,
+    height: asset.height,
     id: asset.id,
     mimeType: asset.mimeType,
+    size: asset.size,
     url: asset.url,
-    usageType: asset.usageType
+    usageType: asset.usageType,
+    width: asset.width
   };
 }
 
 export async function uploadMediaAsset(input: UploadMediaFileInput) {
   await validateUpload(input.file, input.usageType);
 
-  const buffer = Buffer.from(await input.file.arrayBuffer());
+  const optimized = await optimizeUpload(input.file, input.usageType);
   const stored = await saveMediaFile({
-    buffer,
-    filename: input.file.name,
-    mimeType: input.file.type,
+    buffer: optimized.buffer,
+    filename: optimized.filename,
+    mimeType: optimized.mimeType,
     storeId: input.storeId
   });
 
   return createMediaAssetRecord({
     ...(input.alt ? { alt: input.alt } : {}),
-    filename: input.file.name,
+    ...(optimized.height === null ? {} : { height: optimized.height }),
+    ...(optimized.width === null ? {} : { width: optimized.width }),
+    filename: optimized.filename,
     key: stored.key,
-    mimeType: input.file.type,
-    size: input.file.size,
+    mimeType: optimized.mimeType,
+    size: optimized.size,
     storeId: input.storeId,
     usageType: input.usageType,
     url: stored.url
   });
+}
+
+/**
+ * A decode failure here means the bytes are not the image the mime type claims,
+ * so it is reported as a rejected upload rather than falling back to storing
+ * whatever was sent.
+ */
+async function optimizeUpload(file: File, usageType: MediaUsageType) {
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  try {
+    return await optimizeMediaUpload({
+      buffer,
+      filename: file.name,
+      mimeType: file.type,
+      usageType
+    });
+  } catch {
+    throw new Error("That file could not be read as an image. Try a JPG, PNG, or WebP export.");
+  }
 }
 
 export async function deleteMediaAsset(storeId: string, assetId: string) {
@@ -101,8 +130,10 @@ async function validateUpload(file: File, usageType: MediaUsageType) {
     throw new Error("Choose an image to upload.");
   }
 
-  if (file.size > maxMediaUploadSize) {
-    throw new Error("Image must be 5MB or smaller.");
+  const sizeError = mediaSizeErrorForUsage(file.size, usageType);
+
+  if (sizeError) {
+    throw new Error(sizeError);
   }
 
   if (!allowedMimeTypesForUsage(usageType).includes(file.type)) {

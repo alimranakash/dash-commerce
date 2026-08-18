@@ -16,10 +16,13 @@ export type MediaAssetListItem = {
 export type MediaPickerAsset = {
   alt: string | null;
   filename: string;
+  height: number | null;
   id: string;
   mimeType: string;
+  size: number;
   url: string;
   usageType: string | null;
+  width: number | null;
 };
 
 export type MediaPickerPage = {
