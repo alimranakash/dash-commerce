@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ensureCategoryImageSchema } from "../categories/category-image-schema";
 import { getProductIdsByTaxonomySlug } from "../products/product-taxonomy.service";
 import { getProductVariantConfiguration } from "../products/product-variants.service";
+import { getSearchResultsForStore } from "../search/search.service";
 import { ensureDefaultSettingsForStore } from "../settings/settings.service";
 import { withStoreActiveTemplate } from "./templates/template-store";
 
@@ -13,7 +14,8 @@ export type StorefrontProductSort =
   | "featured"
   | "newest"
   | "price-asc"
-  | "price-desc";
+  | "price-desc"
+  | "relevance";
 
 type StorefrontProductQuery = {
   availability?: "in-stock" | "out-of-stock" | undefined;
@@ -219,56 +221,89 @@ export async function getStorefrontProducts(
   const input = typeof inputOrTake === "number" ? { take: inputOrTake } : (inputOrTake ?? {});
   const search = input.search?.trim();
   const taxonomyWhere = await taxonomyProductWhere(storeId, input);
+  const matches = search ? (await getSearchResultsForStore(storeId, search)).matches : null;
 
-  return prisma.product.findMany({
-    where: {
-      ...publicProductWhere(storeId),
-      ...taxonomyWhere,
-      ...(input.categorySlug
-        ? {
-            category: {
-              slug: input.categorySlug
-            }
+  if (matches && matches.length === 0) {
+    return [];
+  }
+
+  const where = {
+    ...publicProductWhere(storeId),
+    ...taxonomyWhere,
+    ...(input.categorySlug
+      ? {
+          category: {
+            slug: input.categorySlug
           }
-        : {}),
-      ...priceWhere(input.minPrice, input.maxPrice),
-      ...availabilityWhere(input.availability),
-      ...(search
-        ? {
-            OR: [
-              {
-                title: {
-                  contains: search,
-                  mode: "insensitive" as const
-                }
-              },
-              {
-                sku: {
-                  contains: search,
-                  mode: "insensitive" as const
-                }
-              }
-            ]
-          }
-        : {})
-    },
-    include: {
-      category: true,
-      images: {
-        orderBy: {
-          position: "asc"
         }
+      : {}),
+    ...priceWhere(input.minPrice, input.maxPrice),
+    ...availabilityWhere(input.availability),
+    ...searchIdWhere(taxonomyWhere, matches)
+  };
+  const include = {
+    category: true,
+    images: {
+      orderBy: {
+        position: "asc" as const
       }
-    },
-    orderBy: storefrontProductOrderBy(input.sort),
-    ...(input.skip ? { skip: input.skip } : {}),
-    ...(input.take ? { take: input.take } : {})
-  });
+    }
+  };
+
+  if (!matches || (input.sort && input.sort !== "relevance")) {
+    return prisma.product.findMany({
+      where,
+      include,
+      orderBy: storefrontProductOrderBy(input.sort),
+      ...(input.skip ? { skip: input.skip } : {}),
+      ...(input.take ? { take: input.take } : {})
+    });
+  }
+
+  // Relevance is a per-query score, not a column, so Prisma cannot order by it.
+  // The candidate set the search service returns is capped, which is what keeps
+  // sorting and paginating in memory here affordable.
+  const ranks = new Map(matches.map((match) => [match.productId, match.rank]));
+  const products = await prisma.product.findMany({ where, include });
+  const ranked = products.sort(
+    (first, second) => (ranks.get(second.id) ?? 0) - (ranks.get(first.id) ?? 0)
+  );
+  const skip = input.skip ?? 0;
+
+  return input.take ? ranked.slice(skip, skip + input.take) : ranked.slice(skip);
+}
+
+/**
+ * Narrows to the products search matched, without losing a taxonomy filter that
+ * already narrowed by id — a brand filter and a search box are both allowed to
+ * be active at once, so the two id sets intersect rather than overwrite.
+ */
+function searchIdWhere(
+  taxonomyWhere: { id?: { in: string[] } },
+  matches: Array<{ productId: string }> | null
+) {
+  if (!matches) {
+    return {};
+  }
+
+  const matchedIds = matches.map((match) => match.productId);
+  const taxonomyIds = taxonomyWhere.id?.in;
+
+  return {
+    id: {
+      in: taxonomyIds ? matchedIds.filter((id) => taxonomyIds.includes(id)) : matchedIds
+    }
+  };
 }
 
 export async function getStorefrontProductCount(storeId: string, input?: StorefrontProductQuery) {
   const search = input?.search?.trim();
   const taxonomyWhere = await taxonomyProductWhere(storeId, input ?? {});
+  const matches = search ? (await getSearchResultsForStore(storeId, search)).matches : null;
+
+  if (matches && matches.length === 0) {
+    return 0;
+  }
 
   return prisma.product.count({
     where: {
@@ -283,24 +318,7 @@ export async function getStorefrontProductCount(storeId: string, input?: Storefr
         : {}),
       ...priceWhere(input?.minPrice, input?.maxPrice),
       ...availabilityWhere(input?.availability),
-      ...(search
-        ? {
-            OR: [
-              {
-                title: {
-                  contains: search,
-                  mode: "insensitive" as const
-                }
-              },
-              {
-                sku: {
-                  contains: search,
-                  mode: "insensitive" as const
-                }
-              }
-            ]
-          }
-        : {})
+      ...searchIdWhere(taxonomyWhere, matches)
     }
   });
 }

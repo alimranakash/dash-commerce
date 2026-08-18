@@ -660,12 +660,18 @@ model Product {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @default(now()) @updatedAt
 
+  /// Storefront relevance index. Declared here only so `db:push` does not drop
+  /// it; the real definition is the GENERATED ALWAYS expression in
+  /// apps/web/src/modules/search/search-schema.ts, which Prisma cannot express.
+  searchVector      Unsupported("tsvector")?
+
   @@unique([storeId, slug])
   @@unique([storeId, sku])
   @@index([storeId])
   @@index([storeId, isDemoContent])
   @@index([storeId, demoPackId])
   @@index([categoryId])
+  @@index([searchVector], type: Gin)
 }
 
 model ProductImage {
