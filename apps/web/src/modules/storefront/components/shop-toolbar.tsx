@@ -30,7 +30,8 @@ const sortLabels: Record<StorefrontShopPageSortOption, string> = {
   featured: "Featured",
   newest: "Newest",
   "price-asc": "Price Low -> High",
-  "price-desc": "Price High -> Low"
+  "price-desc": "Price High -> Low",
+  relevance: "Relevance"
 };
 
 export function ShopToolbar({ brands, categories, productCount, settings, tags }: ShopToolbarProps) {

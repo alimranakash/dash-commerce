@@ -1,15 +1,27 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { after } from "next/server";
+import type { CSSProperties } from "react";
+import { getPublicProductTaxonomyItems } from "../../../../modules/products/product-taxonomy.service";
+import { recordSearchQuery } from "../../../../modules/search/search-admin.repository";
+import { normalizeSearchRule } from "../../../../modules/search/search-admin.schema";
 import {
-  ProductGrid,
-  SectionHeader
-} from "../../../../modules/storefront/components/product-listing";
+  getSearchRedirect,
+  getSearchResultsForStore
+} from "../../../../modules/search/search.service";
+import { ProductGrid } from "../../../../modules/storefront/components/product-listing";
+import { ShopToolbar } from "../../../../modules/storefront/components/shop-toolbar";
 import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../../../modules/storefront/customization";
-import { storefrontSectionHref } from "../../../../modules/storefront/product-sections";
+import type { StorefrontShopPageSettings } from "../../../../modules/storefront/customization";
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../modules/storefront/components/storefront-header";
 import {
+  getStorefrontCategories,
+  getStorefrontProductCount,
   getStorefrontProducts,
   requireStorefrontBySlug
 } from "../../../../modules/storefront/resolver";
+import type { StorefrontProductSort } from "../../../../modules/storefront/resolver";
 import { getStorefrontTemplateForStore } from "../../../../modules/storefront/templates/registry";
 import { getStorefrontThemeSettings } from "../../../../modules/storefront/themes/theme.service";
 
@@ -17,9 +29,19 @@ type StorefrontSearchPageProps = {
   params: Promise<{
     slug: string;
   }>;
-  searchParams: Promise<{
-    q?: string;
-  }>;
+  searchParams: Promise<StorefrontSearchFilters>;
+};
+
+type StorefrontSearchFilters = {
+  availability?: string;
+  brand?: string;
+  category?: string;
+  maxPrice?: string;
+  minPrice?: string;
+  page?: string;
+  q?: string;
+  sort?: string;
+  tag?: string;
 };
 
 export default async function StorefrontSearchPage({
@@ -27,73 +49,331 @@ export default async function StorefrontSearchPage({
   searchParams
 }: StorefrontSearchPageProps) {
   const { slug } = await params;
-  const { q = "" } = await searchParams;
+  const filters = await searchParams;
   const store = await requireStorefrontBySlug(slug);
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
-  const query = q.trim();
+  const query = (filters.q ?? "").trim();
   const template = getStorefrontTemplateForStore(store);
   const settings = await getStorefrontThemeSettings(store.id);
-  const searchSection = settings.advancedSettings.productSections?.search ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.search;
-  const products = query
-    ? await getStorefrontProducts(store.id, {
-        search: query,
-        take: Math.round(searchSection.count)
-      })
-    : [];
+  const shopSettings =
+    settings.advancedSettings.shopPage ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.shopPage;
+  const searchSettings = withRelevanceSort(shopSettings);
+  const sort = parseSort(filters.sort);
+  const currentPage = parsePage(filters.page);
+  const productsPerPage = Math.round(shopSettings.productsPerPage);
+
+  if (!query) {
+    return (
+      <EmptySearchPage
+        primaryDomain={primaryDomain?.domain}
+        store={store}
+        templateId={template.id}
+      />
+    );
+  }
+
+  // Checked before any product query: a redirected term never renders results,
+  // so running the search first would be wasted work.
+  const redirectTarget = await getSearchRedirect(store.id, query);
+
+  if (redirectTarget) {
+    redirect(redirectTarget);
+  }
+
+  const productQuery = {
+    availability: parseAvailability(filters.availability),
+    brandSlug: shopSettings.enableBrandFilter ? filters.brand : undefined,
+    categorySlug: filters.category,
+    maxPrice: parsePrice(filters.maxPrice),
+    minPrice: parsePrice(filters.minPrice),
+    search: query,
+    sort,
+    tagSlug: shopSettings.enableTagFilter ? filters.tag : undefined
+  };
+  // `getSearchResultsForStore` is request-cached, so asking it for the strategy
+  // here does not cost a second full-text query on top of the two below.
+  const [categories, brands, tags, products, totalProducts, searchResult] = await Promise.all([
+    getStorefrontCategories(store.id),
+    shopSettings.enableBrandFilter
+      ? getPublicProductTaxonomyItems(store.id, "BRAND")
+      : Promise.resolve([]),
+    shopSettings.enableTagFilter
+      ? getPublicProductTaxonomyItems(store.id, "TAG")
+      : Promise.resolve([]),
+    getStorefrontProducts(store.id, {
+      ...productQuery,
+      skip: (currentPage - 1) * productsPerPage,
+      take: productsPerPage
+    }),
+    getStorefrontProductCount(store.id, productQuery),
+    getSearchResultsForStore(store.id, query)
+  ]);
+  const totalPages = Math.max(1, Math.ceil(totalProducts / productsPerPage));
+
+  // Recorded after the response so a shopper never waits on analytics, and only
+  // for the first page — paging through one search is still one search.
+  if (currentPage === 1) {
+    after(async () => {
+      await recordSearchQuery(store.id, normalizeSearchRule(query), totalProducts);
+    });
+  }
+
+  const hasActiveFilters = Boolean(
+    filters.availability ||
+    filters.brand ||
+    filters.category ||
+    filters.maxPrice ||
+    filters.minPrice ||
+    filters.tag
+  );
+  const listingSection = {
+    ...(settings.advancedSettings.productSections?.search ??
+      DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.search),
+    columns: shopSettings.productsPerRow,
+    count: productsPerPage,
+    enableBadges: shopSettings.enableProductBadges,
+    enableComparePrice: shopSettings.enableComparePrice,
+    enableHoverImage: shopSettings.enableHoverImage
+  };
   const gridId = "storefront-search-product-grid";
 
   return (
     <main className="sf-page" data-storefront-template={template.id}>
       <StorefrontHeader store={store} />
-      <section className="sf-shop-hero" aria-labelledby="search-title">
-        <p>{primaryDomain?.domain ?? `${store.slug}.dash.com`}</p>
-        <h1 id="search-title">Search products</h1>
-        <span>Find products by title or SKU.</span>
+      <section className="sf-shop-page-header" aria-labelledby="search-title">
+        <p>Search results</p>
+        <span>{resultSummary(query, totalProducts, hasActiveFilters)}</span>
       </section>
-      <section className="sf-section general-product-section sf-search-products" aria-labelledby="search-results">
-        <form className="sf-search-form" action={`/s/${store.slug}/search`} method="get">
-          <label>
-            Search
-            <input
-              defaultValue={query}
-              name="q"
-              placeholder="Search products or SKU"
-              type="search"
-            />
-          </label>
-          <button type="submit">Search</button>
-        </form>
-        <SectionHeader
-          ctaHref={storefrontSectionHref(store.slug, searchSection.ctaLink)}
-          ctaText={searchSection.ctaText}
-          id="search-results"
-          sliderTargetId={query && searchSection.mode === "slider" ? gridId : undefined}
-          subtitle={searchSection.subtitle}
-          title={searchSection.title}
+      <section
+        className={`sf-shop-page sf-shop-page-${shopSettings.widthMode}`}
+        style={
+          {
+            "--shop-grid-gap": `${shopSettings.gridSpacing}px`,
+            "--shop-section-spacing": `${shopSettings.sectionSpacing}px`
+          } as CSSProperties
+        }
+        aria-labelledby="search-title"
+      >
+        <h1 className="sr-only" id="search-title">
+          Search results for {query}
+        </h1>
+
+        {/*
+          Fuzzy matching is the last resort in the search service, so reaching it
+          means nothing the shopper actually typed exists in the catalogue. Saying
+          so prevents the results below from reading like exact matches.
+        */}
+        {searchResult.strategy === "fuzzy" ? (
+          <p className="sf-search-notice">
+            No exact match for <strong>{query}</strong> — showing the closest products we carry.
+          </p>
+        ) : null}
+
+        <ShopToolbar
+          brands={brands}
+          categories={categories}
+          productCount={totalProducts}
+          settings={searchSettings}
+          tags={tags}
         />
-        {!query ? (
-          <div className="sf-empty">
-            <h3>Search the catalog</h3>
-            <p>Enter a product title or SKU to find matching public products.</p>
-          </div>
-        ) : products.length === 0 ? (
-          <div className="sf-empty">
+
+        {products.length === 0 ? (
+          <div className="sf-shop-empty">
+            <div aria-hidden="true" />
             <h3>No products found</h3>
-            <p>Try another keyword or browse the full shop.</p>
+            <p>
+              {hasActiveFilters
+                ? `No product matching "${query}" fits the filters you picked.`
+                : `We could not find anything for "${query}". Try a shorter or more general word.`}
+            </p>
+            <Link href={`/s/${store.slug}/products`}>Browse all products</Link>
           </div>
         ) : (
-          <ProductGrid
-            cardVariant={template.productCardVariant}
-            currency={store.currency}
-            gridId={gridId}
-            products={products}
-            section={searchSection}
-            storeId={store.id}
-            storeSlug={store.slug}
-          />
+          <>
+            <ProductGrid
+              cardVariant={template.productCardVariant}
+              currency={store.currency}
+              gridId={gridId}
+              products={products}
+              section={listingSection}
+              storeId={store.id}
+              storeSlug={store.slug}
+            />
+            {totalPages > 1 ? (
+              <div className="sf-pagination" aria-label="Search result pagination">
+                <PaginationLink
+                  disabled={currentPage <= 1}
+                  href={buildSearchHref(store.slug, filters, currentPage - 1)}
+                  label="Previous"
+                />
+                <span>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <PaginationLink
+                  disabled={currentPage >= totalPages}
+                  href={buildSearchHref(store.slug, filters, currentPage + 1)}
+                  label="Next"
+                />
+              </div>
+            ) : null}
+          </>
         )}
       </section>
       <StorefrontFooter primaryDomain={primaryDomain?.domain} store={store} />
     </main>
   );
+}
+
+type EmptySearchPageProps = {
+  primaryDomain: string | undefined;
+  store: Awaited<ReturnType<typeof requireStorefrontBySlug>>;
+  templateId: string;
+};
+
+/**
+ * Landing on `/search` with no query. The header already carries the search
+ * field on every template, so this only has to explain itself and offer a way
+ * into the catalogue.
+ */
+function EmptySearchPage({ primaryDomain, store, templateId }: EmptySearchPageProps) {
+  return (
+    <main className="sf-page" data-storefront-template={templateId}>
+      <StorefrontHeader store={store} />
+      <section className="sf-shop-page-header" aria-labelledby="search-title">
+        <p>Search</p>
+        <span>{primaryDomain ?? `${store.slug}.dash.com`}</span>
+      </section>
+      <section className="sf-shop-page sf-shop-page-boxed" aria-labelledby="search-title">
+        <h1 className="sr-only" id="search-title">
+          Search
+        </h1>
+        <div className="sf-shop-empty">
+          <div aria-hidden="true" />
+          <h3>Search the catalog</h3>
+          <p>Type a product name, category or SKU in the search box above.</p>
+          <Link href={`/s/${store.slug}/products`}>Browse all products</Link>
+        </div>
+      </section>
+      <StorefrontFooter primaryDomain={primaryDomain} store={store} />
+    </main>
+  );
+}
+
+/**
+ * Zero results has two different meanings worth separating: the catalogue holds
+ * nothing like the query, or it does and the shopper's own filters hid it. The
+ * second is recoverable by clearing a filter, so it must not read as the first.
+ */
+function resultSummary(query: string, totalProducts: number, hasActiveFilters: boolean) {
+  if (totalProducts > 0) {
+    return `${totalProducts} ${totalProducts === 1 ? "result" : "results"} for "${query}"`;
+  }
+
+  return hasActiveFilters
+    ? `No result for "${query}" with these filters`
+    : `Nothing matched "${query}"`;
+}
+
+function PaginationLink({
+  disabled,
+  href,
+  label
+}: {
+  disabled: boolean;
+  href: string;
+  label: string;
+}) {
+  if (disabled) {
+    return <span aria-disabled="true">{label}</span>;
+  }
+
+  return <Link href={href}>{label}</Link>;
+}
+
+/**
+ * Puts relevance at the head of the sort list and makes it the default.
+ *
+ * Seller settings cannot carry relevance — it is filtered out of the persisted
+ * whitelist — so the search page grants it here, for this render only.
+ */
+function withRelevanceSort(settings: StorefrontShopPageSettings): StorefrontShopPageSettings {
+  return {
+    ...settings,
+    defaultSort: "relevance",
+    sortOptions: ["relevance", ...settings.sortOptions.filter((option) => option !== "relevance")]
+  };
+}
+
+function parseAvailability(value: string | undefined): "in-stock" | "out-of-stock" | undefined {
+  return value === "in-stock" || value === "out-of-stock" ? value : undefined;
+}
+
+function parsePrice(value: string | undefined) {
+  const price = Number(value);
+
+  return Number.isFinite(price) && price >= 0 ? price : undefined;
+}
+
+function parseSort(value: string | undefined): StorefrontProductSort {
+  return [
+    "alpha-asc",
+    "alpha-desc",
+    "best-selling",
+    "featured",
+    "newest",
+    "price-asc",
+    "price-desc"
+  ].includes(value ?? "")
+    ? (value as StorefrontProductSort)
+    : "relevance";
+}
+
+function parsePage(value: string | undefined) {
+  const page = Number(value);
+
+  return Number.isInteger(page) && page > 0 ? page : 1;
+}
+
+function buildSearchHref(storeSlug: string, filters: StorefrontSearchFilters, page: number) {
+  const params = new URLSearchParams();
+
+  if (filters.q) {
+    params.set("q", filters.q);
+  }
+
+  if (filters.category) {
+    params.set("category", filters.category);
+  }
+
+  if (filters.availability) {
+    params.set("availability", filters.availability);
+  }
+
+  if (filters.brand) {
+    params.set("brand", filters.brand);
+  }
+
+  if (filters.tag) {
+    params.set("tag", filters.tag);
+  }
+
+  if (filters.minPrice) {
+    params.set("minPrice", filters.minPrice);
+  }
+
+  if (filters.maxPrice) {
+    params.set("maxPrice", filters.maxPrice);
+  }
+
+  if (filters.sort) {
+    params.set("sort", filters.sort);
+  }
+
+  if (page > 1) {
+    params.set("page", String(page));
+  }
+
+  const query = params.toString();
+
+  return `/s/${storeSlug}/search${query ? `?${query}` : ""}`;
 }

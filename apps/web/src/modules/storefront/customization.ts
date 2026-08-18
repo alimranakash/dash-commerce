@@ -240,7 +240,14 @@ export type StorefrontShopPageSortOption =
   | "price-asc"
   | "price-desc"
   | "alpha-asc"
-  | "alpha-desc";
+  | "alpha-desc"
+  /**
+   * Search results only, and deliberately absent from the whitelist in
+   * `shopSortOptions` below: ranking by relevance means nothing without a
+   * query, so a seller must not be able to save it as a shop-page default.
+   * The search page composes it onto the sort list at render time instead.
+   */
+  | "relevance";
 
 export type StorefrontShopPageSettings = {
   defaultSort: StorefrontShopPageSortOption;
