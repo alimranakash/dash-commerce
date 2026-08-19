@@ -1,0 +1,114 @@
+name: Deploy
+
+# Push to main -> storeim.com, automatically. Nothing else deploys.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never let two deploys overlap — rsync --delete and db:push interleaving would
+# leave a half-written tree. Queue instead of cancel, so a rollback push is not
+# discarded by the run that follows it.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy
+    # Matches the server, so the .next output and the Node version it was built
+    # against line up. node_modules is rebuilt on the server anyway.
+    runs-on: ubuntu-24.04
+
+    # Add required reviewers to a GitHub Environment named "production" to make
+    # every deploy wait for approval. Optional — without it, push means live.
+    environment: production
+
+    # The build reaches the database: several pages call Prisma at render time and
+    # the generated client is constructed on import. A throwaway Postgres makes the
+    # build honest, and running db:push against it proves the schema still applies
+    # cleanly before the real database is touched.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # Build-time only. The real credentials live in the server's .env and are
+      # read at runtime — this repo has no NEXT_PUBLIC_* variables, so nothing
+      # environment-specific is baked into the build.
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?schema=dash_commerce
+      NEXTAUTH_SECRET: build-only-secret
+      NEXTAUTH_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Create schema
+        run: psql "postgresql://postgres:postgres@localhost:5432/postgres" -c 'CREATE SCHEMA IF NOT EXISTS dash_commerce'
+        env:
+          PGPASSWORD: postgres
+
+      - run: npm run db:generate
+      - run: npm run db:push
+
+      # lint and typecheck are the only automated checks this repo has, and lint
+      # runs with --max-warnings=0, so a missing `import type` fails here — before
+      # anything reaches the server.
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      # --delete keeps the server tree identical to this commit. The excludes are
+      # load-bearing:
+      #   .env                 server-owned secrets, never in git
+      #   public/uploads       the only copy of every seller's media
+      #   node_modules         rebuilt by release.sh; symlinked workspaces and
+      #                        sharp's native binary do not travel well
+      - name: Upload build
+        run: |
+          rsync -az --delete \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.env' \
+            --exclude='.env.local' \
+            --exclude='node_modules/' \
+            --exclude='.turbo/' \
+            --exclude='.next/cache/' \
+            --exclude='apps/web/public/uploads/' \
+            ./ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/srv/dash-commerce/"
+
+      - name: Release
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "bash /srv/dash-commerce/deploy/bin/release.sh"
+
+      - name: Summary
+        run: |
+          {
+            echo "### Deployed https://storeim.com"
+            echo
+            echo "commit \`${{ github.sha }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

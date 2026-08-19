@@ -1,0 +1,64 @@
+name: CI
+
+# Pull requests only. A push to main runs the same checks inside deploy.yml,
+# which then ships the artifact it just built.
+on:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, typecheck, build
+    runs-on: ubuntu-24.04
+
+    # The build reaches the database: several pages call Prisma at render time and
+    # the generated client is constructed on import. A throwaway Postgres makes the
+    # build honest, and running db:push against it proves the schema still applies
+    # cleanly before any deploy job touches a real database.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?schema=dash_commerce
+      NEXTAUTH_SECRET: ci-secret-not-used-outside-this-job
+      NEXTAUTH_URL: http://localhost:3000
+      PLATFORM_ROOT_DOMAIN: storeim.com
+      PLATFORM_APP_HOST: app.storeim.com
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Create schema
+        run: psql "$DATABASE_URL_PLAIN" -c 'CREATE SCHEMA IF NOT EXISTS dash_commerce'
+        env:
+          DATABASE_URL_PLAIN: postgresql://postgres:postgres@localhost:5432/postgres
+          PGPASSWORD: postgres
+
+      - run: npm run db:generate
+      - run: npm run db:push
+
+      # lint and typecheck are the only automated checks this repo has, and lint
+      # runs with --max-warnings=0, so a missing `import type` fails here.
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build

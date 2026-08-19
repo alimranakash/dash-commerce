@@ -1,15 +1,14 @@
 # Dash Commerce OS — Caddy reverse proxy with on-demand TLS for seller domains.
 #
-# Replace dash.com / app.dash.com with the real PLATFORM_ROOT_DOMAIN and
-# PLATFORM_APP_HOST, and admin@dash.com with a real address. Everything else works
-# as written.
+# Replace storeim.com with the real PLATFORM_ROOT_DOMAIN and admin@storeim.com
+# with a real address. Everything else works as written.
 #
 # Install to /etc/caddy/Caddyfile, then:  caddy validate --config /etc/caddy/Caddyfile
 #                                        systemctl reload caddy
 
 {
 	# Let's Encrypt sends expiry notices here.
-	email admin@dash.com
+	email admin@storeim.com
 
 	# Testing? Uncomment this to use the staging CA, whose limits are far higher and
 	# whose certificates are untrusted (browsers will warn — that is expected).
@@ -17,8 +16,8 @@
 
 	on_demand_tls {
 		# The app decides which hostnames may get a certificate. 2xx = issue.
-		# Add &token=... if DOMAIN_AUTHORIZE_TOKEN is set in the app's .env.
-		ask http://127.0.0.1:3000/api/domains/authorize
+		# Drop ?token=... if DOMAIN_AUTHORIZE_TOKEN is unset in the app's .env.
+		ask http://127.0.0.1:3000/api/domains/authorize?token=REPLACE_WITH_DOMAIN_AUTHORIZE_TOKEN
 	}
 }
 
@@ -40,30 +39,38 @@
 # --- The platform's own hostnames -------------------------------------------
 # Named sites, so Caddy gets these certificates at startup instead of waiting for
 # a handshake.
-dash.com, www.dash.com, app.dash.com {
+storeim.com, www.storeim.com, app.storeim.com {
 	import app
 }
 
 # --- Tenant subdomains and seller custom domains -----------------------------
 # Any other hostname that arrives on 443: issued on demand, only if the app
-# authorises it.
+# authorises it. That covers both <slug>.storeim.com and seller custom domains.
 #
-# Note: every <slug>.dash.com certificate counts against the same "50 certificates
-# per registered domain per week" bucket for dash.com. Past ~50 new stores a week,
-# switch the tenant subdomains to a single wildcard certificate — that needs a
-# DNS-01 challenge, i.e. a Caddy build with your DNS provider plugin:
+# Note: every <slug>.storeim.com certificate counts against the same "50
+# certificates per registered domain per week" bucket for storeim.com. Past ~50
+# new stores a week, switch the tenant subdomains to a single wildcard
+# certificate. That needs a DNS-01 challenge, so a Caddy build with the
+# Cloudflare plugin and a token that can edit the zone:
 #
-#   *.dash.com {
-#       tls { dns cloudflare {env.CLOUDFLARE_API_TOKEN} }
+#   caddy add-package github.com/caddy-dns/cloudflare
+#   systemctl edit caddy   ->  [Service]
+#                              Environment=CLOUDFLARE_API_TOKEN=...
+#
+#   *.storeim.com {
+#       tls {
+#           dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+#       }
 #       import app
 #   }
 #
 # Seller custom domains are each their own registered domain, so they have their
-# own bucket and are unaffected.
+# own bucket and are unaffected either way.
 https:// {
 	tls {
 		on_demand
 	}
+
 	import app
 }
 

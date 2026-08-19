@@ -1,0 +1,49 @@
+# Dash Commerce OS — the Next.js server, behind Caddy.
+#
+#   cp deploy/dash-web.service /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable --now dash-web
+#
+# Logs:  journalctl -u dash-web -f
+
+[Unit]
+Description=Dash Commerce OS
+Documentation=file:///srv/dash-commerce/deploy/DEPLOY.md
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=dash
+Group=dash
+
+# next start resolves uploads with join(process.cwd(), "public", key), so the
+# working directory must be apps/web and nothing else.
+WorkingDirectory=/srv/dash-commerce/apps/web
+
+# The app also dotenv-loads the repo-root .env itself (lib/env.ts, packages/db/
+# src/client.ts). Loading it here as well means process.env is populated before
+# Node starts, which removes any import-order doubt.
+EnvironmentFile=/srv/dash-commerce/.env
+Environment=NODE_ENV=production
+
+# npm workspaces hoist binaries to the repo root, so call next directly rather
+# than through an npm wrapper process — systemd then supervises the real server.
+ExecStart=/srv/dash-commerce/node_modules/.bin/next start --hostname 127.0.0.1 --port 3000
+
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Hardening. ReadWritePaths covers what the app writes: uploaded media and Next's
+# runtime cache. Everything else on the filesystem is read-only to this unit.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/dash-commerce/apps/web/public/uploads /srv/dash-commerce/apps/web/.next
+
+[Install]
+WantedBy=multi-user.target
