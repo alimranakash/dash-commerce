@@ -1,4 +1,5 @@
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
+import { CourierAutoSyncChip } from "../../../modules/courier/components/courier-auto-sync-chip";
 import { CourierBalance } from "../../../modules/courier/components/courier-balance";
 import {
   CourierFilterTabs,
@@ -9,7 +10,7 @@ import {
 import { OrdersCourierTable, type OrderCourierRow } from "../../../modules/courier/components/orders-courier-table";
 import { describeSendTarget } from "../../../modules/courier/courier-accounts.service";
 import { getCachedCourierBalance } from "../../../modules/courier/courier-insight.service";
-import { getShipmentsByOrderId } from "../../../modules/courier/courier.service";
+import { getCourierAutoSync, getShipmentsByOrderId } from "../../../modules/courier/courier.service";
 import { getCourierProvider } from "../../../modules/courier/providers/registry";
 import { OrderListControls, type OrderFilterKey } from "../../../modules/orders/components/order-list-controls";
 import { getOrdersForStore } from "../../../modules/orders/order.service";
@@ -35,6 +36,11 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const sendTarget = await describeSendTarget(store.id);
   const courierBalance = sendTarget.provider
     ? await getCachedCourierBalance(store.id, sendTarget.provider)
+    : null;
+  // Says whether the Delivery column keeps itself current, which a column of
+  // carrier statuses cannot convey on its own.
+  const autoSync = sendTarget.provider
+    ? await getCourierAutoSync(store.id, sendTarget.provider)
     : null;
 
   // One query badges every row.
@@ -78,7 +84,10 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
       <section className="resource-page">
         <div className="catalog-page-heading">
           <h1>Orders</h1>
-          {courierBalance ? <CourierBalance balance={courierBalance} showRefresh={false} /> : null}
+          <span className="flex flex-wrap items-center gap-2">
+            {autoSync ? <CourierAutoSyncChip autoSync={autoSync} /> : null}
+            {courierBalance ? <CourierBalance balance={courierBalance} showRefresh={false} /> : null}
+          </span>
         </div>
         <OrderListControls activeFilter={activeFilter} counts={counts} dateFrom={dateFrom} dateTo={dateTo} search={search} />
         <section className="rounded-xl border border-[#ececf5] bg-white px-5 pt-5 shadow-[0_8px_24px_rgba(62,54,114,0.04)]">

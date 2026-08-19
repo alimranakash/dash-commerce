@@ -35,6 +35,7 @@ export const PLAN_FEATURE_KEYS = [
   "inventory",
   "marketing_analytics",
   "marketing_automation",
+  "order_tracking",
   "order_verification",
   "pixel_tracking",
   "purchases",
@@ -141,6 +142,12 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
     description: "Cross-channel campaign automation and journeys.",
     label: "Marketing Automation",
     status: "planned"
+  },
+  order_tracking: {
+    description:
+      "Track parcels by tracking code, with delivery status auto-synced from the courier's webhook.",
+    label: "Order Tracking",
+    status: "available"
   },
   order_verification: {
     description: "Courier verification queue for orders before dispatch.",

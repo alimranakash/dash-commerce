@@ -10,6 +10,7 @@ import {
   testCourierConnection
 } from "./courier-accounts.service";
 import { courierErrorMessage, toCourierError } from "./courier-errors";
+import { disableCourierWebhook, generateCourierWebhook } from "./courier-webhook.service";
 import {
   checkCourierCustomerScore,
   getCourierBalance,
@@ -26,8 +27,10 @@ import {
   refreshShipmentStatus,
   sendOrderToCourier,
   sendOrdersToCourier,
+  trackShipmentByReference,
   type BulkSendResult,
-  type SendOrderToCourierResult
+  type SendOrderToCourierResult,
+  type TrackedShipmentView
 } from "./courier.service";
 import { requireCourierProvider } from "./providers/registry";
 import { hasPlanFeature } from "../billing/subscription-limits";
@@ -409,6 +412,128 @@ export async function testCourierConnectionAction(
   }
 }
 
+export type TrackOrderActionState = CourierActionState & {
+  reference: string;
+  shipment: TrackedShipmentView | null;
+};
+
+/**
+ * Order Tracking's lookup, gated on its own entitlement rather than on
+ * `courier_api`: booking parcels and tracking them are sold separately, and a
+ * seller can hold one without the other.
+ *
+ * Read-only, so it returns state instead of redirecting — the page keeps whatever
+ * was already on screen when a code turns out to be wrong.
+ */
+export async function trackOrderAction(reference: string): Promise<TrackOrderActionState> {
+  const store = await requireStore();
+  const gate = await courierPlanGate(store.id, "order_tracking");
+  const trimmed = reference.trim();
+
+  if (gate) {
+    return { ...gate, reference: trimmed, shipment: null };
+  }
+
+  if (!trimmed) {
+    return {
+      message: "Enter a tracking code, consignment id, or order number.",
+      reference: trimmed,
+      shipment: null,
+      status: "error"
+    };
+  }
+
+  const shipment = await trackShipmentByReference(store.id, trimmed);
+
+  if (!shipment) {
+    return {
+      message: `No parcel found for "${trimmed}". Check the code, or search by order number instead.`,
+      reference: trimmed,
+      shipment: null,
+      status: "warning"
+    };
+  }
+
+  return { reference: trimmed, shipment, status: "success" };
+}
+
+export type CourierWebhookActionState = CourierActionState & {
+  /** Shown once, so the seller can copy it into the carrier's panel. */
+  secret: string | null;
+  url: string | null;
+};
+
+/**
+ * Issues the callback URL and secret for one carrier.
+ *
+ * Manager-only and doubly gated: the credentials it hangs off are a manager
+ * concern, and auto-sync is what `order_tracking` actually sells. Regenerating
+ * invalidates the previous pair immediately, which is why the copy says so.
+ */
+export async function generateCourierWebhookAction(
+  providerKey: string
+): Promise<CourierWebhookActionState> {
+  const access = await requireCourierManagerStore();
+
+  if (!access.ok) {
+    return { ...access.state, secret: null, url: null };
+  }
+
+  const store = access.store;
+  const gate = await courierPlanGate(store.id, "order_tracking");
+
+  if (gate) {
+    return { ...gate, secret: null, url: null };
+  }
+
+  try {
+    const result = await generateCourierWebhook(store.id, providerKey);
+
+    revalidateCourierPaths(store.slug);
+
+    return {
+      message: "Webhook URL created. Paste both values into the courier's panel.",
+      secret: result.secret,
+      status: "success",
+      url: result.url
+    };
+  } catch (error) {
+    return { message: messageFor(error), secret: null, status: "error", url: null };
+  }
+}
+
+export async function disableCourierWebhookAction(
+  providerKey: string
+): Promise<CourierWebhookActionState> {
+  const access = await requireCourierManagerStore();
+
+  if (!access.ok) {
+    return { ...access.state, secret: null, url: null };
+  }
+
+  const store = access.store;
+  const gate = await courierPlanGate(store.id, "order_tracking");
+
+  if (gate) {
+    return { ...gate, secret: null, url: null };
+  }
+
+  try {
+    await disableCourierWebhook(store.id, providerKey);
+
+    revalidateCourierPaths(store.slug);
+
+    return {
+      message: "Webhook disabled. Remove the URL from the courier's panel too.",
+      secret: null,
+      status: "success",
+      url: null
+    };
+  } catch (error) {
+    return { message: messageFor(error), secret: null, status: "error", url: null };
+  }
+}
+
 function toActionState(result: SendOrderToCourierResult): CourierActionState {
   switch (result.kind) {
     case "SENT":
@@ -433,6 +558,7 @@ function messageFor(error: unknown) {
 
 function revalidateCourierPaths(storeSlug: string, orderId?: string) {
   revalidatePath("/dashboard/orders");
+  revalidatePath("/dashboard/orders/tracking");
   revalidatePath("/dashboard/settings/courier");
   revalidatePath(`/dashboard/settings/${storeSlug}`);
 

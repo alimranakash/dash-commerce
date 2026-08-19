@@ -50,6 +50,9 @@ async function createCourierSchema(db: CourierSchemaClient) {
       "lastTestMessage" TEXT,
       "balanceAmount" NUMERIC(12, 2),
       "balanceCheckedAt" TIMESTAMP(3),
+      "webhookToken" TEXT,
+      "webhookSecret" TEXT,
+      "webhookLastSeenAt" TIMESTAMP(3),
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       CONSTRAINT "CourierAccount_storeId_fkey" FOREIGN KEY ("storeId")
@@ -61,6 +64,24 @@ async function createCourierSchema(db: CourierSchemaClient) {
   );
   await db.$executeRawUnsafe(
     `CREATE INDEX IF NOT EXISTS "CourierAccount_storeId_idx" ON "${schema}"."CourierAccount" ("storeId")`
+  );
+  // Webhook routing columns, added after the table shipped. The CREATE above
+  // covers a fresh install; these three cover every database that already has a
+  // CourierAccount table.
+  for (const column of [
+    `"webhookToken" TEXT`,
+    `"webhookSecret" TEXT`,
+    `"webhookLastSeenAt" TIMESTAMP(3)`
+  ]) {
+    await db.$executeRawUnsafe(
+      `ALTER TABLE "${schema}"."CourierAccount" ADD COLUMN IF NOT EXISTS ${column}`
+    );
+  }
+  // The receiver looks an account up by this token alone, so it must be unique
+  // platform-wide, not per store. `db:push` will not add a unique constraint
+  // without --accept-data-loss, which is why it is created here.
+  await db.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "CourierAccount_webhookToken_key" ON "${schema}"."CourierAccount" ("webhookToken")`
   );
 
   await db.$executeRawUnsafe(`

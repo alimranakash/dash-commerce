@@ -1397,6 +1397,14 @@ model CourierAccount {
   lastTestMessage   String?
   balanceAmount     Decimal?   @db.Decimal(12, 2)
   balanceCheckedAt  DateTime?
+  // Opaque per-account routing token that sits in the webhook URL path. The
+  // carrier's payload carries no store identity, so this is what tells us which
+  // tenant an inbound delivery update belongs to.
+  webhookToken      String?    @unique
+  // The Bearer/signature secret the seller pastes into the carrier's panel,
+  // encrypted with the same key as the credentials.
+  webhookSecret     String?
+  webhookLastSeenAt DateTime?
   store             Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
   shipments         Shipment[]
   createdAt         DateTime   @default(now())

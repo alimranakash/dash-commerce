@@ -15,12 +15,14 @@ import { BULK_SEND_MAX_ORDERS } from "./courier.schema";
 import {
   createDeliveryEventForStore,
   createShipmentForStore,
+  findShipmentByAnyReferenceForStore,
   getActiveShipmentsForStore,
   getCourierAccountForStore,
   getCourierAccountsForStore,
   getDeliveryEventsForShipment,
   getShipmentByIdForStore,
   getRecentDeliveryEventsForStore,
+  getRecentShipmentsWithOrderForStore,
   getShipmentForOrderProvider,
   getShipmentsForOrder,
   getShipmentsForOrders,
@@ -125,6 +127,170 @@ export async function getCustomerVisibleShipment(storeId: string, orderId: strin
     providerStatus: shipment.providerStatus,
     trackingCode: shipment.trackingCode
   };
+}
+
+/**
+ * Whether a carrier is pushing updates to this store, and when it last did.
+ *
+ * Surfaced next to every tracking status so a stale figure is legible as a stale
+ * figure: "auto-sync off" tells a seller to press Refresh, where a bare
+ * timestamp leaves them guessing whether the parcel or the integration is stuck.
+ */
+export type CourierAutoSyncView = {
+  enabled: boolean;
+  lastSeenAt: Date | null;
+};
+
+export type TrackedShipmentEvent = {
+  id: string;
+  message: string | null;
+  occurredAt: Date;
+  providerStatus: string | null;
+  source: string;
+  status: string;
+};
+
+export type TrackedShipmentView = {
+  autoSync: CourierAutoSyncView;
+  bookedAt: Date | null;
+  codAmount: number;
+  createdAt: Date;
+  deliveredAt: Date | null;
+  events: TrackedShipmentEvent[];
+  id: string;
+  invoiceReference: string;
+  lastError: string | null;
+  lastSyncedAt: Date | null;
+  order: {
+    currency: string;
+    customerName: string;
+    customerPhone: string;
+    fulfillmentStatus: string;
+    id: string;
+    orderNumber: string;
+    status: string;
+    totalAmount: number;
+  } | null;
+  provider: string;
+  providerLabel: string;
+  providerShipmentId: string | null;
+  providerStatus: string | null;
+  status: string;
+  trackingCode: string | null;
+};
+
+/**
+ * Whether the given provider's callbacks are wired up for this store. Read from
+ * the account row rather than from the provider registry, because "the carrier
+ * supports webhooks" and "this seller has set one up" are different facts and
+ * only the second one makes a status live.
+ */
+export async function getCourierAutoSync(
+  storeId: string,
+  provider: string
+): Promise<CourierAutoSyncView> {
+  const account = await getCourierAccountForStore(storeId, provider);
+
+  return {
+    enabled: Boolean(account?.webhookToken) && Boolean(getCourierProvider(provider)?.webhook),
+    lastSeenAt: account?.webhookLastSeenAt ?? null
+  };
+}
+
+/**
+ * The Order Tracking lookup: one identifier in, one parcel and its full history
+ * out.
+ *
+ * Deliberately forgiving about *which* identifier — a seller holding a parcel
+ * sticker has a tracking code, a seller reading a carrier's dashboard has a
+ * consignment id, and a customer on the phone quotes an order number. Requiring
+ * them to know which is which would make the page useless at the moment it is
+ * needed. Every candidate is still matched inside this store only.
+ */
+export async function trackShipmentByReference(
+  storeId: string,
+  reference: string
+): Promise<TrackedShipmentView | null> {
+  const shipment = await findShipmentByAnyReferenceForStore(storeId, reference);
+
+  if (!shipment) {
+    return null;
+  }
+
+  const [events, autoSync] = await Promise.all([
+    getDeliveryEventsForShipment(storeId, shipment.id),
+    getCourierAutoSync(storeId, shipment.provider)
+  ]);
+
+  return {
+    autoSync,
+    bookedAt: shipment.bookedAt,
+    codAmount: Number(shipment.codAmount),
+    createdAt: shipment.createdAt,
+    deliveredAt: shipment.deliveredAt,
+    events: events.map((event) => ({
+      id: event.id,
+      message: event.message,
+      occurredAt: event.occurredAt,
+      providerStatus: event.providerStatus,
+      source: event.source,
+      status: event.status
+    })),
+    id: shipment.id,
+    invoiceReference: shipment.invoiceReference,
+    lastError: shipment.lastError,
+    lastSyncedAt: shipment.lastSyncedAt,
+    order: shipment.order
+      ? {
+          currency: shipment.order.currency,
+          customerName: shipment.order.customerName,
+          customerPhone: shipment.order.customerPhone,
+          fulfillmentStatus: shipment.order.fulfillmentStatus,
+          id: shipment.order.id,
+          orderNumber: shipment.order.orderNumber,
+          status: shipment.order.status,
+          totalAmount: Number(shipment.order.totalAmount)
+        }
+      : null,
+    provider: shipment.provider,
+    providerLabel: getCourierProvider(shipment.provider)?.label ?? shipment.provider,
+    providerShipmentId: shipment.providerShipmentId,
+    providerStatus: shipment.providerStatus,
+    status: shipment.status,
+    trackingCode: shipment.trackingCode
+  };
+}
+
+export type RecentTrackedShipment = {
+  customerName: string | null;
+  id: string;
+  orderId: string | null;
+  orderNumber: string | null;
+  providerLabel: string;
+  providerStatus: string | null;
+  status: string;
+  trackingCode: string | null;
+  updatedAt: Date;
+};
+
+/** Seeds the tracking page with something to click before anything is searched. */
+export async function getRecentTrackedShipments(
+  storeId: string,
+  limit = 10
+): Promise<RecentTrackedShipment[]> {
+  const shipments = await getRecentShipmentsWithOrderForStore(storeId, limit);
+
+  return shipments.map((shipment) => ({
+    customerName: shipment.order?.customerName ?? null,
+    id: shipment.id,
+    orderId: shipment.order?.id ?? null,
+    orderNumber: shipment.order?.orderNumber ?? null,
+    providerLabel: getCourierProvider(shipment.provider)?.label ?? shipment.provider,
+    providerStatus: shipment.providerStatus,
+    status: shipment.status,
+    trackingCode: shipment.trackingCode ?? shipment.providerShipmentId,
+    updatedAt: shipment.lastSyncedAt ?? shipment.updatedAt
+  }));
 }
 
 export type RefreshShipmentStatusResult = {

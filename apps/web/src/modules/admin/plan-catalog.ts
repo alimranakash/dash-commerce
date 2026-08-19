@@ -38,6 +38,7 @@ const STARTER_FEATURES: PlanFeatureKey[] = [
   "fraud_check",
   "inventory",
   "marketing_analytics",
+  "order_tracking",
   "order_verification",
   "pixel_tracking",
   "purchases",

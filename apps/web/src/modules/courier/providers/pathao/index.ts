@@ -11,6 +11,7 @@ import type {
 import { pathaoProductionBaseUrl, pathaoRequest, pathaoSandboxBaseUrl } from "./client";
 import { toPathaoOrderPayload } from "./mapper";
 import { pathaoStatusToShipmentStatus } from "./status-map";
+import { pathaoWebhook } from "./webhook";
 
 /**
  * Pathao Courier — the second provider, and the test of the abstraction.
@@ -131,7 +132,8 @@ export const pathaoProvider: CourierProvider = {
   getStatus,
   key: "pathao",
   label: "Pathao",
-  testConnection
+  testConnection,
+  webhook: pathaoWebhook
 };
 
 async function createShipment(

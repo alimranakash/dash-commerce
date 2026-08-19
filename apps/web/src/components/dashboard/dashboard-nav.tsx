@@ -56,6 +56,7 @@ const NAV_FEATURE_BY_HREF: Record<string, PlanFeatureKey> = {
   "/dashboard/fraud-check": "fraud_check",
   "/dashboard/inventory": "inventory",
   "/dashboard/orders/fake": "fake_orders",
+  "/dashboard/orders/tracking": "order_tracking",
   "/dashboard/orders/verification": "order_verification",
   "/dashboard/purchases": "purchases",
   "/dashboard/reports/abandoned-carts": "abandoned_cart",
@@ -99,6 +100,7 @@ const productLinks = [
 
 const orderLinks = [
   { href: "/dashboard/orders", label: "All Orders" },
+  { href: "/dashboard/orders/tracking", label: "Order Tracking" },
   { href: "/dashboard/orders/fake", label: "Fake Orders" },
   { href: "/dashboard/orders/verification", label: "Verification Queue" }
 ];
@@ -491,6 +493,10 @@ function isOrderLinkActive(pathname: string, href: string) {
 
   if (href === "/dashboard/orders/verification") {
     return matchesRoute(pathname, href) || matchesRoute(pathname, "/dashboard/orders/verification-queue");
+  }
+
+  if (href === "/dashboard/orders/tracking") {
+    return matchesRoute(pathname, href);
   }
 
   return pathname === "/dashboard/orders";

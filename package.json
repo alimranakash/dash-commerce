@@ -14,6 +14,7 @@
     "typecheck": "turbo typecheck --env-mode=loose",
     "format": "prettier --write .",
     "verify:demo-packs": "node scripts/verify-demo-packs.mjs",
+    "verify:courier-webhook": "tsx scripts/verify-courier-webhook.mts",
     "verify:plan-features": "tsx scripts/verify-plan-features.mts",
     "verify:staff-seats": "tsx scripts/verify-staff-seats.mts",
     "verify:staff-permissions": "tsx scripts/verify-staff-permissions.mts",

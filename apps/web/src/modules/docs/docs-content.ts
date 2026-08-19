@@ -1167,33 +1167,67 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         slug: "payments-delivery/courier-setup",
         title: "Courier Setup",
         intro:
-          "Courier Settings page Pathao, SteadFast, RedX, Paperfly এবং Carry Bee API credential রাখার UI foundation। Automatic booking/tracking এখনো চালু নয়।",
+          "Courier Settings page এ Steadfast বা Pathao connect করলে order থেকেই real parcel book করা যায়। RedX, Paperfly এবং Carry Bee এখনো Coming soon — ওগুলো credential নেয় না। Credential encrypt হয়ে save হয়, আর কখনওই ফেরত দেখানো হয় না — শুধু শেষ চার character।",
         useCase: [
-          "ভবিষ্যতের delivery booking integration-এর credential প্রস্তুত রাখতে।",
-          "Provider অনুযায়ী API base URL, store ID, key, token, username/password সংরক্ষণ করতে।",
-          "Courier provider enable/disable state manage করতে।"
+          "Order page থেকে এক ক্লিকে courier-এ parcel book করতে।",
+          "Orders list থেকে একসাথে অনেক order bulk send করতে।",
+          "Delivery status auto-sync (webhook) চালু করতে।"
         ],
         steps: [
           "Settings > Courier খুলুন।",
-          "যে provider ব্যবহার করবেন তার Enable toggle চালু করুন।",
-          "API Base URL এবং required credential fields পূরণ করুন।",
-          "Secret/API key/password fields password input হিসেবে রাখুন।",
-          "Save Courier Settings চাপুন।"
+          "Steadfast বা Pathao card-এ API credential গুলো দিন।",
+          "Test connection চেপে নিশ্চিত হন credential কাজ করছে।",
+          "Enable toggle চালু করুন, একাধিক courier থাকলে একটিকে Default করুন।",
+          "Delivery auto-sync section-এ Generate webhook URL চাপুন, তারপর URL ও Secret courier-এর panel-এ paste করুন।"
         ],
         important: [
-          "এটি real courier booking করে না।",
-          "Secret fields public কোথাও share করবেন না।",
+          "COURIER_CREDENTIALS_KEY root .env-এ না থাকলে credential save করা যাবে না।",
+          "Courier API একটি paid feature — plan-এ না থাকলে booking ও tracking action গুলো blocked থাকবে।",
+          "Timeout হলে কখনওই আবার send করবেন না — Refresh status দিয়ে দেখুন parcel তৈরি হয়েছে কি না।",
           "Checkout shipping amount Shipping settings থেকে আসে, courier credentials থেকে নয়।"
         ],
         tips: [
           "Provider sandbox/live credential আলাদা করে নোট রাখুন।",
-          "Future Test Connection button থাকলে live করার আগে test করুন।"
+          "Webhook চালু থাকলে Orders list-এর Delivery column নিজে নিজেই update হয়।"
         ],
         commonMistakes: [
-          "Courier setup করলেই order auto-book হবে ভাবা।",
+          "Webhook URL-কেই secret ভেবে courier panel-এর secret ঘরে বসানো — দুটো আলাদা মান, আলাদা ঘরে যায়।",
           "Wrong base URL দিয়ে credential save করা।"
         ],
-        related: ["Shipping Zones", "Manage Orders", "Invoice Settings"]
+        related: ["Order Tracking", "Shipping Zones", "Manage Orders", "Invoice Settings"]
+      }),
+      page({
+        slug: "payments-delivery/order-tracking",
+        title: "Order Tracking",
+        intro:
+          "Orders > Order Tracking page-এ tracking code দিয়ে যেকোনো parcel খুঁজে তার পুরো delivery history দেখা যায়। Webhook চালু থাকলে courier নিজে থেকেই update পাঠায়, তাই status নিজে নিজেই বদলায়।",
+        useCase: [
+          "Customer ফোন করে জানতে চাইলে সাথে সাথে parcel কোথায় আছে বলতে।",
+          "একটি order-এর ভেতরেই Order Tracking panel-এ শেষ অবস্থা দেখতে।",
+          "Orders list-এর Delivery column-এ সব parcel-এর অবস্থা একসাথে দেখতে।"
+        ],
+        steps: [
+          "Orders > Order Tracking খুলুন।",
+          "Tracking code, consignment id, invoice reference বা order number — যেকোনো একটি লিখে Track চাপুন।",
+          "Delivery history-তে প্রতিটি update কখন ও কোথা থেকে এসেছে দেখুন।",
+          "Auto-sync বন্ধ থাকলে Refresh চেপে courier থেকে সরাসরি status আনুন।",
+          "Open order চেপে সেই order-এর detail page-এ যান।"
+        ],
+        important: [
+          "Order Tracking একটি paid feature — Starter plan থেকে চালু।",
+          "Courier যে status পাঠায় সেটাই হুবহু দেখানো হয়, আমরা বদলাই না।",
+          "শুধু নিশ্চিত delivered হলেই order FULFILLED হয়; delivered_approval_pending হলে হয় না।",
+          "Auto-sync off থাকলে status শুধু Refresh চাপলে বদলাবে।"
+        ],
+        tips: [
+          "Customer-এর কাছ থেকে order number নিলেই হবে — tracking code মুখস্থ করার দরকার নেই।",
+          "Recent parcels list থেকে সরাসরি click করে track করা যায়।"
+        ],
+        commonMistakes: [
+          "Webhook setup না করে status নিজে নিজে update হবে আশা করা।",
+          "Courier panel-এ webhook URL বদলে গেলে (Regenerate করার পর) পুরোনো URL রেখে দেয়া।"
+        ],
+        related: ["Courier Setup", "Manage Orders", "Thank You Page"]
       }),
       page({
         slug: "payments-delivery/invoice-settings",

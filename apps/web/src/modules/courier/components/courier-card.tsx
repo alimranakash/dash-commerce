@@ -1,13 +1,20 @@
 import { Truck } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { OrderStatusBadge } from "../../orders/components/order-status-badge";
+import { DeliveryTimeline } from "./order-tracking-panel";
 import { RefreshStatusButton } from "./refresh-status-button";
 import { SendToCourierButton } from "./send-to-courier-button";
+import type { CourierAutoSyncView } from "../courier.service";
 
 /**
- * The order-detail courier surface, replacing the hardcoded "Not booked" /
- * "Not assigned" rows. Renders one of two states: a send prompt, or the live
- * booking with its delivery history.
+ * The order-detail courier surface: booking and tracking in one panel, because
+ * from the seller's side they are one question — "where is this parcel?" —
+ * whose first answer is sometimes "not sent yet".
+ *
+ * Renders one of two states: a send prompt, or the live booking with its
+ * delivery history. The history is the same `DeliveryTimeline` the Order
+ * Tracking page uses, so the two surfaces cannot drift.
  */
 
 export type CourierCardShipment = {
@@ -18,6 +25,7 @@ export type CourierCardShipment = {
     id: string;
     message: string | null;
     occurredAt: Date;
+    providerStatus: string | null;
     source: string;
     status: string;
   }>;
@@ -33,6 +41,7 @@ export type CourierCardShipment = {
 };
 
 export function CourierCard({
+  autoSync,
   courierLabel,
   orderId,
   sendDisabledReason,
@@ -40,6 +49,8 @@ export function CourierCard({
   shippingCost,
   shippingMethod
 }: {
+  /** Whether this store's carrier pushes delivery updates here on its own. */
+  autoSync: CourierAutoSyncView;
   courierLabel: string;
   orderId: string;
   sendDisabledReason?: string | undefined;
@@ -52,7 +63,12 @@ export function CourierCard({
       <header className="mb-4 flex items-center justify-between gap-2">
         <span className="flex items-center gap-2">
           <Truck className="h-4 w-4 text-[#7548f5]" />
-          <h2 className="m-0 text-sm font-semibold text-[#20212a]">Courier</h2>
+          <span className="grid">
+            <h2 className="m-0 text-sm font-semibold text-[#20212a]">Order Tracking</h2>
+            <span className="text-[10px] text-[#858691]">
+              {shipment ? shipment.providerLabel : "Not booked yet"}
+            </span>
+          </span>
         </span>
         {shipment ? <RefreshStatusButton orderId={orderId} shipmentId={shipment.id} /> : null}
       </header>
@@ -76,6 +92,16 @@ export function CourierCard({
                 "Last checked",
                 shipment.lastSyncedAt ? formatDate(shipment.lastSyncedAt) : "Not checked yet"
               ],
+              [
+                "Full history",
+                <Link
+                  className="font-semibold text-[#6d3cf5] hover:underline"
+                  href="/dashboard/orders/tracking"
+                  key="tracking"
+                >
+                  Open in Order Tracking
+                </Link>
+              ],
               ["COD Amount", shipment.codAmount],
               ["Shipping Method", shippingMethod],
               ["Shipping Cost", shippingCost],
@@ -89,25 +115,9 @@ export function CourierCard({
             </p>
           ) : null}
 
-          {shipment.events.length > 0 ? (
-            <div className="border-t border-[#f0eff7] pt-4">
-              <h3 className="m-0 text-[11px] font-semibold uppercase tracking-wide text-[#777985]">
-                Delivery history
-              </h3>
-              <ul className="mt-3 grid gap-2.5">
-                {shipment.events.map((event) => (
-                  <li className="grid gap-0.5 text-[11px] leading-5" key={event.id}>
-                    <span className="font-medium text-[#292a34]">
-                      {event.message ?? event.status}
-                    </span>
-                    <span className="text-[#858691]">
-                      {formatDate(event.occurredAt)} · {sourceLabel(event.source)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+          <AutoSyncRow autoSync={autoSync} />
+
+          <DeliveryTimeline events={shipment.events} />
         </div>
       ) : (
         <div className="grid gap-4">
@@ -127,6 +137,34 @@ export function CourierCard({
         </div>
       )}
     </section>
+  );
+}
+
+/**
+ * Says whether this status keeps itself current.
+ *
+ * Without it a timestamp is ambiguous: a seller cannot tell a parcel that has
+ * genuinely not moved from an integration that stopped reporting. Auto-sync off
+ * links straight to where it is turned on, rather than describing it.
+ */
+function AutoSyncRow({ autoSync }: { autoSync: CourierAutoSyncView }) {
+  if (!autoSync.enabled) {
+    return (
+      <p className="m-0 rounded-lg bg-[#faf9ff] px-3 py-2 text-[11px] leading-5 text-[#6b6c7c]">
+        Auto-sync is off — this status only changes when you press Refresh.{" "}
+        <Link className="font-semibold text-[#6d3cf5] hover:underline" href="/dashboard/settings/courier">
+          Set up the courier webhook
+        </Link>
+        .
+      </p>
+    );
+  }
+
+  return (
+    <p className="m-0 rounded-lg bg-emerald-50 px-3 py-2 text-[11px] leading-5 text-emerald-700">
+      Auto-syncing from the courier
+      {autoSync.lastSeenAt ? ` · last update received ${formatDate(autoSync.lastSeenAt)}` : ""}
+    </p>
   );
 }
 
@@ -191,19 +229,6 @@ function Rows({ rows }: { rows: Array<[string, ReactNode]> }) {
 
 function mono(value: string | null) {
   return value ? <span className="font-mono text-[11px]">{value}</span> : "Not assigned";
-}
-
-function sourceLabel(source: string) {
-  switch (source) {
-    case "MANUAL":
-      return "by seller";
-    case "PROVIDER_POLL":
-      return "from courier";
-    case "PROVIDER_WEBHOOK":
-      return "courier update";
-    default:
-      return "system";
-  }
 }
 
 function formatDate(value: Date) {

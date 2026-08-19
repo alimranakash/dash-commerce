@@ -16,6 +16,7 @@ import { parseSteadfastBulkResponse, toSteadfastBulkBody } from "./bulk";
 import { steadfastDefaultBaseUrl, steadfastRequest } from "./client";
 import { toSteadfastCreateOrderPayload } from "./mapper";
 import { steadfastStatusToShipmentStatus } from "./status-map";
+import { steadfastWebhook } from "./webhook";
 
 /**
  * Steadfast (Packzy), the first real provider.
@@ -96,7 +97,8 @@ export const steadfastProvider: CourierProvider = {
   getStatus,
   key: "steadfast",
   label: "Steadfast",
-  testConnection
+  testConnection,
+  webhook: steadfastWebhook
 };
 
 async function createShipment(

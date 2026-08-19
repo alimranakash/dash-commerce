@@ -1,16 +1,21 @@
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
 import { CourierActivityLog } from "../../../../modules/courier/components/courier-activity-log";
 import { CourierSettingsCards } from "../../../../modules/courier/components/courier-settings-cards";
+import { CourierWebhookCards } from "../../../../modules/courier/components/courier-webhook-cards";
 import { listCourierAccountViews } from "../../../../modules/courier/courier-accounts.service";
 import { isCourierEncryptionConfigured } from "../../../../modules/courier/courier-credentials";
+import { listCourierWebhookViews } from "../../../../modules/courier/courier-webhook.service";
 import { getCourierActivity } from "../../../../modules/courier/courier.service";
+import { hasPlanFeature } from "../../../../modules/billing/subscription-limits";
 import { requireStore } from "../../../../modules/stores/queries";
 
 export default async function CourierSettingsPage() {
   const store = await requireStore();
-  const [accounts, activity] = await Promise.all([
+  const [accounts, activity, webhooks, trackingEntitled] = await Promise.all([
     listCourierAccountViews(store.id),
-    getCourierActivity(store.id)
+    getCourierActivity(store.id),
+    listCourierWebhookViews(store.id),
+    hasPlanFeature(store.id, "order_tracking")
   ]);
   const configured = accounts.filter((account) => account.hasCredentials).length;
 
@@ -33,6 +38,7 @@ export default async function CourierSettingsPage() {
           ) : null}
         </div>
         <CourierSettingsCards accounts={accounts} encryptionReady={isCourierEncryptionConfigured()} />
+        <CourierWebhookCards locked={!trackingEntitled} webhooks={webhooks} />
         <CourierActivityLog entries={activity} />
       </section>
     </DashboardShell>

@@ -150,6 +150,64 @@ export type BulkShipmentResult = {
 };
 
 /**
+ * An inbound carrier callback, reduced to the two things an adapter needs and
+ * nothing more. `headers` are lowercased by the route so an adapter never has to
+ * guess at casing, and `rawBody` is the exact bytes as received, for carriers
+ * that sign the payload.
+ */
+export type CourierWebhookRequest = {
+  body: unknown;
+  headers: Record<string, string>;
+  rawBody: string;
+};
+
+/**
+ * One delivery update lifted out of a webhook payload.
+ *
+ * `status` is optional on purpose: Steadfast's `tracking_update` carries a
+ * free-text movement note with no status change at all, and the pipeline records
+ * it as a timeline entry rather than inventing a transition. `reference` is how
+ * the receiver finds our shipment — the payload never carries a store id, and it
+ * may name the parcel by any of the three keys.
+ */
+export type CourierWebhookEvent = {
+  message?: string | null | undefined;
+  occurredAt?: Date | undefined;
+  providerStatus: string | null;
+  reference: {
+    consignmentId?: string | null | undefined;
+    invoice?: string | null | undefined;
+    trackingCode?: string | null | undefined;
+  };
+  status?: ShipmentStatus | undefined;
+};
+
+/**
+ * IGNORED is a success, not a failure: a carrier ping, an event type we do not
+ * act on, or a payload shape we deliberately skip. The receiver answers 200 to
+ * all of them so the carrier does not retry something that will never change.
+ */
+export type CourierWebhookParseResult =
+  | { events: CourierWebhookEvent[]; kind: "EVENTS" }
+  | { kind: "IGNORED"; reason: string };
+
+/**
+ * Present iff `capabilities.webhook` and we have actually built the receiver
+ * side for that carrier. Everything carrier-specific about callbacks — auth
+ * scheme, payload shape, and any acknowledgement the carrier insists on — is
+ * contained here, so `/api/courier/webhook/[token]` stays provider-agnostic.
+ */
+export type CourierWebhookAdapter = {
+  /** Extra response headers the carrier requires on a successful ack. */
+  readonly ackHeaders?: Record<string, string> | undefined;
+  readonly parse: (request: CourierWebhookRequest) => CourierWebhookParseResult;
+  /** Seller-facing copy for the settings card — where to paste the URL. */
+  readonly setupHint: string;
+  /** Constant-time comparison lives in the adapter's helper, never a `===`. */
+  readonly verify: (request: CourierWebhookRequest, secret: string) => boolean;
+};
+
+/**
  * Raw counts only. The success ratio is computed once in the service so every
  * carrier agrees on the formula rather than each adapter inventing one.
  */
@@ -187,4 +245,6 @@ export type CourierProvider = {
     input: { phone: string },
     context: CourierContext
   ) => Promise<CustomerScoreResult>;
+  /** Present iff capabilities.webhook and the receiver side is built. */
+  readonly webhook?: CourierWebhookAdapter;
 };

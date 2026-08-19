@@ -7,7 +7,11 @@ import { CourierCard } from "../../../../modules/courier/components/courier-card
 import { CourierScoreCard } from "../../../../modules/courier/components/courier-score-card";
 import { describeSendTarget } from "../../../../modules/courier/courier-accounts.service";
 import { getCachedCourierScore } from "../../../../modules/courier/courier-insight.service";
-import { getOrderShipments, getShipmentTimeline } from "../../../../modules/courier/courier.service";
+import {
+  getCourierAutoSync,
+  getOrderShipments,
+  getShipmentTimeline
+} from "../../../../modules/courier/courier.service";
 import { getCourierProvider } from "../../../../modules/courier/providers/registry";
 import { getOrderByIdForStore } from "../../../../modules/orders/order.service";
 import { hasPlanFeature } from "../../../../modules/billing/subscription-limits";
@@ -30,6 +34,11 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
   const paymentDate = order.paymentStatus === "PENDING" ? "Awaiting payment" : formatDate(order.updatedAt);
   const shipment = (await getOrderShipments(store.id, order.id))[0] ?? null;
   const shipmentEvents = shipment ? await getShipmentTimeline(store.id, shipment.id) : [];
+  // Whether the carrier pushes updates here on its own, so the tracking panel can
+  // say why a status might be stale instead of leaving the seller to guess.
+  const autoSync = shipment
+    ? await getCourierAutoSync(store.id, shipment.provider)
+    : { enabled: false, lastSeenAt: null };
   const sendTarget = await describeSendTarget(store.id);
   // Cache-only on render: checking the carrier is an explicit click.
   const courierScore = await getCachedCourierScore(store.id, order.customerPhone);
@@ -82,6 +91,7 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
         <div className="grid items-start gap-4 xl:grid-cols-2">
           <PaymentCard method={order.paymentMethodName} paymentDate={paymentDate} reference={order.paymentReference} status={order.paymentStatus} />
           <CourierCard
+            autoSync={autoSync}
             courierLabel={sendTarget.label}
             orderId={order.id}
             shipment={shipment ? {
@@ -92,6 +102,7 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
                 id: event.id,
                 message: event.message,
                 occurredAt: event.occurredAt,
+                providerStatus: event.providerStatus,
                 source: event.source,
                 status: event.status
               })),

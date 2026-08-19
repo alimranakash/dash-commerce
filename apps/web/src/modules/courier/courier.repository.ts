@@ -214,6 +214,77 @@ export async function updateCourierAccountSecretCacheForStore(
   });
 }
 
+/**
+ * The one query in this file that is *not* scoped by storeId, and deliberately
+ * so: a carrier's callback carries no store identity at all, so the opaque token
+ * in the webhook URL is the tenant key. It is unique platform-wide, generated
+ * from 32 random bytes, and the row it finds supplies the storeId that scopes
+ * everything the receiver does next.
+ */
+export async function getCourierAccountByWebhookToken(token: string) {
+  await ensureCourierSchema();
+
+  if (!token.trim()) {
+    return null;
+  }
+
+  return prisma.courierAccount.findFirst({
+    where: {
+      webhookToken: token
+    }
+  });
+}
+
+export async function updateCourierAccountWebhookForStore(
+  storeId: string,
+  provider: string,
+  input: { webhookSecret: string; webhookToken: string }
+) {
+  await ensureCourierSchema();
+
+  return prisma.courierAccount.updateMany({
+    where: {
+      provider,
+      storeId
+    },
+    data: {
+      webhookSecret: input.webhookSecret,
+      webhookToken: input.webhookToken
+    }
+  });
+}
+
+export async function clearCourierAccountWebhookForStore(storeId: string, provider: string) {
+  await ensureCourierSchema();
+
+  return prisma.courierAccount.updateMany({
+    where: {
+      provider,
+      storeId
+    },
+    data: {
+      webhookLastSeenAt: null,
+      webhookSecret: null,
+      webhookToken: null
+    }
+  });
+}
+
+/** Records that the carrier reached us, so settings can show the link is live. */
+export async function touchCourierAccountWebhookSeenForStore(storeId: string, provider: string) {
+  await ensureCourierSchema();
+
+  return prisma.courierAccount.updateMany({
+    where: {
+      provider,
+      storeId
+    },
+    data: {
+      webhookLastSeenAt: new Date()
+    }
+  });
+}
+
 export async function updateCourierAccountBalanceForStore(
   storeId: string,
   provider: string,
@@ -401,6 +472,126 @@ export async function reserveShipmentsForStore(input: {
       provider: input.provider,
       storeId: input.storeId
     }
+  });
+}
+
+/**
+ * Finds the shipment an inbound callback is about.
+ *
+ * Ordered by how strongly each key identifies a parcel. The consignment id is
+ * the carrier's own primary key and is matched first; `invoiceReference` is
+ * unique per (store, provider) by constraint; `trackingCode` is last because it
+ * carries no uniqueness guarantee. Provider is always part of the match, so a
+ * Pathao callback can never land on a Steadfast shipment that happens to share
+ * an invoice.
+ */
+export async function findShipmentByCarrierReferenceForStore(
+  storeId: string,
+  provider: string,
+  reference: {
+    consignmentId?: string | null | undefined;
+    invoice?: string | null | undefined;
+    trackingCode?: string | null | undefined;
+  }
+) {
+  await ensureCourierSchema();
+
+  const candidates = [
+    reference.consignmentId?.trim()
+      ? { providerShipmentId: reference.consignmentId.trim() }
+      : null,
+    reference.invoice?.trim() ? { invoiceReference: reference.invoice.trim() } : null,
+    reference.trackingCode?.trim() ? { trackingCode: reference.trackingCode.trim() } : null
+  ].filter((value): value is NonNullable<typeof value> => value !== null);
+
+  for (const candidate of candidates) {
+    const shipment = await prisma.shipment.findFirst({
+      where: {
+        provider,
+        storeId,
+        ...candidate
+      },
+      orderBy: {
+        createdAt: "desc"
+      }
+    });
+
+    if (shipment) {
+      return shipment;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * The seller-facing tracking lookup. Accepts whichever identifier is to hand —
+ * the tracking code off a parcel sticker, the carrier's consignment id, our
+ * invoice reference, or the order number a customer quotes — because a seller
+ * chasing a parcel should not have to know which of those they are holding.
+ */
+export async function findShipmentByAnyReferenceForStore(storeId: string, reference: string) {
+  await ensureCourierSchema();
+
+  const value = reference.trim();
+
+  if (!value) {
+    return null;
+  }
+
+  const orderNumber = value.replace(/^#/, "");
+
+  return prisma.shipment.findFirst({
+    where: {
+      storeId,
+      OR: [
+        { trackingCode: value },
+        { providerShipmentId: value },
+        { invoiceReference: value },
+        { order: { orderNumber } }
+      ]
+    },
+    include: {
+      order: {
+        select: {
+          currency: true,
+          customerName: true,
+          customerPhone: true,
+          fulfillmentStatus: true,
+          id: true,
+          orderNumber: true,
+          status: true,
+          totalAmount: true
+        }
+      }
+    },
+    orderBy: {
+      createdAt: "desc"
+    }
+  });
+}
+
+/** Newest shipments with their order, for the tracking page's recent list. */
+export async function getRecentShipmentsWithOrderForStore(storeId: string, limit = 10) {
+  await ensureCourierSchema();
+
+  return prisma.shipment.findMany({
+    where: {
+      storeId
+    },
+    include: {
+      order: {
+        select: {
+          customerName: true,
+          id: true,
+          orderNumber: true
+        }
+      }
+    },
+    orderBy: {
+      createdAt: "desc"
+    },
+    take: limit
   });
 }
 
