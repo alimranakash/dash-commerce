@@ -71,8 +71,7 @@ export async function changePasswordAction(
 function profileInfoFromFormData(formData: FormData): ProfileInfoInput {
   return {
     image: optionalValue(formData, "image") ?? "",
-    name: getValue(formData, "name"),
-    phone: optionalValue(formData, "phone")
+    name: getValue(formData, "name")
   };
 }
 

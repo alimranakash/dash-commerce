@@ -6,7 +6,8 @@ export { getProfileByUserId };
 
 export async function saveProfileInfo(userId: string, input: ProfileInfoInput) {
   const data = profileInfoSchema.parse(input);
-  return updateProfileInfo(userId, data);
+
+  return updateProfileInfo(userId, { image: data.image || null, name: data.name });
 }
 
 export async function saveProfilePreferences(userId: string, input: ProfilePreferencesInput) {

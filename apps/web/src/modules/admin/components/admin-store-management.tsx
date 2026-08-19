@@ -13,6 +13,7 @@ import {
 
 export type AdminStoreTeamMember = {
   email: string;
+  id: string;
   joinedAt: string;
   name: string;
   role: string;
@@ -319,7 +320,7 @@ function StoreDetailsModal({ onClose, store }: { onClose: () => void; store: Adm
               {store.team.map((member) => (
                 <div
                   className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-[#eeecf7] bg-[#fbfaff] px-3 py-2"
-                  key={member.email}
+                  key={member.id}
                 >
                   <div>
                     <div className="text-xs font-semibold text-[#30313d]">{member.name}</div>

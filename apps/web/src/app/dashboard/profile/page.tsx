@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { requireUser } from "../../../lib/auth";
+import { changeContactAction } from "../../../modules/auth/contact-change.actions";
+import { SignInDetailsCard } from "../../../modules/auth/sign-in-details-card";
 import { ConnectedAccountsCard } from "../../../modules/profile/components/connected-accounts-card";
 import { PasswordForm, PersonalInfoForm, PreferencesForm } from "../../../modules/profile/components/profile-forms";
 import { changePasswordAction, updateProfileInfoAction, updateProfilePreferencesAction } from "../../../modules/profile/profile.actions";
@@ -34,10 +36,23 @@ export default async function ProfilePage() {
           <PersonalInfoForm
             action={updateProfileInfoAction}
             profile={{
-              email: profile.email,
               image: profile.image,
-              name: profile.name,
-              phone: profile.phone
+              name: profile.name
+            }}
+          />
+        </ProfileCard>
+
+        <ProfileCard
+          description="The email address and phone number you sign in with. Changing either sends a code to the new one first."
+          title="Sign-in Details"
+        >
+          <SignInDetailsCard
+            action={changeContactAction}
+            contacts={{
+              email: profile.email,
+              emailVerified: profile.emailVerified !== null,
+              phone: profile.phone,
+              phoneVerified: profile.phoneVerified !== null
             }}
           />
         </ProfileCard>

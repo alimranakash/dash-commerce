@@ -5,8 +5,10 @@ import { FakeOrderActionButtons } from "../../../../modules/fake-orders/componen
 import { FakeOrderEmpty } from "../../../../modules/fake-orders/components/fake-order-empty";
 import { RiskLevelBadge, VerificationStatusBadge } from "../../../../modules/fake-orders/components/fake-order-badges";
 import { getVerificationQueue } from "../../../../modules/fake-orders/fake-order.service";
+import { isCheckoutPhoneOtpRequired } from "../../../../modules/checkout/checkout-verification.service";
 import { isCourierVerificationRequired } from "../../../../modules/fake-orders/fake-order.verification";
 import {
+  CheckoutOtpPolicyToggle,
   VerificationPolicyNotice,
   VerificationPolicyToggle
 } from "../../../../modules/fake-orders/components/verification-policy-toggle";
@@ -20,9 +22,10 @@ export default async function VerificationQueuePage({ searchParams }: Verificati
   const store = await requireStore();
   const params = await searchParams;
   const search = singleValue(params.search).trim();
-  const [orders, verificationRequired] = await Promise.all([
+  const [orders, verificationRequired, codOtpRequired] = await Promise.all([
     getVerificationQueue(store.id, search),
-    isCourierVerificationRequired(store.id)
+    isCourierVerificationRequired(store.id),
+    isCheckoutPhoneOtpRequired(store.id)
   ]);
 
   return (
@@ -35,6 +38,7 @@ export default async function VerificationQueuePage({ searchParams }: Verificati
             <p className="auth-copy">Manually verify suspicious orders before fulfillment.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <CheckoutOtpPolicyToggle required={codOtpRequired} />
             <VerificationPolicyToggle required={verificationRequired} />
             <Link className="secondary link-button" href="/dashboard/orders/fake">
               Fake Orders
@@ -46,6 +50,12 @@ export default async function VerificationQueuePage({ searchParams }: Verificati
         {params.policy ? (
           <p className="success-message">
             Courier verification is now {params.policy === "on" ? "required" : "off"} for this store.
+          </p>
+        ) : null}
+        {params.codOtp ? (
+          <p className="success-message">
+            Cash-on-delivery orders {params.codOtp === "on" ? "now need" : "no longer need"} an SMS
+            code before they can be placed.
           </p>
         ) : null}
 

@@ -43,7 +43,8 @@ export async function listOrganizationMembers(organizationId: string) {
         select: {
           email: true,
           id: true,
-          name: true
+          name: true,
+          phone: true
         }
       }
     },

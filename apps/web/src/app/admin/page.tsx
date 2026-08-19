@@ -1,5 +1,10 @@
 import { CreditCard, Store, TrendingUp, Users } from "lucide-react";
+import { Suspense } from "react";
 import { AdminMetricCard, AdminPageHeader } from "../../components/admin/admin-ui";
+import {
+  AdminMessagingHealth,
+  AdminMessagingHealthSkeleton
+} from "../../modules/admin/components/admin-messaging-health";
 import { getAdminOverviewMetrics } from "../../modules/admin/admin.repository";
 
 export default async function AdminOverviewPage() {
@@ -28,13 +33,18 @@ export default async function AdminOverviewPage() {
             Admin activity charts and tenant health events will appear here.
           </div>
         </section>
-        <section className="rounded-xl border border-[#ececf5] bg-white p-5 shadow-sm">
-          <h2 className="m-0 text-base font-semibold text-[#20212c]">Admin Notes</h2>
-          <div className="mt-4 space-y-3 text-sm text-[#565762]">
-            <p className="m-0 rounded-lg bg-[#fbfaff] p-3">Billing, support, and audit log tools are scaffolded as admin placeholders.</p>
-            <p className="m-0 rounded-lg bg-[#fbfaff] p-3">Access is limited to users with the platform `ADMIN` role.</p>
-          </div>
-        </section>
+        <div className="grid gap-4">
+          <Suspense fallback={<AdminMessagingHealthSkeleton />}>
+            <AdminMessagingHealth />
+          </Suspense>
+          <section className="rounded-xl border border-[#ececf5] bg-white p-5 shadow-sm">
+            <h2 className="m-0 text-base font-semibold text-[#20212c]">Admin Notes</h2>
+            <div className="mt-4 space-y-3 text-sm text-[#565762]">
+              <p className="m-0 rounded-lg bg-[#fbfaff] p-3">Billing, support, and audit log tools are scaffolded as admin placeholders.</p>
+              <p className="m-0 rounded-lg bg-[#fbfaff] p-3">Access is limited to users with the platform `ADMIN` role.</p>
+            </div>
+          </section>
+        </div>
       </div>
     </section>
   );

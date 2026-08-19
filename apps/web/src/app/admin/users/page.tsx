@@ -60,7 +60,8 @@ function toUserListItem(user: AdminUserRecord, currentAdminId: string): AdminUse
 
   return {
     createdAt: formatDate(user.createdAt),
-    email: user.email,
+    email: user.email ?? "No email",
+    emailVerified: user.emailVerified !== null,
     id: user.id,
     image: user.image,
     isCurrentAdmin: user.id === currentAdminId,
@@ -68,7 +69,9 @@ function toUserListItem(user: AdminUserRecord, currentAdminId: string): AdminUse
     joinedStores,
     lastActivity: formatDate(user.updatedAt),
     loginProviders: user.accounts.map((account) => account.provider),
-    name: user.name ?? user.email,
+    name: user.name ?? user.email ?? user.phone ?? "Unnamed user",
+    phone: user.phone,
+    phoneVerified: user.phoneVerified !== null,
     role: user.role,
     storesCount: joinedStores.length
   };

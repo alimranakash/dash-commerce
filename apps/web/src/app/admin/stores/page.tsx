@@ -98,7 +98,8 @@ function toStoreListItem(store: AdminStoreRecord): AdminStoreListItem {
     status: store.status as AdminStoreListItem["status"],
     storeUrl: `/s/${store.slug}`,
     team: store.organization.members.map((member) => ({
-      email: member.user.email,
+      email: member.user.email ?? "No email",
+      id: member.id,
       joinedAt: formatDate(member.createdAt),
       name: member.user.name ?? "No name set",
       role: member.role

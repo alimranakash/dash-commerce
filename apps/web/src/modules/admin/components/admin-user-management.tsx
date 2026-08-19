@@ -15,6 +15,7 @@ import {
 export type AdminUserListItem = {
   createdAt: string;
   email: string;
+  emailVerified: boolean;
   id: string;
   image?: string | null;
   isCurrentAdmin: boolean;
@@ -28,6 +29,8 @@ export type AdminUserListItem = {
   lastActivity: string;
   loginProviders: string[];
   name: string;
+  phone: string | null;
+  phoneVerified: boolean;
   role: "ADMIN" | "MEMBER" | "OWNER";
   storesCount: number;
 };
@@ -221,7 +224,16 @@ function UserDetailsModal({ onClose, user }: { onClose: () => void; user: AdminU
         <div className="grid gap-4">
           <DetailSection title="User Information">
             <DetailRow label="Name" value={user.name} />
-            <DetailRow label="Email" value={user.email} />
+            <DetailRow
+              label="Email"
+              note={user.email === "No email" ? undefined : { ok: user.emailVerified, text: user.emailVerified ? "Verified" : "Unverified" }}
+              value={user.email}
+            />
+            <DetailRow
+              label="Phone"
+              note={user.phone === null ? undefined : { ok: user.phoneVerified, text: user.phoneVerified ? "Verified" : "Unverified" }}
+              value={user.phone ?? "No phone"}
+            />
             <DetailRow label="Created Date" value={user.createdAt} />
             <DetailRow label="Last Activity" value={user.lastActivity} />
           </DetailSection>
@@ -295,11 +307,14 @@ function DetailSection({ children, title }: { children: React.ReactNode; title: 
   );
 }
 
-function DetailRow({ label, value }: { label: string; value: string }) {
+function DetailRow({ label, note, value }: { label: string; note?: { ok: boolean; text: string } | undefined; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4 border-b border-[#efeff5] py-2 last:border-b-0">
       <span className="text-xs font-medium text-[#74758a]">{label}</span>
-      <span className="text-right text-xs font-semibold text-[#30313d]">{value}</span>
+      <span className="text-right text-xs font-semibold text-[#30313d]">
+        {value}
+        {note ? <em className={`ml-2 not-italic font-semibold ${note.ok ? "text-[#1f9d6a]" : "text-[#c08a2b]"}`}>{note.text}</em> : null}
+      </span>
     </div>
   );
 }

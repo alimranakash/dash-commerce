@@ -112,6 +112,7 @@ export async function getTeamView(scope: {
       isSelf,
       joinedAt: member.createdAt,
       name: member.user.name,
+      phone: member.user.phone,
       role
     };
   });
@@ -355,7 +356,17 @@ async function requireManageableMember(scope: ActorScope, memberId: string) {
  * forwarded to a group chat would let whoever opens it first join the store.
  */
 function assertInviteMatchesViewer(inviteEmail: string, viewerEmail: string | null | undefined) {
-  if (viewerEmail?.trim().toLowerCase() !== inviteEmail) {
+  // Invites are keyed by email, and an account that signed up with a phone
+  // number has none yet. That is fixable from their own profile, so say so
+  // rather than leaving them at a door with no handle.
+  if (!viewerEmail) {
+    throw new StaffInviteError(
+      "wrong_email",
+      `This invite was sent to ${inviteEmail}, and your account has no email address on it yet. Add ${inviteEmail} to your account under Profile, then open this link again.`
+    );
+  }
+
+  if (viewerEmail.trim().toLowerCase() !== inviteEmail) {
     throw new StaffInviteError(
       "wrong_email",
       `This invite was sent to ${inviteEmail}. Sign in with that account to accept it.`

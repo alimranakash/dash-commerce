@@ -9,6 +9,7 @@ import { getServerSession } from "next-auth";
 import * as CredentialsProviderModule from "next-auth/providers/credentials";
 import * as GoogleProviderModule from "next-auth/providers/google";
 import type { GoogleProfile } from "next-auth/providers/google";
+import { accountIdentifierWhere, parseAccountIdentifier } from "../modules/auth/identifier";
 import { loginSchema } from "../modules/auth/schemas";
 
 const nextAuthSecret = process.env.NEXTAUTH_SECRET ?? "dash-commerce-local-dev-secret-change-me";
@@ -20,9 +21,9 @@ const GoogleProvider = resolveDefaultExport(GoogleProviderModule);
 
 const providers: NextAuthOptions["providers"] = [
   CredentialsProvider({
-    name: "Email and password",
+    name: "Email or phone and password",
     credentials: {
-      email: { label: "Email", type: "email" },
+      identifier: { label: "Email or phone", type: "text" },
       password: { label: "Password", type: "password" }
     },
     async authorize(credentials) {
@@ -32,10 +33,16 @@ const providers: NextAuthOptions["providers"] = [
         return null;
       }
 
+      // An unparseable handle is indistinguishable from a wrong one on purpose:
+      // the form must not become a way to ask which numbers are registered.
+      const identifier = parseAccountIdentifier(parsedCredentials.data.identifier);
+
+      if (!identifier) {
+        return null;
+      }
+
       const user = await prisma.user.findUnique({
-        where: {
-          email: parsedCredentials.data.email
-        }
+        where: accountIdentifierWhere(identifier)
       });
 
       if (!user?.passwordHash || user.isSuspended) {

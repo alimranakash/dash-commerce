@@ -297,6 +297,9 @@ function MemberRow({
 }) {
   const [roleState, roleFormAction, isSavingRole] = useActionState(changeRoleAction, initialState);
   const [removeState, removeFormAction] = useActionState(removeAction, initialState);
+  // An account that signed up by phone has no email, so every label falls back
+  // to whichever handle the member actually has.
+  const handle = member.email ?? member.phone;
 
   return (
     <div className="grid gap-3 rounded-lg border border-[#ececf5] bg-[#fcfcff] p-4">
@@ -304,7 +307,7 @@ function MemberRow({
         <div className="grid gap-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-semibold text-[#292a34]">
-              {member.name ?? member.email}
+              {member.name ?? handle ?? "Unnamed member"}
             </span>
             <StatusBadge tone={member.role === "OWNER" ? "purple" : "gray"}>
               {roleLabels[member.role]}
@@ -312,7 +315,7 @@ function MemberRow({
             {member.isSelf ? <StatusBadge tone="green">You</StatusBadge> : null}
           </div>
           <span className="text-[11px] leading-5 text-[#858691]">
-            {member.name ? `${member.email} · ` : ""}joined {formatDate(member.joinedAt)} ·{" "}
+            {member.name && handle ? `${handle} · ` : ""}joined {formatDate(member.joinedAt)} ·{" "}
             {roleDescriptions[member.role]}
           </span>
         </div>
@@ -322,7 +325,7 @@ function MemberRow({
             <form action={roleFormAction} className="flex items-center gap-2">
               <input name="memberId" type="hidden" value={member.id} />
               <select
-                aria-label={`Role for ${member.email}`}
+                aria-label={`Role for ${handle ?? "this member"}`}
                 className="h-9 rounded-lg border border-[#dcd9e8] bg-white px-2.5 text-xs font-semibold text-[#555762]"
                 defaultValue={member.role}
                 name="role"
@@ -345,9 +348,9 @@ function MemberRow({
                 formData.set("memberId", member.id);
                 removeFormAction(formData);
               }}
-              ariaLabel={`Remove ${member.email} from the team`}
+              ariaLabel={`Remove ${handle ?? "this member"} from the team`}
               className="inline-flex h-9 items-center gap-2 rounded-lg border border-[#f2d4dc] bg-white px-3 text-xs font-semibold text-[#c02b52] hover:bg-[#fff5f7]"
-              title={`Remove ${member.email}`}
+              title={`Remove ${handle ?? "this member"}`}
             >
               <UserMinus className="h-3.5 w-3.5" />
               Remove

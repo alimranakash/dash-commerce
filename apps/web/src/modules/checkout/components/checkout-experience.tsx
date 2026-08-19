@@ -32,6 +32,7 @@ type CheckoutExperienceProps = {
   checkoutError: string | undefined;
   currency: string;
   paymentMethods: CheckoutPaymentMethod[];
+  phoneOtpRequired: boolean;
   shippingRates: CheckoutShippingRate[];
   storeSlug: string;
 };
@@ -41,6 +42,7 @@ export function CheckoutExperience({
   checkoutError,
   currency,
   paymentMethods,
+  phoneOtpRequired,
   shippingRates,
   storeSlug
 }: CheckoutExperienceProps) {
@@ -57,6 +59,7 @@ export function CheckoutExperience({
         currency={currency}
         notes={cart.note}
         paymentMethods={paymentMethods}
+        phoneOtpRequired={phoneOtpRequired}
         selectedShippingId={selectedShippingRate?.id ?? ""}
         shippingRates={shippingRates}
         storeSlug={storeSlug}

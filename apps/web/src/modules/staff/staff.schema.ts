@@ -53,11 +53,13 @@ export type StaffMemberView = {
   /** False for the viewer's own row and for a member they outrank no further. */
   canChangeRole: boolean;
   canRemove: boolean;
-  email: string;
+  /** Null for an account that signed up with a phone number instead. */
+  email: string | null;
   id: string;
   isSelf: boolean;
   joinedAt: Date;
   name: string | null;
+  phone: string | null;
   role: OrganizationRole;
 };
 

@@ -1,5 +1,5 @@
 import { prisma } from "@dash/db";
-import type { ProfileInfoInput, ProfilePreferencesInput } from "./profile.schema";
+import type { ProfilePreferencesInput } from "./profile.schema";
 
 export async function getProfileByUserId(userId: string) {
   return prisma.user.findUnique({
@@ -16,16 +16,12 @@ export async function getProfileByUserId(userId: string) {
   });
 }
 
-export async function updateProfileInfo(userId: string, data: ProfileInfoInput) {
+export async function updateProfileInfo(userId: string, data: { image: string | null; name: string }) {
   return prisma.user.update({
     where: {
       id: userId
     },
-    data: {
-      image: data.image || null,
-      name: data.name,
-      phone: data.phone || null
-    }
+    data
   });
 }
 

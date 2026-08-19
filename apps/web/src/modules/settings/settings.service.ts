@@ -89,11 +89,19 @@ export async function updateSocialProfileLinks(storeId: string, input: SocialPro
   });
 }
 
-export async function updateVerificationSettings(storeId: string, input: VerificationSettingsInput) {
+/**
+ * Merges rather than replaces. There are two independent switches in this
+ * section now, and each is flipped from its own button — writing the whole
+ * object from one of them would quietly turn the other off.
+ */
+export async function updateVerificationSettings(
+  storeId: string,
+  input: Partial<VerificationSettingsInput>
+) {
   const current = await getModuleSettingsRecord(storeId);
 
   return updateModuleSettingsRecord(storeId, {
     ...current,
-    verification: verificationSettingsSchema.parse(input)
+    verification: verificationSettingsSchema.parse({ ...current.verification, ...input })
   });
 }

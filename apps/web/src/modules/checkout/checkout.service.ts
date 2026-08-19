@@ -13,6 +13,7 @@ import {
 import { decrementProductVariantStock, type CartVariantRecord } from "../products/product-variants.service";
 import { getEnabledShippingRateForCheckout } from "../shipping/shipping.service";
 import { checkoutSchema, type CheckoutInput } from "./checkout.schema";
+import { assertCheckoutPhoneVerified } from "./checkout-verification.service";
 
 type CheckoutStore = {
   currency: string;
@@ -45,6 +46,15 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
       "This store has reached its monthly order limit and cannot accept new orders right now."
     );
   }
+
+  // Before stock is touched and before the order row exists: a code that does
+  // not check out must leave the shopper on the checkout page with their cart
+  // intact, not with a half-made order.
+  await assertCheckoutPhoneVerified(store.id, {
+    code: data.verificationCode,
+    paymentMethod: data.paymentMethod,
+    phone: data.phone
+  });
 
   const paymentMethod = await getEnabledPaymentMethodForCheckout(store.id, data.paymentMethod);
   const shippingRate = await getEnabledShippingRateForCheckout(store.id, data.shippingRateId);

@@ -32,7 +32,8 @@ export async function POST(request: NextRequest) {
       shippingRateId: getValue(formData, "shippingRateId"),
       paymentMethod: getValue(formData, "paymentMethod") as PaymentMethodTypeValue,
       paymentReference: getValue(formData, "paymentReference"),
-      paymentNote: getValue(formData, "paymentNote")
+      paymentNote: getValue(formData, "paymentNote"),
+      verificationCode: getValue(formData, "verificationCode")
     });
 
     revalidatePath(`/s/${store.slug}`);

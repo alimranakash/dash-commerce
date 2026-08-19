@@ -2,8 +2,9 @@ import { z } from "zod";
 
 export const profileInfoSchema = z.object({
   image: z.url("Use a valid image URL.").optional().or(z.literal("")),
-  name: z.string().trim().min(2, "Full name must be at least 2 characters.").max(80),
-  phone: z.string().trim().max(40, "Phone must be 40 characters or less.").optional()
+  // Phone is deliberately absent: it signs the account in, so it is changed
+  // through a verification code rather than saved with a display name.
+  name: z.string().trim().min(2, "Full name must be at least 2 characters.").max(80)
 });
 
 export const profilePreferencesSchema = z.object({

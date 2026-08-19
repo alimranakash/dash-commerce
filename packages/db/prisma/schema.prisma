@@ -261,10 +261,11 @@ enum StockMovementSourceType {
 model User {
   id                      String               @id @default(cuid())
   name                    String?
-  email                   String               @unique
+  email                   String?              @unique
   emailVerified           DateTime?
   image                   String?
-  phone                   String?
+  phone                   String?              @unique
+  phoneVerified           DateTime?
   language                String               @default("en")
   timezone                String               @default("Asia/Dhaka")
   dateFormat              String               @default("DD/MM/YYYY")
@@ -320,6 +321,86 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+enum OtpChannel {
+  EMAIL
+  SMS
+}
+
+enum OtpPurpose {
+  CHECKOUT
+  CONTACT_CHANGE
+  LOGIN
+  PASSWORD_RESET
+  REGISTRATION
+}
+
+/// One verification code in flight.
+///
+/// A row outlives the code it carries: consumed and expired challenges are what
+/// the hourly rate limiter counts, so deleting them on use would hand an abuser
+/// a fresh allowance every time they finished a challenge. `sweepExpiredOtpChallenges`
+/// clears anything old enough to be useless to both the visitor and the limiter.
+///
+/// `payload` holds the half-finished signup — name and an already-bcrypt-hashed
+/// password — because no User row exists until the code is verified. An
+/// unverified account would otherwise sit on the unique email or phone it
+/// claimed, which is exactly how someone squats a number they do not own.
+model OtpChallenge {
+  id          String     @id @default(cuid())
+  purpose     OtpPurpose
+  channel     OtpChannel
+  /// Normalised email or `01XXXXXXXXX`, never as the visitor typed it.
+  identifier  String
+  codeHash    String
+  attempts    Int        @default(0)
+  resendCount Int        @default(0)
+  payload     Json?
+  ipAddress   String?
+  lastSentAt  DateTime
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
+
+  @@index([identifier, purpose])
+  @@index([ipAddress, createdAt])
+  @@index([expiresAt])
+}
+
+enum MessageChannel {
+  EMAIL
+  SMS
+}
+
+enum MessageDeliveryStatus {
+  FAILED
+  SENT
+  SKIPPED
+}
+
+/// One outbound message, kept for when someone says it never arrived.
+///
+/// The body is deliberately absent. Everything this carries today is a
+/// verification code, and a code sitting in a log would undo the point of only
+/// storing its hash on the challenge. Template, recipient and whatever the
+/// gateway said back is enough to answer "was it sent, when, and why not".
+model MessageDelivery {
+  id                String                @id @default(cuid())
+  channel           MessageChannel
+  template          String
+  recipient         String
+  provider          String
+  providerMessageId String?
+  status            MessageDeliveryStatus
+  errorCode         String?
+  errorMessage      String?
+  createdAt         DateTime              @default(now())
+
+  @@index([channel, createdAt])
+  @@index([recipient, createdAt])
+  @@index([status, createdAt])
 }
 
 model Organization {

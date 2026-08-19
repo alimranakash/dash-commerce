@@ -75,8 +75,8 @@ function toTicketListItem(ticket: AdminSupportTicketRecord): AdminSupportTicketL
       id: reply.id,
       isAdminReply: reply.isAdminReply,
       message: reply.message,
-      userEmail: reply.user.email,
-      userName: reply.user.name ?? reply.user.email,
+      userEmail: reply.user.email ?? "No email",
+      userName: reply.user.name ?? reply.user.email ?? "Unnamed user",
       userRole: reply.user.role
     })),
     status: ticket.status,
@@ -84,18 +84,18 @@ function toTicketListItem(ticket: AdminSupportTicketRecord): AdminSupportTicketL
     storeName: ticket.store?.name ?? "No store",
     subject: ticket.subject,
     updatedAt: formatDateTime(ticket.updatedAt),
-    userEmail: ticket.user.email,
+    userEmail: ticket.user.email ?? "No email",
     userImage: ticket.user.image,
-    userName: ticket.user.name ?? ticket.user.email
+    userName: ticket.user.name ?? ticket.user.email ?? "Unnamed user"
   };
 }
 
 function toAdminOption(admin: Awaited<ReturnType<typeof getAdminSupportAdmins>>[number]): AdminSupportAdminOption {
   return {
-    email: admin.email,
+    email: admin.email ?? "No email",
     id: admin.id,
     image: admin.image,
-    name: admin.name ?? admin.email
+    name: admin.name ?? admin.email ?? "Unnamed admin"
   };
 }
 

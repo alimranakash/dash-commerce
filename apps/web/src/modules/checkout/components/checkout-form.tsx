@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import type { PaymentMethodTypeValue } from "../../payments/payment.schema";
 import { defaultCheckoutSettings } from "../checkout-settings";
 
@@ -33,6 +33,7 @@ type CheckoutFormProps = {
   currency: string;
   notes: string;
   paymentMethods: CheckoutPaymentMethod[];
+  phoneOtpRequired: boolean;
   selectedShippingId: string;
   shippingRates: CheckoutShippingRate[];
   storeSlug: string;
@@ -44,6 +45,7 @@ export function CheckoutForm({
   currency,
   notes,
   paymentMethods,
+  phoneOtpRequired,
   selectedShippingId,
   shippingRates,
   storeSlug,
@@ -56,6 +58,9 @@ export function CheckoutForm({
   const settings = defaultCheckoutSettings;
   const selectedPayment = paymentMethods.find((method) => method.type === selectedPaymentMethod) ?? defaultPaymentMethod;
   const needsPaymentReference = selectedPayment ? isManualCheckoutPayment(selectedPayment.type) : false;
+  // Only cash on delivery, and only where the seller asked for it. A prepaid
+  // order has already cost the buyer money, so its number is not what is at risk.
+  const needsPhoneCode = phoneOtpRequired && selectedPaymentMethod === "COD";
   const formRef = useRef<HTMLFormElement>(null);
 
   useCheckoutContactCapture(formRef, storeSlug);
@@ -167,10 +172,105 @@ export function CheckoutForm({
           </label>
         ) : null}
       </fieldset>
+      {needsPhoneCode ? (
+        <CheckoutPhoneVerification formRef={formRef} storeSlug={storeSlug} />
+      ) : (
+        <input name="verificationCode" type="hidden" value="" />
+      )}
       <button disabled={!canSubmit} type="submit">
         {settings.confirmButtonText}
       </button>
     </form>
+  );
+}
+
+/**
+ * The cash-on-delivery number check.
+ *
+ * The code is only typed here; it is checked when the order is created, so
+ * nothing on this page can be tampered with to skip the step. The number is
+ * read back out of the form rather than mirrored into state, so a shopper who
+ * corrects a typo above and asks again gets a code at the number they fixed.
+ */
+function CheckoutPhoneVerification({
+  formRef,
+  storeSlug
+}: {
+  formRef: RefObject<HTMLFormElement | null>;
+  storeSlug: string;
+}) {
+  const [isSending, setIsSending] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [devCode, setDevCode] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function sendCode() {
+    const form = formRef.current;
+
+    if (!form) {
+      return;
+    }
+
+    const phone = String(new FormData(form).get("phone") ?? "").trim();
+
+    if (!phone) {
+      setMessage("Enter your mobile number above first.");
+      return;
+    }
+
+    setIsSending(true);
+    setMessage(null);
+
+    const response = await fetch("/api/checkout/verify-phone", {
+      body: JSON.stringify({ phone, storeSlug }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST"
+    });
+    const body = (await response.json().catch(() => null)) as
+      | { devCode?: string; error?: string; identifier?: string }
+      | null;
+
+    if (response.ok && body?.identifier) {
+      setSentTo(body.identifier);
+      setDevCode(body.devCode ?? null);
+      setMessage(null);
+    } else {
+      setMessage(body?.error ?? "We could not send a code. Check the number and try again.");
+    }
+
+    setIsSending(false);
+  }
+
+  return (
+    <fieldset>
+      <legend>Confirm your number</legend>
+      <p className="sf-checkout-hint">
+        {sentTo
+          ? `We sent a 6-digit code by SMS to ${sentTo}. Enter it to place this order.`
+          : "Cash on delivery orders from this store are confirmed with a code sent by SMS."}
+      </p>
+      <button disabled={isSending} onClick={sendCode} type="button">
+        {isSending ? "Sending..." : sentTo ? "Send another code" : "Send code"}
+      </button>
+      {sentTo ? (
+        <label>
+          Verification code
+          <input
+            autoComplete="one-time-code"
+            inputMode="numeric"
+            maxLength={6}
+            name="verificationCode"
+            placeholder="6-digit code"
+            required
+            type="text"
+          />
+        </label>
+      ) : (
+        <input name="verificationCode" type="hidden" value="" />
+      )}
+      {devCode ? <p className="sf-checkout-hint">Development build: the code is {devCode}.</p> : null}
+      {message ? <p className="sf-alert">{message}</p> : null}
+    </fieldset>
   );
 }
 

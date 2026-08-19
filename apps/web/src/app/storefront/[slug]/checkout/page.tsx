@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getCart } from "../../../../modules/cart/cart.service";
+import { isCheckoutPhoneOtpRequired } from "../../../../modules/checkout/checkout-verification.service";
 import { CheckoutExperience } from "../../../../modules/checkout/components/checkout-experience";
 import { getEnabledPaymentMethods } from "../../../../modules/payments/payment.service";
 import { getEnabledShippingRates } from "../../../../modules/shipping/shipping.service";
@@ -24,6 +25,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
   const cart = await getCart(store.id);
   const paymentMethods = await getEnabledPaymentMethods(store.id);
   const shippingRates = await getEnabledShippingRates(store.id);
+  const phoneOtpRequired = await isCheckoutPhoneOtpRequired(store.id);
   const checkoutShippingRates = shippingRates.map((rate) => ({
     id: rate.id,
     name: rate.name,
@@ -55,6 +57,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
             checkoutError={checkoutError}
             currency={store.currency}
             paymentMethods={paymentMethods}
+            phoneOtpRequired={phoneOtpRequired}
             shippingRates={checkoutShippingRates}
             storeSlug={store.slug}
           />

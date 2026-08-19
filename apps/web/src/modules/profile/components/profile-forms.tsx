@@ -5,10 +5,8 @@ import { useActionState, type ReactNode } from "react";
 import type { ProfileActionState } from "../profile.actions";
 
 type ProfileInfoValue = {
-  email: string;
   image?: string | null;
   name?: string | null;
-  phone?: string | null;
 };
 
 type PreferencesValue = {
@@ -43,20 +41,10 @@ export function PersonalInfoForm({
             <input className={inputClass} defaultValue={profile.name ?? ""} name="name" placeholder="Your full name" required />
           </label>
         </FieldError>
-        <label className={labelClass}>
-          Email
-          <input className={inputClass} defaultValue={profile.email} disabled readOnly type="email" />
-        </label>
         <FieldError errors={state.fieldErrors} name="image">
           <label className={labelClass}>
             Avatar/Image URL
             <input className={inputClass} defaultValue={profile.image ?? ""} name="image" placeholder="https://..." type="url" />
-          </label>
-        </FieldError>
-        <FieldError errors={state.fieldErrors} name="phone">
-          <label className={labelClass}>
-            Phone
-            <input className={inputClass} defaultValue={profile.phone ?? ""} name="phone" placeholder="+880..." type="tel" />
           </label>
         </FieldError>
       </div>

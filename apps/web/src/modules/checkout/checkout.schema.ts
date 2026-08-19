@@ -58,6 +58,14 @@ export const checkoutSchema = z.object({
     .trim()
     .max(500)
     .optional()
+    .transform((value) => value || undefined),
+  // Only read when the store verifies numbers on cash-on-delivery. Absent
+  // everywhere else, which is why it cannot be required here.
+  verificationCode: z
+    .string()
+    .trim()
+    .max(10)
+    .optional()
     .transform((value) => value || undefined)
 });
 

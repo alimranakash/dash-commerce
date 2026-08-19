@@ -151,7 +151,11 @@ export const socialProfileLinksSchema = z.object({
  * Verification Queue is unaffected by the courier guard.
  */
 export const verificationSettingsSchema = z.object({
-  blockCourierUntilVerified: z.boolean()
+  blockCourierUntilVerified: z.boolean(),
+  // Defaulted rather than required so settings written before this existed keep
+  // parsing — without it every store would silently fall back to the whole
+  // default section and lose the courier gate it had turned on.
+  requirePhoneOtpForCod: z.boolean().default(false)
 });
 
 export const DEFAULT_INVOICE_SETTINGS: InvoiceSettingsInput = {
@@ -186,7 +190,8 @@ export const DEFAULT_SOCIAL_LOGIN_SETTINGS: SocialLoginSettingsInput = {
 };
 
 export const DEFAULT_VERIFICATION_SETTINGS: VerificationSettingsInput = {
-  blockCourierUntilVerified: false
+  blockCourierUntilVerified: false,
+  requirePhoneOtpForCod: false
 };
 
 export const DEFAULT_MODULE_SETTINGS: ModuleSettings = {
