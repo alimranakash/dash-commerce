@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { reservedStoreSlugs } from "../../lib/host-routing";
 
 export const storeSlugSchema = z
   .string()
@@ -6,6 +7,9 @@ export const storeSlugSchema = z
   .regex(/^[a-z0-9-]{3,40}$/, "Use 3-40 lowercase letters, numbers, or hyphens.")
   .refine((value) => !value.startsWith("-") && !value.endsWith("-"), {
     message: "Slug cannot start or end with a hyphen."
+  })
+  .refine((value) => !reservedStoreSlugs.has(value), {
+    message: "This slug is reserved by the platform. Pick another one."
   });
 
 export const onboardingSchema = z.object({

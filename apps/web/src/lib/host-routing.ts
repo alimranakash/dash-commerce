@@ -17,7 +17,15 @@ const platformAppHost = normalizeHostname(
 const ROOT_HOSTS = new Set([platformRootDomain, `www.${platformRootDomain}`]);
 const APP_HOSTS = new Set([platformAppHost]);
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
-const RESERVED_SUBDOMAINS = new Set(["www", "app", "api", "admin"]);
+/** Subdomains the platform answers on itself, so no store may take them as a slug. */
+const RESERVED_SUBDOMAINS = new Set(["admin", "api", "app", "www"]);
+
+/**
+ * The same set, for input validation: a store slug that collides with a platform
+ * subdomain produces a storefront no one can reach, so it must be refused at the
+ * point it is chosen rather than only at routing time.
+ */
+export const reservedStoreSlugs: ReadonlySet<string> = RESERVED_SUBDOMAINS;
 
 /** The root the platform's own subdomains hang off. */
 export const PLATFORM_ROOT_DOMAIN = platformRootDomain;
@@ -132,7 +140,7 @@ function getSubdomainSlug(hostname: string, rootDomain: string) {
     return null;
   }
 
-  const slug = hostname.slice(0, -1 * (`.${rootDomain}`.length));
+  const slug = hostname.slice(0, -1 * `.${rootDomain}`.length);
 
   if (!slug || slug.includes(".") || RESERVED_SUBDOMAINS.has(slug)) {
     return null;
