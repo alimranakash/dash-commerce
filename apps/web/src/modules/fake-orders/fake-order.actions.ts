@@ -11,7 +11,6 @@ import {
   markOrderVerified,
   returnOrderToNormalQueue
 } from "./fake-order.service";
-import { setCheckoutPhoneOtpRequired } from "../checkout/checkout-verification.service";
 import { setCourierVerificationRequired } from "./fake-order.verification";
 
 export async function markOrderVerifiedAction(orderId: string): Promise<GatedResult> {
@@ -124,28 +123,6 @@ export async function setCourierVerificationRequiredAction(required: boolean): P
   revalidatePath("/dashboard/orders");
 
   redirect(`/dashboard/orders/verification?policy=${required ? "on" : "off"}`);
-}
-
-/**
- * Turns the cash-on-delivery number check on or off. Sits beside the courier
- * gate because it answers the same question one step earlier: the courier gate
- * stops a bad order shipping, this one stops it being placed.
- */
-export async function setCheckoutPhoneOtpRequiredAction(required: boolean): Promise<GatedResult> {
-  const store = await requireStore();
-
-  if (!(await hasPlanFeature(store.id, "order_verification"))) {
-    return { lockedFeature: "order_verification" };
-  }
-
-  await setCheckoutPhoneOtpRequired(store.id, required);
-
-  revalidatePath("/dashboard/orders/verification");
-  // The storefront reads this on every checkout render, so it has to drop the
-  // cached page or the field would keep appearing after it was switched off.
-  revalidatePath(`/s/${store.slug}/checkout`);
-
-  redirect(`/dashboard/orders/verification?codOtp=${required ? "on" : "off"}`);
 }
 
 function revalidateFakeOrderPaths(orderId: string) {

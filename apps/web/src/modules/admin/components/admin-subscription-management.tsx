@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@dash/ui";
-import { CalendarClock, CheckCircle2, Edit3, Eye, PauseCircle, RotateCcw, Search, TimerReset, X } from "lucide-react";
+import { CalendarClock, CheckCircle2, Edit3, Eye, MessageSquare, PauseCircle, RotateCcw, Search, TimerReset, X } from "lucide-react";
 import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
 import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 import {
@@ -11,6 +11,7 @@ import {
   extendSubscriptionTrialAction,
   markSubscriptionPastDueAction,
   resumeSubscriptionAction,
+  setSubscriptionSmsLimitAction,
   type SubscriptionActionState
 } from "../admin-subscriptions.actions";
 import { BILLING_CYCLE_DAYS } from "../admin-subscriptions.schema";
@@ -27,6 +28,8 @@ export type AdminSubscriptionListItem = {
   ownerName: string;
   planId: string;
   planName: string;
+  planSmsLimit: number;
+  smsLimitOverride: number | null;
   status: "ACTIVE" | "CANCELLED" | "EXPIRED" | "PAST_DUE" | "TRIALING";
   storeDomain: string;
   storeName: string;
@@ -86,6 +89,7 @@ export function AdminSubscriptionManagement({
   const [selectedSubscription, setSelectedSubscription] = useState<AdminSubscriptionListItem | null>(null);
   const [planTarget, setPlanTarget] = useState<AdminSubscriptionListItem | null>(null);
   const [trialTarget, setTrialTarget] = useState<AdminSubscriptionListItem | null>(null);
+  const [smsTarget, setSmsTarget] = useState<AdminSubscriptionListItem | null>(null);
   const [statusTarget, setStatusTarget] = useState<{ action: StatusAction; subscription: AdminSubscriptionListItem } | null>(null);
   const [pending, startTransition] = useTransition();
   const hasSubscriptions = subscriptions.length > 0;
@@ -181,6 +185,9 @@ export function AdminSubscriptionManagement({
                           <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#7c3aed] hover:bg-[#f3f0ff]" onClick={() => setTrialTarget(subscription)} title="Extend trial" type="button">
                             <TimerReset className="h-4 w-4" />
                           </button>
+                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#0f766e] hover:bg-teal-50" onClick={() => setSmsTarget(subscription)} title="SMS allowance" type="button">
+                            <MessageSquare className="h-4 w-4" />
+                          </button>
                           <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50" disabled={pending} onClick={() => setStatusTarget({ action: statusActions.activate, subscription })} title="Activate" type="button">
                             <CheckCircle2 className="h-4 w-4" />
                           </button>
@@ -212,6 +219,7 @@ export function AdminSubscriptionManagement({
       {selectedSubscription ? <SubscriptionDetailsModal onClose={() => setSelectedSubscription(null)} subscription={selectedSubscription} /> : null}
       {planTarget ? <ChangePlanModal onClose={() => setPlanTarget(null)} plans={plans} subscription={planTarget} /> : null}
       {trialTarget ? <ExtendTrialModal onClose={() => setTrialTarget(null)} subscription={trialTarget} /> : null}
+      {smsTarget ? <SmsAllowanceModal onClose={() => setSmsTarget(null)} subscription={smsTarget} /> : null}
       {statusTarget ? (
         <StatusConfirmModal
           disabled={pending}
@@ -306,6 +314,55 @@ function ChangePlanModal({ onClose, plans, subscription }: { onClose: () => void
           {state.message && state.status === "error" ? <p className="m-0 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{state.message}</p> : null}
         </div>
         <ModalActions disabled={isPending} onClose={onClose} primaryLabel={isPending ? "Saving..." : "Save Changes"} />
+      </form>
+    </div>
+  );
+}
+
+/**
+ * One store's monthly message allowance, set apart from its plan.
+ *
+ * Blank hands it back to the plan rather than meaning zero, because "no number
+ * here" and "no messages at all" are very different intentions and an admin
+ * clearing a field almost never means the second.
+ */
+function SmsAllowanceModal({ onClose, subscription }: { onClose: () => void; subscription: AdminSubscriptionListItem }) {
+  const [state, formAction, isPending] = useActionState(setSubscriptionSmsLimitAction.bind(null, subscription.id), initialActionState);
+
+  useEffect(() => {
+    if (state.status === "success") {
+      onClose();
+    }
+  }, [onClose, state.status]);
+
+  return (
+    <div aria-modal="true" className="fixed inset-0 z-[100] grid place-items-center bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
+      <form action={formAction} className="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
+        <ModalHeader onClose={onClose} subtitle={subscription.storeName} title="SMS Allowance" />
+        <div className="grid gap-4 p-5">
+          <p className="m-0 rounded-lg bg-[#f7f7fb] px-4 py-3 text-sm text-[#565762]">
+            The <b>{subscription.planName}</b> plan allows{" "}
+            {subscription.planSmsLimit <= 0 ? "unlimited" : subscription.planSmsLimit} messages a month.
+            {subscription.smsLimitOverride === null
+              ? " This store follows the plan."
+              : ` This store is currently set to ${subscription.smsLimitOverride === 0 ? "unlimited" : subscription.smsLimitOverride}.`}
+          </p>
+          <label className="grid gap-2">
+            <span className="text-sm font-semibold text-[#20212c]">Messages per month</span>
+            <input
+              className="h-11 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none placeholder:text-[#a2a3b0] focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10"
+              defaultValue={subscription.smsLimitOverride ?? ""}
+              min={0}
+              name="smsLimitOverride"
+              placeholder="Leave blank to follow the plan"
+              type="number"
+            />
+            <span className="text-xs text-[#74758a]">Leave blank to follow the plan. Enter 0 for unlimited.</span>
+            {state.fieldErrors?.smsLimitOverride ? <span className="text-xs font-medium text-red-600">{state.fieldErrors.smsLimitOverride}</span> : null}
+          </label>
+          {state.message && state.status === "error" ? <p className="m-0 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{state.message}</p> : null}
+        </div>
+        <ModalActions disabled={isPending} onClose={onClose} primaryLabel={isPending ? "Saving..." : "Save allowance"} />
       </form>
     </div>
   );

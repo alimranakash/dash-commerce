@@ -45,6 +45,7 @@ export async function getPlanLimits(storeId: string) {
     orderLimit: subscription.plan.orderLimit,
     productLimit: subscription.plan.productLimit,
     smsLimit: subscription.plan.smsLimit,
+    smsLimitOverride: subscription.smsLimitOverride,
     staffLimit: subscription.plan.staffLimit,
     storeLimit: subscription.plan.storeLimit,
     subscriptionStatus: subscription.status
@@ -132,7 +133,10 @@ export type SmsAllowance = {
  */
 export async function getSmsAllowance(storeId: string): Promise<SmsAllowance> {
   const limits = await getPlanLimits(storeId);
-  const limit = !limits || limits.smsLimit <= 0 ? null : limits.smsLimit;
+  // `??` rather than `||`, so an override of 0 is respected as "unlimited for
+  // this store" instead of quietly falling back to the plan's number.
+  const configured = limits === null ? null : (limits.smsLimitOverride ?? limits.smsLimit);
+  const limit = configured === null || configured <= 0 ? null : configured;
   const used = await countStoreSmsSentSince(storeId, startOfCurrentMonth());
 
   return {

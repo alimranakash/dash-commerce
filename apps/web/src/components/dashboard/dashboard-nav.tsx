@@ -120,6 +120,7 @@ const settingsLinks = [
   { href: "/dashboard/settings/domains", label: "Domains" },
   { href: "/dashboard/settings/marketing", label: "Marketing" },
   { href: "/dashboard/settings/courier", label: "Courier" },
+  { href: "/dashboard/settings/sms", label: "SMS" },
   { href: "/dashboard/settings/invoice", label: "Invoice" },
   { href: "/dashboard/settings/social", label: "Social" },
   { href: "/dashboard/payments", label: "Payments" },
@@ -178,6 +179,7 @@ const MANAGER_ONLY_HREFS: ReadonlySet<string> = new Set([
   "/dashboard/settings/general",
   "/dashboard/settings/invoice",
   "/dashboard/settings/marketing",
+  "/dashboard/settings/sms",
   "/dashboard/settings/social",
   "/dashboard/shipping"
 ]);

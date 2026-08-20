@@ -4,6 +4,7 @@ import { ZodError } from "zod";
 import { createCheckoutOrder } from "../../../modules/checkout/checkout.service";
 import { sendGa4PurchaseEvent } from "../../../modules/marketing/ga4-mp";
 import { sendMetaPurchaseEvent } from "../../../modules/marketing/meta-capi";
+import { sendOrderConfirmationSms } from "../../../modules/orders/order-sms.service";
 import type { PaymentMethodTypeValue } from "../../../modules/payments/payment.schema";
 import { getStorefrontBySlug } from "../../../modules/storefront/resolver";
 
@@ -65,6 +66,14 @@ export async function POST(request: NextRequest) {
         orderId: order.id,
         pageLocation: thankYouUrl,
         storeId: store.id
+      }).catch(() => undefined),
+      sendOrderConfirmationSms({
+        currency: store.currency,
+        orderNumber: order.orderNumber,
+        phone: order.customerPhone,
+        storeId: store.id,
+        storeName: store.name,
+        total: Number(order.totalAmount)
       }).catch(() => undefined)
     ]);
 

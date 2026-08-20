@@ -9,7 +9,8 @@ import {
   changeSubscriptionPlan,
   extendSubscriptionTrial,
   markSubscriptionPastDue,
-  resumeSubscription
+  resumeSubscription,
+  setSubscriptionSmsLimit
 } from "./admin-subscriptions.service";
 
 export type SubscriptionActionState = {
@@ -36,6 +37,30 @@ export async function changeSubscriptionPlanAction(subscriptionId: string, _stat
   revalidatePath("/admin/subscriptions");
   return {
     message: "Subscription plan updated.",
+    status: "success"
+  };
+}
+
+/**
+ * Gives one store a number of its own, regardless of what its plan says. Blank
+ * hands it back to the plan; `0` makes it unlimited.
+ */
+export async function setSubscriptionSmsLimitAction(subscriptionId: string, _state: SubscriptionActionState, formData: FormData): Promise<SubscriptionActionState> {
+  await requirePlatformAdmin();
+
+  try {
+    await setSubscriptionSmsLimit(subscriptionId, {
+      smsLimitOverride: String(formData.get("smsLimitOverride") ?? "").trim()
+    });
+  } catch (error) {
+    return subscriptionErrorState(error);
+  }
+
+  revalidatePath("/admin/subscriptions");
+  revalidatePath("/dashboard/settings/sms");
+
+  return {
+    message: "SMS allowance updated.",
     status: "success"
   };
 }

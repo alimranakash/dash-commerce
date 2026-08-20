@@ -1,9 +1,9 @@
 "use client";
 
-import { MessageSquareLock, ShieldCheck, ShieldOff } from "lucide-react";
+import { ShieldCheck, ShieldOff } from "lucide-react";
 import { useTransition } from "react";
 import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
-import { setCheckoutPhoneOtpRequiredAction, setCourierVerificationRequiredAction } from "../fake-order.actions";
+import { setCourierVerificationRequiredAction } from "../fake-order.actions";
 
 /**
  * The store-level courier gate. Off by default, so this is the only place a
@@ -30,35 +30,6 @@ export function VerificationPolicyToggle({ required }: { required: boolean }) {
     >
       {required ? <ShieldCheck className="h-4 w-4" /> : <ShieldOff className="h-4 w-4" />}
       {required ? "Verification required before courier" : "Require verification before courier"}
-    </button>
-  );
-}
-
-/**
- * The checkout-side switch. Every code costs an SMS, so this is off by default
- * and named for what it actually does rather than for the feature behind it.
- */
-export function CheckoutOtpPolicyToggle({ required }: { required: boolean }) {
-  const { openUpgrade } = useUpgradePrompt();
-  const [isPending, startTransition] = useTransition();
-
-  return (
-    <button
-      className={`inline-flex h-10 items-center gap-2 rounded-lg border px-4 text-sm font-semibold transition disabled:opacity-60 ${
-        required
-          ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-          : "border-[#e4e3ee] text-[#565762] hover:bg-[#f7f7fa]"
-      }`}
-      disabled={isPending}
-      onClick={() =>
-        startTransition(async () => {
-          openUpgrade((await setCheckoutPhoneOtpRequiredAction(!required)).lockedFeature);
-        })
-      }
-      type="button"
-    >
-      <MessageSquareLock className="h-4 w-4" />
-      {required ? "COD orders confirmed by SMS code" : "Confirm COD orders by SMS code"}
     </button>
   );
 }

@@ -348,6 +348,20 @@ async function periodRefreshIfLapsed(subscriptionId: string) {
   };
 }
 
+export async function updateAdminSubscriptionSmsLimit(
+  subscriptionId: string,
+  smsLimitOverride: number | null
+) {
+  return prisma.subscription.update({
+    data: {
+      smsLimitOverride
+    },
+    where: {
+      id: subscriptionId
+    }
+  });
+}
+
 export async function extendAdminSubscriptionTrial(subscriptionId: string, days: number) {
   const subscription = await prisma.subscription.findUnique({
     where: {

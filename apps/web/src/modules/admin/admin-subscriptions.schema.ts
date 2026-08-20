@@ -21,5 +21,17 @@ export const extendTrialSchema = z.object({
   days: z.coerce.number().int().min(1, "Trial extension must be at least 1 day.").max(365, "Trial extension cannot exceed 365 days.")
 });
 
+/**
+ * A number of messages for one store, off-plan. Blank means "follow the plan"
+ * and `0` means unlimited — the same convention every plan limit uses, so the
+ * two read the same way wherever they are shown together.
+ */
+export const smsLimitOverrideSchema = z.object({
+  smsLimitOverride: z
+    .union([z.literal(""), z.coerce.number().int().min(0, "The limit cannot be negative.").max(1_000_000)])
+    .transform((value) => (value === "" ? null : value))
+});
+
+export type SmsLimitOverrideInput = z.input<typeof smsLimitOverrideSchema>;
 export type ChangeSubscriptionPlanInput = z.infer<typeof changeSubscriptionPlanSchema>;
 export type ExtendTrialInput = z.infer<typeof extendTrialSchema>;

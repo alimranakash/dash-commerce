@@ -65,8 +65,10 @@ export async function sendSms(input: {
   template: MessageTemplateKey;
   to: string;
 }): Promise<MessageDeliveryOutcome> {
-  const config = await resolveMessagingConfig();
   const storeId = input.storeId ?? null;
+  const config = await resolveMessagingConfig();
+  // Store messages come out of the platform's gateway, so the plan allowance is
+  // the only thing standing between one seller and everyone else's budget.
   const blocked = storeId === null ? null : await overAllowance(storeId);
 
   if (blocked) {

@@ -77,6 +77,8 @@ function toSubscriptionListItem(subscription: AdminSubscriptionRecord): AdminSub
     ownerName: owner?.user.name ?? "No owner assigned",
     planId: subscription.planId,
     planName: subscription.plan.name,
+    planSmsLimit: subscription.plan.smsLimit,
+    smsLimitOverride: subscription.smsLimitOverride,
     status: subscription.status,
     storeDomain: subscription.store.domains[0]?.domain ?? `${subscription.store.slug}.dash.com`,
     storeName: subscription.store.name,

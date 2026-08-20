@@ -14,6 +14,25 @@ export function otpCodeSms(input: { code: string; expiresInMinutes: number }) {
   return `${brand} verification code: ${input.code}. Valid for ${input.expiresInMinutes} minutes. Do not share it with anyone.`;
 }
 
+/**
+ * The text a customer gets the moment their order goes through.
+ *
+ * Kept to one segment with a long store name and a five-figure total, because
+ * the seller pays per segment and this one goes out on every single order — the
+ * highest-volume message the platform sends.
+ */
+export function orderConfirmationSms(input: {
+  currency: string;
+  orderNumber: string;
+  storeName: string;
+  total: number;
+}) {
+  const store = input.storeName.length > 24 ? `${input.storeName.slice(0, 23)}.` : input.storeName;
+  const total = Math.round(input.total).toLocaleString("en-US");
+
+  return `Order ${input.orderNumber} confirmed at ${store}. Total ${input.currency} ${total}. We will call you before delivery. Thank you!`;
+}
+
 export function otpCodeEmail(input: { code: string; expiresInMinutes: number }) {
   const text = [
     `Your ${brand} verification code is ${input.code}.`,

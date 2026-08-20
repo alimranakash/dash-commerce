@@ -495,6 +495,7 @@ model Store {
   customers                  Customer[]
   addresses                  Address[]
   setting                    StoreSetting?
+  messagingSetting           StoreMessagingSetting?
   themeSetting               ThemeSetting?
   marketingSetting           MarketingSetting?
   paymentMethods             PaymentMethod[]
@@ -567,6 +568,26 @@ model StoreSetting {
   store           Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @default(now()) @updatedAt
+}
+
+/// When a store is allowed to text its customers.
+///
+/// Deliberately holds no credentials. Every message goes through the platform's
+/// one gateway (`MessagingSetting`), and what a store may spend is set by its
+/// plan's `smsLimit` — so a seller chooses *when* messages are sent, never *how
+/// many* or *through what*.
+model StoreMessagingSetting {
+  id                  String   @id @default(cuid())
+  storeId             String   @unique
+  /// The master switch. Off means nothing is sent for this store at all.
+  smsEnabled          Boolean  @default(false)
+  /// Confirm a cash-on-delivery number with a code before the order is placed.
+  checkoutOtpEnabled  Boolean  @default(false)
+  /// Text the customer their order details the moment the order goes through.
+  orderConfirmEnabled Boolean  @default(false)
+  store               Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @default(now()) @updatedAt
 }
 
 model ThemeSetting {
@@ -1174,6 +1195,9 @@ model Subscription {
   currentPeriodStartsAt DateTime?          @map("current_period_starts_at")
   currentPeriodEndsAt   DateTime?          @map("current_period_ends_at")
   cancelAtPeriodEnd     Boolean            @default(false) @map("cancel_at_period_end")
+  /// Replaces the plan's monthly SMS allowance for this one store. `null` means
+  /// follow the plan; `0` means unlimited, the same convention the plan uses.
+  smsLimitOverride      Int?               @map("sms_limit_override")
   cancelledAt           DateTime?          @map("cancelled_at")
   organization          Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   store                 Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)

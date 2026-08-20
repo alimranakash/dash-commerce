@@ -2,7 +2,7 @@ import { getSmsAllowance } from "../billing/subscription-limits";
 import { normalizeBangladeshPhone } from "../courier/courier-phone";
 import { OtpError } from "../auth/otp/otp-errors";
 import { requestOtpChallenge, verifyOtpChallenge } from "../auth/otp/otp.service";
-import { getModuleSettings, updateVerificationSettings } from "../settings/settings.service";
+import { isStoreCheckoutOtpEnabled } from "../notifications/store-messaging.service";
 
 /**
  * Confirming a shopper's number before a cash-on-delivery order is accepted.
@@ -30,26 +30,13 @@ import { getModuleSettings, updateVerificationSettings } from "../settings/setti
  * counted in the admin messaging card, and the send itself logs a warning.
  */
 export async function isCheckoutPhoneOtpRequired(storeId: string) {
-  const settings = await getModuleSettings(storeId);
-
-  if (!settings.verification.requirePhoneOtpForCod) {
+  if (!(await isStoreCheckoutOtpEnabled(storeId))) {
     return false;
   }
 
   const allowance = await getSmsAllowance(storeId);
 
   return allowance.remaining === null || allowance.remaining > 0;
-}
-
-/** The seller-facing switch, which stays on even when the allowance runs out. */
-export async function isCheckoutPhoneOtpEnabled(storeId: string) {
-  const settings = await getModuleSettings(storeId);
-
-  return settings.verification.requirePhoneOtpForCod;
-}
-
-export async function setCheckoutPhoneOtpRequired(storeId: string, required: boolean) {
-  await updateVerificationSettings(storeId, { requirePhoneOtpForCod: required });
 }
 
 export async function requestCheckoutPhoneCode(

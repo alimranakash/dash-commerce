@@ -6,7 +6,7 @@ export type MessageDeliveryStatus = "BLOCKED" | "FAILED" | "SENT" | "SKIPPED";
  * template beside it — the key is what the delivery log is searched by when
  * someone asks "did the invite go out".
  */
-export type MessageTemplateKey = "otp_code";
+export type MessageTemplateKey = "order_confirmation" | "otp_code";
 
 export type MessageDeliveryOutcome = {
   provider: string;

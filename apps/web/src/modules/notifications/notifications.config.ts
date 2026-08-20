@@ -42,8 +42,10 @@ export type MessagingConfig = {
 };
 
 /**
- * Resolved once per send and handed down, so a single message never reads the
- * settings row twice and an adapter never reaches for configuration itself.
+ * The platform's one gateway. Everything goes through it — the platform's own
+ * codes and every message a store sends. Resolved once per send and handed down, so a single message
+ * never reads the settings row twice and an adapter never reaches for
+ * configuration itself.
  */
 export async function resolveMessagingConfig(): Promise<MessagingConfig> {
   const record = await getMessagingSettingRecord().catch(() => null);
