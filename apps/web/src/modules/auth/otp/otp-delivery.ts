@@ -28,17 +28,21 @@ export async function deliverOtpCode(input: {
   code: string;
   expiresInMinutes: number;
   identifier: string;
+  /** The store whose allowance pays for this, or null when the platform does. */
+  storeId: string | null;
 }): Promise<OtpDeliveryResult> {
   try {
     const outcome =
       input.channel === "EMAIL"
         ? await sendEmail({
             ...otpCodeEmail({ code: input.code, expiresInMinutes: input.expiresInMinutes }),
+            storeId: input.storeId,
             template: "otp_code",
             to: input.identifier
           })
         : await sendSms({
             message: otpCodeSms({ code: input.code, expiresInMinutes: input.expiresInMinutes }),
+            storeId: input.storeId,
             template: "otp_code",
             to: input.identifier
           });

@@ -5,7 +5,7 @@ import { FakeOrderActionButtons } from "../../../../modules/fake-orders/componen
 import { FakeOrderEmpty } from "../../../../modules/fake-orders/components/fake-order-empty";
 import { RiskLevelBadge, VerificationStatusBadge } from "../../../../modules/fake-orders/components/fake-order-badges";
 import { getVerificationQueue } from "../../../../modules/fake-orders/fake-order.service";
-import { isCheckoutPhoneOtpRequired } from "../../../../modules/checkout/checkout-verification.service";
+import { isCheckoutPhoneOtpEnabled } from "../../../../modules/checkout/checkout-verification.service";
 import { isCourierVerificationRequired } from "../../../../modules/fake-orders/fake-order.verification";
 import {
   CheckoutOtpPolicyToggle,
@@ -25,7 +25,7 @@ export default async function VerificationQueuePage({ searchParams }: Verificati
   const [orders, verificationRequired, codOtpRequired] = await Promise.all([
     getVerificationQueue(store.id, search),
     isCourierVerificationRequired(store.id),
-    isCheckoutPhoneOtpRequired(store.id)
+    isCheckoutPhoneOtpEnabled(store.id)
   ]);
 
   return (

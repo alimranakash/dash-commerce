@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MessageSquare,
   PackageOpen,
   ScrollText,
   Shield,
@@ -42,6 +43,7 @@ const adminLinks: AdminNavItem[] = [
   { href: "/admin/subscriptions", icon: FileClock, label: "Subscriptions" },
   { href: "/admin/payments", icon: CreditCard, label: "Payments" },
   { href: "/admin/support", icon: HelpCircle, label: "Support" },
+  { href: "/admin/messaging", icon: MessageSquare, label: "Messaging" },
   { href: "/admin/logs", icon: ScrollText, label: "Logs" }
 ];
 

@@ -31,9 +31,10 @@ export async function AdminMessagingHealth() {
         />
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-2">
+      <div className="mt-4 grid grid-cols-4 gap-2">
         <Total label="Sent" tone="green" value={health.totals.SENT} />
         <Total label="Failed" tone={health.totals.FAILED > 0 ? "red" : "gray"} value={health.totals.FAILED} />
+        <Total label="Over plan" tone={health.totals.BLOCKED > 0 ? "amber" : "gray"} value={health.totals.BLOCKED} />
         <Total label="Logged only" tone="gray" value={health.totals.SKIPPED} />
       </div>
 
@@ -115,8 +116,17 @@ function ChannelRow({
   );
 }
 
-function Total({ label, tone, value }: { label: string; tone: "gray" | "green" | "red"; value: number }) {
+function Total({
+  label,
+  tone,
+  value
+}: {
+  label: string;
+  tone: "amber" | "gray" | "green" | "red";
+  value: number;
+}) {
   const tones = {
+    amber: "text-[#c08a2b]",
     gray: "text-[#565762]",
     green: "text-[#1f9d6a]",
     red: "text-[#c02b52]"

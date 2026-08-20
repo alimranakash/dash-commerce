@@ -161,6 +161,7 @@ function formatPlanData(data: PlanInput) {
     productLimit: data.productLimit,
     slug: data.slug,
     sortOrder: data.sortOrder,
+    smsLimit: data.smsLimit,
     staffLimit: data.staffLimit,
     storeLimit: data.storeLimit,
     trialDays: data.trialDays

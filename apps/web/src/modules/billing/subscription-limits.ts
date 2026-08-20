@@ -1,4 +1,5 @@
 import { prisma, type Prisma } from "@dash/db";
+import { countStoreSmsSentSince } from "../notifications/notifications.repository";
 import { countOrganizationMembers, countPendingStaffInvites } from "../staff/staff.repository";
 import type { StaffSeatUsage } from "../staff/staff.schema";
 import { PLAN_FEATURE_REGISTRY, isPlanFeatureKey, type PlanFeatureKey } from "./plan-features";
@@ -43,6 +44,7 @@ export async function getPlanLimits(storeId: string) {
     customDomainEnabled: subscription.plan.customDomainEnabled,
     orderLimit: subscription.plan.orderLimit,
     productLimit: subscription.plan.productLimit,
+    smsLimit: subscription.plan.smsLimit,
     staffLimit: subscription.plan.staffLimit,
     storeLimit: subscription.plan.storeLimit,
     subscriptionStatus: subscription.status
@@ -112,6 +114,32 @@ export async function countOrdersThisMonth(storeId: string) {
       storeId
     }
   });
+}
+
+export type SmsAllowance = {
+  /** Null when nothing caps it — an unlimited plan, or no subscription row. */
+  limit: number | null;
+  remaining: number | null;
+  used: number;
+};
+
+/**
+ * How many messages the store's plan still allows this month.
+ *
+ * Fails open, like the product and order limits: a store with no subscription
+ * row is not cut off from sending. Only successful sends are counted, so a
+ * month of gateway outages does not eat an allowance nobody got the benefit of.
+ */
+export async function getSmsAllowance(storeId: string): Promise<SmsAllowance> {
+  const limits = await getPlanLimits(storeId);
+  const limit = !limits || limits.smsLimit <= 0 ? null : limits.smsLimit;
+  const used = await countStoreSmsSentSince(storeId, startOfCurrentMonth());
+
+  return {
+    limit,
+    remaining: limit === null ? null : Math.max(0, limit - used),
+    used
+  };
 }
 
 /**

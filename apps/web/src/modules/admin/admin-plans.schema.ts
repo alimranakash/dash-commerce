@@ -14,6 +14,8 @@ export const planInputSchema = z.object({
   priceMonthly: z.coerce.number().min(0, "Monthly price cannot be negative."),
   priceYearly: z.coerce.number().min(0, "Yearly price cannot be negative."),
   productLimit: z.coerce.number().int().min(0, "Product limit cannot be negative."),
+  // 0 means unlimited, the same convention every other limit on a plan uses.
+  smsLimit: z.coerce.number().int().min(0, "SMS limit cannot be negative."),
   slug: z.string().trim().toLowerCase().regex(/^[a-z0-9-]{2,60}$/, "Slug can use lowercase letters, numbers, and hyphens."),
   sortOrder: z.coerce.number().int().min(0, "Sort order cannot be negative."),
   staffLimit: z.coerce.number().int().min(0, "Staff limit cannot be negative."),

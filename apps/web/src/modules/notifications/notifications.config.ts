@@ -1,12 +1,19 @@
 import "../../lib/env";
+import { decryptSecret } from "../../lib/secret-box";
+import { getMessagingSettingRecord } from "./messaging-settings.repository";
 
 /**
- * Everything the transports read from the environment, in one place.
+ * Where the transports get their credentials.
  *
- * Both channels return `null` rather than throwing when unset. An install with
- * no mail host and no SMS account still has to run — the service falls back to
- * writing codes to the server log, which is the same courtesy the StoreOS
- * client extends when its own credentials are missing.
+ * Two sources, in a deliberate order: whatever an admin saved in the panel
+ * first, and the matching environment variable behind it. A deployment that was
+ * configured through `.env` therefore keeps working untouched until someone
+ * saves a value in the panel, and nothing has to be migrated.
+ *
+ * Both resolvers return `null` rather than throwing when nothing is set. An
+ * install with no mail host and no SMS account still has to run — the service
+ * falls back to writing codes to the server log, which is the same courtesy the
+ * StoreOS client extends when its own credentials are missing.
  */
 
 export const smsProviderKeys = ["alpha"] as const;
@@ -23,56 +30,101 @@ export type SmtpSettings = {
   user: string;
 };
 
-export type AlphaSmsSettings = {
+export type SmsCredentials = {
   apiKey: string;
   /** Needs prior approval from the gateway; sends go out unbranded without it. */
   senderId: string | null;
 };
 
-export function readSmtpSettings(): SmtpSettings | null {
-  const host = trimmed(process.env.SMTP_HOST);
-  const user = trimmed(process.env.SMTP_USER);
-  const password = trimmed(process.env.SMTP_PASSWORD);
+export type MessagingConfig = {
+  email: SmtpSettings | null;
+  sms: { credentials: SmsCredentials; provider: SmsProviderKey } | null;
+};
+
+/**
+ * Resolved once per send and handed down, so a single message never reads the
+ * settings row twice and an adapter never reaches for configuration itself.
+ */
+export async function resolveMessagingConfig(): Promise<MessagingConfig> {
+  const record = await getMessagingSettingRecord().catch(() => null);
+
+  return {
+    email: record?.emailEnabled === false ? null : readSmtpSettings(record),
+    sms: record?.smsEnabled === false ? null : readSmsSettings(record)
+  };
+}
+
+type MessagingRecord = Awaited<ReturnType<typeof getMessagingSettingRecord>>;
+
+function readSmtpSettings(record: MessagingRecord): SmtpSettings | null {
+  const host = trimmed(record?.smtpHost) ?? trimmed(process.env.SMTP_HOST);
+  const user = trimmed(record?.smtpUser) ?? trimmed(process.env.SMTP_USER);
+  const password = openSecret(record?.smtpPasswordCipher) ?? trimmed(process.env.SMTP_PASSWORD);
 
   if (!host || !user || !password) {
     return null;
   }
 
-  const port = Number.parseInt(trimmed(process.env.SMTP_PORT) ?? "587", 10);
-  const resolvedPort = Number.isFinite(port) && port > 0 ? port : 587;
+  const configuredPort = record?.smtpPort ?? Number.parseInt(trimmed(process.env.SMTP_PORT) ?? "587", 10);
+  const port = Number.isFinite(configuredPort) && configuredPort > 0 ? configuredPort : 587;
 
   return {
     // Falling back to the SMTP username is right far more often than it is
     // wrong: most relays require the From address to be one they authenticated.
-    from: trimmed(process.env.EMAIL_FROM) ?? user,
+    from: trimmed(record?.emailFrom) ?? trimmed(process.env.EMAIL_FROM) ?? user,
     host,
     password,
-    port: resolvedPort,
-    secure: trimmed(process.env.SMTP_SECURE)?.toLowerCase() === "true" || resolvedPort === 465,
+    port,
+    secure:
+      record?.smtpSecure === true ||
+      trimmed(process.env.SMTP_SECURE)?.toLowerCase() === "true" ||
+      port === 465,
     user
   };
 }
 
-export function readAlphaSmsSettings(): AlphaSmsSettings | null {
-  const apiKey = trimmed(process.env.ALPHA_SMS_API_KEY);
+function readSmsSettings(record: MessagingRecord): MessagingConfig["sms"] {
+  const apiKey = openSecret(record?.smsApiKeyCipher) ?? trimmed(process.env.ALPHA_SMS_API_KEY);
 
   if (!apiKey) {
     return null;
   }
 
   return {
-    apiKey,
-    senderId: trimmed(process.env.SMS_SENDER_ID) ?? null
+    credentials: {
+      apiKey,
+      senderId: trimmed(record?.smsSenderId) ?? trimmed(process.env.SMS_SENDER_ID) ?? null
+    },
+    provider: toProviderKey(trimmed(record?.smsProvider) ?? trimmed(process.env.SMS_PROVIDER))
   };
 }
 
-export function readSmsProviderKey(): SmsProviderKey {
-  const configured = trimmed(process.env.SMS_PROVIDER)?.toLowerCase();
+function toProviderKey(value: string | undefined): SmsProviderKey {
+  const normalized = value?.toLowerCase();
 
-  return smsProviderKeys.find((key) => key === configured) ?? "alpha";
+  return smsProviderKeys.find((key) => key === normalized) ?? "alpha";
 }
 
-function trimmed(value: string | undefined) {
+/**
+ * A stored secret that will not decrypt is treated as absent rather than fatal:
+ * the encryption key has probably been rotated or lost, and the environment
+ * fallback behind it is a better answer than refusing to send anything at all.
+ */
+function openSecret(cipher: string | null | undefined) {
+  if (!cipher) {
+    return undefined;
+  }
+
+  try {
+    return trimmed(decryptSecret(cipher) ?? undefined);
+  } catch {
+    console.error("A stored messaging secret could not be decrypted — falling back to the environment.");
+
+    return undefined;
+  }
+}
+
+function trimmed(value: string | null | undefined) {
   const result = value?.trim();
 
   return result ? result : undefined;

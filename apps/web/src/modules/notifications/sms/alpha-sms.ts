@@ -1,5 +1,4 @@
 import { NotificationError } from "../notifications-errors";
-import { readAlphaSmsSettings } from "../notifications.config";
 import type { SmsProvider } from "./provider.types";
 
 /**
@@ -36,14 +35,10 @@ type AlphaResponse = {
 };
 
 export const alphaSmsProvider: SmsProvider = {
-  isConfigured() {
-    return readAlphaSmsSettings() !== null;
-  },
   key: "alpha",
   label: "Alpha SMS",
-  async readAccountStatus() {
-    const settings = requireSettings();
-    const body = await call(balanceUrl, { api_key: settings.apiKey });
+  async readAccountStatus(credentials) {
+    const body = await call(balanceUrl, { api_key: credentials.apiKey });
     const balance = Number.parseFloat(String(body.data?.balance ?? ""));
     // `2026-11-19 00:00:00`, with no zone given. Read as UTC: it is shown as a
     // date, and a few hours either way does not change what it tells an admin.
@@ -56,10 +51,9 @@ export const alphaSmsProvider: SmsProvider = {
       validUntil: validity && !Number.isNaN(validity.getTime()) ? validity : null
     };
   },
-  async send(input) {
-    const settings = requireSettings();
+  async send(input, credentials) {
     const params: Record<string, string> = {
-      api_key: settings.apiKey,
+      api_key: credentials.apiKey,
       msg: input.message,
       to: input.to
     };
@@ -67,7 +61,7 @@ export const alphaSmsProvider: SmsProvider = {
     try {
       const body = await call(sendUrl, {
         ...params,
-        ...(settings.senderId === null ? {} : { sender_id: settings.senderId })
+        ...(credentials.senderId === null ? {} : { sender_id: credentials.senderId })
       });
 
       return { providerMessageId: readRequestId(body) };
@@ -75,9 +69,9 @@ export const alphaSmsProvider: SmsProvider = {
       // An unapproved sender ID is rejected outright. Falling back to an
       // unbranded send is strictly better than not delivering the code at all,
       // and it is the state every account is in before approval comes through.
-      if (settings.senderId !== null && isProviderCode(error, "413")) {
+      if (credentials.senderId !== null && isProviderCode(error, "413")) {
         console.warn(
-          `[sms] Alpha SMS rejected sender ID "${settings.senderId}" — resending unbranded. Get the ID approved or clear SMS_SENDER_ID.`
+          `[sms] Alpha SMS rejected sender ID "${credentials.senderId}" — resending unbranded. Get the ID approved, or clear it in Admin › Messaging.`
         );
 
         return { providerMessageId: readRequestId(await call(sendUrl, params)) };
@@ -87,16 +81,6 @@ export const alphaSmsProvider: SmsProvider = {
     }
   }
 };
-
-function requireSettings() {
-  const settings = readAlphaSmsSettings();
-
-  if (!settings) {
-    throw new NotificationError("CONFIG", "ALPHA_SMS_API_KEY is not set.");
-  }
-
-  return settings;
-}
 
 async function call(url: string, params: Record<string, string>) {
   let response: Response;

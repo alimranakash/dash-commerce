@@ -97,6 +97,7 @@ function planInputFromFormData(formData: FormData): PlanInput {
     productLimit: Number(formData.get("productLimit") ?? 0),
     slug: getValue(formData, "slug"),
     sortOrder: Number(formData.get("sortOrder") ?? 0),
+    smsLimit: Number(formData.get("smsLimit") ?? 0),
     staffLimit: Number(formData.get("staffLimit") ?? 0),
     storeLimit: Number(formData.get("storeLimit") ?? 0),
     trialDays: Number(formData.get("trialDays") ?? 0)

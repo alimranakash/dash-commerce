@@ -55,6 +55,7 @@ function toPlanListItem(plan: AdminPlanRecord): AdminPlanListItem {
     productLimit: plan.productLimit,
     slug: plan.slug,
     sortOrder: plan.sortOrder,
+    smsLimit: plan.smsLimit,
     staffLimit: plan.staffLimit,
     storeLimit: plan.storeLimit,
     trialDays: plan.trialDays

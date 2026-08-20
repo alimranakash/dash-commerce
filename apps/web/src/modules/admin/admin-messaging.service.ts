@@ -1,9 +1,8 @@
-import { describeEmailTransport } from "../notifications/email-transport";
 import {
   countMessageDeliveriesSince,
   listRecentMessageFailures
 } from "../notifications/notifications.repository";
-import type { SmsProvider } from "../notifications/sms/provider.types";
+import { resolveMessagingConfig } from "../notifications/notifications.config";
 import { getSmsProvider } from "../notifications/sms/registry";
 
 /**
@@ -43,6 +42,7 @@ export type MessagingHealth = {
     validUntil: Date | null;
   };
   totals: {
+    BLOCKED: number;
     FAILED: number;
     SENT: number;
     SKIPPED: number;
@@ -51,17 +51,17 @@ export type MessagingHealth = {
 
 export async function getMessagingHealth(): Promise<MessagingHealth> {
   const since = new Date(Date.now() - windowMs);
-  const email = describeEmailTransport();
+  const config = await resolveMessagingConfig();
   const [totals, failures, sms] = await Promise.all([
     countMessageDeliveriesSince(since),
     listRecentMessageFailures(failuresShown),
-    describeSmsHealth(getSmsProvider())
+    describeSmsHealth(config.sms)
   ]);
 
   return {
     email: {
-      configured: email !== null,
-      host: email?.host ?? null
+      configured: config.email !== null,
+      host: config.email?.host ?? null
     },
     recentFailures: failures.map((failure) => ({
       channel: failure.channel,
@@ -76,26 +76,40 @@ export async function getMessagingHealth(): Promise<MessagingHealth> {
   };
 }
 
-async function describeSmsHealth(provider: SmsProvider): Promise<MessagingHealth["sms"]> {
+async function describeSmsHealth(
+  sms: Awaited<ReturnType<typeof resolveMessagingConfig>>["sms"]
+): Promise<MessagingHealth["sms"]> {
+  if (!sms) {
+    return {
+      balance: null,
+      configured: false,
+      isLow: false,
+      label: "SMS",
+      statusError: null,
+      validUntil: null
+    };
+  }
+
+  const provider = getSmsProvider(sms.provider);
   const base = {
     balance: null,
+    configured: true,
     isLow: false,
     label: provider.label,
     statusError: null,
     validUntil: null
   };
 
-  if (!provider.isConfigured() || !provider.readAccountStatus) {
-    return { ...base, configured: provider.isConfigured() };
+  if (!provider.readAccountStatus) {
+    return base;
   }
 
   try {
-    const status = await provider.readAccountStatus();
+    const status = await provider.readAccountStatus(sms.credentials);
 
     return {
       ...base,
       balance: status.balance,
-      configured: true,
       isLow: status.balance !== null && status.balance < lowBalanceThreshold,
       validUntil: status.validUntil
     };
@@ -104,7 +118,6 @@ async function describeSmsHealth(provider: SmsProvider): Promise<MessagingHealth
     // API key stopped working, which is the same outage by another route.
     return {
       ...base,
-      configured: true,
       statusError: error instanceof Error ? error.message : "Could not read the account."
     };
   }

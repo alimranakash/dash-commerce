@@ -375,6 +375,8 @@ enum MessageChannel {
 }
 
 enum MessageDeliveryStatus {
+  /// Deliberately not sent — the store had used up its plan's allowance.
+  BLOCKED
   FAILED
   SENT
   SKIPPED
@@ -391,6 +393,10 @@ model MessageDelivery {
   channel           MessageChannel
   template          String
   recipient         String
+  /// Null for messages the platform sends on nobody's behalf — a sign-up code
+  /// or a password reset happens before any store is in the picture, and its
+  /// cost belongs to the platform rather than to a seller's allowance.
+  storeId           String?
   provider          String
   providerMessageId String?
   status            MessageDeliveryStatus
@@ -401,6 +407,7 @@ model MessageDelivery {
   @@index([channel, createdAt])
   @@index([recipient, createdAt])
   @@index([status, createdAt])
+  @@index([storeId, channel, createdAt])
 }
 
 model Organization {
@@ -1121,6 +1128,7 @@ model Plan {
   orderLimit          Int            @default(0) @map("order_limit")
   customerLimit       Int            @default(0) @map("customer_limit")
   staffLimit          Int            @default(1) @map("staff_limit")
+  smsLimit            Int            @default(0) @map("sms_limit")
   storeLimit          Int            @default(1) @map("store_limit")
   customDomainEnabled Boolean        @default(false) @map("custom_domain_enabled")
   aiEnabled           Boolean        @default(false) @map("ai_enabled")
@@ -1226,6 +1234,38 @@ model BillingSetting {
   updatedAt           DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("billing_settings")
+}
+
+/// The platform's own gateway credentials, editable from the admin panel.
+///
+/// A singleton, like `BillingSetting`: there is one SMS account and one mail
+/// relay for the whole platform, not one per store. Secrets are encrypted with
+/// the same key as courier credentials and never leave the server; the `*Hint`
+/// columns hold the last few characters so an admin can tell which key is
+/// loaded without the panel ever having to show it back.
+///
+/// Anything left blank falls back to the matching environment variable, so a
+/// deployment that configured messaging through `.env` keeps working untouched
+/// until someone saves a value here.
+model MessagingSetting {
+  id                 String   @id @default(cuid())
+  smsEnabled         Boolean  @default(true) @map("sms_enabled")
+  smsProvider        String   @default("alpha") @map("sms_provider")
+  smsApiKeyCipher    String?  @map("sms_api_key_cipher")
+  smsApiKeyHint      String?  @map("sms_api_key_hint")
+  smsSenderId        String?  @map("sms_sender_id")
+  emailEnabled       Boolean  @default(true) @map("email_enabled")
+  smtpHost           String?  @map("smtp_host")
+  smtpPort           Int?     @map("smtp_port")
+  smtpUser           String?  @map("smtp_user")
+  smtpPasswordCipher String?  @map("smtp_password_cipher")
+  smtpPasswordHint   String?  @map("smtp_password_hint")
+  smtpSecure         Boolean  @default(false) @map("smtp_secure")
+  emailFrom          String?  @map("email_from")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("messaging_settings")
 }
 
 model SupportTicket {

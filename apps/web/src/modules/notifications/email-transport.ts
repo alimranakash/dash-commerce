@@ -1,6 +1,6 @@
 import { createTransport, type Transporter } from "nodemailer";
 import { NotificationError } from "./notifications-errors";
-import { readSmtpSettings, type SmtpSettings } from "./notifications.config";
+import type { SmtpSettings } from "./notifications.config";
 
 /**
  * Plain SMTP, deliberately.
@@ -16,31 +16,15 @@ import { readSmtpSettings, type SmtpSettings } from "./notifications.config";
 
 let cached: { key: string; transporter: Transporter } | null = null;
 
-export function isEmailConfigured() {
-  return readSmtpSettings() !== null;
-}
-
-export function describeEmailTransport() {
-  const settings = readSmtpSettings();
-
-  return settings ? { from: settings.from, host: settings.host, port: settings.port } : null;
-}
-
-export async function sendSmtpEmail(input: {
-  html?: string;
-  subject: string;
-  text: string;
-  to: string;
-}) {
-  const settings = readSmtpSettings();
-
-  if (!settings) {
-    throw new NotificationError(
-      "CONFIG",
-      "SMTP_HOST, SMTP_USER and SMTP_PASSWORD have to be set before mail can be sent."
-    );
-  }
-
+export async function sendSmtpEmail(
+  input: {
+    html?: string;
+    subject: string;
+    text: string;
+    to: string;
+  },
+  settings: SmtpSettings
+) {
   try {
     const receipt = await resolveTransporter(settings).sendMail({
       from: settings.from,

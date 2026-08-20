@@ -9,6 +9,7 @@ export async function recordMessageDelivery(data: {
   providerMessageId: string | null;
   recipient: string;
   status: MessageDeliveryStatus;
+  storeId: string | null;
   template: MessageTemplateKey;
 }) {
   return prisma.messageDelivery.create({
@@ -32,8 +33,26 @@ export async function countMessageDeliveriesSince(since: Date) {
 
   return rows.reduce<Record<MessageDeliveryStatus, number>>(
     (totals, row) => ({ ...totals, [row.status]: row._count._all }),
-    { FAILED: 0, SENT: 0, SKIPPED: 0 }
+    { BLOCKED: 0, FAILED: 0, SENT: 0, SKIPPED: 0 }
   );
+}
+
+/**
+ * What a store has actually spent this month. Only `SENT` counts — a refused or
+ * unconfigured message costs nothing, and charging a plan for one would be
+ * charging for a failure.
+ */
+export async function countStoreSmsSentSince(storeId: string, since: Date) {
+  return prisma.messageDelivery.count({
+    where: {
+      channel: "SMS",
+      createdAt: {
+        gte: since
+      },
+      status: "SENT",
+      storeId
+    }
+  });
 }
 
 /**

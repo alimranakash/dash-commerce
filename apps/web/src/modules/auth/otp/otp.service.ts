@@ -65,6 +65,8 @@ export async function requestOtpChallenge(input: {
   ipAddress: string | null;
   payload?: Prisma.InputJsonValue;
   purpose: OtpPurpose;
+  /** The store whose plan allowance pays for the message, when one does. */
+  storeId?: string | null;
   /**
    * Goes through every motion except handing the code to a gateway.
    *
@@ -132,7 +134,8 @@ export async function requestOtpChallenge(input: {
         channel,
         code,
         expiresInMinutes: Math.round(codeTtlMs[channel] / 60_000),
-        identifier: value
+        identifier: value,
+        storeId: input.storeId ?? null
       });
 
   return {

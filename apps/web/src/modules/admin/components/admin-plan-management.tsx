@@ -31,6 +31,7 @@ export type AdminPlanListItem = {
   productLimit: number;
   slug: string;
   sortOrder: number;
+  smsLimit: number;
   staffLimit: number;
   storeLimit: number;
   trialDays: number;
@@ -145,6 +146,7 @@ export function AdminPlanManagement({ plans, search }: AdminPlanManagementProps)
                           <span>Orders / month: {limitLabel(plan.orderLimit)}</span>
                           <span>Customers: {limitLabel(plan.customerLimit)}</span>
                           <span>Staff: {limitLabel(plan.staffLimit)}</span>
+                          <span>SMS / month: {limitLabel(plan.smsLimit)}</span>
                           <span>Stores: {limitLabel(plan.storeLimit)}</span>
                         </div>
                       </td>
@@ -241,6 +243,7 @@ function PlanFormModal({ mode, onClose, plan }: { mode: "create" | "edit"; onClo
           <PlanField label="Order Limit / month" name="orderLimit" defaultValue={plan?.orderLimit ?? 0} error={state.fieldErrors?.orderLimit} min="0" type="number" />
           <PlanField label="Customer Limit" name="customerLimit" defaultValue={plan?.customerLimit ?? 0} error={state.fieldErrors?.customerLimit} min="0" type="number" />
           <PlanField label="Staff Limit" name="staffLimit" defaultValue={plan?.staffLimit ?? 1} error={state.fieldErrors?.staffLimit} min="0" type="number" />
+          <PlanField label="SMS Limit / month" name="smsLimit" defaultValue={plan?.smsLimit ?? 0} error={state.fieldErrors?.smsLimit} min="0" type="number" />
           <PlanField label="Store Limit" name="storeLimit" defaultValue={plan?.storeLimit ?? 1} error={state.fieldErrors?.storeLimit} min="0" type="number" />
           <PlanField label="Sort Order" name="sortOrder" defaultValue={plan?.sortOrder ?? 0} error={state.fieldErrors?.sortOrder} min="0" type="number" />
           <label className="grid gap-2 lg:col-span-2">

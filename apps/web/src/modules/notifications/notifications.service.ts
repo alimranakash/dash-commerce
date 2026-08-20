@@ -1,5 +1,7 @@
-import { isEmailConfigured, sendSmtpEmail } from "./email-transport";
+import { getSmsAllowance } from "../billing/subscription-limits";
+import { sendSmtpEmail } from "./email-transport";
 import { isNotificationError, toNotificationError } from "./notifications-errors";
+import { resolveMessagingConfig, type MessagingConfig } from "./notifications.config";
 import { recordMessageDelivery } from "./notifications.repository";
 import type {
   MessageChannel,
@@ -11,53 +13,110 @@ import { getSmsProvider } from "./sms/registry";
 /**
  * The one way anything in this app sends a message.
  *
- * Two rules hold for both channels. An unconfigured install does not fail — the
- * message goes to the server log and is recorded as `SKIPPED`, which is what
+ * Three rules hold for both channels. An unconfigured install does not fail —
+ * the message goes to the server log and is recorded as `SKIPPED`, which is what
  * lets sign-up be developed and tested before a mail host or an SMS balance
- * exists. And every attempt is written to `MessageDelivery` either way, because
- * the failure that costs the most time is the silent one.
+ * exists. Every attempt is written to `MessageDelivery` either way, because the
+ * failure that costs the most time is the silent one. And every message says
+ * which store it was sent for, or that it was sent for none.
+ *
+ * `storeId` is the difference between a seller's allowance and the platform's
+ * own cost. A sign-up code or a password reset happens before any store is in
+ * the picture and is the platform's to pay for; a checkout code is sent on a
+ * seller's behalf and counts against their plan.
  */
 
 export async function sendEmail(input: {
   html?: string;
+  storeId?: string | null;
   subject: string;
   template: MessageTemplateKey;
   text: string;
   to: string;
 }): Promise<MessageDeliveryOutcome> {
+  const config = await resolveMessagingConfig();
+  const settings = config.email;
+
   return deliver({
     channel: "EMAIL",
     preview: `${input.subject} — ${input.text.replace(/\s+/g, " ").slice(0, 200)}`,
     provider: "smtp",
     recipient: input.to,
-    send: isEmailConfigured()
+    send: settings
       ? () =>
-          sendSmtpEmail({
-            ...(input.html === undefined ? {} : { html: input.html }),
-            subject: input.subject,
-            text: input.text,
-            to: input.to
-          })
+          sendSmtpEmail(
+            {
+              ...(input.html === undefined ? {} : { html: input.html }),
+              subject: input.subject,
+              text: input.text,
+              to: input.to
+            },
+            settings
+          )
       : null,
+    storeId: input.storeId ?? null,
     template: input.template
   });
 }
 
 export async function sendSms(input: {
   message: string;
+  storeId?: string | null;
   template: MessageTemplateKey;
   to: string;
 }): Promise<MessageDeliveryOutcome> {
-  const provider = getSmsProvider();
+  const config = await resolveMessagingConfig();
+  const storeId = input.storeId ?? null;
+  const blocked = storeId === null ? null : await overAllowance(storeId);
+
+  if (blocked) {
+    console.warn(
+      `[sms] store ${storeId} has used its plan's monthly SMS allowance (${blocked.used}/${blocked.limit}) — not sending.`
+    );
+
+    await log({
+      channel: "SMS",
+      errorCode: "PLAN_LIMIT",
+      errorMessage: `The store's plan allows ${blocked.limit} SMS a month and ${blocked.used} have been sent.`,
+      provider: config.sms?.provider ?? "none",
+      providerMessageId: null,
+      recipient: input.to,
+      status: "BLOCKED",
+      storeId,
+      template: input.template
+    });
+
+    return { provider: config.sms?.provider ?? "none", providerMessageId: null, status: "BLOCKED" };
+  }
 
   return deliver({
     channel: "SMS",
     preview: input.message,
-    provider: provider.key,
+    provider: config.sms?.provider ?? "none",
     recipient: input.to,
-    send: provider.isConfigured() ? () => provider.send({ message: input.message, to: input.to }) : null,
+    send: sendWith(config, input),
+    storeId,
     template: input.template
   });
+}
+
+function sendWith(config: MessagingConfig, input: { message: string; to: string }) {
+  if (!config.sms) {
+    return null;
+  }
+
+  const provider = getSmsProvider(config.sms.provider);
+  const credentials = config.sms.credentials;
+
+  return () => provider.send({ message: input.message, to: input.to }, credentials);
+}
+
+async function overAllowance(storeId: string) {
+  const allowance = await getSmsAllowance(storeId);
+
+  return allowance.remaining !== null && allowance.remaining <= 0
+    ? { limit: allowance.limit, used: allowance.used }
+    : null;
 }
 
 async function deliver(input: {
@@ -67,13 +126,22 @@ async function deliver(input: {
   provider: string;
   recipient: string;
   send: (() => Promise<{ providerMessageId: string | null }>) | null;
+  storeId: string | null;
   template: MessageTemplateKey;
 }): Promise<MessageDeliveryOutcome> {
+  const entry = {
+    channel: input.channel,
+    provider: input.provider,
+    recipient: input.recipient,
+    storeId: input.storeId,
+    template: input.template
+  };
+
   if (!input.send) {
     console.info(`[${input.channel.toLowerCase()}] to ${input.recipient}: ${input.preview}`);
     console.info(`[${input.channel.toLowerCase()}] nothing configured to send this — logged only.`);
 
-    await log({ ...input, errorCode: null, errorMessage: null, providerMessageId: null, status: "SKIPPED" });
+    await log({ ...entry, errorCode: null, errorMessage: null, providerMessageId: null, status: "SKIPPED" });
 
     return { provider: input.provider, providerMessageId: null, status: "SKIPPED" };
   }
@@ -82,7 +150,7 @@ async function deliver(input: {
     const receipt = await input.send();
 
     await log({
-      ...input,
+      ...entry,
       errorCode: null,
       errorMessage: null,
       providerMessageId: receipt.providerMessageId,
@@ -104,7 +172,7 @@ async function deliver(input: {
     }
 
     await log({
-      ...input,
+      ...entry,
       errorCode: failure.providerCode ?? failure.kind,
       errorMessage: failure.message.slice(0, 500),
       providerMessageId: null,
@@ -126,20 +194,12 @@ async function log(entry: {
   provider: string;
   providerMessageId: string | null;
   recipient: string;
-  status: "FAILED" | "SENT" | "SKIPPED";
+  status: "BLOCKED" | "FAILED" | "SENT" | "SKIPPED";
+  storeId: string | null;
   template: MessageTemplateKey;
 }) {
   try {
-    await recordMessageDelivery({
-      channel: entry.channel,
-      errorCode: entry.errorCode,
-      errorMessage: entry.errorMessage,
-      provider: entry.provider,
-      providerMessageId: entry.providerMessageId,
-      recipient: entry.recipient,
-      status: entry.status,
-      template: entry.template
-    });
+    await recordMessageDelivery(entry);
   } catch (error) {
     console.error("Could not record a message delivery", error);
   }

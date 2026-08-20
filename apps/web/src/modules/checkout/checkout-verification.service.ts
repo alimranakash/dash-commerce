@@ -1,3 +1,4 @@
+import { getSmsAllowance } from "../billing/subscription-limits";
 import { normalizeBangladeshPhone } from "../courier/courier-phone";
 import { OtpError } from "../auth/otp/otp-errors";
 import { requestOtpChallenge, verifyOtpChallenge } from "../auth/otp/otp.service";
@@ -18,7 +19,30 @@ import { getModuleSettings, updateVerificationSettings } from "../settings/setti
  * either arrives with a working code or is not created.
  */
 
+/**
+ * Whether a shopper will be asked for a code — the setting *and* the store still
+ * having messages left to send.
+ *
+ * A store that has spent its monthly allowance stops verifying rather than
+ * stops selling. Losing an order costs a seller far more than losing one
+ * verification, and a shopper cannot be shown a code field for a message that
+ * will never arrive. The seller is told loudly instead: the blocked sends are
+ * counted in the admin messaging card, and the send itself logs a warning.
+ */
 export async function isCheckoutPhoneOtpRequired(storeId: string) {
+  const settings = await getModuleSettings(storeId);
+
+  if (!settings.verification.requirePhoneOtpForCod) {
+    return false;
+  }
+
+  const allowance = await getSmsAllowance(storeId);
+
+  return allowance.remaining === null || allowance.remaining > 0;
+}
+
+/** The seller-facing switch, which stays on even when the allowance runs out. */
+export async function isCheckoutPhoneOtpEnabled(storeId: string) {
   const settings = await getModuleSettings(storeId);
 
   return settings.verification.requirePhoneOtpForCod;
@@ -46,7 +70,10 @@ export async function requestCheckoutPhoneCode(
   return requestOtpChallenge({
     identifier: { channel: "SMS", phone },
     ipAddress: context.ipAddress,
-    purpose: "CHECKOUT"
+    purpose: "CHECKOUT",
+    // The only code sent on a seller's behalf, and so the only one that comes
+    // out of their plan rather than the platform's own cost.
+    storeId
   });
 }
 

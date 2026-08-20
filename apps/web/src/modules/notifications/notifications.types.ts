@@ -1,5 +1,5 @@
 export type MessageChannel = "EMAIL" | "SMS";
-export type MessageDeliveryStatus = "FAILED" | "SENT" | "SKIPPED";
+export type MessageDeliveryStatus = "BLOCKED" | "FAILED" | "SENT" | "SKIPPED";
 
 /**
  * Every kind of message the platform can send. Adding one means adding a
