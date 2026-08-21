@@ -9,7 +9,7 @@ import { getModuleSettings } from "../settings/settings.service";
  * by its plan. A seller decides *when* messages are sent — never *how many*, and
  * never *through what*.
  *
- * The master switch sits above both uses on purpose. A seller who wants to stop
+ * The master switch sits above every use on purpose. A seller who wants to stop
  * all texting for a day should not have to remember which individual toggles
  * they had on.
  */
@@ -17,6 +17,9 @@ import { getModuleSettings } from "../settings/settings.service";
 export type StoreMessagingView = {
   checkoutOtpEnabled: boolean;
   orderConfirmEnabled: boolean;
+  orderCustomEnabled: boolean;
+  /** Empty rather than null, because this is what a form field is populated with. */
+  orderCustomMessage: string;
   smsEnabled: boolean;
 };
 
@@ -26,19 +29,46 @@ export async function getStoreMessagingView(storeId: string): Promise<StoreMessa
   return {
     checkoutOtpEnabled: record?.checkoutOtpEnabled ?? (await legacyCheckoutOtpFlag(storeId)),
     orderConfirmEnabled: record?.orderConfirmEnabled ?? false,
+    orderCustomEnabled: record?.orderCustomEnabled ?? false,
+    orderCustomMessage: record?.orderCustomMessage ?? "",
     smsEnabled: record?.smsEnabled ?? false
   };
 }
 
 export async function saveStoreMessagingSettings(
   storeId: string,
-  input: { checkoutOtpEnabled: boolean; orderConfirmEnabled: boolean; smsEnabled: boolean }
+  input: {
+    checkoutOtpEnabled: boolean;
+    orderConfirmEnabled: boolean;
+    orderCustomEnabled: boolean;
+    orderCustomMessage: string | null;
+    smsEnabled: boolean;
+  }
 ) {
   return prisma.storeMessagingSetting.upsert({
     create: { ...input, storeId },
     update: input,
     where: { storeId }
   });
+}
+
+/**
+ * The seller's own order text, or null when nothing should be sent.
+ *
+ * Blank copy counts as nothing to send: a seller who ticks the box and saves
+ * before writing anything gets silence, not an empty text on every order.
+ */
+export async function getStoreCustomOrderSms(storeId: string) {
+  const record = await prisma.storeMessagingSetting.findUnique({
+    select: { orderCustomEnabled: true, orderCustomMessage: true, smsEnabled: true },
+    where: { storeId }
+  });
+
+  if (!record?.smsEnabled || !record.orderCustomEnabled) {
+    return null;
+  }
+
+  return record.orderCustomMessage?.trim() || null;
 }
 
 export async function isStoreOrderConfirmSmsEnabled(storeId: string) {

@@ -585,6 +585,13 @@ model StoreMessagingSetting {
   checkoutOtpEnabled  Boolean  @default(false)
   /// Text the customer their order details the moment the order goes through.
   orderConfirmEnabled Boolean  @default(false)
+  /// A second text on the same order, written by the seller. Kept apart from the
+  /// switch above because turning it on doubles what confirming an order costs.
+  orderCustomEnabled  Boolean  @default(false)
+  /// The seller's own copy, with its placeholders filled in at send time. Null
+  /// until they write something, and a blank one sends nothing however the
+  /// switch is set — an empty message must never leave as a bare template.
+  orderCustomMessage  String?
   store               Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @default(now()) @updatedAt

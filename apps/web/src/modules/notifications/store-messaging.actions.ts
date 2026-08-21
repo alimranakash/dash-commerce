@@ -6,6 +6,7 @@ import { requireStore } from "../stores/queries";
 import { isNotificationError } from "./notifications-errors";
 import { sendSms } from "./notifications.service";
 import { saveStoreMessagingSettings } from "./store-messaging.service";
+import { CUSTOM_ORDER_SMS_MAX_LENGTH } from "./templates";
 
 export type StoreMessagingState = {
   message?: string;
@@ -17,11 +18,31 @@ export async function saveStoreMessagingAction(
   formData: FormData
 ): Promise<StoreMessagingState> {
   const store = await requireStore();
+  const orderCustomEnabled = checked(formData, "orderCustomEnabled");
+  const orderCustomMessage = value(formData, "orderCustomMessage");
+
+  // Only a blocking error while the switch is on. A seller clearing the box to
+  // turn the message off should not be stopped and told to write one.
+  if (orderCustomEnabled && !orderCustomMessage) {
+    return {
+      message: "Write the message you want sent, or switch that option off.",
+      status: "error"
+    };
+  }
+
+  if (orderCustomMessage.length > CUSTOM_ORDER_SMS_MAX_LENGTH) {
+    return {
+      message: `Your message is ${orderCustomMessage.length} characters. Keep it to ${CUSTOM_ORDER_SMS_MAX_LENGTH} or fewer.`,
+      status: "error"
+    };
+  }
 
   try {
     await saveStoreMessagingSettings(store.id, {
       checkoutOtpEnabled: checked(formData, "checkoutOtpEnabled"),
       orderConfirmEnabled: checked(formData, "orderConfirmEnabled"),
+      orderCustomEnabled,
+      orderCustomMessage: orderCustomMessage || null,
       smsEnabled: checked(formData, "smsEnabled")
     });
   } catch (error) {

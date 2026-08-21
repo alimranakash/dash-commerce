@@ -33,6 +33,48 @@ export function orderConfirmationSms(input: {
   return `Order ${input.orderNumber} confirmed at ${store}. Total ${input.currency} ${total}. We will call you before delivery. Thank you!`;
 }
 
+/**
+ * The longest text a seller may write, and the tokens they may write into it.
+ *
+ * The cap is deliberately loose — a little past the 306 characters two joined
+ * GSM segments hold — because the seller is the one paying for the extra
+ * segment. The number is here to stop a runaway paste, not to police their
+ * words; the settings page shows them the running cost instead.
+ */
+export const CUSTOM_ORDER_SMS_MAX_LENGTH = 320;
+export const CUSTOM_ORDER_SMS_PLACEHOLDERS = ["{name}", "{order}", "{store}", "{total}"] as const;
+
+/**
+ * The seller's own text to the customer, sent alongside the confirmation above.
+ *
+ * Placeholders are matched without regard to case, because a seller typing
+ * `{Order}` meant the order number and being sent their own braces back is the
+ * kind of mistake they only find out about from an annoyed customer. Anything
+ * that is not a placeholder is left exactly as written, braces included.
+ */
+export function customOrderSms(input: {
+  currency: string;
+  customerName: string;
+  message: string;
+  orderNumber: string;
+  storeName: string;
+  total: number;
+}) {
+  const values: Record<string, string> = {
+    name: input.customerName,
+    order: input.orderNumber,
+    store: input.storeName,
+    total: `${input.currency} ${Math.round(input.total).toLocaleString("en-US")}`
+  };
+
+  return input.message
+    .replace(
+      /\{(name|order|store|total)\}/gi,
+      (token, key: string) => values[key.toLowerCase()] ?? token
+    )
+    .trim();
+}
+
 export function otpCodeEmail(input: { code: string; expiresInMinutes: number }) {
   const text = [
     `Your ${brand} verification code is ${input.code}.`,

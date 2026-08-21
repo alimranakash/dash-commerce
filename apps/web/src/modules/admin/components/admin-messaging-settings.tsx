@@ -2,7 +2,7 @@
 
 import { Button } from "@dash/ui";
 import { KeyRound, Loader2, Mail, MessageSquare, Send, TriangleAlert } from "lucide-react";
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useState, useTransition, type ReactNode } from "react";
 import type { MessagingSettingsState } from "../admin-messaging.actions";
 
 type MessagingSettingsView = {
@@ -22,6 +22,8 @@ type MessagingSettingsView = {
 };
 
 type Action = (state: MessagingSettingsState, formData: FormData) => Promise<MessagingSettingsState>;
+/** Called outright rather than submitted — see `SecretField`. */
+type ClearAction = (channel: "EMAIL" | "SMS") => Promise<MessagingSettingsState>;
 
 const initialState: MessagingSettingsState = { status: "idle" };
 const inputClass =
@@ -34,7 +36,7 @@ export function AdminMessagingSettings({
   settings,
   testAction
 }: {
-  clearAction: Action;
+  clearAction: ClearAction;
   saveAction: Action;
   settings: MessagingSettingsView;
   testAction: Action;
@@ -226,6 +228,19 @@ function TestSender({ action }: { action: Action }) {
 /**
  * A stored secret is never sent back to the browser. The hint is enough to tell
  * one key from another, and a blank field means "keep the one that is there".
+ *
+ * Removing a key is a plain button that calls its action, not a submit.
+ *
+ * This renders inside the settings form, and every form-shaped way of running a
+ * second action from in there is closed off. Its own nested `<form>` is invalid
+ * HTML, and the browser drops it — which had the remove button silently saving
+ * the settings instead of clearing the key. `formAction` avoids that, but React
+ * spends such a button's `name` attribute on its own action reference, so the
+ * channel cannot ride along on it; a hidden input cannot carry it either, since
+ * both secret fields sit in the same form and would collide on the name.
+ *
+ * Calling the action outright sidesteps all of it, at the cost of this one
+ * control needing JavaScript — which the rest of this page needs anyway.
  */
 function SecretField({
   action,
@@ -234,13 +249,14 @@ function SecretField({
   label,
   name
 }: {
-  action: Action;
+  action: ClearAction;
   channel: "EMAIL" | "SMS";
   hint: string | null;
   label: string;
   name: string;
 }) {
-  const [state, formAction, isPending] = useActionState(action, initialState);
+  const [state, setState] = useState(initialState);
+  const [isPending, startTransition] = useTransition();
 
   return (
     <div>
@@ -260,16 +276,18 @@ function SecretField({
           {hint ? `Stored: ${hint}` : "Nothing stored here yet"}
         </span>
         {hint ? (
-          <form action={formAction}>
-            <input name="channel" type="hidden" value={channel} />
-            <button
-              className="font-semibold text-[#c02b52] disabled:opacity-60"
-              disabled={isPending}
-              type="submit"
-            >
-              {isPending ? "Removing..." : "Remove stored key"}
-            </button>
-          </form>
+          <button
+            className="font-semibold text-[#c02b52] disabled:opacity-60"
+            disabled={isPending}
+            onClick={() =>
+              startTransition(async () => {
+                setState(await action(channel));
+              })
+            }
+            type="button"
+          >
+            {isPending ? "Removing..." : "Remove stored key"}
+          </button>
         ) : null}
       </div>
       {state.message ? <p className="m-0 mt-2 text-xs text-[#74758a]">{state.message}</p> : null}

@@ -42,12 +42,16 @@ export async function saveMessagingSettingsAction(
   return { message: "Messaging settings saved.", status: "success" };
 }
 
+/**
+ * Takes a channel, not form state: the button that calls it lives inside the
+ * settings form — see `SecretField` — so it is called outright rather than
+ * submitted. There is no second field to remove a key, and nothing about it
+ * belongs in the settings the surrounding form saves.
+ */
 export async function clearMessagingSecretAction(
-  _state: MessagingSettingsState,
-  formData: FormData
+  channel: "EMAIL" | "SMS"
 ): Promise<MessagingSettingsState> {
   await requirePlatformAdmin();
-  const channel = value(formData, "channel") === "SMS" ? "SMS" : "EMAIL";
 
   try {
     await clearMessagingSecret(channel);

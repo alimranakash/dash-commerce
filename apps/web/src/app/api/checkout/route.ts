@@ -4,7 +4,10 @@ import { ZodError } from "zod";
 import { createCheckoutOrder } from "../../../modules/checkout/checkout.service";
 import { sendGa4PurchaseEvent } from "../../../modules/marketing/ga4-mp";
 import { sendMetaPurchaseEvent } from "../../../modules/marketing/meta-capi";
-import { sendOrderConfirmationSms } from "../../../modules/orders/order-sms.service";
+import {
+  sendCustomOrderSms,
+  sendOrderConfirmationSms
+} from "../../../modules/orders/order-sms.service";
 import type { PaymentMethodTypeValue } from "../../../modules/payments/payment.schema";
 import { getStorefrontBySlug } from "../../../modules/storefront/resolver";
 
@@ -48,11 +51,11 @@ export async function POST(request: NextRequest) {
     ).toString();
 
     // Post-order side effects only: the order is committed and the cart cleared
-    // before these run. Both senders resolve rather than reject, and the extra
+    // before these run. Every sender resolves rather than rejects, and the extra
     // catch on each guarantees a confirmed order can never be reported to the
     // customer as a checkout failure. Each no-ops unless the seller enabled it,
     // and because the catch is attached per sender, one being misconfigured or
-    // slow cannot suppress the other.
+    // slow cannot suppress the others.
     await Promise.all([
       sendMetaPurchaseEvent({
         eventSourceUrl: thankYouUrl,
@@ -69,6 +72,15 @@ export async function POST(request: NextRequest) {
       }).catch(() => undefined),
       sendOrderConfirmationSms({
         currency: store.currency,
+        orderNumber: order.orderNumber,
+        phone: order.customerPhone,
+        storeId: store.id,
+        storeName: store.name,
+        total: Number(order.totalAmount)
+      }).catch(() => undefined),
+      sendCustomOrderSms({
+        currency: store.currency,
+        customerName: order.customerName,
         orderNumber: order.orderNumber,
         phone: order.customerPhone,
         storeId: store.id,
