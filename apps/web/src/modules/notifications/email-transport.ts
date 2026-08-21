@@ -66,6 +66,18 @@ function resolveTransporter(settings: SmtpSettings) {
   return cached.transporter;
 }
 
+/**
+ * A TLS handshake against a STARTTLS port fails deep inside OpenSSL, and what
+ * it reports is a malformed record header — true, and useless to whoever has to
+ * fix it. This is the one SMTP misconfiguration an admin cannot guess from the
+ * message they are shown, so it gets named.
+ */
+function transportMessage(message: string) {
+  return /wrong version number|packet length too long|SSL routines/i.test(message)
+    ? `The TLS setting does not match the port: use implicit TLS on 465, or turn it off for STARTTLS on 587. (${message})`
+    : `Could not reach the mail server: ${message}`;
+}
+
 function describeSmtpError(error: unknown) {
   const code =
     typeof error === "object" && error !== null ? String((error as { code?: unknown }).code ?? "") : "";
@@ -78,7 +90,7 @@ function describeSmtpError(error: unknown) {
     case "ECONNECTION":
     case "ESOCKET":
     case "ETIMEDOUT":
-      return new NotificationError("TRANSPORT", `Could not reach the mail server: ${message}`, options);
+      return new NotificationError("TRANSPORT", transportMessage(message), options);
     case "EENVELOPE":
       return new NotificationError("INVALID_RECIPIENT", `The mail server refused that address: ${message}`, options);
     default:

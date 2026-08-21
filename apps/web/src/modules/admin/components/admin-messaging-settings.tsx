@@ -42,6 +42,9 @@ export function AdminMessagingSettings({
   testAction: Action;
 }) {
   const [state, formAction, isPending] = useActionState(saveAction, initialState);
+  // Only so the port placeholder can follow the toggle: a blank field reading
+  // "587" beside a ticked implicit-TLS box promises a pair that cannot connect.
+  const [implicitTls, setImplicitTls] = useState(settings.smtpSecure);
 
   return (
     <div className="grid gap-4">
@@ -126,7 +129,7 @@ export function AdminMessagingSettings({
             </label>
             <label className={labelClass}>
               Port
-              <input className={inputClass} defaultValue={settings.smtpPort} name="smtpPort" placeholder="587" />
+              <input className={inputClass} defaultValue={settings.smtpPort} name="smtpPort" placeholder={implicitTls ? "465" : "587"} />
             </label>
             <label className={labelClass}>
               Username
@@ -141,6 +144,7 @@ export function AdminMessagingSettings({
             defaultChecked={settings.smtpSecure}
             label="Implicit TLS (port 465). Leave off for STARTTLS on 587."
             name="smtpSecure"
+            onChange={setImplicitTls}
           />
           <SecretField
             action={clearAction}
@@ -323,15 +327,23 @@ function Card({
 function Toggle({
   defaultChecked,
   label,
-  name
+  name,
+  onChange
 }: {
   defaultChecked: boolean;
   label: string;
   name: string;
+  onChange?: ((checked: boolean) => void) | undefined;
 }) {
   return (
     <label className="flex items-center gap-2 text-sm font-medium text-[#30313d]">
-      <input className="h-4 w-4 accent-[#7c3aed]" defaultChecked={defaultChecked} name={name} type="checkbox" />
+      <input
+        className="h-4 w-4 accent-[#7c3aed]"
+        defaultChecked={defaultChecked}
+        name={name}
+        onChange={(event) => onChange?.(event.target.checked)}
+        type="checkbox"
+      />
       {label}
     </label>
   );

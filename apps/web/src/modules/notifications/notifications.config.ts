@@ -67,8 +67,17 @@ function readSmtpSettings(record: MessagingRecord): SmtpSettings | null {
     return null;
   }
 
-  const configuredPort = record?.smtpPort ?? Number.parseInt(trimmed(process.env.SMTP_PORT) ?? "587", 10);
-  const port = Number.isFinite(configuredPort) && configuredPort > 0 ? configuredPort : 587;
+  // Implicit TLS decides the default port rather than the other way round. 465
+  // speaks TLS from the first byte and 587 negotiates it after a plaintext
+  // greeting, so a blank port field defaulting to 587 while implicit TLS is on
+  // fails the handshake outright — OpenSSL calls it "wrong version number",
+  // which names a record header instead of the setting that caused it.
+  const wantsImplicitTls =
+    record?.smtpSecure === true || trimmed(process.env.SMTP_SECURE)?.toLowerCase() === "true";
+  const port =
+    readPort(record?.smtpPort) ??
+    readPort(trimmed(process.env.SMTP_PORT)) ??
+    (wantsImplicitTls ? 465 : 587);
 
   return {
     // Falling back to the SMTP username is right far more often than it is
@@ -77,10 +86,7 @@ function readSmtpSettings(record: MessagingRecord): SmtpSettings | null {
     host,
     password,
     port,
-    secure:
-      record?.smtpSecure === true ||
-      trimmed(process.env.SMTP_SECURE)?.toLowerCase() === "true" ||
-      port === 465,
+    secure: wantsImplicitTls || port === 465,
     user
   };
 }
@@ -99,6 +105,16 @@ function readSmsSettings(record: MessagingRecord): MessagingConfig["sms"] {
     },
     provider: toProviderKey(trimmed(record?.smsProvider) ?? trimmed(process.env.SMS_PROVIDER))
   };
+}
+
+function readPort(value: number | string | null | undefined) {
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+
+  const port = typeof value === "number" ? value : Number.parseInt(value, 10);
+
+  return Number.isFinite(port) && port > 0 && port <= 65535 ? port : undefined;
 }
 
 function toProviderKey(value: string | undefined): SmsProviderKey {
