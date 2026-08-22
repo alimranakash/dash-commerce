@@ -25,7 +25,10 @@ export async function proxy(request: NextRequest) {
   }
 
   if (hostRoute.type === "storefront") {
-    return rewriteToStorefront(request, hostRoute.slug, pathname);
+    return (
+      redirectAwaySlugPrefix(request, hostRoute.slug, pathname) ??
+      rewriteToStorefront(request, hostRoute.slug, pathname)
+    );
   }
 
   // Custom domains are resolved against the database — only a verified hostname
@@ -41,24 +44,34 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  const slugPrefix = `/s/${route.slug}`;
+  return (
+    redirectAwaySlugPrefix(request, route.slug, pathname) ??
+    rewriteToStorefront(request, route.slug, pathname)
+  );
+}
 
-  /**
-   * Storefront components link to `/s/<slug>/…` everywhere, which is the right
-   * URL on `<slug>.storeim.com` but leaks the internal path on a custom domain. So
-   * the slug prefix is redirected away rather than served: the customer's address
-   * bar keeps the clean `worzen.com/products` form, and the 121 existing hrefs
-   * need no change.
-   *
-   * Only *this* store's prefix is stripped. A `/s/<other-store>` path falls
-   * through to the rewrite below, produces no matching route, and 404s — a
-   * custom domain never serves another tenant.
-   */
+/**
+ * Sends `/s/<slug>/…` back to the bare path on the hostname it arrived on.
+ *
+ * Storefront components link to `/s/<slug>/…` everywhere. That is the rewrite
+ * target, not a servable address on either storefront hostname: rewriting it a
+ * second time prefixes another `/s/<slug>`, which matches no route and 404s. So
+ * the prefix is redirected away rather than served, which also keeps the
+ * customer's address bar on the clean `ds-shop.storeim.com/categories/haircare`
+ * form and leaves the existing hrefs untouched.
+ *
+ * Only *this* store's prefix is stripped. A `/s/<other-store>` path returns null,
+ * falls through to the rewrite, produces no matching route, and 404s — a
+ * storefront never serves another tenant.
+ */
+function redirectAwaySlugPrefix(request: NextRequest, slug: string, pathname: string) {
+  const slugPrefix = `/s/${slug}`;
+
   if (pathname === slugPrefix || pathname.startsWith(`${slugPrefix}/`)) {
     return redirectOnSameHost(request, pathname.slice(slugPrefix.length) || "/");
   }
 
-  return rewriteToStorefront(request, route.slug, pathname);
+  return null;
 }
 
 export const config = {
