@@ -16,7 +16,7 @@ import "../../lib/env";
  *
  *   PLATFORM_DOMAIN_IPV4   A-record target, e.g. 203.0.113.10 (comma-separated for several)
  *   PLATFORM_DOMAIN_IPV6   optional AAAA target
- *   PLATFORM_DOMAIN_CNAME  optional CNAME target for www/subdomains, e.g. stores.dash.com
+ *   PLATFORM_DOMAIN_CNAME  optional CNAME target for www/subdomains, e.g. stores.storeim.com
  */
 
 const LOOKUP_TIMEOUT_MS = 4000;

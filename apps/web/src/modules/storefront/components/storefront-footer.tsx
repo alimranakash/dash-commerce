@@ -8,6 +8,7 @@ import { getStorefrontThemeSettings } from "../themes/theme.service";
 import { resolveStorefrontSocialLinks } from "../social-links";
 import { resolveStorefrontHref, resolveStorefrontCopyright } from "../footer-content";
 import type { StorefrontStore } from "../storefront.types";
+import { storeSubdomain } from "../../../lib/host-routing";
 
 type StorefrontFooterProps = {
   primaryDomain: string | undefined;
@@ -58,7 +59,7 @@ export async function StorefrontFooter({ primaryDomain, store }: StorefrontFoote
   const description =
     footer.description ||
     settings?.tagline?.trim() ||
-    "A curated online store powered by Dash Commerce OS, built for smooth shopping and modern customer service.";
+    "A curated online store powered by StoreIM, built for smooth shopping and modern customer service.";
 
   return (
     <footer className="sf-footer" data-storefront-footer-template={templateId}>
@@ -75,7 +76,7 @@ export async function StorefrontFooter({ primaryDomain, store }: StorefrontFoote
             <strong>{store.name}</strong>
           </Link>
           <p>{description}</p>
-          <small>{primaryDomain ?? `${store.slug}.dash.com`}</small>
+          <small>{primaryDomain ?? storeSubdomain(store.slug)}</small>
         </section>
 
         {footer.columns.map((column) => (

@@ -38,6 +38,7 @@ export type AdminUserListItem = {
 type AdminUserManagementProps = {
   activeRole: string;
   activeStatus: string;
+  platformDomain: string;
   search: string;
   users: AdminUserListItem[];
 };
@@ -54,7 +55,7 @@ const statusOptions = [
   { label: "Suspended", value: "suspended" }
 ];
 
-export function AdminUserManagement({ activeRole, activeStatus, search, users }: AdminUserManagementProps) {
+export function AdminUserManagement({ activeRole, activeStatus, platformDomain, search, users }: AdminUserManagementProps) {
   const [selectedUser, setSelectedUser] = useState<AdminUserListItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminUserListItem | null>(null);
   const [pending, startTransition] = useTransition();
@@ -176,7 +177,7 @@ export function AdminUserManagement({ activeRole, activeStatus, search, users }:
         )}
       </section>
 
-      {selectedUser ? <UserDetailsModal onClose={() => setSelectedUser(null)} user={selectedUser} /> : null}
+      {selectedUser ? <UserDetailsModal onClose={() => setSelectedUser(null)} platformDomain={platformDomain} user={selectedUser} /> : null}
       {deleteTarget ? (
         <DeleteUserModal
           disabled={pending}
@@ -206,7 +207,7 @@ function UserStatusBadge({ suspended }: { suspended: boolean }) {
   );
 }
 
-function UserDetailsModal({ onClose, user }: { onClose: () => void; user: AdminUserListItem }) {
+function UserDetailsModal({ onClose, platformDomain, user }: { onClose: () => void; platformDomain: string; user: AdminUserListItem }) {
   return (
     <div aria-modal="true" className="fixed inset-0 z-[100] flex justify-end bg-[#20212a]/45" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
       <aside className="h-full w-full max-w-xl overflow-y-auto bg-white p-5 shadow-2xl">
@@ -252,7 +253,7 @@ function UserDetailsModal({ onClose, user }: { onClose: () => void; user: AdminU
                 {user.joinedStores.map((store) => (
                   <div className="rounded-lg bg-white p-3" key={`${store.slug}-${store.role}`}>
                     <div className="font-semibold text-[#20212c]">{store.name}</div>
-                    <div className="mt-1 text-xs text-[#74758a]">{store.role} · {store.slug}.dash.com · {store.status}</div>
+                    <div className="mt-1 text-xs text-[#74758a]">{store.role} · {store.slug}.{platformDomain} · {store.status}</div>
                   </div>
                 ))}
               </div>

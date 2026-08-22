@@ -1,7 +1,7 @@
 /**
  * The platform's own hostnames.
  *
- * Env-driven because a real deployment does not run on `dash.com`: the same build
+ * Env-driven because a deployment may not run on `storeim.com`: the same build
  * has to answer on the operator's domain, and both request routing and the
  * on-demand TLS authorisation endpoint have to agree on which names are ours.
  * Defaults keep local development and the existing fixtures working unchanged.
@@ -9,7 +9,7 @@
  *   PLATFORM_ROOT_DOMAIN   marketing site + the root tenant subdomains hang off it
  *   PLATFORM_APP_HOST      seller app + platform admin (defaults to app.<root>)
  */
-const platformRootDomain = normalizeHostname(process.env.PLATFORM_ROOT_DOMAIN ?? "dash.com");
+const platformRootDomain = normalizeHostname(process.env.PLATFORM_ROOT_DOMAIN ?? "storeim.com");
 const platformAppHost = normalizeHostname(
   process.env.PLATFORM_APP_HOST ?? `app.${platformRootDomain}`
 );
@@ -32,6 +32,20 @@ export const PLATFORM_ROOT_DOMAIN = platformRootDomain;
 
 export function getPlatformRootDomain() {
   return platformRootDomain;
+}
+
+/**
+ * The subdomain every store gets for free, e.g. `myshop.storeim.com`.
+ *
+ * Worth a function rather than a template literal at each call site: this string
+ * is shown to sellers as the address of their own storefront, and a build that
+ * answers on one root domain while telling them another is the kind of wrong
+ * that only surfaces when a customer cannot reach the shop. Server-side only —
+ * `PLATFORM_ROOT_DOMAIN` is not in the browser bundle, so a client component
+ * takes the root domain as a prop instead.
+ */
+export function storeSubdomain(slug: string) {
+  return `${slug}.${platformRootDomain}`;
 }
 
 /**

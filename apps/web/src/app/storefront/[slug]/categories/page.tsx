@@ -5,6 +5,7 @@ import {
   getStorefrontCategories,
   requireStorefrontBySlug
 } from "../../../../modules/storefront/resolver";
+import { storeSubdomain } from "../../../../lib/host-routing";
 
 type StorefrontCategoriesPageProps = {
   params: Promise<{
@@ -22,7 +23,7 @@ export default async function StorefrontCategoriesPage({ params }: StorefrontCat
     <main className="sf-page">
       <StorefrontHeader store={store} />
       <section className="sf-shop-hero" aria-labelledby="categories-title">
-        <p>{primaryDomain?.domain ?? `${store.slug}.dash.com`}</p>
+        <p>{primaryDomain?.domain ?? storeSubdomain(store.slug)}</p>
         <h1 id="categories-title">Categories</h1>
         <span>Browse collections from {store.name}.</span>
       </section>

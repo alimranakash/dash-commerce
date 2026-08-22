@@ -42,7 +42,7 @@ export function LoginForm() {
         {error ? <p className={styles.errorMessage}>{error}</p> : null}{notice ? <p className={styles.successMessage}>{notice}</p> : null}
         <button className={styles.submitButton} disabled={isSubmitting} type="submit">{isSubmitting ? <><LoaderCircle className={styles.spinner} /> Logging in...</> : <>Log In <ArrowRight /></>}</button>
       </form>
-      <p className={styles.switchPrompt}>New to Dash? <Link href="/register">Create an account</Link></p>
+      <p className={styles.switchPrompt}>New to StoreIM? <Link href="/register">Create an account</Link></p>
     </div>
   );
 }

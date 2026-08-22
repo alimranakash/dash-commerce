@@ -48,7 +48,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   if (!viewer) {
     return (
       <AuthExperience
-        description={`You have been invited to help run ${invite.organizationName} on Dash. Sign in as ${invite.email} to join, or create that account if you do not have one yet.`}
+        description={`You have been invited to help run ${invite.organizationName} on StoreIM. Sign in as ${invite.email} to join, or create that account if you do not have one yet.`}
         eyebrow="Team invite"
         title={`Join ${invite.organizationName}.`}
       >
@@ -157,7 +157,7 @@ function InviteProblemScreen({
             />
           ) : null}
           <Link className={signedIn ? styles.submitButton : styles.backButton} href="/dashboard">
-            {signedIn ? "Go to my dashboard" : "Go to Dash"}
+            {signedIn ? "Go to my dashboard" : "Go to StoreIM"}
           </Link>
         </div>
 

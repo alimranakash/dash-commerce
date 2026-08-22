@@ -24,6 +24,7 @@ import {
 import type { StorefrontProductSort } from "../../../../modules/storefront/resolver";
 import { getStorefrontTemplateForStore } from "../../../../modules/storefront/templates/registry";
 import { getStorefrontThemeSettings } from "../../../../modules/storefront/themes/theme.service";
+import { storeSubdomain } from "../../../../lib/host-routing";
 
 type StorefrontSearchPageProps = {
   params: Promise<{
@@ -241,7 +242,7 @@ function EmptySearchPage({ primaryDomain, store, templateId }: EmptySearchPagePr
       <StorefrontHeader store={store} />
       <section className="sf-shop-page-header" aria-labelledby="search-title">
         <p>Search</p>
-        <span>{primaryDomain ?? `${store.slug}.dash.com`}</span>
+        <span>{primaryDomain ?? storeSubdomain(store.slug)}</span>
       </section>
       <section className="sf-shop-page sf-shop-page-boxed" aria-labelledby="search-title">
         <h1 className="sr-only" id="search-title">

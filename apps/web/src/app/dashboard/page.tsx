@@ -16,6 +16,7 @@ import {
   getTopProducts
 } from "../../modules/analytics/analytics.service";
 import { LogoutButton } from "../../modules/auth/logout-button";
+import { getPlatformRootDomain } from "../../lib/host-routing";
 import { OnboardingForm } from "../../modules/onboarding/onboarding-form";
 import onboardingStyles from "../../modules/onboarding/onboarding-experience.module.css";
 import { getCurrentStore } from "../../modules/stores/queries";
@@ -27,10 +28,10 @@ export default async function DashboardPage() {
   if (!store) {
     return (
       <main className={onboardingStyles.onboardingPage}>
-        <header className={onboardingStyles.topbar}><span className={onboardingStyles.brand}><b>D</b> Dash Commerce <i>OS</i></span><div><span>{user.name ?? user.email}</span><div className={onboardingStyles.logout}><LogoutButton /></div></div></header>
+        <header className={onboardingStyles.topbar}><span className={onboardingStyles.brand}><b>S</b> Store<i>IM</i></span><div><span>{user.name ?? user.email}</span><div className={onboardingStyles.logout}><LogoutButton /></div></div></header>
         <section className={onboardingStyles.onboardingShell} aria-labelledby="onboarding-title">
           <div className={onboardingStyles.pageIntro}><span>Workspace setup</span><h1 id="onboarding-title">Let’s build your commerce workspace.</h1><p>Five simple steps. No technical setup. You’ll be ready to add products and start selling in minutes.</p></div>
-          <OnboardingForm />
+          <OnboardingForm platformDomain={getPlatformRootDomain()} />
         </section>
       </main>
     );

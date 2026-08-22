@@ -386,7 +386,7 @@ function AdminPlansEmpty({ onCreate }: { onCreate: () => void }) {
         <Sparkles className="h-6 w-6" />
       </div>
       <h3 className="m-0 text-lg font-semibold text-[#20212c]">No plans found</h3>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#74758a]">Create the first pricing tier for Dash Commerce OS.</p>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#74758a]">Create the first pricing tier for StoreIM.</p>
       <Button className="mt-5 inline-flex h-10 cursor-pointer items-center rounded-lg bg-[#7c3aed] px-4 text-sm font-semibold text-white hover:bg-[#6d28d9]" onClick={onCreate}>
         Create Plan
       </Button>

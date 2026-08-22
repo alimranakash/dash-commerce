@@ -18,8 +18,8 @@ export default async function AIAssistantPage() {
   const connection = await getStoreOSConnection(store.id);
   const initialMessage =
     connection?.status === "connected"
-      ? "I am connected to StoreOS. Ask me about your store operations."
-      : "StoreOS AI Assistant is not connected yet. You can still preview the chat, but responses will use a safe fallback until StoreOS is configured.";
+      ? "I am connected and ready. Ask me about your store operations."
+      : "StoreIM AI is not connected yet. You can still preview the chat, but responses will use a safe fallback until the connection is configured.";
 
   return (
     <DashboardShell storeSlug={store.slug}>
@@ -27,7 +27,7 @@ export default async function AIAssistantPage() {
         <div className="resource-header">
           <div>
             <p className="eyebrow">AI Assistant</p>
-            <h1>Dash AI for StoreOS</h1>
+            <h1>StoreIM AI</h1>
             <p className="auth-copy">
               Ask operational questions about orders, sales, inventory, and store health.
             </p>

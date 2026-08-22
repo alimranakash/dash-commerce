@@ -7,6 +7,7 @@ import {
   type AdminLogSourceFilter
 } from "../../../modules/admin/admin-logs.service";
 import { AdminLogManagement, type AdminSystemLogListItem } from "../../../modules/admin/components/admin-log-management";
+import { storeSubdomain } from "../../../lib/host-routing";
 
 type AdminLogsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -59,7 +60,7 @@ function toLogListItem(log: AdminSystemLogRecord): AdminSystemLogListItem {
     metadata: formatMetadata(log.metadata),
     organizationName: log.organization?.name ?? "No organization",
     source: log.source,
-    storeDomain: log.store?.domains[0]?.domain ?? (log.store ? `${log.store.slug}.dash.com` : "No store"),
+    storeDomain: log.store?.domains[0]?.domain ?? (log.store ? storeSubdomain(log.store.slug) : "No store"),
     storeName: log.store?.name ?? "No store",
     userEmail: log.user?.email ?? "No user",
     userName: log.user?.name ?? log.user?.email ?? "No user"

@@ -29,12 +29,12 @@ export async function generateMetadata({ params }: StorefrontLayoutProps): Promi
 
   if (!store) {
     return {
-      title: "Storefront not found | Dash Commerce OS"
+      title: "Storefront not found | StoreIM"
     };
   }
 
   const primaryDomain = getPrimaryStorefrontDomain(store);
-  const title = `${store.name} | Dash Commerce OS`;
+  const title = `${store.name} | StoreIM`;
   const description =
     store.themeSetting?.heroSubtitle ?? store.setting?.tagline ?? `Shop ${store.name} online.`;
   const canonical = primaryDomain ? `https://${primaryDomain.domain}` : `/s/${store.slug}`;

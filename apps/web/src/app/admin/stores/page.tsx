@@ -9,6 +9,7 @@ import {
   getAdminStores,
   type AdminStoreStatusFilter
 } from "../../../modules/admin/admin-stores.service";
+import { storeSubdomain } from "../../../lib/host-routing";
 
 type AdminStoresPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -72,7 +73,7 @@ function toStoreListItem(store: AdminStoreRecord): AdminStoreListItem {
   const owner =
     store.organization.members.find((member) => member.role === "OWNER") ??
     store.organization.members[0];
-  const domain = store.domains[0]?.domain ?? `${store.slug}.dash.com`;
+  const domain = store.domains[0]?.domain ?? storeSubdomain(store.slug);
   const lastActivity = store.orders[0]?.updatedAt ?? store.updatedAt;
   const staffLimit = store.subscription?.plan.staffLimit;
 

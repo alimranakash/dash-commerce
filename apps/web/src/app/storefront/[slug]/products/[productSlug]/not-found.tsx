@@ -8,7 +8,7 @@ export default function StorefrontProductUnavailable() {
         <h1 id="product-404">This product is not available.</h1>
         <span>It may have been unpublished, archived, or moved by the seller.</span>
         <Link className="sf-button" href="/">
-          Back to Dash Commerce OS
+          Back to StoreIM
         </Link>
       </section>
     </main>

@@ -20,6 +20,8 @@ export type StoreSettingsFormValue = {
 
 type StoreSettingsFormProps = {
   action: (state: SettingsActionState, formData: FormData) => Promise<SettingsActionState>;
+  /** The platform root the store's free subdomain hangs off, from the server. */
+  platformDomain: string;
   settings: StoreSettingsFormValue;
   store: {
     currency: string;
@@ -33,7 +35,7 @@ const initialState: SettingsActionState = {
   status: "idle"
 };
 
-export function StoreSettingsForm({ action, settings, store }: StoreSettingsFormProps) {
+export function StoreSettingsForm({ action, platformDomain, settings, store }: StoreSettingsFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
 
   return (
@@ -45,7 +47,7 @@ export function StoreSettingsForm({ action, settings, store }: StoreSettingsForm
       </div>
       <div className="form-grid">
         <label>Store Name<input readOnly value={store.name} /></label>
-        <label>Store URL<input readOnly value={`${store.slug}.dash.com`} /></label>
+        <label>Store URL<input readOnly value={`${store.slug}.${platformDomain}`} /></label>
         <label>Store Currency<input readOnly value={store.currency} /></label>
         <label>Store Language<input readOnly value="English" /></label>
         <label>Timezone<input readOnly value={store.timezone} /></label>

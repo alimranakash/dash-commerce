@@ -100,7 +100,7 @@ export async function sendTestMessageAction(
       }
 
       const outcome = await sendSms({
-        message: "Dash test message. Your SMS gateway is working.",
+        message: "StoreIM test message. Your SMS gateway is working.",
         storeId: null,
         template: "otp_code",
         to: phone
@@ -111,7 +111,7 @@ export async function sendTestMessageAction(
 
     const outcome = await sendEmail({
       storeId: null,
-      subject: "Dash test message",
+      subject: "StoreIM test message",
       template: "otp_code",
       text: "Your mail relay is working. Nothing else to do.",
       to: recipient

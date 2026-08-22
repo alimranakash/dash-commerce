@@ -1,6 +1,7 @@
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../modules/storefront/components/storefront-header";
 import { requireStorefrontBySlug } from "../../../../modules/storefront/resolver";
+import { storeSubdomain } from "../../../../lib/host-routing";
 
 type StorefrontAccountPageProps = {
   params: Promise<{
@@ -17,7 +18,7 @@ export default async function StorefrontAccountPage({ params }: StorefrontAccoun
     <main className="sf-page">
       <StorefrontHeader store={store} />
       <section className="sf-shop-hero" aria-labelledby="account-title">
-        <p>{primaryDomain?.domain ?? `${store.slug}.dash.com`}</p>
+        <p>{primaryDomain?.domain ?? storeSubdomain(store.slug)}</p>
         <h1 id="account-title">Customer account</h1>
         <span>Profile, orders, and saved addresses will be managed from this customer account area.</span>
       </section>

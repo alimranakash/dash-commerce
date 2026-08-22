@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
 import { getCategoriesForStore } from "../../../../modules/categories/category.service";
+import { getPlatformRootDomain } from "../../../../lib/host-routing";
 import { ProductForm } from "../../../../modules/products/components/product-form";
 import { createProductFormAction } from "../../../../modules/products/product.actions";
 import { getProductTaxonomyItems } from "../../../../modules/products/product-taxonomy.service";
@@ -37,6 +38,7 @@ export default async function NewProductPage() {
             id: category.id,
             name: category.name
           }))}
+          platformDomain={getPlatformRootDomain()}
           storeSlug={store.slug}
           submitLabel="Create product"
           tags={tags.map((tag) => ({

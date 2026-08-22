@@ -3,7 +3,7 @@ import { isPlatformHostname } from "../../lib/host-routing";
 import type { DnsInstruction } from "./domain-verification";
 
 /**
- * A store gets one `<slug>.dash.com` row for free; this caps the *custom* rows.
+ * A store gets one `<slug>.storeim.com` row for free; this caps the *custom* rows.
  * Each verified hostname becomes a certificate Caddy has to issue and renew, so
  * the ceiling is a real resource limit, not just tidiness.
  */

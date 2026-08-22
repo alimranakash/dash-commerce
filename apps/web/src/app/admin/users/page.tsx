@@ -7,6 +7,7 @@ import {
   type AdminUserRoleFilter,
   type AdminUserStatusFilter
 } from "../../../modules/admin/admin-users.service";
+import { getPlatformRootDomain } from "../../../lib/host-routing";
 import { AdminUserManagement, type AdminUserListItem } from "../../../modules/admin/components/admin-user-management";
 
 type AdminUsersPageProps = {
@@ -39,6 +40,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
       <AdminUserManagement
         activeRole={activeRole}
         activeStatus={activeStatus}
+        platformDomain={getPlatformRootDomain()}
         search={search}
         users={users.map((user) => toUserListItem(user, admin.id))}
       />

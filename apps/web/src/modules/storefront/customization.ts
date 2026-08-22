@@ -511,7 +511,7 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
         title: "Customer Support"
       }
     ],
-    copyrightText: "© {year} {store}. Powered by Dash Commerce OS.",
+    copyrightText: "© {year} {store}. Powered by StoreIM.",
     description: "",
     enabled: true,
     paymentIcons: ["Visa", "Mastercard", "Amex", "bKash", "Nagad"],

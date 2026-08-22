@@ -1,4 +1,4 @@
-# Dash Commerce OS — Caddy reverse proxy with on-demand TLS for seller domains.
+# StoreIM — Caddy reverse proxy with on-demand TLS for seller domains.
 #
 # Replace storeim.com with the real PLATFORM_ROOT_DOMAIN and admin@storeim.com
 # with a real address. Everything else works as written.

@@ -1,4 +1,4 @@
-# Deploying Dash Commerce OS
+# Deploying StoreIM
 
 One VPS, one environment, deployed automatically by GitHub Actions:
 

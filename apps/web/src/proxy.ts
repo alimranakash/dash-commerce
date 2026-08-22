@@ -45,7 +45,7 @@ export async function proxy(request: NextRequest) {
 
   /**
    * Storefront components link to `/s/<slug>/…` everywhere, which is the right
-   * URL on `<slug>.dash.com` but leaks the internal path on a custom domain. So
+   * URL on `<slug>.storeim.com` but leaks the internal path on a custom domain. So
    * the slug prefix is redirected away rather than served: the customer's address
    * bar keeps the clean `worzen.com/products` form, and the 121 existing hrefs
    * need no change.

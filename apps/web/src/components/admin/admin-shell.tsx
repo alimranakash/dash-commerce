@@ -58,7 +58,7 @@ export function AdminShell({ admin, children }: AdminShellProps) {
           <Link className="flex items-center gap-2" href="/admin" onClick={() => setOpen(false)}>
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#7c3aed] text-white"><Shield className="h-4 w-4" /></span>
             <span>
-              <b className="block text-sm leading-none text-[#20212a]">Dash Admin</b>
+              <b className="block text-sm leading-none text-[#20212a]">StoreIM Admin</b>
               <small className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7b7c88]">Console</small>
             </span>
           </Link>

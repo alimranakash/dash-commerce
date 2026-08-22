@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { StorefrontStore } from "../storefront.types";
+import { storeSubdomain } from "../../../lib/host-routing";
 
 type HeroSectionProps = {
   primaryDomain: string | undefined;
@@ -20,7 +21,7 @@ export function HeroSection({ primaryDomain, store }: HeroSectionProps) {
       aria-labelledby="storefront-title"
     >
       <div>
-        <p>{primaryDomain ?? `${store.slug}.dash.com`}</p>
+        <p>{primaryDomain ?? storeSubdomain(store.slug)}</p>
         <h1 id="storefront-title">{heroTitle}</h1>
         <span>{heroSubtitle}</span>
         <div className="sf-hero-actions">

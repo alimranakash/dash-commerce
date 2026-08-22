@@ -12,6 +12,7 @@ import {
   type AdminSubscriptionListItem,
   type AdminSubscriptionPlanOption
 } from "../../../modules/admin/components/admin-subscription-management";
+import { storeSubdomain } from "../../../lib/host-routing";
 
 type AdminSubscriptionsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -80,7 +81,7 @@ function toSubscriptionListItem(subscription: AdminSubscriptionRecord): AdminSub
     planSmsLimit: subscription.plan.smsLimit,
     smsLimitOverride: subscription.smsLimitOverride,
     status: subscription.status,
-    storeDomain: subscription.store.domains[0]?.domain ?? `${subscription.store.slug}.dash.com`,
+    storeDomain: subscription.store.domains[0]?.domain ?? storeSubdomain(subscription.store.slug),
     storeName: subscription.store.name,
     storeSlug: subscription.store.slug,
     trialDates,

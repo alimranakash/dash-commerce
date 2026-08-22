@@ -32,7 +32,7 @@ export default async function ProfilePage() {
           </div>
         </div>
 
-        <ProfileCard title="Personal Information" description="Update your profile details used across Dash Commerce OS.">
+        <ProfileCard title="Personal Information" description="Update your profile details used across StoreIM.">
           <PersonalInfoForm
             action={updateProfileInfoAction}
             profile={{

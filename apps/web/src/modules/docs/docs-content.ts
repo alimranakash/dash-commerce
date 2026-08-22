@@ -24,9 +24,9 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
     pages: [
       page({
         slug: "getting-started",
-        title: "Dash Commerce OS কী?",
+        title: "StoreIM কী?",
         intro:
-          "Dash Commerce OS হলো বাংলাদেশের অনলাইন ব্যবসার জন্য একটি পূর্ণাঙ্গ কমার্স অপারেটিং সিস্টেম। এখানে একই জায়গা থেকে স্টোরফ্রন্ট, পণ্য, অর্ডার, কাস্টমার, পেমেন্ট, শিপিং, রিপোর্ট, স্টক, বিলিং এবং StoreOS AI Assistant পরিচালনা করা যায়।",
+          "StoreIM হলো বাংলাদেশের অনলাইন ব্যবসার জন্য একটি পূর্ণাঙ্গ কমার্স অপারেটিং সিস্টেম। এখানে একই জায়গা থেকে স্টোরফ্রন্ট, পণ্য, অর্ডার, কাস্টমার, পেমেন্ট, শিপিং, রিপোর্ট, স্টক, বিলিং এবং StoreIM AI পরিচালনা করা যায়।",
         useCase: [
           "Facebook/Instagram inbox নির্ভর অর্ডারকে একটি পেশাদার অনলাইন স্টোরে আনতে।",
           "পণ্য, অর্ডার, কাস্টমার, স্টক, খরচ এবং রিপোর্ট এক জায়গায় রাখতে।",
@@ -42,7 +42,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         important: [
           "Dashboard, Admin Console এবং Storefront আলাদা অংশ। বিক্রেতারা মূলত Dashboard ব্যবহার করবেন।",
           "স্টোর তৈরি হলে প্রয়োজনীয় default settings, theme, COD payment এবং shipping rate তৈরি হওয়ার কথা।",
-          "StoreOS AI Assistant কাজ করতে StoreOS connection configured থাকতে হবে।"
+          "StoreIM AI কাজ করতে StoreIM AI connection configured থাকতে হবে।"
         ],
         tips: [
           "স্টোর লাইভ করার আগে একটি টেস্ট পণ্য, একটি টেস্ট অর্ডার এবং একটি টেস্ট manual payment flow পরীক্ষা করুন।",
@@ -59,7 +59,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         slug: "create-account",
         title: "অ্যাকাউন্ট তৈরি করা",
         intro:
-          "Dash Commerce OS ব্যবহার শুরু করতে seller account প্রয়োজন। Registration পেজে email/password দিয়ে account তৈরি করা যায়, এবং Google authentication configured থাকলে Google দিয়েও শুরু করা যায়।",
+          "StoreIM ব্যবহার শুরু করতে seller account প্রয়োজন। Registration পেজে email/password দিয়ে account তৈরি করা যায়, এবং Google authentication configured থাকলে Google দিয়েও শুরু করা যায়।",
         useCase: [
           "নতুন ব্যবসার জন্য প্রথম seller account তৈরি করতে।",
           "নিজের dashboard, store setup এবং billing access পেতে।",
@@ -123,9 +123,9 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         slug: "create-store",
         title: "স্টোর তৈরি করা",
         intro:
-          "প্রথম login-এর পরে Dash Commerce OS একটি premium multi-step workspace setup দেখায়। এখানে store name, slug/subdomain, business type, country, currency এবং timezone দিয়ে আপনার tenant store তৈরি হয়।",
+          "প্রথম login-এর পরে StoreIM একটি premium multi-step workspace setup দেখায়। এখানে store name, slug/subdomain, business type, country, currency এবং timezone দিয়ে আপনার tenant store তৈরি হয়।",
         useCase: [
-          "নতুন brand-এর জন্য Dash storefront তৈরি করতে।",
+          "নতুন brand-এর জন্য StoreIM storefront তৈরি করতে।",
           "Organization, Organization Member, Store এবং Store Domain একসাথে তৈরি করতে।",
           "স্টোরের default settings, theme, payment, shipping এবং subscription foundation শুরু করতে।"
         ],
@@ -139,7 +139,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         important: [
           "Store slug lowercase letters, numbers এবং hyphen দিয়ে 3-40 characters হওয়া উচিত।",
           "Slug unique হতে হবে; একই slug অন্য store ব্যবহার করলে error দেখাবে।",
-          "StoreDomain হিসেবে {storeSlug}.dash.com তৈরি হয়।"
+          "StoreDomain হিসেবে {storeSlug}.storeim.com তৈরি হয়।"
         ],
         tips: [
           "Slug ছোট, সহজ এবং brand-এর সাথে মিল রেখে দিন।",
@@ -320,7 +320,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         slug: "products/status",
         title: "Product Status",
         intro:
-          "Product status store catalog workflow নিয়ন্ত্রণ করে। Dash Commerce OS-এ product DRAFT, ACTIVE বা ARCHIVED হতে পারে এবং visibility PUBLIC বা HIDDEN হতে পারে।",
+          "Product status store catalog workflow নিয়ন্ত্রণ করে। StoreIM-এ product DRAFT, ACTIVE বা ARCHIVED হতে পারে এবং visibility PUBLIC বা HIDDEN হতে পারে।",
         useCase: [
           "অপূর্ণ product Draft রাখতে।",
           "Customer-facing product Active/Public করতে।",
@@ -577,7 +577,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         slug: "orders/status",
         title: "Order Status",
         intro:
-          "Order status business workflow বুঝতে সাহায্য করে। Dash Commerce OS order, payment, fulfillment এবং verification status আলাদা করে দেখায়।",
+          "Order status business workflow বুঝতে সাহায্য করে। StoreIM order, payment, fulfillment এবং verification status আলাদা করে দেখায়।",
         useCase: [
           "Pending order থেকে processing বা completed workflow track করতে।",
           "Payment pending/paid/refunded বোঝাতে।",
@@ -915,7 +915,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
           "Empty state দেখলে বুঝবেন ঐ period-এ data নেই।"
         ],
         important: [
-          "Reports Dash database data ব্যবহার করে, StoreOS AI call করে না।",
+          "Reports StoreIM database data ব্যবহার করে, StoreIM AI call করে না।",
           "Revenue সাধারণত non-cancelled order থেকে হিসাব হয়।",
           "Charts data না থাকলে professional placeholder দেখায়।"
         ],
@@ -1034,7 +1034,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         slug: "settings/storefront",
         title: "Storefront Setup",
         intro:
-          "Storefront হলো customer-facing public store। Dash supports /s/{storeSlug} local route এবং wildcard subdomain foundation যেমন {storeSlug}.dash.com।",
+          "Storefront হলো customer-facing public store। StoreIM supports /s/{storeSlug} local route এবং wildcard subdomain foundation যেমন {storeSlug}.storeim.com।",
         useCase: [
           "Customer-কে professional shop, product, cart এবং checkout experience দিতে।",
           "Store settings ও theme settings public storefront-এ apply করতে।",
@@ -1069,7 +1069,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
           "Custom Domain support future-ready architecture হিসেবে রাখা হয়েছে। Storefront resolver future custom domain support করতে প্রস্তুত, তবে seller UI/configuration fully live নাও থাকতে পারে।",
         useCase: [
           "নিজস্ব domain যেমন yourbrand.com storefront-এ connect করার জন্য future planning।",
-          "Brand trust বাড়াতে dash.com subdomain-এর বাইরে custom address ব্যবহার করতে।",
+          "Brand trust বাড়াতে storeim.com subdomain-এর বাইরে custom address ব্যবহার করতে।",
           "DNS ও domain verification workflow প্রস্তুত রাখতে।"
         ],
         steps: [
@@ -1085,7 +1085,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         ],
         tips: [
           "Brand domain কেনার আগে spelling short রাখুন।",
-          "Fallback dash.com subdomain সবসময় ধরে রাখুন।"
+          "Fallback storeim.com subdomain সবসময় ধরে রাখুন।"
         ],
         commonMistakes: [
           "DNS record বসালেই dashboard সেটিং ছাড়া domain কাজ করবে ভাবা।",
@@ -1392,20 +1392,20 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       }),
       page({
         slug: "settings/storeos-ai",
-        title: "StoreOS AI",
+        title: "StoreIM AI",
         intro:
-          "StoreOS AI Assistant Dash dashboard-এর মধ্যে chat interface দিয়ে business প্রশ্নের উত্তর দেয়। StoreOS API configured না থাকলে clear fallback message দেখায়।",
+          "StoreIM AI StoreIM dashboard-এর মধ্যে chat interface দিয়ে business প্রশ্নের উত্তর দেয়। StoreIM AI API configured না থাকলে clear fallback message দেখায়।",
         useCase: [
           "আজ কত order, এই মাসে sales, low stock product বা best-selling product দ্রুত জিজ্ঞেস করতে।",
-          "StoreOS native connection status দেখতে।",
+          "StoreIM AI native connection status দেখতে।",
           "Connect/reconnect action দিয়ে connection retry করতে।"
         ],
         steps: [
-          "Settings > StoreOS / AI বা Dashboard > AI Assistant খুলুন।",
+          "Settings > StoreIM AI বা Dashboard > AI Assistant খুলুন।",
           "Connection panel থেকে API configured, status, connection ID এবং last synced দেখুন।",
           "Suggested prompts থেকে প্রশ্ন select করুন অথবা নিজের প্রশ্ন লিখুন।",
           "Send চাপুন।",
-          "Not configured message এলে StoreOS API setup দরকার।"
+          "Not configured message এলে StoreIM AI API setup দরকার।"
         ],
         important: [
           "STOREOS_API_KEY browser-এ expose করা হয় না।",
@@ -1417,10 +1417,10 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
           "Critical business decision নেয়ার আগে Reports/Orders data মিলিয়ে দেখুন।"
         ],
         commonMistakes: [
-          "StoreOS not configured হলে AI broken মনে করা।",
+          "StoreIM AI not configured হলে AI broken মনে করা।",
           "AI answer-কে accounting final report ধরে নেয়া।"
         ],
-        related: ["Reports", "Dashboard Overview", "StoreOS AI Overview"]
+        related: ["Reports", "Dashboard Overview", "StoreIM AI"]
       })
     ]
   },
@@ -1431,7 +1431,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         slug: "billing",
         title: "Current Plan",
         intro:
-          "Billing page seller subscription, plan, usage, manual payment submission, billing history এবং invoice records দেখায়। Dash manual bKash/Nagad/Rocket/Bank payment verification flow ব্যবহার করে।",
+          "Billing page seller subscription, plan, usage, manual payment submission, billing history এবং invoice records দেখায়। StoreIM manual bKash/Nagad/Rocket/Bank payment verification flow ব্যবহার করে।",
         useCase: [
           "বর্তমান plan name, status, trial remaining, next billing date এবং billing cycle দেখতে।",
           "Products, Orders, Staff, Stores, Storage এবং AI Usage progress বুঝতে।",
@@ -1511,7 +1511,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         important: [
           "Amount readonly; typed amount validation নেই।",
           "Server expected amount calculate করে payment record save করে।",
-          "Status Pending থাকবে যতক্ষণ Dash team/admin verify না করে।"
+          "Status Pending থাকবে যতক্ষণ StoreIM team/admin verify না করে।"
         ],
         tips: [
           "Transaction ID copy-paste করলে ভুল কম হয়।",
@@ -1590,7 +1590,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         slug: "billing/subscription-settings",
         title: "Subscription Settings",
         intro:
-          "Subscription Settings section subscription renewal ও manual billing note দেখায়। Dash বর্তমানে manual billing verification model ব্যবহার করে, auto-renewal শুধুমাত্র tracking indicator হতে পারে।",
+          "Subscription Settings section subscription renewal ও manual billing note দেখায়। StoreIM বর্তমানে manual billing verification model ব্যবহার করে, auto-renewal শুধুমাত্র tracking indicator হতে পারে।",
         useCase: [
           "Cancel at period end বা auto renewal status বুঝতে।",
           "Manual billing rules পড়তে।",
@@ -1916,7 +1916,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         slug: "help/faq",
         title: "FAQ",
         intro:
-          "FAQ পেজে Dash Commerce OS ব্যবহার নিয়ে সাধারণ প্রশ্নের সংক্ষিপ্ত উত্তর থাকবে। এটি নতুন seller-দের setup, payment, shipping, product এবং billing confusion কমানোর জন্য।",
+          "FAQ পেজে StoreIM ব্যবহার নিয়ে সাধারণ প্রশ্নের সংক্ষিপ্ত উত্তর থাকবে। এটি নতুন seller-দের setup, payment, shipping, product এবং billing confusion কমানোর জন্য।",
         useCase: [
           "প্রথমবার dashboard ব্যবহার করার সময় দ্রুত উত্তর পেতে।",
           "Storefront-এ product কেন দেখা যাচ্ছে না, payment pending কেন, billing approval কীভাবে হয় এসব জানতে।",
@@ -1963,7 +1963,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         important: [
           "Database schema change হয়েছে কিন্তু migration/push না হলে Prisma runtime error হতে পারে।",
           "Decimal object client component-এ পাঠালে serialization error হতে পারে; seller হিসেবে page refresh/support লাগতে পারে।",
-          "Environment variable missing হলে StoreOS/Google/Billing settings কাজ নাও করতে পারে।"
+          "Environment variable missing হলে StoreIM AI/Google/Billing settings কাজ নাও করতে পারে।"
         ],
         tips: [
           "Error screenshot, URL এবং সময় support-কে দিলে দ্রুত diagnosis হয়।",

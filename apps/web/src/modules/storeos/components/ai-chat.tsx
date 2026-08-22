@@ -59,7 +59,7 @@ export function AIChat({ action, initialMessage, suggestedPrompts }: AIChatProps
       <div className="ai-chat-history" aria-live="polite">
         {messages.map((message, index) => (
           <div className={`ai-message ${message.role}`} key={`${message.role}-${index}`}>
-            <span>{message.role === "assistant" ? "Dash AI" : "You"}</span>
+            <span>{message.role === "assistant" ? "StoreIM AI" : "You"}</span>
             <p>{message.content}</p>
           </div>
         ))}

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     follow: false,
     index: false
   },
-  title: "Domain not connected | Dash Commerce OS"
+  title: "Domain not connected | StoreIM"
 };
 
 /**
@@ -40,13 +40,13 @@ export default async function DomainNotConfiguredPage() {
             ? "This domain is connected to a store but has not been verified yet. Once its DNS records are in place and verification passes, the storefront will appear here."
             : state === "unavailable"
               ? "This domain is connected to a store that is not currently open. Please check back later."
-              : "This domain is not connected to a store on Dash Commerce OS. If you own it, add it under Settings → Domains and point your DNS records at us."}
+              : "This domain is not connected to a store on StoreIM. If you own it, add it under Settings → Domains and point your DNS records at us."}
         </p>
         <a
           className="mt-6 inline-block rounded-lg bg-[#34353f] px-5 py-2.5 text-sm font-semibold text-white no-underline"
-          href="https://dash.com"
+          href="https://storeim.com"
         >
-          Go to Dash Commerce OS
+          Go to StoreIM
         </a>
       </section>
     </main>

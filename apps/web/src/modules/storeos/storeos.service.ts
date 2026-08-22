@@ -14,6 +14,7 @@ import {
   upsertStoreOSConnectionForStore
 } from "./storeos.repository";
 import { storeOSChatSchema, type StoreOSChatInput } from "./storeos.schema";
+import { storeSubdomain } from "../../lib/host-routing";
 
 export type StoreOSAssistantResponse = StoreOSChatMessageResponse & {
   connected: boolean;
@@ -45,7 +46,7 @@ export async function connectStoreOSForStore(storeId: string) {
     const connection = await createStoreOSClientFromEnv().createNativeConnection({
       metadata: {
         source: "dash",
-        storeDomain: `${store.slug}.dash.com`
+        storeDomain: storeSubdomain(store.slug)
       },
       organization: {
         id: store.organization.id,
@@ -97,11 +98,11 @@ export async function sendStoreOSAssistantMessage(
   const connection = await ensureStoreOSConnectionForStore(storeId);
 
   if (!isStoreOSConfigured()) {
-    return fallbackResponse("StoreOS AI Assistant is not connected yet. Add STOREOS_API_URL and STOREOS_API_KEY to enable it.");
+    return fallbackResponse("StoreIM AI is not connected yet. Add STOREOS_API_URL and STOREOS_API_KEY to enable it.");
   }
 
   if (!connection.storeosConnectionId || connection.status !== "connected") {
-    return fallbackResponse("StoreOS connection is pending. Reconnect StoreOS from settings, then try again.");
+    return fallbackResponse("The StoreIM AI connection is pending. Reconnect it from settings, then try again.");
   }
 
   try {
@@ -142,8 +143,8 @@ function fallbackResponse(message: string): StoreOSAssistantResponse {
 
 function storeOSError(error: unknown) {
   if (error instanceof StoreOSRequestError) {
-    return new Error(`StoreOS request failed: ${error.message}`);
+    return new Error(`StoreIM AI request failed: ${error.message}`);
   }
 
-  return error instanceof Error ? error : new Error("StoreOS request failed.");
+  return error instanceof Error ? error : new Error("StoreIM AI request failed.");
 }

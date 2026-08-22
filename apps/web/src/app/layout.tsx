@@ -10,7 +10,7 @@ const storefrontFont = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Dash Commerce OS",
+  title: "StoreIM — The Operating System for Commerce",
   description: "The multi-tenant commerce operating system."
 };
 

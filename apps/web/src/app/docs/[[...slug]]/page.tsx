@@ -30,8 +30,8 @@ export async function generateMetadata({ params }: DocsPageProps) {
   const page = getDocsPage(slug?.join("/"));
 
   return {
-    description: page?.intro ?? "Dash Commerce OS বিক্রেতাদের জন্য সহায়িকা।",
-    title: page ? `${page.title} | Dash Docs` : "Dash Commerce OS Docs"
+    description: page?.intro ?? "StoreIM বিক্রেতাদের জন্য সহায়িকা।",
+    title: page ? `${page.title} | StoreIM Docs` : "StoreIM Docs"
   };
 }
 
@@ -50,7 +50,7 @@ export default async function DocsPage({ params }: DocsPageProps) {
       <header className={styles.topbar}>
         <Link className={styles.brand} href="/">
           <span>D</span>
-          Dash Commerce OS
+          StoreIM
         </Link>
         <nav aria-label="Docs header navigation">
           <Link href="/">হোম</Link>
@@ -167,7 +167,7 @@ function DocsNav({ activeSlug }: { activeSlug: string }) {
         <BookOpen />
         <div>
           <strong>বিক্রেতা ডকস</strong>
-          <span>Dash Commerce OS ব্যবহার গাইড</span>
+          <span>StoreIM ব্যবহার গাইড</span>
         </div>
       </div>
       {docsSections.map((section) => (

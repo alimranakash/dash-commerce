@@ -8,7 +8,7 @@
  * multiplied by every sign-up.
  */
 
-const brand = "Dash";
+const brand = "StoreIM";
 
 export function otpCodeSms(input: { code: string; expiresInMinutes: number }) {
   return `${brand} verification code: ${input.code}. Valid for ${input.expiresInMinutes} minutes. Do not share it with anyone.`;

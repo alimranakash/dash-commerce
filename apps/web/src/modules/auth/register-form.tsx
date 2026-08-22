@@ -18,7 +18,7 @@ type TicketBody = { channel: "EMAIL" | "SMS"; devCode?: string; identifier: stri
 const initialDraft: Draft = { identifier: "", name: "", password: "", storeName: "", storeSlug: "" };
 const verifyStep = 2;
 
-export function RegisterForm() {
+export function RegisterForm({ platformDomain }: { platformDomain: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   /**
@@ -232,8 +232,8 @@ export function RegisterForm() {
       <form className={styles.authForm} noValidate onSubmit={handleSubmit}>
         {step === 1 ? <AccountStep draft={draft} showPassword={showPassword} togglePassword={() => setShowPassword((value) => !value)} update={update} /> : null}
         {step === verifyStep ? <VerifyStep challenge={challenge} code={code} isResending={isResending} onCodeChange={(value) => { setCode(value); setError(null); }} onResend={resendCode} secondsLeft={secondsLeft} /> : null}
-        {step === verifyStep + 1 && !inviteToken ? <StoreStep draft={draft} update={update} /> : null}
-        {step === lastStep ? <FinishStep draft={draft} isInvite={Boolean(inviteToken)} success={success} /> : null}
+        {step === verifyStep + 1 && !inviteToken ? <StoreStep draft={draft} platformDomain={platformDomain} update={update} /> : null}
+        {step === lastStep ? <FinishStep draft={draft} isInvite={Boolean(inviteToken)} platformDomain={platformDomain} success={success} /> : null}
         {notice ? <p className={styles.successMessage}>{notice}</p> : null}
         {error ? <p className={styles.errorMessage}>{error}</p> : null}
         <div className={styles.stepActions}>{step > firstBackStep && !success ? <button className={styles.backButton} onClick={() => { setStep((current) => current - 1); setError(null); setNotice(null); }} type="button"><ArrowLeft /> Back</button> : null}<button className={styles.submitButton} disabled={isSubmitting || success || (step === verifyStep && code.length < codeLength)} type="submit">{isSubmitting ? <><LoaderCircle className={styles.spinner} /> {step === 1 ? "Sending code..." : step === verifyStep ? "Checking..." : "Creating..."}</> : success ? <><Check /> Signed in</> : step === verifyStep ? <>Verify <ArrowRight /></> : step === lastStep ? <>{inviteToken ? "Join the team" : "Finish Setup"} <ArrowRight /></> : <>Continue <ArrowRight /></>}</button></div>
@@ -259,14 +259,14 @@ function VerifyStep({ challenge, code, isResending, onCodeChange, onResend, seco
   );
 }
 
-function StoreStep({ draft, update }: { draft: Draft; update: (field: keyof Draft, value: string) => void }) { return <><div className={styles.stepHeading}><span><Store /></span><div><h2>Name your store</h2><p>You can refine your branding and business settings later.</p></div></div><label>Store name<div className={styles.inputShell}><Store /><input onChange={(event) => update("storeName", event.target.value)} placeholder="Akash Atelier" type="text" value={draft.storeName} /></div></label><label>Store URL<div className={styles.urlInput}><input aria-label="Store URL slug" onChange={(event) => update("storeSlug", slugify(event.target.value))} placeholder="yourstore" value={draft.storeSlug} /><span>.dash.com</span></div></label><div className={styles.urlPreview}><small>Your storefront</small><b>{draft.storeSlug || "yourstore"}.dash.com</b></div></>; }
+function StoreStep({ draft, platformDomain, update }: { draft: Draft; platformDomain: string; update: (field: keyof Draft, value: string) => void }) { return <><div className={styles.stepHeading}><span><Store /></span><div><h2>Name your store</h2><p>You can refine your branding and business settings later.</p></div></div><label>Store name<div className={styles.inputShell}><Store /><input onChange={(event) => update("storeName", event.target.value)} placeholder="Akash Atelier" type="text" value={draft.storeName} /></div></label><label>Store URL<div className={styles.urlInput}><input aria-label="Store URL slug" onChange={(event) => update("storeSlug", slugify(event.target.value))} placeholder="yourstore" value={draft.storeSlug} /><span>.{platformDomain}</span></div></label><div className={styles.urlPreview}><small>Your storefront</small><b>{draft.storeSlug || "yourstore"}.{platformDomain}</b></div></>; }
 
-function FinishStep({ draft, isInvite, success }: { draft: Draft; isInvite: boolean; success: boolean }) {
+function FinishStep({ draft, isInvite, platformDomain, success }: { draft: Draft; isInvite: boolean; platformDomain: string; success: boolean }) {
   if (isInvite) {
     return <div className={styles.finishState}><span className={styles.finishIcon}>{success ? <Check /> : <UserRound />}</span><h2>{success ? "You are signed in." : "Your account is verified."}</h2><p>{success ? "Taking you back to your invite..." : "Continue, and we will take you straight back to the invite to join the team."}</p><div><span><small>Name</small><b>{draft.name}</b></span><span><small>Account</small><b>{draft.identifier}</b></span></div></div>;
   }
 
-  return <div className={styles.finishState}><span className={styles.finishIcon}>{success ? <Check /> : <Store />}</span><h2>{success ? "You are signed in." : "Your account is verified."}</h2><p>{success ? "Taking you to your new commerce workspace..." : "Finish up now, then complete the remaining store details inside Dash."}</p><div><span><small>Account</small><b>{draft.identifier}</b></span><span><small>Store</small><b>{draft.storeName}</b></span><span><small>URL</small><b>{draft.storeSlug}.dash.com</b></span></div></div>;
+  return <div className={styles.finishState}><span className={styles.finishIcon}>{success ? <Check /> : <Store />}</span><h2>{success ? "You are signed in." : "Your account is verified."}</h2><p>{success ? "Taking you to your new commerce workspace..." : "Finish up now, then complete the remaining store details inside StoreIM."}</p><div><span><small>Account</small><b>{draft.identifier}</b></span><span><small>Store</small><b>{draft.storeName}</b></span><span><small>URL</small><b>{draft.storeSlug}.{platformDomain}</b></span></div></div>;
 }
 
 function slugify(value: string) { return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40); }

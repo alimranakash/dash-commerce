@@ -13,6 +13,7 @@ import {
   type AdminSupportAdminOption,
   type AdminSupportTicketListItem
 } from "../../../modules/admin/components/admin-support-management";
+import { storeSubdomain } from "../../../lib/host-routing";
 
 type AdminSupportPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -80,7 +81,7 @@ function toTicketListItem(ticket: AdminSupportTicketRecord): AdminSupportTicketL
       userRole: reply.user.role
     })),
     status: ticket.status,
-    storeDomain: ticket.store?.domains[0]?.domain ?? (ticket.store ? `${ticket.store.slug}.dash.com` : "No store"),
+    storeDomain: ticket.store?.domains[0]?.domain ?? (ticket.store ? storeSubdomain(ticket.store.slug) : "No store"),
     storeName: ticket.store?.name ?? "No store",
     subject: ticket.subject,
     updatedAt: formatDateTime(ticket.updatedAt),

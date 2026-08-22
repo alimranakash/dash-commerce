@@ -39,9 +39,9 @@ Monorepo: `apps/web` (the whole product), `apps/worker` (placeholder), `packages
 
 | Host | Surface | Routes |
 | --- | --- | --- |
-| `dash.com`, `localhost` | marketing | `/` |
-| `app.dash.com` | seller app + platform admin | `/dashboard/**`, `/admin/**`, `/login`, `/register` |
-| `<slug>.dash.com`, `<slug>.localhost` | tenant storefront | rewritten to `/s/<slug>/**` |
+| `storeim.com`, `localhost` | marketing | `/` |
+| `app.storeim.com` | seller app + platform admin | `/dashboard/**`, `/admin/**`, `/login`, `/register` |
+| `<slug>.storeim.com`, `<slug>.localhost` | tenant storefront | rewritten to `/s/<slug>/**` |
 | any other domain | custom-domain storefront | resolved to a store, then rewritten to `/s/<slug>/**` |
 
 `/admin`, `/dashboard`, `/login`, `/register` are never rewritten, so they stay reachable on any host.

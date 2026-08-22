@@ -12,6 +12,7 @@ import {
   AdminPaymentManagement,
   type AdminPaymentListItem
 } from "../../../modules/admin/components/admin-payment-management";
+import { storeSubdomain } from "../../../lib/host-routing";
 
 type AdminPaymentsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -99,7 +100,7 @@ function toPaymentListItem(payment: AdminPaymentRecord): AdminPaymentListItem {
     rejectionReason: payment.rejectionReason ?? "Not set",
     senderNumber: payment.senderNumber ?? "Not set",
     status: payment.status,
-    storeDomain: payment.store.domains[0]?.domain ?? `${payment.store.slug}.dash.com`,
+    storeDomain: payment.store.domains[0]?.domain ?? storeSubdomain(payment.store.slug),
     storeName: payment.store.name,
     subscriptionStatus: payment.subscription.status,
     timeline

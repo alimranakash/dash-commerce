@@ -1,4 +1,4 @@
-# Dash Commerce OS — the Next.js server, behind Caddy.
+# StoreIM — the Next.js server, behind Caddy.
 #
 #   cp deploy/dash-web.service /etc/systemd/system/
 #   systemctl daemon-reload
@@ -7,7 +7,7 @@
 # Logs:  journalctl -u dash-web -f
 
 [Unit]
-Description=Dash Commerce OS
+Description=StoreIM
 Documentation=file:///srv/dash-commerce/deploy/DEPLOY.md
 After=network-online.target postgresql.service
 Wants=network-online.target

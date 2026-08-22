@@ -34,16 +34,16 @@ const features = [
   { icon: CreditCard, title: "Payments", text: "Offer COD and Bangladesh-first manual payment methods with confidence." },
   { icon: Truck, title: "Courier", text: "Configure delivery zones today and connect courier automation tomorrow." },
   { icon: BarChart3, title: "Reports", text: "Understand revenue, orders, inventory, customers, and growth without spreadsheets." },
-  { icon: Bot, title: "StoreOS AI Assistant", text: "Ask your store questions in natural language and get useful answers instantly." }
+  { icon: Bot, title: "StoreIM AI", text: "Ask your store questions in natural language and get useful answers instantly." }
 ];
 
 export function LandingPage() {
   return (
     <main className={styles.site}>
       <header className={styles.header}>
-        <Link className={styles.brand} href="/" aria-label="Dash Commerce OS home">
-          <span className={styles.brandMark}>D</span>
-          <span>Dash Commerce <b>OS</b></span>
+        <Link className={styles.brand} href="/" aria-label="StoreIM home">
+          <span className={styles.brandMark}>S</span>
+          <span>Store<b>IM</b></span>
         </Link>
         <nav className={styles.nav} aria-label="Primary navigation">
           <a href="#story">Platform</a><a href="#journey">Journey</a><a href="#ai">AI</a><a href="#pricing">Pricing</a><Link href="/docs">Docs</Link>
@@ -73,7 +73,7 @@ export function LandingPage() {
           <div className={`${styles.floatingMetric} ${styles.floatingMetricLeft}`}><span>Gross revenue</span><b>৳67,743</b><small><TrendingArrow /> 18.4%</small></div>
           <div className={`${styles.floatingMetric} ${styles.floatingMetricRight}`}><span>Conversion</span><b>4.8%</b><small>Best this month</small></div>
           <div className={styles.aiFloat}>
-            <div><span><Bot /></span><p>StoreOS AI</p><small>Online</small></div>
+            <div><span><Bot /></span><p>StoreIM AI</p><small>Online</small></div>
             <p>Revenue is up 18% this week. Your top product is nearly out of stock.</p>
           </div>
         </ParallaxStage>
@@ -82,7 +82,7 @@ export function LandingPage() {
 
       <section className={styles.storyBridge} id="story">
         <div className={styles.storyStatement}>
-          <span>Before Dash</span>
+          <span>Before StoreIM</span>
           <h2>Your business is growing.<br />Your tools are holding it back.</h2>
           <p>Orders in messages. Stock in spreadsheets. Payments in screenshots. Delivery in another app. The work multiplies, but clarity disappears.</p>
         </div>
@@ -94,7 +94,7 @@ export function LandingPage() {
         </div>
         <div className={styles.storyTurn}>
           <span>One storefront. One command center. One intelligence layer.</span>
-          <h2>Dash turns the moving parts into momentum.</h2>
+          <h2>StoreIM turns the moving parts into momentum.</h2>
           <p>Your entire commerce operation, designed as one continuous system.</p>
           <ArrowRight />
         </div>
@@ -134,15 +134,15 @@ export function LandingPage() {
       <section className={styles.aiSection} id="ai">
         <div className={styles.aiAtmosphere} />
         <div className={styles.aiCopy}>
-          <div className={styles.eyebrow}><Bot /> StoreOS intelligence</div>
+          <div className={styles.eyebrow}><Bot /> StoreIM intelligence</div>
           <h2>Your store can finally answer back.</h2>
-          <p>Ask in the language you naturally use. StoreOS AI turns live commerce data into focused answers, useful context, and a clearer next step.</p>
+          <p>Ask in the language you naturally use. StoreIM AI turns live commerce data into focused answers, useful context, and a clearer next step.</p>
           <ul><li><Check /> Understand sales without building reports</li><li><Check /> Surface low stock before it costs a sale</li><li><Check /> Keep every answer scoped to your store</li></ul>
         </div>
         <div className={styles.aiStage}>
           <div className={styles.aiMetricTop}><span>Live context</span><b>384 signals</b></div>
           <div className={styles.chatWindow}>
-            <header><span><Bot /></span><div><b>StoreOS AI Assistant</b><small>Connected to Dash</small></div><i /></header>
+            <header><span><Bot /></span><div><b>StoreIM AI</b><small>Connected to StoreIM</small></div><i /></header>
             <div className={styles.chatBody}>
               <p className={styles.userBubble}>আজ কত অর্ডার এসেছে?</p>
               <div className={styles.aiBubble}><span><Sparkles /></span><p><TypingText text="আজ ১৮টি অর্ডার এসেছে, মোট বিক্রি ৳২২,৫০০।" /></p></div>
@@ -179,9 +179,9 @@ export function LandingPage() {
       </section>
 
       <footer className={styles.footer}>
-        <div className={styles.brand}><span className={styles.brandMark}>D</span><span>Dash Commerce <b>OS</b></span></div>
+        <div className={styles.brand}><span className={styles.brandMark}>S</span><span>Store<b>IM</b></span></div>
         <p>Commerce infrastructure for the next generation of sellers.</p>
-        <span>© 2026 Dash Commerce OS</span>
+        <span>© 2026 StoreIM</span>
       </footer>
     </main>
   );
@@ -257,7 +257,7 @@ function TrendingArrow() { return <svg aria-hidden="true" fill="none" viewBox="0
 
 function SectionIntro({ centered, eyebrow, text, title }: { centered?: boolean; eyebrow: string; text: string; title: string }) { return <div className={`${styles.sectionIntro} ${centered ? styles.centered : ""}`}><span>{eyebrow}</span><h2>{title}</h2><p>{text}</p></div>; }
 function PainCard({ icon: Icon, text, title }: CardProps) { return <article className={styles.painCard}><span><Icon /></span><h3>{title}</h3><p>{text}</p></article>; }
-function FeatureCard({ featured, icon: Icon, text, title }: CardProps & { featured: boolean }) { return <article className={`${styles.featureCard} ${featured ? styles.featuredCard : ""}`}><span><Icon /></span><small>Dash module</small><h3>{title}</h3><p>{text}</p><i><ArrowRight /></i></article>; }
+function FeatureCard({ featured, icon: Icon, text, title }: CardProps & { featured: boolean }) { return <article className={`${styles.featureCard} ${featured ? styles.featuredCard : ""}`}><span><Icon /></span><small>StoreIM module</small><h3>{title}</h3><p>{text}</p><i><ArrowRight /></i></article>; }
 function OperationTile({ icon: Icon, label, note, value }: { icon: CardProps["icon"]; label: string; note: string; value: string }) { return <div className={styles.operationTile}><span><Icon /></span><small>{label}</small><b>{value}</b><p>{note}</p></div>; }
 function MockStat({ accent, label, value }: { accent: string; label: string; value: string }) { return <div data-accent={accent}><span>{label}</span><b>{value}</b></div>; }
 function PricingCard({ featured, features, name, price, text }: { featured?: boolean; features: string[]; name: string; price: string; text: string }) { return <article className={`${styles.pricingCard} ${featured ? styles.featuredPricing : ""}`}>{featured ? <span className={styles.popular}>Most popular</span> : null}<h3>{name}</h3><p>{text}</p><div><b>{price}</b><span>/ month</span></div><ul>{features.map((item) => <li key={item}><Check /> {item}</li>)}</ul><Link href="/register">Start Free <ArrowRight /></Link></article>; }
@@ -270,7 +270,7 @@ function PricingCard({ featured, features, name, price, text }: { featured?: boo
  */
 const pricingHighlights: Record<string, string[]> = {
   free: ["Storefront, products and orders", "COD and manual payments"],
-  growth: ["StoreOS AI assistant and POS", "Advanced analytics and reports", "Google Ads and TikTok tracking", "API access"],
+  growth: ["StoreIM AI assistant and POS", "Advanced analytics and reports", "Google Ads and TikTok tracking", "API access"],
   pro: ["Marketing, WhatsApp, email and SMS automation (coming soon)", "Affiliate tracking and advanced attribution (coming soon)"],
   starter: ["Custom domain", "Courier API and fraud check", "Abandoned cart recovery", "Marketing analytics and pixel tracking"]
 };

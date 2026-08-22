@@ -1,6 +1,6 @@
-# Dash Commerce OS
+# StoreIM
 
-Dash Commerce OS is a production-grade multi-tenant SaaS commerce platform. This repository starts with a clean Turborepo foundation for a scalable Next.js and TypeScript codebase.
+StoreIM is a production-grade multi-tenant SaaS commerce platform. This repository starts with a clean Turborepo foundation for a scalable Next.js and TypeScript codebase.
 
 ## Monorepo Structure
 
@@ -10,7 +10,7 @@ Dash Commerce OS is a production-grade multi-tenant SaaS commerce platform. This
 - `packages/ui` - Shared React UI primitives.
 - `packages/config` - Shared TypeScript and ESLint configuration.
 - `packages/types` - Shared TypeScript domain types.
-- `packages/storeos-sdk` - Typed StoreOS native connector SDK used by the Dash web app.
+- `packages/storeos-sdk` - Typed StoreOS native connector SDK used by the StoreIM web app.
 
 ## Local Setup
 
@@ -43,7 +43,7 @@ Copy `.env.example` to `.env.local` when local environment values are needed. Li
 
 ## Database Setup
 
-Dash Commerce OS uses Prisma with PostgreSQL from `packages/db`.
+StoreIM uses Prisma with PostgreSQL from `packages/db`.
 
 Create a local PostgreSQL database, then copy the example environment file:
 
@@ -98,10 +98,10 @@ Create a Google OAuth 2.0 Web application and add these authorized redirect URIs
 
 ```text
 http://localhost:3000/api/auth/callback/google
-https://app.dash.com/api/auth/callback/google
+https://app.storeim.com/api/auth/callback/google
 ```
 
-Production `NEXTAUTH_URL` must use the same canonical seller-app origin (`https://app.dash.com`). Google OAuth redirect URIs do not support wildcard hosts. If you run the web app on another port, update both `NEXTAUTH_URL` and the Google callback URI to match it. After schema changes, sync the database and generate the Prisma client:
+Production `NEXTAUTH_URL` must use the same canonical seller-app origin (`https://app.storeim.com`). Google OAuth redirect URIs do not support wildcard hosts. If you run the web app on another port, update both `NEXTAUTH_URL` and the Google callback URI to match it. After schema changes, sync the database and generate the Prisma client:
 
 ```bash
 npm run db:push
@@ -133,7 +133,7 @@ Checkout only shows enabled rates whose zone is also enabled. The selected rate 
 
 ## StoreOS Setup
 
-Dash can create a native StoreOS connection per store and route AI Assistant messages through the Dash backend. Set these server-only values in `.env`:
+StoreIM can create a native StoreOS connection per store and route AI Assistant messages through the StoreIM backend. Set these server-only values in `.env`:
 
 ```bash
 STOREOS_API_URL="https://api.storeos.example"

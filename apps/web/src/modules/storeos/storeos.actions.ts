@@ -59,8 +59,8 @@ export async function reconnectStoreOSAction(
     return {
       message:
         connection.status === "connected"
-          ? "StoreOS is connected."
-          : "StoreOS connection is pending. Add StoreOS env variables, then reconnect.",
+          ? "StoreIM AI is connected."
+          : "The StoreIM AI connection is pending. Add STOREOS_API_URL and STOREOS_API_KEY, then reconnect.",
       status: connection.status === "connected" ? "success" : "error"
     };
   } catch (error) {
@@ -73,8 +73,8 @@ export async function reconnectStoreOSAction(
 
 function errorMessage(error: unknown) {
   if (error instanceof ZodError) {
-    return error.issues[0]?.message ?? "Please check your StoreOS request.";
+    return error.issues[0]?.message ?? "Please check your StoreIM AI request.";
   }
 
-  return error instanceof Error ? error.message : "StoreOS request failed.";
+  return error instanceof Error ? error.message : "StoreIM AI request failed.";
 }

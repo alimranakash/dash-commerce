@@ -4,6 +4,7 @@ import { DashboardShell } from "../../../../../components/dashboard/dashboard-sh
 import { getCategoriesForStore } from "../../../../../modules/categories/category.service";
 import { ProductStockHistory } from "../../../../../modules/inventory/components/product-stock-history";
 import { getStockMovementsForProduct } from "../../../../../modules/inventory/inventory.service";
+import { getPlatformRootDomain } from "../../../../../lib/host-routing";
 import { ProductForm } from "../../../../../modules/products/components/product-form";
 import { updateProductFormAction } from "../../../../../modules/products/product.actions";
 import {
@@ -63,6 +64,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
             id: category.id,
             name: category.name
           }))}
+          platformDomain={getPlatformRootDomain()}
           product={{
             id: product.id,
             title: product.title,

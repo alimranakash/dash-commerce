@@ -1,4 +1,5 @@
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
+import { getPlatformRootDomain } from "../../../lib/host-routing";
 import { StoreSettingsForm } from "../../../modules/settings/components/store-settings-form";
 import { updateGeneralSettingsFormAction } from "../../../modules/settings/settings.actions";
 import { getStoreSettings } from "../../../modules/settings/settings.service";
@@ -27,6 +28,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         <div className="dashboard-shell">
           <StoreSettingsForm
             action={updateGeneralSettingsFormAction}
+            platformDomain={getPlatformRootDomain()}
             settings={settings}
             store={{ currency: store.currency, name: store.name, slug: store.slug, timezone: store.timezone }}
           />

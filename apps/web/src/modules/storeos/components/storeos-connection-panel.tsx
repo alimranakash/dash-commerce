@@ -31,11 +31,11 @@ export function StoreOSConnectionPanel({
   return (
     <section className="storeos-panel">
       <div>
-        <p className="eyebrow">StoreOS</p>
-        <h2>Native StoreOS connection</h2>
+        <p className="eyebrow">StoreIM AI</p>
+        <h2>Native AI connection</h2>
         <p>
-          Dash connects to StoreOS internally so sellers can use AI operations without a separate
-          StoreOS login.
+          StoreIM connects to the AI service internally so sellers can use AI operations without a
+          separate login.
         </p>
       </div>
       <dl className="order-totals">
@@ -55,7 +55,7 @@ export function StoreOSConnectionPanel({
       ) : null}
       <form action={formAction}>
         <Button className="primary action-button" disabled={isPending} type="submit">
-          {isPending ? "Connecting..." : "Connect / reconnect StoreOS"}
+          {isPending ? "Connecting..." : "Connect / reconnect StoreIM AI"}
         </Button>
       </form>
     </section>

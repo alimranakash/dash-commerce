@@ -125,7 +125,7 @@ const settingsLinks = [
   { href: "/dashboard/settings/social", label: "Social" },
   { href: "/dashboard/payments", label: "Payments" },
   { href: "/dashboard/shipping", label: "Shipping" },
-  { href: "/dashboard/ai", label: "StoreOS / AI" }
+  { href: "/dashboard/ai", label: "StoreIM AI" }
 ];
 
 const storefrontLinks = [
@@ -168,7 +168,7 @@ const trailingLinks: NavItem[] = [
  * listed individually because the whole group is manager-only; see
  * `isManagerOnlyHref`.
  *
- * Team and StoreOS / AI are deliberately absent: a member may open the team page
+ * Team and StoreIM AI are deliberately absent: a member may open the team page
  * read-only, and asking the assistant a question is ordinary work.
  */
 const MANAGER_ONLY_HREFS: ReadonlySet<string> = new Set([

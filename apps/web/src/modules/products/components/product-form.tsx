@@ -47,6 +47,7 @@ type ProductFormProps = {
   brands: ProductFormCategory[];
   categories: ProductFormCategory[];
   product?: ProductFormValue;
+  platformDomain: string;
   storeSlug: string;
   submitLabel: string;
   tags: ProductFormCategory[];
@@ -61,6 +62,7 @@ export function ProductForm({
   brands,
   categories,
   product,
+  platformDomain,
   storeSlug,
   submitLabel,
   tags
@@ -83,7 +85,7 @@ export function ProductForm({
   const [brandMessage, setBrandMessage] = useState<string | null>(null);
   const [creatingTag, setCreatingTag] = useState(false);
   const [creatingBrand, setCreatingBrand] = useState(false);
-  const domainPreview = useMemo(() => (slug ? `${storeSlug}.dash.com/products/${slug}` : ""), [slug, storeSlug]);
+  const domainPreview = useMemo(() => (slug ? `${storeSlug}.${platformDomain}/products/${slug}` : ""), [platformDomain, slug, storeSlug]);
   const imageUrls = product?.imageUrls ?? [];
 
   function handleTitleChange(value: string) {
