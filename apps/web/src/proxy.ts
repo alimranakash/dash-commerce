@@ -92,6 +92,13 @@ function redirectOnSameHost(request: NextRequest, pathname: string) {
 function rewriteToStorefront(request: NextRequest, slug: string, pathname: string) {
   const url = request.nextUrl.clone();
 
+  // `nextUrl` takes its protocol from `x-forwarded-proto` but its host from the
+  // address this server listens on, so behind Caddy it reads
+  // `https://localhost:3000` — an origin that does not exist. Rewriting to it
+  // makes Next open a real TLS connection to the plain-HTTP port, and every
+  // storefront request 500s. The rewrite is internal, so the scheme of the
+  // external hop is irrelevant: pin it to the one `next start` actually serves.
+  url.protocol = "http:";
   url.pathname = `/s/${slug}${pathname === "/" ? "" : pathname}`;
 
   return NextResponse.rewrite(url);
