@@ -387,7 +387,7 @@ export function RegisterForm({ platformDomain }: { platformDomain: string }) {
     setNotice(null);
   }
 
-  const submitLabel = isSubmitting ? <><LoaderCircle className={usesWizard ? ob.spinner : styles.spinner} /> {submittingLabel(step, lastStep, Boolean(inviteToken))}</> : success ? <><Check /> {inviteToken ? "Signed in" : "Workspace ready"}</> : step === verifyStep ? <>Verify <ArrowRight /></> : step === lastStep ? <>{inviteToken ? "Join the team" : "Create my store"} {inviteToken ? <ArrowRight /> : <Sparkles />}</> : <>Continue <ArrowRight /></>;
+  const submitLabel = isSubmitting ? <><LoaderCircle className={usesWizard ? ob.spinner : styles.spinner} /> {submittingLabel(step, lastStep, Boolean(inviteToken))}</> : success ? <><Check /> {inviteToken ? "Signed in" : "Workspace ready"}</> : step === verifyStep ? <>Verify <ArrowRight /></> : step === lastStep ? <>{inviteToken ? "Join the team" : "Generate my store"} {inviteToken ? <ArrowRight /> : <Sparkles />}</> : <>Continue <ArrowRight /></>;
 
   if (usesWizard) {
     return (
@@ -411,7 +411,7 @@ export function RegisterForm({ platformDomain }: { platformDomain: string }) {
                 {error ? <p className={ob.errorMessage}>{error}</p> : null}
                 <footer className={ob.stepActions}>{step > firstBackStep && !success ? <button className={ob.backButton} disabled={isSubmitting} onClick={goBack} type="button"><ArrowLeft /> Back</button> : <span />}<button className={ob.nextButton} disabled={isSubmitting || success} type="submit">{submitLabel}</button></footer>
               </form>
-              {isSubmitting && step === lastStep ? <div className={ob.loadingOverlay} role="status"><span><LoaderCircle /></span><h3>Creating your workspace...</h3><p>Preparing your store, domain, payments, shipping, and settings.</p></div> : null}
+              {isSubmitting && step === lastStep ? <div className={ob.loadingOverlay} role="status"><span><LoaderCircle /></span><h3>Generating your workspace...</h3><p>Preparing your store, domain, payments, shipping, and settings.</p></div> : null}
             </section>
             <StorePreview country={draft.country} currency={draft.currency} domain={previewDomain} name={draft.storeName} />
           </div>
@@ -443,7 +443,7 @@ function submittingLabel(step: number, lastStep: number, isInvite: boolean) {
   if (step === 1) return "Sending code...";
   if (step === verifyStep) return "Checking...";
   // Tested before storeStep: on an invite there is no store step, and step 3 is the last one.
-  if (step === lastStep) return isInvite ? "Signing you in..." : "Creating your store...";
+  if (step === lastStep) return isInvite ? "Signing you in..." : "Generating your store...";
   if (step === storeStep) return "Checking URL...";
   return "Continuing...";
 }
@@ -504,7 +504,7 @@ function WizardRegionStep({ draft, onCountryChange, onCurrencyChange, onTimezone
 
 function WizardFinishStep({ draft, previewDomain, success }: { draft: Draft; previewDomain: string; success: boolean }) {
   return (
-    <StepIntro eyebrow="Ready to launch" icon={Sparkles} text={success ? "Taking you to your dashboard..." : "Review the essentials. StoreIM will prepare the rest automatically."} title={success ? "Your workspace is ready." : "Your workspace is ready to be created."}>
+    <StepIntro eyebrow="Ready to launch" icon={Sparkles} text={success ? "Taking you to your dashboard..." : "Review the essentials. StoreIM will prepare the rest automatically."} title={success ? "Your workspace is ready." : "Your workspace is ready to be generated."}>
       <div className={ob.reviewList}>
         <WizardReview label="Account" value={draft.identifier} />
         <WizardReview label="Store" value={draft.storeName} />
