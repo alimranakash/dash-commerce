@@ -52,6 +52,9 @@ export async function saveStoreMessagingAction(
   revalidatePath("/dashboard/settings/sms");
   // The storefront reads both switches while rendering checkout, so a stale
   // page would keep asking for codes after the seller turned them off.
+  // The internal route on purpose: /s/<slug> is what Next serves, and a
+  // storefront hostname is a rewrite onto it. Revalidating the clean
+  // address would quietly revalidate nothing.
   revalidatePath(`/s/${store.slug}/checkout`);
 
   return { message: "Your SMS settings are saved.", status: "success" };

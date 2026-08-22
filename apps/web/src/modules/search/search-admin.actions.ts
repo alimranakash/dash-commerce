@@ -100,6 +100,9 @@ async function runAndReport(work: () => Promise<unknown>, scope: string) {
 function finish(storeSlug: string, status: string) {
   revalidatePath(SEARCH_SETTINGS_PATH);
   // Storefront results change the moment a rule does, so drop their cache too.
+  // The internal route on purpose: /s/<slug> is what Next serves, and a
+  // storefront hostname is a rewrite onto it. Revalidating the clean
+  // address would quietly revalidate nothing.
   revalidatePath(`/s/${storeSlug}/search`);
   redirect(`${SEARCH_SETTINGS_PATH}?status=${status}`);
 }

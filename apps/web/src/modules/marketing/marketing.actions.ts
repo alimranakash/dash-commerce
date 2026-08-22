@@ -76,6 +76,9 @@ export async function updateMarketingSettingsFormAction(
   }
 
   revalidatePath("/dashboard/settings/marketing");
+  // The internal route on purpose: /s/<slug> is what Next serves, and a
+  // storefront hostname is a rewrite onto it. Revalidating the clean
+  // address would quietly revalidate nothing.
   revalidatePath(`/s/${storeSlug}`);
 
   return { message: "Marketing settings saved.", status: "success" };

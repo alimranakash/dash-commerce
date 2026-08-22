@@ -1,3 +1,4 @@
+import { storefrontBasePath, storefrontRequestOrigin } from "../../../modules/storefront/base-path";
 import { revalidatePath } from "next/cache";
 import { NextResponse, type NextRequest } from "next/server";
 import {
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true });
       }
 
-      return redirectTo(request, `/s/${storeSlug}/cart?added=1`);
+      return await redirectTo(request, storeSlug, `/cart?added=1`);
     }
 
     if (cartAction === "update") {
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true });
       }
 
-      return redirectTo(request, `/s/${storeSlug}/cart?updated=1`);
+      return await redirectTo(request, storeSlug, `/cart?updated=1`);
     }
 
     if (cartAction === "remove") {
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true });
       }
 
-      return redirectTo(request, `/s/${storeSlug}/cart?removed=1`);
+      return await redirectTo(request, storeSlug, `/cart?removed=1`);
     }
 
     if (cartAction === "note") {
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true });
       }
 
-      return redirectTo(request, `/s/${storeSlug}/cart?updated=1`);
+      return await redirectTo(request, storeSlug, `/cart?updated=1`);
     }
 
     if (cartAction === "clear") {
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true });
       }
 
-      return redirectTo(request, `/s/${storeSlug}/cart?cleared=1`);
+      return await redirectTo(request, storeSlug, `/cart?cleared=1`);
     }
 
     throw new Error("Unsupported cart action.");
@@ -87,10 +88,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (cartAction === "add" && productSlug) {
-      return redirectTo(request, `/s/${storeSlug}/products/${productSlug}?cartError=${message}`);
+      return await redirectTo(request, storeSlug, `/products/${productSlug}?cartError=${message}`);
     }
 
-    return redirectTo(request, `/s/${storeSlug}/cart?cartError=${message}`);
+    return await redirectTo(request, storeSlug, `/cart?cartError=${message}`);
   }
 }
 
@@ -103,11 +104,24 @@ function getValue(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
 
-function redirectTo(request: NextRequest, path: string) {
-  return NextResponse.redirect(new URL(path, request.nextUrl.origin), 303);
+/**
+ * Sends the shopper back to the storefront they came from.
+ *
+ * `path` is relative to the store, not to the app: the prefix is added here so
+ * a subdomain gets /cart and the path form gets /s/<slug>/cart, and the origin
+ * comes from the request rather than from `nextUrl`, which behind Caddy points
+ * at localhost:3000.
+ */
+async function redirectTo(request: NextRequest, storeSlug: string, path: string) {
+  const basePath = await storefrontBasePath(storeSlug);
+
+  return NextResponse.redirect(new URL(`${basePath}${path}`, storefrontRequestOrigin(request)), 303);
 }
 
 function revalidateStorefrontCart(storeSlug: string) {
+  // These stay on the internal route: /s/<slug> is what Next actually serves,
+  // and the prefix-free address is a rewrite onto it. Revalidating the clean
+  // path would silently revalidate nothing.
   revalidatePath(`/s/${storeSlug}`);
   revalidatePath(`/s/${storeSlug}/cart`);
   revalidatePath(`/s/${storeSlug}/products`);

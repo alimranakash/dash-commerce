@@ -36,6 +36,9 @@ export async function updateShippingSettingsFormAction(
   }
 
   revalidatePath("/dashboard/shipping");
+  // The internal route on purpose: /s/<slug> is what Next serves, and a
+  // storefront hostname is a rewrite onto it. Revalidating the clean
+  // address would quietly revalidate nothing.
   revalidatePath(`/s/${storeSlug}/checkout`);
   redirect("/dashboard/shipping?updated=1");
 }

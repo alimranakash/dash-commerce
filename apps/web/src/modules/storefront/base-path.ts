@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import type { NextRequest } from "next/server";
 import { resolveStoreFromHost } from "../../lib/host-routing";
 
 /**
@@ -45,4 +46,24 @@ export async function storefrontBasePath(slug: string | undefined) {
   }
 
   return `/s/${slug}`;
+}
+
+/**
+ * The origin the shopper's browser actually asked for.
+ *
+ * `request.nextUrl.origin` cannot be used for anything the browser will follow:
+ * it is built from the address this server listens on, so behind Caddy it reads
+ * `https://localhost:3000`. A redirect to that is a dead end — which is exactly
+ * what every cart and checkout POST used to return.
+ *
+ * Caddy sets `x-forwarded-host` and `x-forwarded-proto`; the plain `Host` header
+ * is the fallback for a direct request with no proxy in front.
+ */
+export function storefrontRequestOrigin(request: NextRequest) {
+  const host =
+    request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? request.nextUrl.host;
+  const forwardedProtocol = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const protocol = forwardedProtocol || request.nextUrl.protocol.replace(":", "") || "https";
+
+  return `${protocol}://${host}`;
 }

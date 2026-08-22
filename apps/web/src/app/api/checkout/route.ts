@@ -1,3 +1,5 @@
+import { getStorefrontOrigin } from "../../../modules/abandoned-carts/abandoned-cart.service";
+import { storefrontBasePath, storefrontRequestOrigin } from "../../../modules/storefront/base-path";
 import { revalidatePath } from "next/cache";
 import { NextResponse, type NextRequest } from "next/server";
 import { ZodError } from "zod";
@@ -17,7 +19,7 @@ export async function POST(request: NextRequest) {
   const store = await getStorefrontBySlug(storeSlug);
 
   if (!store) {
-    return redirectTo(request, `/s/${storeSlug}/checkout?checkoutError=Storefront%20not%20found.`);
+    return await redirectTo(request, storeSlug, `/checkout?checkoutError=Storefront%20not%20found.`);
   }
 
   try {
@@ -40,15 +42,19 @@ export async function POST(request: NextRequest) {
       verificationCode: getValue(formData, "verificationCode")
     });
 
+    // Internal route on purpose: /s/<slug> is what Next serves, and the clean
+    // address is a rewrite onto it — revalidating that would revalidate nothing.
     revalidatePath(`/s/${store.slug}`);
     revalidatePath(`/s/${store.slug}/cart`);
     revalidatePath(`/s/${store.slug}/checkout`);
     revalidatePath("/dashboard/orders");
 
-    const thankYouUrl = new URL(
-      `/s/${store.slug}/thank-you/${order.orderNumber}`,
-      request.nextUrl.origin
-    ).toString();
+    // Meta and GA4 record this as the page the purchase happened on, so it has
+    // to be the store's real public address — its custom domain when it has one.
+    // The request origin would report localhost:3000 and break both attribution
+    // and the domain check Meta runs on the event source URL.
+    const storefrontOrigin = await getStorefrontOrigin(store);
+    const thankYouUrl = `${storefrontOrigin.href}/thank-you/${order.orderNumber}`;
 
     // Post-order side effects only: the order is committed and the cart cleared
     // before these run. Every sender resolves rather than rejects, and the extra
@@ -89,12 +95,9 @@ export async function POST(request: NextRequest) {
       }).catch(() => undefined)
     ]);
 
-    return redirectTo(request, `/s/${store.slug}/thank-you/${order.orderNumber}`);
+    return await redirectTo(request, store.slug, `/thank-you/${order.orderNumber}`);
   } catch (error) {
-    return redirectTo(
-      request,
-      `/s/${store.slug}/checkout?checkoutError=${encodeURIComponent(errorMessage(error))}`
-    );
+    return await redirectTo(request, store.slug, `/checkout?checkoutError=${encodeURIComponent(errorMessage(error))}`);
   }
 }
 
@@ -102,8 +105,17 @@ function getValue(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
 
-function redirectTo(request: NextRequest, path: string) {
-  return NextResponse.redirect(new URL(path, request.nextUrl.origin), 303);
+/**
+ * Sends the shopper back to the storefront they came from.
+ *
+ * `path` is relative to the store: the prefix is added here, and the origin
+ * comes from the request rather than from `nextUrl`, which behind Caddy points
+ * at localhost:3000 — a dead address for the browser being redirected.
+ */
+async function redirectTo(request: NextRequest, storeSlug: string, path: string) {
+  const basePath = await storefrontBasePath(storeSlug);
+
+  return NextResponse.redirect(new URL(`${basePath}${path}`, storefrontRequestOrigin(request)), 303);
 }
 
 function errorMessage(error: unknown) {

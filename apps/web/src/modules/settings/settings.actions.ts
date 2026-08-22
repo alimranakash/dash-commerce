@@ -802,6 +802,9 @@ function revalidateSettingsPaths(storeSlug: string) {
   revalidatePath("/dashboard/settings/social");
   revalidatePath("/dashboard/theme");
   revalidatePath("/dashboard/storefront/themes");
+  // The internal route on purpose: /s/<slug> is what Next serves, and a
+  // storefront hostname is a rewrite onto it. Revalidating the clean
+  // address would quietly revalidate nothing.
   revalidatePath(`/s/${storeSlug}`);
   revalidatePath(`/s/${storeSlug}/cart`);
   revalidatePath(`/s/${storeSlug}/checkout`);

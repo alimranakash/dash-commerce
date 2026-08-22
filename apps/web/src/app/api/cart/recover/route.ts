@@ -1,3 +1,4 @@
+import { storefrontBasePath, storefrontRequestOrigin } from "../../../../modules/storefront/base-path";
 import { NextResponse, type NextRequest } from "next/server";
 import { restoreCartFromSnapshot } from "../../../../modules/cart/cart.service";
 import { resolveStoreFromHost } from "../../../../lib/host-routing";
@@ -16,21 +17,27 @@ import { getStorefrontBySlug } from "../../../../modules/storefront/resolver";
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token")?.trim() ?? "";
   const slug = await resolveStoreSlug(request);
+  // Not `nextUrl.origin`: behind Caddy that is localhost:3000, and this redirect
+  // is followed by the shopper's browser straight from a recovery email.
+  const origin = storefrontRequestOrigin(request);
 
   if (!slug) {
-    return NextResponse.redirect(new URL("/", request.nextUrl.origin), 303);
+    return NextResponse.redirect(new URL("/", origin), 303);
   }
 
   const store = await getStorefrontBySlug(slug);
 
   if (!store || !token) {
-    return NextResponse.redirect(new URL(`/s/${slug}/cart`, request.nextUrl.origin), 303);
+    return NextResponse.redirect(new URL(`${await storefrontBasePath(slug)}/cart`, origin), 303);
   }
 
   const cart = await restoreCartFromSnapshot(store.id, token);
 
   return NextResponse.redirect(
-    new URL(`/s/${slug}/cart${cart ? "?recovered=1" : "?cartError=This%20cart%20is%20no%20longer%20available."}`, request.nextUrl.origin),
+    new URL(
+      `${await storefrontBasePath(slug)}/cart${cart ? "?recovered=1" : "?cartError=This%20cart%20is%20no%20longer%20available."}`,
+      origin
+    ),
     303
   );
 }
