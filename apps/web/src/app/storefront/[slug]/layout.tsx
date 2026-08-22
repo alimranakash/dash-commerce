@@ -1,3 +1,4 @@
+import { storeSubdomain } from "../../../lib/host-routing";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { MarketingTags } from "../../../modules/marketing/components/marketing-tags";
@@ -39,7 +40,11 @@ export async function generateMetadata({ params }: StorefrontLayoutProps): Promi
   const title = `${store.name} | StoreIM`;
   const description =
     store.themeSetting?.heroSubtitle ?? store.setting?.tagline ?? `Shop ${store.name} online.`;
-  const canonical = primaryDomain ? `https://${primaryDomain.domain}` : `/s/${store.slug}`;
+  // A canonical URL has to be absolute; the internal `/s/<slug>` path is not an
+  // address any shopper or crawler should be pointed at.
+  const canonical = primaryDomain
+    ? `https://${primaryDomain.domain}`
+    : `https://${storeSubdomain(store.slug)}`;
   const verification = await getMarketingMetaTags(store.id);
 
   return {

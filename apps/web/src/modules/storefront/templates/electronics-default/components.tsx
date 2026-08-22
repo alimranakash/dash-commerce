@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../base-path";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import { ProductPrice } from "../../components/product-card";
@@ -75,7 +76,7 @@ export function ElectronicsSection({
   );
 }
 
-export function ElectronicsHero({
+export async function ElectronicsHero({
   categories,
   electronicsSettings,
   heroSettings,
@@ -92,6 +93,7 @@ export function ElectronicsHero({
   subtitle?: string | null;
   title?: string | null;
 }) {
+  const basePath = await storefrontBasePath(storeSlug);
   const productImages = products
     .flatMap((product) => product.images.map((image) => image.url))
     .filter((url): url is string => Boolean(url));
@@ -104,7 +106,7 @@ export function ElectronicsHero({
   const headphonesImage = productImages[2] || categoryImages.find((url) => /audio|headphone/i.test(url)) || productImages[1] || heroImage;
   const watchImage = productImages[3] || categoryImages.find((url) => /watch/i.test(url)) || productImages[2] || heroImage;
   const [gamingCard, headphonesCard, watchCard] = electronicsSettings?.heroPromoCards ?? [];
-  const homeHref = `/s/${storeSlug}`;
+  const homeHref = basePath;
 
   // "Enable hero" is a plain on/off in the Hero Section panel, so it has to turn
   // this banner off the same way it turns the other templates' heroes off.
@@ -206,7 +208,7 @@ function PromoCard({
   );
 }
 
-export function ElectronicsCategoryGrid({
+export async function ElectronicsCategoryGrid({
   categories,
   products = [],
   storeSlug
@@ -215,16 +217,17 @@ export function ElectronicsCategoryGrid({
   products?: StorefrontProduct[];
   storeSlug: string;
 }) {
+  const basePath = await storefrontBasePath(storeSlug);
   const items: ElectronicsCarouselItem[] = categories.length > 0
     ? categories.slice(0, 12).map((category) => ({
       fallback: category.name.trim().slice(0, 2).toUpperCase(),
-      href: `/s/${storeSlug}/categories/${category.slug}`,
+      href: `${basePath}/categories/${category.slug}`,
       imageUrl: category.imageUrl ?? productImageForCategory(products, category),
       label: category.name.trim()
     }))
     : fallbackCategories.map((category, index) => ({
       fallback: category.icon,
-      href: `/s/${storeSlug}/search?q=${encodeURIComponent(category.name)}`,
+      href: `${basePath}/search?q=${encodeURIComponent(category.name)}`,
       imageUrl: products[index]?.images[0]?.url ?? null,
       label: category.name
     }));
@@ -232,16 +235,17 @@ export function ElectronicsCategoryGrid({
   return <ElectronicsCategoryCarousel items={items} />;
 }
 
-export function ElectronicsBrandGrid({
+export async function ElectronicsBrandGrid({
   products = [],
   storeSlug
 }: {
   products?: StorefrontProduct[];
   storeSlug: string;
 }) {
+  const basePath = await storefrontBasePath(storeSlug);
   const items = brandCards.map((brand, index) => ({
     fallback: brand.slice(0, 2).toUpperCase(),
-    href: `/s/${storeSlug}/search?q=${encodeURIComponent(brand)}`,
+    href: `${basePath}/search?q=${encodeURIComponent(brand)}`,
     imageUrl: products[index]?.images[0]?.url ?? null,
     label: brand
   }));
@@ -259,7 +263,7 @@ function productImageForCategory(products: StorefrontProduct[], category: Electr
   return matchedProduct?.images[0]?.url ?? null;
 }
 
-export function ElectronicsProductGrid({
+export async function ElectronicsProductGrid({
   count = 5,
   currency,
   enableHoverImage = true,
@@ -274,6 +278,7 @@ export function ElectronicsProductGrid({
   storeSlug: string;
   variant?: "deal" | "standard";
 }) {
+  const basePath = await storefrontBasePath(storeSlug);
   const items = products.length > 0 ? products.slice(0, count) : fallbackProducts.slice(0, count);
 
   return (
@@ -286,7 +291,7 @@ export function ElectronicsProductGrid({
         }
 
         return (
-          <Link className="electronics-product-card electronics-product-card-demo" href={`/s/${storeSlug}/products`} key={`${product.title}-${index}`}>
+          <Link className="electronics-product-card electronics-product-card-demo" href={`${basePath}/products`} key={`${product.title}-${index}`}>
             <div className="electronics-product-card-media">
               <span>{product.label}</span>
               {variant === "deal" ? <strong>Save 20%</strong> : null}
@@ -305,7 +310,7 @@ export function ElectronicsProductGrid({
   );
 }
 
-export function ElectronicsProductCard({
+export async function ElectronicsProductCard({
   currency,
   enableHoverImage = true,
   product,
@@ -318,6 +323,7 @@ export function ElectronicsProductCard({
   storeSlug: string;
   variant?: "deal" | "standard";
 }) {
+  const basePath = await storefrontBasePath(storeSlug);
   const image = product.images[0];
   const hoverImage = enableHoverImage ? product.images[1] : undefined;
   const imageFallback = product.category?.name?.slice(0, 2).toUpperCase() ?? "TX";
@@ -326,7 +332,7 @@ export function ElectronicsProductCard({
 
   return (
     <article className="electronics-product-card">
-      <Link className="electronics-product-card-media" href={`/s/${storeSlug}/products/${product.slug}`}>
+      <Link className="electronics-product-card-media" href={`${basePath}/products/${product.slug}`}>
         <StorefrontImage alt={image?.alt ?? product.title} fallback={imageFallback} src={image?.url} />
         {hoverImage ? (
           <ProductHoverImage alt={hoverImage.alt ?? product.title} fallback={imageFallback} src={hoverImage.url} />
@@ -336,7 +342,7 @@ export function ElectronicsProductCard({
       <div className="electronics-product-card-body">
         <p>{product.category?.name ?? "Store Verified"}</p>
         <h3>
-          <Link href={`/s/${storeSlug}/products/${product.slug}`}>{product.title}</Link>
+          <Link href={`${basePath}/products/${product.slug}`}>{product.title}</Link>
         </h3>
         <p className="electronics-rating">★★★★★ 4.8</p>
         <ProductPrice
@@ -412,7 +418,7 @@ function promoInkColor(backgroundColor?: string | undefined) {
   return luminance > 0.45 ? "#101318" : "#ffffff";
 }
 
-export function ElectronicsTechnologyBanner({
+export async function ElectronicsTechnologyBanner({
   electronicsSettings,
   products = [],
   storeSlug
@@ -421,6 +427,7 @@ export function ElectronicsTechnologyBanner({
   products?: StorefrontProduct[];
   storeSlug: string;
 }) {
+  const basePath = await storefrontBasePath(storeSlug);
   const defaultPromoCards = [
     {
       backgroundColor: "#373e66",
@@ -490,7 +497,7 @@ export function ElectronicsTechnologyBanner({
       imageUrl: configured?.imageUrl || products[index]?.images[0]?.url || fallback.imageUrl
     };
   });
-  const homeHref = `/s/${storeSlug}`;
+  const homeHref = basePath;
 
   return (
     <section className="electronics-promo-deals" aria-labelledby="electronics-promo-title">
@@ -640,7 +647,12 @@ function resolveStorefrontHref(homeHref: string, url: string) {
     return url;
   }
 
-  return `${homeHref}${url === "/" ? "" : url.startsWith("/") ? url : `/${url}`}`;
+  if (url === "/") {
+    // On a storefront hostname homeHref is empty, and an empty href is not a link.
+    return homeHref || "/";
+  }
+
+  return `${homeHref}${url.startsWith("/") ? url : `/${url}`}`;
 }
 
 export function ElectronicsNewsletter() {

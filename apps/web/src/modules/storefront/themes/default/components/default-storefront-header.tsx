@@ -193,5 +193,10 @@ function resolveStorefrontHref(homeHref: string, url: string) {
     return url;
   }
 
-  return `${homeHref}${url === "/" ? "" : url.startsWith("/") ? url : `/${url}`}`;
+  if (url === "/") {
+    // On a storefront hostname homeHref is empty, and an empty href is not a link.
+    return homeHref || "/";
+  }
+
+  return `${homeHref}${url.startsWith("/") ? url : `/${url}`}`;
 }

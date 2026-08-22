@@ -1,3 +1,6 @@
+"use client";
+
+import { useStorefrontBasePath } from "../base-path-provider";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import type { StorefrontProductSectionSettings } from "../customization";
@@ -115,14 +118,14 @@ export function ProductGrid({
 export function ProductCard({
   currency,
   product,
-  section,
-  storeSlug
+  section
 }: {
   currency: string;
   product: ProductCardProduct;
   section: StorefrontProductSectionSettings;
   storeSlug: string;
 }) {
+  const basePath = useStorefrontBasePath();
   const primaryImage = product.images[0];
   const hoverImage = section.enableHoverImage ? product.images[1] : null;
   const compareAtPrice = product.compareAtPrice?.toString();
@@ -131,7 +134,7 @@ export function ProductCard({
   const variantCount = product.images.length > 1 ? `${product.images.length} Images` : "";
 
   return (
-    <Link className="general-product-listing-card" href={`/s/${storeSlug}/products/${product.slug}`}>
+    <Link className="general-product-listing-card" href={`${basePath}/products/${product.slug}`}>
       <ProductImage
         alt={primaryImage?.alt ?? product.title}
         hoverSrc={hoverImage?.url}

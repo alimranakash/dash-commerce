@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../../../../modules/storefront/base-path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
@@ -42,6 +43,7 @@ export default async function StorefrontCategoryProductsPage({
   const { categorySlug, slug } = await params;
   const filters = await searchParams;
   const store = await requireStorefrontBySlug(slug);
+  const basePath = await storefrontBasePath(store.slug);
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
   const template = getStorefrontTemplateForStore(store);
   const settings = await getStorefrontThemeSettings(store.id);
@@ -102,7 +104,7 @@ export default async function StorefrontCategoryProductsPage({
         <p>Collection</p>
         {shopSettings.descriptionEnabled ? <span>{listingSection.subtitle}</span> : null}
         {listingSection.ctaText ? (
-          <Link href={storefrontSectionHref(store.slug, listingSection.ctaLink)}>{listingSection.ctaText}</Link>
+          <Link href={storefrontSectionHref(basePath, listingSection.ctaLink)}>{listingSection.ctaText}</Link>
         ) : null}
       </section>
       <section
@@ -126,7 +128,7 @@ export default async function StorefrontCategoryProductsPage({
             <div aria-hidden="true" />
             <h3>No products found</h3>
             <p>This collection does not have products matching the selected filters.</p>
-            <Link href={`/s/${store.slug}/categories/${category.slug}`}>Reset Filters</Link>
+            <Link href={`${basePath}/categories/${category.slug}`}>Reset Filters</Link>
           </div>
         ) : (
           <>
@@ -142,7 +144,7 @@ export default async function StorefrontCategoryProductsPage({
             <div className="sf-pagination" aria-label="Product pagination">
               <PaginationLink
                 disabled={currentPage <= 1}
-                href={buildCategoryHref(store.slug, category.slug, filters, currentPage - 1)}
+                href={buildCategoryHref(basePath, category.slug, filters, currentPage - 1)}
                 label="Previous"
               />
               <span>
@@ -150,7 +152,7 @@ export default async function StorefrontCategoryProductsPage({
               </span>
               <PaginationLink
                 disabled={currentPage >= totalPages}
-                href={buildCategoryHref(store.slug, category.slug, filters, currentPage + 1)}
+                href={buildCategoryHref(basePath, category.slug, filters, currentPage + 1)}
                 label={shopSettings.paginationMode === "load-more" ? "Load More" : "Next"}
               />
             </div>
@@ -185,7 +187,7 @@ function parseSort(value: string | undefined, fallback: StorefrontProductSort): 
 }
 
 function buildCategoryHref(
-  storeSlug: string,
+  basePath: string,
   categorySlug: string,
   filters: {
     availability?: string;
@@ -229,7 +231,7 @@ function buildCategoryHref(
 
   const query = params.toString();
 
-  return `/s/${storeSlug}/categories/${categorySlug}${query ? `?${query}` : ""}`;
+  return `${basePath}/categories/${categorySlug}${query ? `?${query}` : ""}`;
 }
 
 function PaginationLink({ disabled, href, label }: { disabled: boolean; href: string; label: string }) {

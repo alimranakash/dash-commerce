@@ -1,5 +1,6 @@
 "use client";
 
+import { useStorefrontBasePath } from "../../base-path-provider";
 import Link from "next/link";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { useCallback, useRef, useState } from "react";
@@ -29,8 +30,8 @@ export function BeautyBeforeAfterSection({
   advancedSettings,
   currency,
   product,
-  storeSlug
 }: BeautyBeforeAfterSectionProps) {
+  const basePath = useStorefrontBasePath();
   const beauty = advancedSettings?.beauty ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.beauty;
   const frameRef = useRef<HTMLDivElement | null>(null);
   const [position, setPosition] = useState(clamp(beauty.comparisonInitialPosition));
@@ -101,8 +102,8 @@ export function BeautyBeforeAfterSection({
     "--beauty-comparison-position": `${position}%`
   } as CSSProperties;
   const productHref = product?.slug
-    ? `/s/${storeSlug}/products/${product.slug}`
-    : `/s/${storeSlug}/products`;
+    ? `${basePath}/products/${product.slug}`
+    : `${basePath}/products`;
 
   return (
     <section
@@ -180,7 +181,7 @@ export function BeautyBeforeAfterSection({
             aria-label={beauty.comparisonCtaText}
             className="beauty-before-after-cta"
             data-comparison-link=""
-            href={storefrontHref(storeSlug, beauty.comparisonCtaLink)}
+            href={storefrontHref(basePath, beauty.comparisonCtaLink)}
             title={beauty.comparisonCtaText}
           >
             <ArrowIcon />
@@ -284,10 +285,10 @@ function clamp(value: number) {
 }
 
 // Seller-entered links are store-relative paths; absolute URLs are left alone.
-function storefrontHref(storeSlug: string, link: string) {
+function storefrontHref(basePath: string, link: string) {
   if (/^https?:\/\//.test(link)) {
     return link;
   }
 
-  return `/s/${storeSlug}${link.startsWith("/") ? link : `/${link}`}`;
+  return `${basePath}${link.startsWith("/") ? link : `/${link}`}`;
 }

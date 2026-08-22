@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../base-path";
 import Link from "next/link";
 
 type StorefrontCategory = {
@@ -13,7 +14,8 @@ type CategorySectionProps = {
   storeSlug?: string;
 };
 
-export function CategorySection({ categories, storeSlug }: CategorySectionProps) {
+export async function CategorySection({ categories, storeSlug }: CategorySectionProps) {
+  const basePath = await storefrontBasePath(storeSlug);
   return (
     <section
       className="sf-section sf-category-section"
@@ -40,7 +42,7 @@ export function CategorySection({ categories, storeSlug }: CategorySectionProps)
               <h3>{category.name}</h3>
               <p>{category.description ?? "Explore products in this collection."}</p>
               {storeSlug ? (
-                <Link href={`/s/${storeSlug}/categories/${category.slug}`}>Explore category</Link>
+                <Link href={`${basePath}/categories/${category.slug}`}>Explore category</Link>
               ) : null}
             </article>
           ))}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useStorefrontBasePath } from "../../base-path-provider";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { ProductPrice } from "../../components/product-card";
@@ -142,17 +143,17 @@ export function ElectronicsRecommendedForYouClient({
 
 function ElectronicsRecommendedProductCard({
   currency,
-  product,
-  storeSlug
+  product
 }: {
   currency: string;
   product: ElectronicsRecommendedProduct;
   storeSlug: string;
 }) {
+  const basePath = useStorefrontBasePath();
   const imageFallback = product.category?.name.slice(0, 2).toUpperCase() ?? "TX";
 
   return (
-    <Link className="electronics-recommended-card" href={`/s/${storeSlug}/products/${product.slug}`}>
+    <Link className="electronics-recommended-card" href={`${basePath}/products/${product.slug}`}>
       <span className="electronics-recommended-media">
         <StorefrontImage
           alt={product.image?.alt ?? product.title}

@@ -1,3 +1,6 @@
+"use client";
+
+import { useStorefrontBasePath } from "../base-path-provider";
 import Link from "next/link";
 import { formatStorefrontMoney } from "../format";
 import type { StorefrontProduct } from "../storefront.types";
@@ -9,11 +12,12 @@ type ProductCardProps = {
   storeSlug: string;
 };
 
-export function ProductCard({ currency, product, storeSlug }: ProductCardProps) {
+export function ProductCard({ currency, product }: ProductCardProps) {
+  const basePath = useStorefrontBasePath();
   const image = product.images[0];
 
   return (
-    <Link className="sf-product-card" href={`/s/${storeSlug}/products/${product.slug}`}>
+    <Link className="sf-product-card" href={`${basePath}/products/${product.slug}`}>
       <div className="sf-product-image">
         <StorefrontImage alt={image?.alt ?? product.title} fallback="No image" src={image?.url} />
       </div>

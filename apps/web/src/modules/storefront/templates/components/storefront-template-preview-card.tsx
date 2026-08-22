@@ -1,3 +1,4 @@
+import { storeSubdomain } from "../../../../lib/host-routing";
 import Link from "next/link";
 import { getStorefrontTemplateById } from "../registry";
 
@@ -17,7 +18,7 @@ export function StorefrontTemplatePreviewCard({
   storeSlug
 }: StorefrontTemplatePreviewCardProps) {
   const template = getStorefrontTemplateById(resolvedTemplateId);
-  const previewUrl = `/s/${storeSlug}`;
+  const previewUrl = `https://${storeSubdomain(storeSlug)}`;
 
   return (
     <section className="panel-card">

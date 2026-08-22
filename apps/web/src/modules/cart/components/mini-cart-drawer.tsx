@@ -38,8 +38,8 @@ export function MiniCartDrawer({
   const router = useRouter();
   const itemCountLabel = cart.totals.itemCount === 1 ? "1 item" : `${cart.totals.itemCount} items`;
   const checkoutHref = `${homeHref}/checkout`;
-  const viewCartHref = storefrontHref(store.slug, settings.viewCartButtonLink);
-  const shopHref = storefrontHref(store.slug, settings.freeShippingCtaLink);
+  const viewCartHref = storefrontHref(homeHref, settings.viewCartButtonLink);
+  const shopHref = storefrontHref(homeHref, settings.freeShippingCtaLink);
   const drawerStyle = {
     "--mini-cart-overlay-opacity": String(settings.overlayOpacity / 100),
     "--mini-cart-width": `${settings.drawerWidth}px`
@@ -355,18 +355,21 @@ function EmptyMiniCart({ continueHref }: { continueHref: string }) {
   );
 }
 
-function storefrontHref(storeSlug: string, value: string) {
+function storefrontHref(basePath: string, value: string) {
   if (value.startsWith("http")) {
     return value;
   }
 
-  if (value.startsWith(`/s/${storeSlug}`)) {
+  // Guarded on basePath: on a storefront hostname it is empty, and every value
+  // startsWith("") — which would return each link unprefixed by accident rather
+  // than by decision.
+  if (basePath && value.startsWith(basePath)) {
     return value;
   }
 
   if (value === "/") {
-    return `/s/${storeSlug}`;
+    return basePath || "/";
   }
 
-  return `/s/${storeSlug}${value.startsWith("/") ? value : `/${value}`}`;
+  return `${basePath}${value.startsWith("/") ? value : `/${value}`}`;
 }

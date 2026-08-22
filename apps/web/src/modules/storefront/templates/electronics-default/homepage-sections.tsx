@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../base-path";
 import type { StorefrontTemplateHomepageProps } from "../types";
 import {
   ElectronicsBrandGrid,
@@ -11,11 +12,12 @@ import {
   ElectronicsWhyChooseUs
 } from "./components";
 
-export function ElectronicsHomepageSections({
+export async function ElectronicsHomepageSections({
   homeData,
   settings,
   store
 }: StorefrontTemplateHomepageProps) {
+  const basePath = await storefrontBasePath(store.slug);
   const advanced = settings?.advancedSettings;
   const electronics = advanced?.electronics;
   const productSections = advanced?.productSections;
@@ -39,7 +41,7 @@ export function ElectronicsHomepageSections({
         subtitle={store.themeSetting?.heroSubtitle ?? null}
         title={store.themeSetting?.heroTitle ?? null}
       />
-      <ElectronicsSection actionHref={`/s/${store.slug}/products`} eyebrow="Categories" id="electronics-categories" title={electronics?.categorySectionTitle ?? "Top categories"}>
+      <ElectronicsSection actionHref={`${basePath}/products`} eyebrow="Categories" id="electronics-categories" title={electronics?.categorySectionTitle ?? "Top categories"}>
         <ElectronicsCategoryGrid
           categories={homeData.categories}
           products={allProducts}
@@ -52,7 +54,7 @@ export function ElectronicsHomepageSections({
           storeSlug={store.slug}
         />
       </ElectronicsSection>
-      <ElectronicsSection actionHref={`/s/${store.slug}${featuredSection?.ctaLink ?? "/products"}`} actionLabel={featuredSection?.ctaText} eyebrow="Featured" id="electronics-featured" title={featuredSection?.title || electronics?.featuredSectionTitle || "Featured products"}>
+      <ElectronicsSection actionHref={`${basePath}${featuredSection?.ctaLink ?? "/products"}`} actionLabel={featuredSection?.ctaText} eyebrow="Featured" id="electronics-featured" title={featuredSection?.title || electronics?.featuredSectionTitle || "Featured products"}>
         <ElectronicsProductGrid
           count={featuredSection?.count}
           currency={store.currency}
@@ -69,7 +71,7 @@ export function ElectronicsHomepageSections({
         products={homeData.bestSellers.length > 0 ? homeData.bestSellers : homeData.featuredProducts}
         storeSlug={store.slug}
       />
-      <ElectronicsSection actionHref={`/s/${store.slug}${newArrivalsSection?.ctaLink ?? "/products"}`} actionLabel={newArrivalsSection?.ctaText} eyebrow="New Arrivals" id="electronics-new-arrivals" title={newArrivalsSection?.title || electronics?.newArrivalsTitle || "Latest devices and accessories"}>
+      <ElectronicsSection actionHref={`${basePath}${newArrivalsSection?.ctaLink ?? "/products"}`} actionLabel={newArrivalsSection?.ctaText} eyebrow="New Arrivals" id="electronics-new-arrivals" title={newArrivalsSection?.title || electronics?.newArrivalsTitle || "Latest devices and accessories"}>
         <ElectronicsProductGrid
           count={newArrivalsSection?.count}
           currency={store.currency}

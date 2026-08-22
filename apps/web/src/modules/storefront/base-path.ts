@@ -18,7 +18,14 @@ import { resolveStoreFromHost } from "../../lib/host-routing";
  * Server-only: it reads the request's `Host`. Client components take the result
  * as a prop — `PLATFORM_ROOT_DOMAIN` never reaches the browser bundle.
  */
-export async function storefrontBasePath(slug: string) {
+export async function storefrontBasePath(slug: string | undefined) {
+  // Some sections take the slug optionally. Without one there is no prefix to
+  // build, and the clean form is the only one that can be correct — the old
+  // code produced `/s/undefined/…` here.
+  if (!slug) {
+    return "";
+  }
+
   const requestHeaders = await headers();
   // After the proxy rewrites to `/s/<slug>`, `host` is the internal target
   // (`localhost:3000`) and the address the shopper actually asked for survives in

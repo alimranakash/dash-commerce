@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../base-path";
 import type { StorefrontTemplateHomepageProps } from "../types";
 import { FashionBeforeAfter } from "./fashion-before-after";
 import { FashionEditorialSplitBanner } from "./fashion-editorial-split-banner";
@@ -15,11 +16,12 @@ import {
   FashionSection
 } from "./components";
 
-export function FashionHomepageSections({
+export async function FashionHomepageSections({
   homeData,
   settings,
   store
 }: StorefrontTemplateHomepageProps) {
+  const basePath = await storefrontBasePath(store.slug);
   const editorialImages = homeData.featuredProducts
     .flatMap((product) => product.images)
     .map((image) => image.url);
@@ -92,7 +94,7 @@ export function FashionHomepageSections({
         title={fashion?.newArrivalsTitle ?? productSections?.newArrivals.title ?? "New Arrivals"}
       />
       <FashionEditorialSplitBanner
-        ctaLink={resolveStorefrontHref(store.slug, fashion?.editorialSplitCtaLink ?? "/products")}
+        ctaLink={resolveStorefrontHref(basePath, fashion?.editorialSplitCtaLink ?? "/products")}
         ctaText={fashion?.editorialSplitCtaText ?? "Explore"}
         heading={fashion?.editorialSplitHeading ?? "Timeless classics"}
         height={fashion?.editorialSplitHeight ?? settings?.advancedSettings.hero.customHeight ?? 720}
@@ -101,10 +103,10 @@ export function FashionHomepageSections({
         rightImageUrl={fashion?.editorialSplitRightImageUrl || heroSlides[2]?.url || editorialImages[1] || editorialImages[0]}
         textPosition="center"
       />
-      <FashionSection actionHref={`/s/${store.slug}/products`} eyebrow="Categories" id="fashion-categories" title="Shop by category">
+      <FashionSection actionHref={`${basePath}/products`} eyebrow="Categories" id="fashion-categories" title="Shop by category">
         <FashionCategoryCards categories={homeData.categories} storeSlug={store.slug} />
       </FashionSection>
-      <FashionSection actionHref={resolveStorefrontHref(store.slug, productSections?.trending.ctaLink ?? "/products")} actionLabel={productSections?.trending.ctaText} eyebrow="Trending" id="fashion-trending" title={productSections?.trending.title ?? "Trending products"}>
+      <FashionSection actionHref={resolveStorefrontHref(basePath, productSections?.trending.ctaLink ?? "/products")} actionLabel={productSections?.trending.ctaText} eyebrow="Trending" id="fashion-trending" title={productSections?.trending.title ?? "Trending products"}>
         <FashionProductGrid
           currency={store.currency}
           products={homeData.featuredProducts.slice(0, productSections?.trending.count ?? 4)}
@@ -157,10 +159,14 @@ export function FashionHomepageSections({
   );
 }
 
-function resolveStorefrontHref(storeSlug: string, href: string) {
+function resolveStorefrontHref(basePath: string, href: string) {
   if (href.startsWith("http") || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("#")) {
     return href;
   }
 
-  return `/s/${storeSlug}${href === "/" ? "" : href.startsWith("/") ? href : `/${href}`}`;
+  if (href === "/") {
+    return basePath || "/";
+  }
+
+  return `${basePath}${href.startsWith("/") ? href : `/${href}`}`;
 }

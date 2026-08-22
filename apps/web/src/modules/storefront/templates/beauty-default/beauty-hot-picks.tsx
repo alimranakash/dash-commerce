@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../base-path";
 import Link from "next/link";
 import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
@@ -27,7 +28,7 @@ export type BeautyHotPicksSectionProps = {
   storeSlug: string;
 };
 
-export function BeautyHotPicksSection({
+export async function BeautyHotPicksSection({
   advancedSettings,
   categories,
   currency,
@@ -35,6 +36,7 @@ export function BeautyHotPicksSection({
   storeId,
   storeSlug
 }: BeautyHotPicksSectionProps) {
+  const basePath = await storefrontBasePath(storeSlug);
   const beauty = advancedSettings?.beauty ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.beauty;
   const products = mergeProductPools(productPools);
 
@@ -63,7 +65,7 @@ export function BeautyHotPicksSection({
   const cardSection =
     advancedSettings?.productSections.featured ??
     DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.featured;
-  const ctaHref = `/s/${storeSlug}${beauty.hotPicksCtaLink.startsWith("/") ? beauty.hotPicksCtaLink : `/${beauty.hotPicksCtaLink}`}`;
+  const ctaHref = `${basePath}${beauty.hotPicksCtaLink.startsWith("/") ? beauty.hotPicksCtaLink : `/${beauty.hotPicksCtaLink}`}`;
 
   return (
     <section

@@ -1,5 +1,6 @@
 "use client";
 
+import { useStorefrontBasePath } from "../../base-path-provider";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { FashionEditorialProductCard } from "./fashion-editorial-product-card";
@@ -21,6 +22,7 @@ export function FashionNewArrivals({
   storeSlug,
   title
 }: FashionNewArrivalsProps) {
+  const basePath = useStorefrontBasePath();
   const tabs = useMemo(() => {
     const unique = new Map<string, { label: string; slug: string }>();
 
@@ -41,8 +43,8 @@ export function FashionNewArrivals({
     : products.slice(0, 4);
   const activeCategory = tabs.find((tab) => tab.slug === activeTab);
   const shopHref = activeCategory
-    ? `/s/${storeSlug}/categories/${activeCategory.slug}`
-    : `/s/${storeSlug}/products`;
+    ? `${basePath}/categories/${activeCategory.slug}`
+    : `${basePath}/products`;
 
   return (
     <section className={styles.section} id="fashion-new-collection" aria-labelledby="fashion-new-arrivals-title">

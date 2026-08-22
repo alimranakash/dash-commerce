@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../../../modules/storefront/base-path";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
@@ -52,6 +53,7 @@ export default async function StorefrontSearchPage({
   const { slug } = await params;
   const filters = await searchParams;
   const store = await requireStorefrontBySlug(slug);
+  const basePath = await storefrontBasePath(store.slug);
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
   const query = (filters.q ?? "").trim();
   const template = getStorefrontTemplateForStore(store);
@@ -187,7 +189,7 @@ export default async function StorefrontSearchPage({
                 ? `No product matching "${query}" fits the filters you picked.`
                 : `We could not find anything for "${query}". Try a shorter or more general word.`}
             </p>
-            <Link href={`/s/${store.slug}/products`}>Browse all products</Link>
+            <Link href={`${basePath}/products`}>Browse all products</Link>
           </div>
         ) : (
           <>
@@ -204,7 +206,7 @@ export default async function StorefrontSearchPage({
               <div className="sf-pagination" aria-label="Search result pagination">
                 <PaginationLink
                   disabled={currentPage <= 1}
-                  href={buildSearchHref(store.slug, filters, currentPage - 1)}
+                  href={buildSearchHref(basePath, filters, currentPage - 1)}
                   label="Previous"
                 />
                 <span>
@@ -212,7 +214,7 @@ export default async function StorefrontSearchPage({
                 </span>
                 <PaginationLink
                   disabled={currentPage >= totalPages}
-                  href={buildSearchHref(store.slug, filters, currentPage + 1)}
+                  href={buildSearchHref(basePath, filters, currentPage + 1)}
                   label="Next"
                 />
               </div>
@@ -236,7 +238,8 @@ type EmptySearchPageProps = {
  * field on every template, so this only has to explain itself and offer a way
  * into the catalogue.
  */
-function EmptySearchPage({ primaryDomain, store, templateId }: EmptySearchPageProps) {
+async function EmptySearchPage({ primaryDomain, store, templateId }: EmptySearchPageProps) {
+  const basePath = await storefrontBasePath(store.slug);
   return (
     <main className="sf-page" data-storefront-template={templateId}>
       <StorefrontHeader store={store} />
@@ -252,7 +255,7 @@ function EmptySearchPage({ primaryDomain, store, templateId }: EmptySearchPagePr
           <div aria-hidden="true" />
           <h3>Search the catalog</h3>
           <p>Type a product name, category or SKU in the search box above.</p>
-          <Link href={`/s/${store.slug}/products`}>Browse all products</Link>
+          <Link href={`${basePath}/products`}>Browse all products</Link>
         </div>
       </section>
       <StorefrontFooter primaryDomain={primaryDomain} store={store} />
@@ -335,7 +338,7 @@ function parsePage(value: string | undefined) {
   return Number.isInteger(page) && page > 0 ? page : 1;
 }
 
-function buildSearchHref(storeSlug: string, filters: StorefrontSearchFilters, page: number) {
+function buildSearchHref(basePath: string, filters: StorefrontSearchFilters, page: number) {
   const params = new URLSearchParams();
 
   if (filters.q) {
@@ -376,5 +379,5 @@ function buildSearchHref(storeSlug: string, filters: StorefrontSearchFilters, pa
 
   const query = params.toString();
 
-  return `/s/${storeSlug}/search${query ? `?${query}` : ""}`;
+  return `${basePath}/search${query ? `?${query}` : ""}`;
 }

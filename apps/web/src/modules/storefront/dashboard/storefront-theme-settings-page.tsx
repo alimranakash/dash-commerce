@@ -1,3 +1,4 @@
+import { storeSubdomain } from "../../../lib/host-routing";
 import Link from "next/link";
 import { BrandAssetsForm } from "../../settings/components/brand-assets-form";
 import { ThemeSettingsForm } from "../../settings/components/theme-settings-form";
@@ -59,7 +60,9 @@ export async function StorefrontThemeSettingsPage({
   const toastId = getSearchParamValue(searchParams.toast);
   const message = updated ? "Theme settings updated." : brandingUpdated ? "Store branding updated." : null;
   const messageKey = toastId ?? updated ?? brandingUpdated ?? null;
-  const storefrontPreviewUrl = `/s/${store.slug}`;
+  // From the seller app, the store's own address is the one to open — the
+  // internal /s/<slug> path is not what a shopper ever sees.
+  const storefrontPreviewUrl = `https://${storeSubdomain(store.slug)}`;
   // Both panels resolve the active template exactly the way the storefront does,
   // so "Current active" in the dashboard can never disagree with what renders.
   const activeTemplateId = getStorefrontTemplateForStore({

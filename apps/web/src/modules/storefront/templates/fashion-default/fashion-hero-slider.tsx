@@ -1,5 +1,6 @@
 "use client";
 
+import { useStorefrontBasePath } from "../../base-path-provider";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
@@ -20,10 +21,10 @@ type FashionHeroSliderProps = {
 export function FashionHeroSlider({
   fallbackImageUrl,
   settings,
-  storeSlug,
   subtitle,
   title
 }: FashionHeroSliderProps) {
+  const basePath = useStorefrontBasePath();
   const advanced = normalizeAdvancedSettings(settings);
   const hero = advanced.hero;
   const [activeIndex, setActiveIndex] = useState(0);
@@ -70,9 +71,9 @@ export function FashionHeroSlider({
         <p>{currentSlide.subtitle || "THAT FEEL GOOD FIT"}</p>
         <h1 id="fashion-hero-title">{currentSlide.title || "Iconic style,\nmaximum heat."}</h1>
         <div className={`fashion-hero-actions fashion-hero-actions-${hero.buttonStyle}`}>
-          <Link href={resolveHeroHref(storeSlug, hero.button1Link)}>{primaryButtonText}</Link>
+          <Link href={resolveHeroHref(basePath, hero.button1Link)}>{primaryButtonText}</Link>
           {hero.button2Text ? (
-            <Link href={resolveHeroHref(storeSlug, hero.button2Link)}>{hero.button2Text}</Link>
+            <Link href={resolveHeroHref(basePath, hero.button2Link)}>{hero.button2Text}</Link>
           ) : null}
         </div>
       </div>
@@ -230,12 +231,17 @@ function resolveSlides(
   }];
 }
 
-function resolveHeroHref(storeSlug: string, path: string) {
+function resolveHeroHref(basePath: string, path: string) {
   if (path.startsWith("http")) {
     return path;
   }
 
-  return `/s/${storeSlug}${path === "/" ? "" : path.startsWith("/") ? path : `/${path}`}`;
+  if (path === "/") {
+    // An empty basePath would otherwise make this an empty href.
+    return basePath || "/";
+  }
+
+  return `${basePath}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 function hexToRgb(hex: string) {

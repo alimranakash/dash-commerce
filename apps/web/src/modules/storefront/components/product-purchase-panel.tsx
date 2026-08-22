@@ -1,5 +1,6 @@
 "use client";
 
+import { useStorefrontBasePath } from "../base-path-provider";
 import { useRouter } from "next/navigation";
 import { useState, type CSSProperties, type FormEvent } from "react";
 import { notifyCartUpdated, submitCartAction } from "../../cart/components/cart-client-actions";
@@ -31,6 +32,7 @@ export function ProductPurchasePanel({
   storeSlug,
   variantId
 }: ProductPurchasePanelProps) {
+  const basePath = useStorefrontBasePath();
   const isUnavailable = maxQuantity < 1;
   const [quantity, setQuantity] = useState(1);
   const [error, setError] = useState("");
@@ -91,7 +93,7 @@ export function ProductPurchasePanel({
     }
 
     if (await addCurrentSelection()) {
-      router.push(`/s/${storeSlug}/checkout`);
+      router.push(`${basePath}/checkout`);
     }
   }
 

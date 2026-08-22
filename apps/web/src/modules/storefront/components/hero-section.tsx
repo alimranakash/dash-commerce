@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../base-path";
 import Link from "next/link";
 import type { StorefrontStore } from "../storefront.types";
 import { storeSubdomain } from "../../../lib/host-routing";
@@ -7,7 +8,8 @@ type HeroSectionProps = {
   store: StorefrontStore;
 };
 
-export function HeroSection({ primaryDomain, store }: HeroSectionProps) {
+export async function HeroSection({ primaryDomain, store }: HeroSectionProps) {
+  const basePath = await storefrontBasePath(store.slug);
   const theme = store.themeSetting;
   const heroTitle = theme?.heroTitle || "Discover products you'll love";
   const heroSubtitle =
@@ -25,7 +27,7 @@ export function HeroSection({ primaryDomain, store }: HeroSectionProps) {
         <h1 id="storefront-title">{heroTitle}</h1>
         <span>{heroSubtitle}</span>
         <div className="sf-hero-actions">
-          <Link className="sf-button" href={`/s/${store.slug}/products`}>
+          <Link className="sf-button" href={`${basePath}/products`}>
             Shop Now
           </Link>
           <a className="sf-button sf-button-secondary" href="#featured-categories">

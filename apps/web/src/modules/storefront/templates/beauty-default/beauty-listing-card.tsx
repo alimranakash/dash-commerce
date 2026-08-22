@@ -1,3 +1,6 @@
+"use client";
+
+import { useStorefrontBasePath } from "../../base-path-provider";
 import Link from "next/link";
 import type { ProductCardProduct } from "../../components/product-listing";
 import { StorefrontImage } from "../../components/storefront-image";
@@ -30,7 +33,8 @@ export function BeautyListingCard({
   storeId,
   storeSlug
 }: BeautyListingCardProps) {
-  const href = `/s/${storeSlug}/products/${product.slug}`;
+  const basePath = useStorefrontBasePath();
+  const href = `${basePath}/products/${product.slug}`;
   const primaryImage = product.images[0];
   const hoverImage = section.enableHoverImage ? product.images[1] : undefined;
   const price = product.price.toString();

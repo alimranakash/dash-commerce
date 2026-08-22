@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../base-path";
 import Link from "next/link";
 import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
@@ -29,7 +30,7 @@ export type BeautySpotlightSectionProps = {
   storeSlug: string;
 };
 
-export function BeautySpotlightSection({
+export async function BeautySpotlightSection({
   advancedSettings,
   categories,
   currency,
@@ -38,6 +39,7 @@ export function BeautySpotlightSection({
   storeId,
   storeSlug
 }: BeautySpotlightSectionProps) {
+  const basePath = await storefrontBasePath(storeSlug);
   const beauty = advancedSettings?.beauty ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.beauty;
   const pool = mergeProductPools(productPools);
   const products = resolveSpotlightProducts({
@@ -57,7 +59,7 @@ export function BeautySpotlightSection({
     advancedSettings?.productSections.featured ??
     DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.featured;
   const image = beauty.spotlightImageUrl || fallbackImageUrl || "";
-  const ctaHref = `/s/${storeSlug}${beauty.spotlightCtaLink.startsWith("/") ? beauty.spotlightCtaLink : `/${beauty.spotlightCtaLink}`}`;
+  const ctaHref = `${basePath}${beauty.spotlightCtaLink.startsWith("/") ? beauty.spotlightCtaLink : `/${beauty.spotlightCtaLink}`}`;
 
   return (
     <section

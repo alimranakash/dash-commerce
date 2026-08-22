@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../base-path";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { HeroSlider } from "../../components/hero-slider";
@@ -85,13 +86,14 @@ export function GeneralHero({
   );
 }
 
-export function GeneralCategoryStrip({
+export async function GeneralCategoryStrip({
   categories,
   storeSlug
 }: {
   categories: GeneralCategory[];
   storeSlug: string;
 }) {
+  const basePath = await storefrontBasePath(storeSlug);
   // A store with no categories shows nothing here rather than a strip of
   // placeholder names that link to pages which do not exist.
   if (categories.length === 0) {
@@ -108,7 +110,7 @@ export function GeneralCategoryStrip({
   return (
     <div className="general-category-strip">
       {visibleCategories.map((category) => (
-        <Link className="general-category-bubble" href={`/s/${storeSlug}/categories/${category.slug}`} key={category.slug}>
+        <Link className="general-category-bubble" href={`${basePath}/categories/${category.slug}`} key={category.slug}>
           <span suppressHydrationWarning>
             {category.imageUrl ? <img alt="" loading="lazy" src={category.imageUrl} /> : category.icon.trim()}
           </span>
@@ -129,7 +131,7 @@ export function GeneralProductGrid({
   return <ProductGrid currency={currency} gridId={gridId} products={products} section={section} storeSlug={storeSlug} />;
 }
 
-export function GeneralProductSection({
+export async function GeneralProductSection({
   currency,
   id,
   products,
@@ -142,6 +144,7 @@ export function GeneralProductSection({
   section: StorefrontProductSectionSettings;
   storeSlug: string;
 }) {
+  const basePath = await storefrontBasePath(storeSlug);
   // A product row with nothing in it is a heading over empty space, so the
   // whole section drops out instead of rendering stand-in cards.
   if (products.length === 0) {
@@ -155,7 +158,7 @@ export function GeneralProductSection({
   return (
     <section className="general-home-section general-product-section" id={id} aria-labelledby={`${id}-products-title`}>
       <SectionHeader
-        ctaHref={storefrontSectionHref(storeSlug, section.ctaLink)}
+        ctaHref={storefrontSectionHref(basePath, section.ctaLink)}
         ctaText={section.ctaText}
         id={`${id}-products-title`}
         sliderTargetId={section.mode === "slider" ? gridId : undefined}
@@ -173,20 +176,21 @@ export function GeneralProductSection({
   );
 }
 
-export function GeneralPromoBanner({
+export async function GeneralPromoBanner({
   imageUrl,
   storeSlug
 }: {
   imageUrl?: string | null | undefined;
   storeSlug: string;
 }) {
+  const basePath = await storefrontBasePath(storeSlug);
   return (
     <section className="general-promo-banner" aria-labelledby="general-promo-title">
       <div className="general-promo-copy">
         <p>The full catalogue</p>
         <h2 id="general-promo-title">Everything in one place</h2>
         <span>Filter by category, price or availability.</span>
-        <Link className="general-dark-button general-promo-cta" href={`/s/${storeSlug}/products`}>
+        <Link className="general-dark-button general-promo-cta" href={`${basePath}/products`}>
           Browse all products
         </Link>
       </div>

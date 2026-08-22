@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../../../../modules/storefront/base-path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCustomerVisibleShipment } from "../../../../../modules/courier/courier.service";
@@ -23,6 +24,7 @@ type ThankYouPageProps = {
 export default async function ThankYouPage({ params }: ThankYouPageProps) {
   const { orderNumber, slug } = await params;
   const store = await requireStorefrontBySlug(slug);
+  const basePath = await storefrontBasePath(store.slug);
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
   const order = await getPublicOrderByNumber(store.id, orderNumber);
   const paymentMethod = order
@@ -125,7 +127,7 @@ export default async function ThankYouPage({ params }: ThankYouPageProps) {
             </div>
           ))}
         </div>
-        <Link className="sf-button" href={`/s/${store.slug}/products`}>
+        <Link className="sf-button" href={`${basePath}/products`}>
           Continue shopping
         </Link>
       </section>

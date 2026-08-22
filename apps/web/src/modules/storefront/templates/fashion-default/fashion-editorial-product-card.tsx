@@ -1,5 +1,6 @@
 "use client";
 
+import { useStorefrontBasePath } from "../../base-path-provider";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { formatStorefrontMoney } from "../../format";
@@ -17,9 +18,10 @@ export function FashionEditorialProductCard({
   product,
   storeSlug
 }: FashionEditorialProductCardProps) {
+  const basePath = useStorefrontBasePath();
   const productHref = product.slug
-    ? `/s/${storeSlug}/products/${product.slug}`
-    : `/s/${storeSlug}/products`;
+    ? `${basePath}/products/${product.slug}`
+    : `${basePath}/products`;
   const primaryImage = product.images[0];
   const secondaryImage = product.images[1];
   const price = Number(product.price);

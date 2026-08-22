@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../base-path";
 import type { StorefrontTemplateHomepageProps } from "../types";
 import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../customization";
 import {
@@ -18,11 +19,12 @@ import {
   BeautySection
 } from "./components";
 
-export function BeautyHomepageSections({
+export async function BeautyHomepageSections({
   homeData,
   settings,
   store
 }: StorefrontTemplateHomepageProps) {
+  const basePath = await storefrontBasePath(store.slug);
   const productSections = settings?.advancedSettings.productSections ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections;
   const bestSellerSection = {
     ...productSections.bestSellers,
@@ -52,7 +54,7 @@ export function BeautyHomepageSections({
         storeSlug={store.slug}
         title={store.themeSetting?.heroTitle ?? null}
       />
-      <BeautySection actionHref={`/s/${store.slug}/products`} eyebrow="Categories" id="beauty-categories" title="Shop by category">
+      <BeautySection actionHref={`${basePath}/products`} eyebrow="Categories" id="beauty-categories" title="Shop by category">
         <BeautyCategoryGrid categories={homeData.categories} storeSlug={store.slug} />
       </BeautySection>
       <BeautyProductSection

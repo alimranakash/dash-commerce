@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../base-path";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { StorefrontImage } from "../../components/storefront-image";
@@ -75,7 +76,7 @@ export function FashionHero({
   );
 }
 
-export function FashionEditorialCollectionGrid({
+export async function FashionEditorialCollectionGrid({
   categories,
   ctas,
   storeSlug
@@ -84,6 +85,7 @@ export function FashionEditorialCollectionGrid({
   ctas?: string[] | undefined;
   storeSlug: string;
 }) {
+  const basePath = await storefrontBasePath(storeSlug);
   // Cards come from the store's own categories - an empty catalogue renders no
   // section rather than links to collections that were never created.
   const collections = categories.slice(0, 4).map((category, index) => ({
@@ -106,7 +108,7 @@ export function FashionEditorialCollectionGrid({
         {collections.map((collection, index) => (
           <Link
             className={collectionStyles.card}
-            href={`/s/${storeSlug}/categories/${collection.slug}`}
+            href={`${basePath}/categories/${collection.slug}`}
             key={collection.slug}
           >
             <div className={collectionStyles.media}>
@@ -129,13 +131,14 @@ export function FashionEditorialCollectionGrid({
   );
 }
 
-export function FashionCategoryCards({
+export async function FashionCategoryCards({
   categories,
   storeSlug
 }: {
   categories: FashionCategory[];
   storeSlug: string;
 }) {
+  const basePath = await storefrontBasePath(storeSlug);
   const visibleCategories = categories.slice(0, 4).map((category) => ({
     imageUrl: category.imageUrl ?? null,
     name: category.name,
@@ -149,7 +152,7 @@ export function FashionCategoryCards({
   return (
     <div className="fashion-category-grid">
       {visibleCategories.map((category, index) => (
-        <Link className="fashion-category-card" href={`/s/${storeSlug}/categories/${category.slug}`} key={category.slug}>
+        <Link className="fashion-category-card" href={`${basePath}/categories/${category.slug}`} key={category.slug}>
           {category.imageUrl ? <img alt="" loading="lazy" src={category.imageUrl} /> : null}
           <div aria-hidden="true">{String(index + 1).padStart(2, "0")}</div>
           <strong>{category.name}</strong>
@@ -186,7 +189,7 @@ export function FashionProductGrid({
   );
 }
 
-export function FashionEditorialBanner({
+export async function FashionEditorialBanner({
   ctaLabel,
   ctaLink,
   imageUrl,
@@ -201,6 +204,7 @@ export function FashionEditorialBanner({
   subtitle?: string | null | undefined;
   title?: string | null | undefined;
 }) {
+  const basePath = await storefrontBasePath(storeSlug);
   return (
     <section className={editorialStyles.campaign} aria-labelledby="fashion-editorial-title">
       <div className={editorialStyles.campaignMedia}>
@@ -214,13 +218,13 @@ export function FashionEditorialBanner({
         <p>Campaign</p>
         <h2 id="fashion-editorial-title">{title?.trim() || "Quiet confidence, cut for everyday movement."}</h2>
         <span>{subtitle?.trim() || "Refined layers, understated textures, and pieces designed to move beautifully together."}</span>
-        <Link href={resolveFashionHref(storeSlug, ctaLink || "/products")}>{ctaLabel?.trim() || "Explore the edit"}</Link>
+        <Link href={resolveFashionHref(basePath, ctaLink || "/products")}>{ctaLabel?.trim() || "Explore the edit"}</Link>
       </div>
     </section>
   );
 }
 
-export function FashionFeaturedLook({
+export async function FashionFeaturedLook({
   ctaLink,
   ctaText,
   description,
@@ -237,6 +241,7 @@ export function FashionFeaturedLook({
   storeSlug: string;
   title?: string | null | undefined;
 }) {
+  const basePath = await storefrontBasePath(storeSlug);
   return (
     <section className={editorialStyles.lookbook} id="fashion-featured-look" aria-labelledby="fashion-lookbook-title">
       <div className={editorialStyles.lookbookMedia}>
@@ -246,10 +251,10 @@ export function FashionFeaturedLook({
         <p>Featured Look</p>
         <h2 id="fashion-lookbook-title">{title?.trim() || "The art of effortless dressing."}</h2>
         <span>{description?.trim() || "A considered edit of pieces designed to work together, season after season."}</span>
-        <Link href={resolveFashionHref(storeSlug, ctaLink || "/products")}>{ctaText?.trim() || "Shop the look"}</Link>
+        <Link href={resolveFashionHref(basePath, ctaLink || "/products")}>{ctaText?.trim() || "Shop the look"}</Link>
         <div className={editorialStyles.lookbookProducts}>
           {products.slice(0, 3).map((product) => (
-            <Link href={`/s/${storeSlug}/products/${product.slug}`} key={product.id}>
+            <Link href={`${basePath}/products/${product.slug}`} key={product.id}>
               <div>
                 <StorefrontImage
                   alt={product.images[0]?.alt ?? product.title}
@@ -335,10 +340,14 @@ export function FashionNewsletter({
   );
 }
 
-function resolveFashionHref(storeSlug: string, href: string) {
+function resolveFashionHref(basePath: string, href: string) {
   if (href.startsWith("http") || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("#")) {
     return href;
   }
 
-  return `/s/${storeSlug}${href === "/" ? "" : href.startsWith("/") ? href : `/${href}`}`;
+  if (href === "/") {
+    return basePath || "/";
+  }
+
+  return `${basePath}${href.startsWith("/") ? href : `/${href}`}`;
 }

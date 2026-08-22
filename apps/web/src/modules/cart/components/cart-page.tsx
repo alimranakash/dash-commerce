@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../storefront/base-path";
 import Link from "next/link";
 import type { StorefrontCartPageSettings } from "../../storefront/customization";
 import type { Cart } from "../cart.types";
@@ -26,11 +27,12 @@ type CartPageProps = {
   };
 };
 
-export function CartPage({ cart, currency, feedback, settings, store }: CartPageProps) {
+export async function CartPage({ cart, currency, feedback, settings, store }: CartPageProps) {
+  const basePath = await storefrontBasePath(store.slug);
   const itemLabel = cart.totals.itemCount === 1 ? "1 item" : `${cart.totals.itemCount} items`;
-  const continueHref = storefrontHref(store.slug, settings.continueShoppingLink);
-  const checkoutHref = `/s/${store.slug}/checkout`;
-  const shopHref = storefrontHref(store.slug, settings.freeShippingCtaLink);
+  const continueHref = storefrontHref(basePath, settings.continueShoppingLink);
+  const checkoutHref = `${basePath}/checkout`;
+  const shopHref = storefrontHref(basePath, settings.freeShippingCtaLink);
   const isEmpty = cart.items.length === 0;
 
   return (
@@ -38,7 +40,7 @@ export function CartPage({ cart, currency, feedback, settings, store }: CartPage
       <div className="general-cart-inner">
         {settings.breadcrumbEnabled ? (
           <nav className="general-cart-breadcrumb" aria-label="Breadcrumb">
-            <Link href={`/s/${store.slug}`}>Home</Link>
+            <Link href={basePath || "/"}>Home</Link>
             <span aria-hidden="true">&gt;</span>
             <span>Shopping Cart</span>
           </nav>
@@ -94,18 +96,18 @@ export function CartPage({ cart, currency, feedback, settings, store }: CartPage
   );
 }
 
-function storefrontHref(storeSlug: string, value: string) {
+function storefrontHref(basePath: string, value: string) {
   if (value.startsWith("http")) {
     return value;
   }
 
-  if (value.startsWith(`/s/${storeSlug}`)) {
+  if (basePath && value.startsWith(basePath)) {
     return value;
   }
 
   if (value === "/") {
-    return `/s/${storeSlug}`;
+    return basePath || "/";
   }
 
-  return `/s/${storeSlug}${value.startsWith("/") ? value : `/${value}`}`;
+  return `${basePath}${value.startsWith("/") ? value : `/${value}`}`;
 }

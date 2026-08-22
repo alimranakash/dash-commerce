@@ -1,5 +1,6 @@
 "use client";
 
+import { useStorefrontBasePath } from "../base-path-provider";
 import { useEffect, useState } from "react";
 import type { StorefrontProductSectionSettings } from "../customization";
 import { ProductGrid, SectionHeader, type ProductCardProduct } from "./product-listing";
@@ -38,6 +39,7 @@ export function RecentlyViewedSection({
   storeId,
   storeSlug
 }: RecentlyViewedSectionProps) {
+  const basePath = useStorefrontBasePath();
   const [products, setProducts] = useState<RecentlyViewedProduct[]>([]);
 
   useEffect(() => {
@@ -69,7 +71,7 @@ export function RecentlyViewedSection({
   return (
     <section className="general-home-section general-product-section" aria-labelledby="recently-viewed-title">
       <SectionHeader
-        ctaHref={storefrontSectionHref(storeSlug, section.ctaLink)}
+        ctaHref={storefrontSectionHref(basePath, section.ctaLink)}
         ctaText={section.ctaText}
         id="recently-viewed-title"
         sliderTargetId={section.mode === "slider" ? gridId : undefined}

@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../../../modules/storefront/base-path";
 import Link from "next/link";
 import { getCart } from "../../../../modules/cart/cart.service";
 import { isCheckoutPhoneOtpRequired } from "../../../../modules/checkout/checkout-verification.service";
@@ -21,6 +22,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
   const { slug } = await params;
   const { checkoutError } = await searchParams;
   const store = await requireStorefrontBySlug(slug);
+  const basePath = await storefrontBasePath(store.slug);
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
   const cart = await getCart(store.id);
   const paymentMethods = await getEnabledPaymentMethods(store.id);
@@ -46,7 +48,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
           <div className="sf-empty">
             <h2>Your cart is empty</h2>
             <p>Add products before placing an order.</p>
-            <Link className="sf-button" href={`/s/${store.slug}/products`}>
+            <Link className="sf-button" href={`${basePath}/products`}>
               Continue shopping
             </Link>
           </div>

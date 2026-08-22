@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../base-path";
 import { ProductGrid } from "../../components/product-listing";
 import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
@@ -28,7 +29,7 @@ export type BeautyCuratedSectionProps = {
   storeSlug: string;
 };
 
-export function BeautyCuratedSection({
+export async function BeautyCuratedSection({
   advancedSettings,
   categories,
   currency,
@@ -37,6 +38,7 @@ export function BeautyCuratedSection({
   storeId,
   storeSlug
 }: BeautyCuratedSectionProps) {
+  const basePath = await storefrontBasePath(storeSlug);
   const beauty = advancedSettings?.beauty ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.beauty;
 
   if (products.length === 0) {
@@ -72,7 +74,7 @@ export function BeautyCuratedSection({
       : fallbackImageUrl
         ? [fallbackImageUrl]
         : [];
-  const promoCtaHref = `/s/${storeSlug}${beauty.curatedPromoCtaLink.startsWith("/") ? beauty.curatedPromoCtaLink : `/${beauty.curatedPromoCtaLink}`}`;
+  const promoCtaHref = `${basePath}${beauty.curatedPromoCtaLink.startsWith("/") ? beauty.curatedPromoCtaLink : `/${beauty.curatedPromoCtaLink}`}`;
 
   return (
     <section aria-labelledby={`${SECTION_ID}-title`} className="beauty-home-section beauty-curated" id={SECTION_ID}>

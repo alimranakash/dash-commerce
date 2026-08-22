@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../base-path";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import {
@@ -108,13 +109,14 @@ export function BeautyHero({
   );
 }
 
-export function BeautyCategoryGrid({
+export async function BeautyCategoryGrid({
   categories,
   storeSlug
 }: {
   categories: BeautyCategory[];
   storeSlug: string;
 }) {
+  const basePath = await storefrontBasePath(storeSlug);
   const visibleCategories = (categories.length > 0 ? categories.slice(0, 5) : fallbackCategories).map((category) => ({
     imageUrl: "imageUrl" in category && typeof category.imageUrl === "string" ? category.imageUrl : null,
     name: category.name,
@@ -124,7 +126,7 @@ export function BeautyCategoryGrid({
   return (
     <div className="beauty-category-grid">
       {visibleCategories.map((category, index) => (
-        <Link className="beauty-category-card" href={`/s/${storeSlug}/categories/${category.slug}`} key={category.slug}>
+        <Link className="beauty-category-card" href={`${basePath}/categories/${category.slug}`} key={category.slug}>
           {category.imageUrl ? <img alt="" loading="lazy" src={category.imageUrl} /> : null}
           <span>{String(index + 1).padStart(2, "0")}</span>
           <strong>{category.name}</strong>
@@ -137,7 +139,7 @@ export function BeautyCategoryGrid({
 // The homepage product rows are the General Default rows: same shared `SectionHeader`
 // (title / subtitle / CTA / slider arrows) above the same `ProductGrid`, so the cards,
 // the 5-per-view sizing, and the arrow behaviour are identical across both templates.
-export function BeautyProductSection({
+export async function BeautyProductSection({
   currency,
   id,
   products,
@@ -152,12 +154,13 @@ export function BeautyProductSection({
   storeId: string;
   storeSlug: string;
 }) {
+  const basePath = await storefrontBasePath(storeSlug);
   const gridId = `${id}-grid`;
 
   return (
     <section className="general-home-section general-product-section" id={id} aria-labelledby={`${id}-title`}>
       <SectionHeader
-        ctaHref={`/s/${storeSlug}${section.ctaLink.startsWith("/") ? section.ctaLink : `/${section.ctaLink}`}`}
+        ctaHref={`${basePath}${section.ctaLink.startsWith("/") ? section.ctaLink : `/${section.ctaLink}`}`}
         ctaText={section.ctaText}
         id={`${id}-title`}
         sliderTargetId={section.mode === "slider" ? gridId : undefined}
@@ -176,7 +179,7 @@ export function BeautyProductSection({
   );
 }
 
-export function BeautyProductGrid({
+export async function BeautyProductGrid({
   currency,
   gridId,
   products,
@@ -191,6 +194,7 @@ export function BeautyProductGrid({
   storeId: string;
   storeSlug: string;
 }) {
+  const basePath = await storefrontBasePath(storeSlug);
   if (products.length > 0) {
     return (
       <ProductGrid
@@ -208,7 +212,7 @@ export function BeautyProductGrid({
   return (
     <div id={gridId} className={`general-product-listing-grid general-product-listing-grid-${section.columns} general-product-listing-${section.mode}`}>
       {fallbackProducts.slice(0, section.count).map((product, index) => (
-        <Link className="general-product-listing-card" href={`/s/${storeSlug}/products`} key={`${product.title}-${index}`}>
+        <Link className="general-product-listing-card" href={`${basePath}/products`} key={`${product.title}-${index}`}>
           <ProductImage alt={product.title} fallback={product.label} />
           <div className="general-product-listing-meta">
             <div>

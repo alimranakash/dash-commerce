@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../base-path";
 import type { ComponentType } from "react";
 import Link from "next/link";
 import {
@@ -41,7 +42,7 @@ type GeneralProductPageProps = {
   store: StorefrontStore;
 };
 
-export function GeneralProductPage({
+export async function GeneralProductPage({
   cardVariant,
   cartError,
   product,
@@ -52,6 +53,7 @@ export function GeneralProductPage({
   relatedSection,
   store
 }: GeneralProductPageProps) {
+  const basePath = await storefrontBasePath(store.slug);
   const badge = productBadge(product);
   const description = product.description || product.shortDescription || `${product.title} is ready for your everyday shopping routine.`;
   const descriptionParagraphs = description.split(/\r?\n+/).filter(Boolean).slice(0, 4);
@@ -157,7 +159,7 @@ export function GeneralProductPage({
       {relatedProducts.length > 0 ? (
         <section className="general-product-related general-product-section" aria-labelledby="related-products">
           <SectionHeader
-            ctaHref={storefrontSectionHref(store.slug, relatedSection.ctaLink)}
+            ctaHref={storefrontSectionHref(basePath, relatedSection.ctaLink)}
             ctaText={relatedSection.ctaText}
             id="related-products"
             sliderTargetId={relatedSection.mode === "slider" ? relatedGridId : undefined}
@@ -206,21 +208,22 @@ function recentlyViewedSnapshot(product: StorefrontProductDetails): RecentlyView
   };
 }
 
-function GeneralProductBreadcrumb({
+async function GeneralProductBreadcrumb({
   product,
   store
 }: {
   product: StorefrontProductDetails;
   store: StorefrontStore;
 }) {
+  const basePath = await storefrontBasePath(store.slug);
   return (
     <nav className="general-product-breadcrumb" aria-label="Breadcrumb">
-      <Link href={`/s/${store.slug}`}>Home</Link>
+      <Link href={basePath || "/"}>Home</Link>
       <span>&gt;</span>
       {product.category ? (
-        <Link href={`/s/${store.slug}/categories/${product.category.slug}`}>{product.category.name}</Link>
+        <Link href={`${basePath}/categories/${product.category.slug}`}>{product.category.name}</Link>
       ) : (
-        <Link href={`/s/${store.slug}/products`}>Products</Link>
+        <Link href={`${basePath}/products`}>Products</Link>
       )}
       <span>&gt;</span>
       <strong>{product.title}</strong>
@@ -234,7 +237,7 @@ function GeneralProductBreadcrumb({
  * catalogue record - there are no invented collection names here, so a card
  * always leads somewhere that exists.
  */
-function GeneralProductPromoBlocks({
+async function GeneralProductPromoBlocks({
   product,
   relatedProducts,
   store
@@ -243,6 +246,7 @@ function GeneralProductPromoBlocks({
   relatedProducts: StorefrontProduct[];
   store: StorefrontStore;
 }) {
+  const basePath = await storefrontBasePath(store.slug);
   const category = product.category;
   const neighbours = relatedProducts.slice(0, 2);
 
@@ -254,13 +258,13 @@ function GeneralProductPromoBlocks({
 
   const categoryBlock = category
     ? {
-        href: `/s/${store.slug}/categories/${category.slug}`,
+        href: `${basePath}/categories/${category.slug}`,
         imageUrl: neighbours[0]?.images[0]?.url ?? product.images[1]?.url ?? product.images[0]?.url,
         subtitle: `Browse everything in ${category.name}`,
         title: category.name
       }
     : {
-        href: `/s/${store.slug}/products`,
+        href: `${basePath}/products`,
         imageUrl: product.images[1]?.url ?? product.images[0]?.url,
         subtitle: `Browse the full catalogue at ${store.name}`,
         title: "All products"
@@ -277,7 +281,7 @@ function GeneralProductPromoBlocks({
       <div>
         {neighbours.map((neighbour) => (
           <PromoBlock
-            href={`/s/${store.slug}/products/${neighbour.slug}`}
+            href={`${basePath}/products/${neighbour.slug}`}
             imageUrl={neighbour.images[0]?.url}
             key={neighbour.id}
             subtitle={neighbour.shortDescription || `Also in ${category?.name ?? store.name}`}

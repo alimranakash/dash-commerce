@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../base-path";
 import type { StorefrontTemplateHomepageProps } from "../types";
 import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../customization";
 import {
@@ -15,12 +16,13 @@ import {
   GeneralSectionWrapper
 } from "./components";
 
-export function GeneralHomepageSections({
+export async function GeneralHomepageSections({
   homeData,
   primaryDomain,
   settings,
   store
 }: StorefrontTemplateHomepageProps) {
+  const basePath = await storefrontBasePath(store.slug);
   const productSections = settings?.advancedSettings.productSections ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections;
   const featuredSection = {
     ...productSections.featured,
@@ -60,7 +62,7 @@ export function GeneralHomepageSections({
         subtitle={store.themeSetting?.heroSubtitle}
         title={store.themeSetting?.heroTitle}
       />
-      <GeneralSectionWrapper actionHref={`/s/${store.slug}/products`} id="general-categories" title="Shop by Category">
+      <GeneralSectionWrapper actionHref={`${basePath}/products`} id="general-categories" title="Shop by Category">
         <GeneralCategoryStrip categories={homeData.categories} storeSlug={store.slug} />
       </GeneralSectionWrapper>
       <TabbedProductSection

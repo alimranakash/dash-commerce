@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../../../modules/storefront/base-path";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { getPublicProductTaxonomyItems } from "../../../../modules/products/product-taxonomy.service";
@@ -40,6 +41,7 @@ export default async function StorefrontProductsPage({
   const { slug } = await params;
   const filters = await searchParams;
   const store = await requireStorefrontBySlug(slug);
+  const basePath = await storefrontBasePath(store.slug);
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
   const template = getStorefrontTemplateForStore(store);
   const settings = await getStorefrontThemeSettings(store.id);
@@ -92,7 +94,7 @@ export default async function StorefrontProductsPage({
         <p>{listingSection.title}</p>
         {shopSettings.descriptionEnabled && pageDescription ? <span>{pageDescription}</span> : null}
         {listingSection.ctaText ? (
-          <Link href={storefrontSectionHref(store.slug, listingSection.ctaLink)}>{listingSection.ctaText}</Link>
+          <Link href={storefrontSectionHref(basePath, listingSection.ctaLink)}>{listingSection.ctaText}</Link>
         ) : null}
       </section>
       <section
@@ -120,7 +122,7 @@ export default async function StorefrontProductsPage({
                 ? "No public products are available in this collection yet."
                 : "Try changing filters or sorting to find more products."}
             </p>
-            <Link href={`/s/${store.slug}/products`}>Reset Filters</Link>
+            <Link href={`${basePath}/products`}>Reset Filters</Link>
           </div>
         ) : (
           <>
@@ -136,7 +138,7 @@ export default async function StorefrontProductsPage({
             <div className="sf-pagination" aria-label="Product pagination">
               <PaginationLink
                 disabled={currentPage <= 1}
-                href={buildProductsHref(store.slug, filters, currentPage - 1)}
+                href={buildProductsHref(basePath, filters, currentPage - 1)}
                 label="Previous"
               />
               <span>
@@ -144,7 +146,7 @@ export default async function StorefrontProductsPage({
               </span>
               <PaginationLink
                 disabled={currentPage >= totalPages}
-                href={buildProductsHref(store.slug, filters, currentPage + 1)}
+                href={buildProductsHref(basePath, filters, currentPage + 1)}
                 label={shopSettings.paginationMode === "load-more" ? "Load More" : "Next"}
               />
             </div>
@@ -179,7 +181,7 @@ function parsePage(value: string | undefined) {
 }
 
 function buildProductsHref(
-  storeSlug: string,
+  basePath: string,
   filters: {
     availability?: string;
     brand?: string;
@@ -227,7 +229,7 @@ function buildProductsHref(
 
   const query = params.toString();
 
-  return `/s/${storeSlug}/products${query ? `?${query}` : ""}`;
+  return `${basePath}/products${query ? `?${query}` : ""}`;
 }
 
 function PaginationLink({ disabled, href, label }: { disabled: boolean; href: string; label: string }) {

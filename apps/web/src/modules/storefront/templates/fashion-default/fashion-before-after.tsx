@@ -1,5 +1,6 @@
 "use client";
 
+import { useStorefrontBasePath } from "../../base-path-provider";
 import Link from "next/link";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { useCallback, useRef, useState } from "react";
@@ -32,9 +33,9 @@ export function FashionBeforeAfter({
   beforeLabel,
   currency,
   initialPosition,
-  product,
-  storeSlug
+  product
 }: FashionBeforeAfterProps) {
+  const basePath = useStorefrontBasePath();
   const frameRef = useRef<HTMLElement | null>(null);
   const [position, setPosition] = useState(clampPosition(initialPosition ?? 50));
   const [isDragging, setIsDragging] = useState(false);
@@ -59,8 +60,8 @@ export function FashionBeforeAfter({
     "--comparison-position": `${position}%`
   } as CSSProperties;
   const productHref = product?.slug
-    ? `/s/${storeSlug}/products/${product.slug}`
-    : `/s/${storeSlug}/products`;
+    ? `${basePath}/products/${product.slug}`
+    : `${basePath}/products`;
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLElement>) => {
     // The product card is a real link sitting on top of the image, so a press

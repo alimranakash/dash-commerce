@@ -26,12 +26,16 @@ export function resolveProductSectionProducts(
   return (pools.featured ?? []).slice(0, section.count);
 }
 
-export function storefrontSectionHref(storeSlug: string, href: string) {
+export function storefrontSectionHref(basePath: string, href: string) {
   if (href.startsWith("http") || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("#")) {
     return href;
   }
 
-  return `/s/${storeSlug}${href === "/" ? "" : href.startsWith("/") ? href : `/${href}`}`;
+  if (href === "/") {
+    return basePath || "/";
+  }
+
+  return `${basePath}${href.startsWith("/") ? href : `/${href}`}`;
 }
 
 function sourcePoolKey(source: StorefrontProductSectionSettings["source"]): keyof StorefrontProductPools {

@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../../../../modules/storefront/base-path";
 import Link from "next/link";
 import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
@@ -34,6 +35,7 @@ export default async function StorefrontProductPage({
   const { productSlug, slug } = await params;
   const { cartError } = await searchParams;
   const store = await requireStorefrontBySlug(slug);
+  const basePath = await storefrontBasePath(store.slug);
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
   const template = getStorefrontTemplateForStore(store);
   const ProductDetailExtras = template.components.ProductDetailExtras;
@@ -48,7 +50,7 @@ export default async function StorefrontProductPage({
           <p>Product unavailable</p>
           <h1 id="product-404">This product is not available.</h1>
           <span>It may have been unpublished, archived, or moved by the seller.</span>
-          <Link className="sf-button" href={`/s/${store.slug}/products`}>
+          <Link className="sf-button" href={`${basePath}/products`}>
             Back to products
           </Link>
         </section>
