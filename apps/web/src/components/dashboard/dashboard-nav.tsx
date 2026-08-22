@@ -12,7 +12,6 @@ import {
   Package,
   Percent,
   Receipt,
-  ShieldQuestion,
   ReceiptText,
   ShoppingBag,
   Settings,
@@ -102,7 +101,10 @@ const orderLinks = [
   { href: "/dashboard/orders", label: "All Orders" },
   { href: "/dashboard/orders/tracking", label: "Order Tracking" },
   { href: "/dashboard/orders/fake", label: "Fake Orders" },
-  { href: "/dashboard/orders/verification", label: "Verification Queue" }
+  { href: "/dashboard/orders/verification", label: "Verification Queue" },
+  // Lives at /dashboard/fraud-check rather than under /dashboard/orders, so the
+  // route checks below have to name it explicitly.
+  { href: "/dashboard/fraud-check", label: "Fraud Check" }
 ];
 
 const reportLinks = [
@@ -145,7 +147,6 @@ const mainLinks: NavItem[] = [
   { href: "/dashboard/sales", icon: ShoppingBag, label: "Sales" },
   { href: "/dashboard/transactions", icon: CircleDollarSign, label: "Transactions" },
   { href: "/dashboard/customers", icon: Users, label: "Customers" },
-  { href: "/dashboard/fraud-check", icon: ShieldQuestion, label: "Fraud check" },
   { href: "/dashboard/suppliers", icon: Truck, label: "Suppliers" },
   { href: "/dashboard/purchases", icon: ClipboardList, label: "Purchases" },
   { href: "/dashboard/inventory", icon: Boxes, label: "Inventory" },
@@ -215,7 +216,8 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
   const productRouteActive = ["/dashboard/products", "/dashboard/attributes", "/dashboard/tags", "/dashboard/brands", "/dashboard/categories"].some(
     (route) => pathname.startsWith(route)
   );
-  const orderRouteActive = pathname.startsWith("/dashboard/orders");
+  const orderRouteActive =
+    pathname.startsWith("/dashboard/orders") || pathname.startsWith("/dashboard/fraud-check");
   const reportRouteActive = pathname.startsWith("/dashboard/reports");
   const storefrontRouteActive = pathname.startsWith("/dashboard/storefront") || pathname.startsWith("/dashboard/theme");
   const settingsRouteActive = pathname.startsWith("/dashboard/settings") || ["/dashboard/payments", "/dashboard/shipping", "/dashboard/ai"].some(
@@ -495,6 +497,10 @@ function isOrderLinkActive(pathname: string, href: string) {
 
   if (href === "/dashboard/orders/verification") {
     return matchesRoute(pathname, href) || matchesRoute(pathname, "/dashboard/orders/verification-queue");
+  }
+
+  if (href === "/dashboard/fraud-check") {
+    return matchesRoute(pathname, href);
   }
 
   if (href === "/dashboard/orders/tracking") {
