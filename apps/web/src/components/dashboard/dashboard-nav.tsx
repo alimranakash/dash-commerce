@@ -210,7 +210,7 @@ const iconColors: Record<string, string> = {
   Transactions: "text-emerald-500"
 };
 
-export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
+export function DashboardNav({ onClose, open }: DashboardNavProps) {
   const pathname = usePathname() ?? "";
   const productRouteActive = ["/dashboard/products", "/dashboard/attributes", "/dashboard/tags", "/dashboard/brands", "/dashboard/categories"].some(
     (route) => pathname.startsWith(route)
@@ -463,7 +463,7 @@ export function DashboardNav({ onClose, open, storeSlug }: DashboardNavProps) {
       <div className="border-t border-[#f0f0f7] p-3">
         <Link
           className="mb-2 flex items-center justify-center gap-2 rounded-lg bg-[#f3f0ff] px-3 py-2 text-xs font-semibold text-[#6d3cf5]"
-          href={`/s/${storeSlug}`}
+          href="/dashboard/open-storefront"
           onClick={onClose}
           target="_blank"
         >
