@@ -1,5 +1,6 @@
 "use client";
 
+import { useStorefrontBasePath } from "../../base-path-provider";
 import { ChevronDown, Menu, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import {
@@ -70,7 +71,7 @@ export function ElectronicsStorefrontHeader({
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const shellRef = useRef<HTMLDivElement>(null);
   const settings = normalizeAdvancedSettings(advancedSettings);
-  const homeHref = `/s/${storeSlug}`;
+  const homeHref = useStorefrontBasePath();
   const displayName = storeName.trim() || "Stockmart";
   const logoText = settings.header.logoText || displayName;
   const navItems = isDefaultMenu(settings.header.menuItems)
@@ -175,7 +176,7 @@ export function ElectronicsStorefrontHeader({
 
       <div className={styles.inner}>
         <div className={styles.topRow}>
-          <Link className={styles.brand} href={homeHref} onClick={() => setMobileOpen(false)}>
+          <Link className={styles.brand} href={homeHref || "/"} onClick={() => setMobileOpen(false)}>
             <span className={styles.brandMark}>
               {logoUrl ? <img alt={`${displayName} logo`} src={logoUrl} /> : "S"}
             </span>

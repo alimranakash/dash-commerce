@@ -5,6 +5,8 @@ import {
   getMarketingMetaTags,
   getMarketingTagPlan
 } from "../../../modules/marketing/marketing.service";
+import { storefrontBasePath } from "../../../modules/storefront/base-path";
+import { StorefrontBasePathProvider } from "../../../modules/storefront/base-path-provider";
 import { ScrollToTopButton } from "../../../modules/storefront/components/scroll-to-top-button";
 import { StorefrontThemeProvider } from "../../../modules/storefront/themes/storefront-theme-provider";
 import {
@@ -77,6 +79,7 @@ export default async function StorefrontLayout({ children, params }: StorefrontL
     getStorefrontThemeSettings(store.id),
     getMarketingTagPlan(store.id)
   ]);
+  const basePath = await storefrontBasePath(store.slug);
   const themeContext = createStorefrontThemeContext({
     settings,
     store
@@ -84,15 +87,17 @@ export default async function StorefrontLayout({ children, params }: StorefrontL
 
   return (
     <StorefrontThemeProvider value={themeContext}>
-      {/* Analytics only ever mounts on a storefront surface — never on /dashboard
+      <StorefrontBasePathProvider value={basePath}>
+        {/* Analytics only ever mounts on a storefront surface — never on /dashboard
           or /admin, which render outside this layout entirely. */}
-      <MarketingTags tags={marketing.head} />
-      <MarketingTags tags={marketing.bodyStart} />
-      {children}
-      {/* Inside the theme scope so the fixed button inherits this store's colour
+        <MarketingTags tags={marketing.head} />
+        <MarketingTags tags={marketing.bodyStart} />
+        {children}
+        {/* Inside the theme scope so the fixed button inherits this store's colour
           tokens and template attribute; mounted here, once, instead of per footer. */}
-      <ScrollToTopButton />
-      <MarketingTags tags={marketing.bodyEnd} />
+        <ScrollToTopButton />
+        <MarketingTags tags={marketing.bodyEnd} />
+      </StorefrontBasePathProvider>
     </StorefrontThemeProvider>
   );
 }

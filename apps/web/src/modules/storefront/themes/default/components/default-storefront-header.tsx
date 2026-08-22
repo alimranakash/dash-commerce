@@ -1,5 +1,6 @@
 "use client";
 
+import { useStorefrontBasePath } from "../../../base-path-provider";
 import { Menu, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { useState, type CSSProperties } from "react";
@@ -37,7 +38,7 @@ export function DefaultStorefrontHeader({
 }: DefaultStorefrontHeaderProps) {
   const [open, setOpen] = useState(false);
   const settings = normalizeAdvancedSettings(advancedSettings);
-  const homeHref = `/s/${storeSlug}`;
+  const homeHref = useStorefrontBasePath();
   const displayName = storeName.trim() || "Store";
   const logoText = settings.header.logoText || displayName;
   const brandInitial = displayName.charAt(0).toUpperCase();
@@ -73,7 +74,7 @@ export function DefaultStorefrontHeader({
       ) : null}
       {settings.header.enabled ? (
       <header className="sf-header">
-        <Link className="sf-brand" href={homeHref} onClick={() => setOpen(false)}>
+        <Link className="sf-brand" href={homeHref || "/"} onClick={() => setOpen(false)}>
           <span className="sf-brand-mark" suppressHydrationWarning>
             {logoUrl ? <img alt={`${displayName} logo`} src={logoUrl} /> : brandInitial}
           </span>

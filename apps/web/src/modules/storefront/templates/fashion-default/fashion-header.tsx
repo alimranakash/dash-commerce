@@ -1,5 +1,6 @@
 "use client";
 
+import { useStorefrontBasePath } from "../../base-path-provider";
 import { Menu, ShoppingBag, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, type CSSProperties } from "react";
@@ -47,7 +48,7 @@ export function FashionStorefrontHeader({
   const [overlay, setOverlay] = useState(true);
   const [messageIndex, setMessageIndex] = useState(0);
   const settings = normalizeAdvancedSettings(advancedSettings);
-  const homeHref = `/s/${storeSlug}`;
+  const homeHref = useStorefrontBasePath();
   const displayName = storeName.trim() || "Store";
   const logoText = settings.header.logoText || displayName;
   const navItems = isDefaultMenu(settings.header.menuItems)
@@ -124,7 +125,7 @@ export function FashionStorefrontHeader({
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
 
-          <Link className="fashion-brand" href={homeHref} onClick={() => setMobileOpen(false)}>
+          <Link className="fashion-brand" href={homeHref || "/"} onClick={() => setMobileOpen(false)}>
             {logoUrl ? <img alt={`${displayName} logo`} src={logoUrl} /> : null}
             <span>{logoText}</span>
           </Link>

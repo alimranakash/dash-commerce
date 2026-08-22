@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../base-path";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { StorefrontStore } from "../../storefront.types";
@@ -14,7 +15,7 @@ type ElectronicsFooterProps = {
   templateId: string;
 };
 
-export function ElectronicsStorefrontFooter({
+export async function ElectronicsStorefrontFooter({
   advancedSettings,
   primaryDomain,
   socialLinks,
@@ -25,7 +26,7 @@ export function ElectronicsStorefrontFooter({
   const advanced = normalizeAdvancedSettings(advancedSettings);
   const electronics = advanced.electronics;
   const footer = advanced.footer;
-  const homeHref = `/s/${store.slug}`;
+  const homeHref = await storefrontBasePath(store.slug);
   const brandName = store.name.trim() || "Atlas";
   const description = footer.description || settings?.tagline?.trim() || "Your destination for modern tech built for everyday living.";
   const paymentIcons = footer.paymentIconsEnabled ? footer.paymentIcons : [];
@@ -34,7 +35,7 @@ export function ElectronicsStorefrontFooter({
     <footer className={styles.footer} data-storefront-footer-template={templateId}>
       <div className={styles.main}>
         <section className={styles.brand} aria-label="Store information">
-          <Link className={styles.logo} href={homeHref}>
+          <Link className={styles.logo} href={homeHref || "/"}>
             {settings?.logoUrl ? <img alt={`${brandName} logo`} src={settings.logoUrl} /> : brandName}
           </Link>
           <p className={styles.description}>{description}</p>

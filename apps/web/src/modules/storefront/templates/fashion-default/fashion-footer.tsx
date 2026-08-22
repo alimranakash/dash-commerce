@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../../base-path";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { StorefrontAdvancedSettings } from "../../customization";
@@ -13,7 +14,7 @@ type FashionFooterProps = {
   templateId: string;
 };
 
-export function FashionStorefrontFooter({
+export async function FashionStorefrontFooter({
   advancedSettings,
   primaryDomain,
   socialLinks,
@@ -23,7 +24,7 @@ export function FashionStorefrontFooter({
   const settings = store.setting;
   const fashion = advancedSettings?.fashion;
   const footer = advancedSettings?.footer;
-  const homeHref = `/s/${store.slug}`;
+  const homeHref = await storefrontBasePath(store.slug);
   const brandText = store.name.trim() || "Symmetry";
   const description = footer?.description || settings?.tagline?.trim() || fashion?.footerDescription || "Best Swimwear is a bikini boutique, in sunny Hermosa Beach, California. A warm environment where instead of feeling self-conscious she feels secure in her own body, not limited by age, size or shape, wearing swimwear that fits and feels good.";
   const paymentIcons = footer?.paymentIconsEnabled ? footer.paymentIcons : [];
@@ -51,7 +52,7 @@ export function FashionStorefrontFooter({
       <div className="fashion-footer-main">
         <section className="fashion-footer-brand" aria-label="Store information">
           <p>{description}</p>
-          <Link className="fashion-footer-logo" href={homeHref}>
+          <Link className="fashion-footer-logo" href={homeHref || "/"}>
             {settings?.logoUrl ? <img alt={`${brandText} logo`} src={settings.logoUrl} /> : null}
             <span>{brandText}</span>
           </Link>

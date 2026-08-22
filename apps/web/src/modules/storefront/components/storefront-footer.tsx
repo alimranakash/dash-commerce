@@ -1,3 +1,4 @@
+import { storefrontBasePath } from "../base-path";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { getModuleSettings } from "../../settings/settings.service";
@@ -17,7 +18,7 @@ type StorefrontFooterProps = {
 
 export async function StorefrontFooter({ primaryDomain, store }: StorefrontFooterProps) {
   const settings = store.setting;
-  const homeHref = `/s/${store.slug}`;
+  const homeHref = await storefrontBasePath(store.slug);
   const templateId = store.activeTemplate || DEFAULT_STOREFRONT_TEMPLATE_ID;
   const [themeSettings, moduleSettings] = await Promise.all([
     getStorefrontThemeSettings(store.id),
@@ -65,7 +66,7 @@ export async function StorefrontFooter({ primaryDomain, store }: StorefrontFoote
     <footer className="sf-footer" data-storefront-footer-template={templateId}>
       <div className="sf-footer-grid">
         <section className="sf-footer-brand" aria-label="Store information">
-          <Link className="sf-footer-logo" href={homeHref}>
+          <Link className="sf-footer-logo" href={homeHref || "/"}>
             <span>
               {settings?.logoUrl ? (
                 <img alt={`${store.name} logo`} src={settings.logoUrl} />
