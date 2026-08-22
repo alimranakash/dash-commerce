@@ -14,7 +14,39 @@ import {
 import { connectStoreOSForStore } from "../storeos/storeos.service";
 import { getStorefrontTemplateById } from "../storefront/templates/registry";
 import { getTemplateIdForBusinessType } from "../storefront/templates/template-mapping";
-import { onboardingSchema, type OnboardingInput } from "./schemas";
+import { onboardingSchema, storeSlugSchema, type OnboardingInput } from "./schemas";
+
+/**
+ * Answers "can I have this URL?" while the seller is still typing it.
+ *
+ * Advisory only: `createOnboardingWorkspace` re-checks inside its transaction,
+ * and that is the check that actually decides. This one exists so a taken or
+ * reserved slug is caught on the step that asks for it, rather than after the
+ * seller has filled in everything else.
+ */
+export async function checkStoreSlugAvailability(value: unknown) {
+  const parsed = storeSlugSchema.safeParse(value);
+
+  if (!parsed.success) {
+    return {
+      available: false,
+      message: parsed.error.issues[0]?.message ?? "Enter a valid store URL."
+    };
+  }
+
+  const existingStore = await prisma.store.findUnique({
+    where: {
+      slug: parsed.data
+    },
+    select: {
+      id: true
+    }
+  });
+
+  return existingStore
+    ? { available: false, message: "This store URL is already taken." }
+    : { available: true, message: null };
+}
 
 export async function createOnboardingWorkspace(userId: string, input: OnboardingInput) {
   const data = onboardingSchema.parse(input);

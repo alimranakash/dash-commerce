@@ -4,18 +4,8 @@ import { ArrowLeft, ArrowRight, BriefcaseBusiness, Check, Globe2, LoaderCircle, 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import styles from "./onboarding-experience.module.css";
+import { businessTypes, countryOptions, isBusinessType, isCountryName, slugify, type BusinessType, type CountryName } from "./options";
 
-const businessTypes = ["General Store", "Fashion", "Electronics", "Cosmetics & Beauty"] as const;
-const countryOptions = {
-  Bangladesh: { code: "BD", currency: "BDT", flag: "BD", timezone: "Asia/Dhaka" },
-  Canada: { code: "CA", currency: "CAD", flag: "CA", timezone: "America/Toronto" },
-  India: { code: "IN", currency: "INR", flag: "IN", timezone: "Asia/Kolkata" },
-  "United Kingdom": { code: "GB", currency: "GBP", flag: "GB", timezone: "Europe/London" },
-  "United States": { code: "US", currency: "USD", flag: "US", timezone: "America/New_York" }
-} as const;
-
-type CountryName = keyof typeof countryOptions;
-type BusinessType = (typeof businessTypes)[number];
 type Draft = { businessType: BusinessType; country: CountryName; storeName: string; storeSlug: string };
 const initialDraft: Draft = { businessType: "General Store", country: "Bangladesh", storeName: "", storeSlug: "" };
 
@@ -29,13 +19,20 @@ export function OnboardingForm({ platformDomain }: { platformDomain: string }) {
   const country = countryOptions[draft.country];
   const previewDomain = useMemo(() => `${draft.storeSlug || "yourstore"}.${platformDomain}`, [draft.storeSlug, platformDomain]);
 
+  // Only reachable now when registration could not create the store itself, or
+  // when the account came from Google and never answered these questions.
   useEffect(() => {
     const savedDraft = sessionStorage.getItem("dash-store-setup-draft");
     if (!savedDraft) return;
     try {
-      const parsed = JSON.parse(savedDraft) as { storeName?: string; storeSlug?: string };
-      setDraft((current) => ({ ...current, storeName: parsed.storeName ?? "", storeSlug: parsed.storeSlug ?? "" }));
-      setSlugEdited(Boolean(parsed.storeSlug));
+      const parsed = JSON.parse(savedDraft) as { businessType?: unknown; country?: unknown; storeName?: unknown; storeSlug?: unknown };
+      setDraft((current) => ({
+        businessType: isBusinessType(parsed.businessType) ? parsed.businessType : current.businessType,
+        country: isCountryName(parsed.country) ? parsed.country : current.country,
+        storeName: typeof parsed.storeName === "string" ? parsed.storeName : current.storeName,
+        storeSlug: typeof parsed.storeSlug === "string" ? parsed.storeSlug : current.storeSlug
+      }));
+      setSlugEdited(typeof parsed.storeSlug === "string" && parsed.storeSlug.length > 0);
     } catch {
       sessionStorage.removeItem("dash-store-setup-draft");
     }
@@ -111,4 +108,3 @@ function Review({ label, value }: { label: string; value: string }) { return <di
 function StorePreview({ country, currency, domain, name }: { country: string; currency: string; domain: string; name: string }) { return <aside className={styles.previewCard}><header><span>Live store preview</span><i><b /> Ready</i></header><div className={styles.storefrontMock}><nav><strong>{name || "YOUR STORE"}</strong><span>Shop&nbsp;&nbsp; About&nbsp;&nbsp; Contact</span></nav><section><small>WELCOME TO</small><h2>{name || "Your next great store"}</h2><p>Thoughtfully selected products, ready for your customers.</p><button type="button">Explore collection</button></section><footer><span>{domain}</span><b>{country} · {currency}</b></footer></div><div className={styles.previewFacts}><div><span>Store Name</span><b>{name || "Not set yet"}</b></div><div><span>Store URL</span><b>{domain}</b></div><div><span>Country</span><b>{country}</b></div><div><span>Currency</span><b>{currency}</b></div></div></aside>; }
 
 const stepTitles = ["Store Name", "Store URL", "Business Type", "Country & Region", "Create Workspace"];
-function slugify(value: string) { return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40); }
