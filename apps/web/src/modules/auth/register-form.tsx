@@ -45,6 +45,19 @@ async function fetchSlugAvailability(slug: string): Promise<SlugCheck> {
   }
 }
 
+
+/** Settles an onboarding POST whose answer never arrived, or that failed because an earlier attempt had already committed. */
+async function hasWorkspace() {
+  try {
+    const response = await fetch("/api/onboarding");
+    const body = (await response.json().catch(() => null)) as { hasStore?: boolean } | null;
+
+    return body?.hasStore === true;
+  } catch {
+    return false;
+  }
+}
+
 export function RegisterForm({ platformDomain }: { platformDomain: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -274,22 +287,29 @@ export function RegisterForm({ platformDomain }: { platformDomain: string }) {
    * wizard, and Back still works if the URL is the thing to fix.
    */
   async function createWorkspace() {
-    const response = await fetch("/api/onboarding", {
-      body: JSON.stringify({ businessType: draft.businessType, country: draft.country, currency: draft.currency, organizationName: draft.storeName, storeName: draft.storeName, storeSlug: draft.storeSlug, timezone: draft.timezone }),
-      headers: { "Content-Type": "application/json" },
-      method: "POST"
-    });
+    let response: Response | null = null;
 
-    if (response.ok) {
+    try {
+      response = await fetch("/api/onboarding", {
+        body: JSON.stringify({ businessType: draft.businessType, country: draft.country, currency: draft.currency, organizationName: draft.storeName, storeName: draft.storeName, storeSlug: draft.storeSlug, timezone: draft.timezone }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST"
+      });
+    } catch {
+      // Seeding a demo catalog is not a fast request, and a connection that
+      // drops on the way back says nothing about whether it committed.
+    }
+
+    if (response?.ok || (await hasWorkspace())) {
       sessionStorage.removeItem("dash-store-setup-draft");
       return true;
     }
 
-    const body = (await response.json().catch(() => null)) as ErrorBody | null;
+    const body = response ? ((await response.json().catch(() => null)) as ErrorBody | null) : null;
     // Kept for the dashboard's fallback wizard in case they navigate away
     // instead of retrying here: it then opens prefilled rather than empty.
     sessionStorage.setItem("dash-store-setup-draft", JSON.stringify({ businessType: draft.businessType, country: draft.country, storeName: draft.storeName, storeSlug: draft.storeSlug }));
-    setError(body?.error ?? "We could not create your store. Try again.");
+    setError(body?.error ?? "We could not reach the server to create your store. Check your connection and try again.");
 
     return false;
   }
@@ -342,6 +362,10 @@ export function RegisterForm({ platformDomain }: { platformDomain: string }) {
       }
 
       await finish();
+    } catch {
+      // Nothing below this may fail silently: an unhandled rejection here used
+      // to leave the seller on a finished-looking form that simply did nothing.
+      setError("Something went wrong. Try again.");
     } finally {
       setIsSubmitting(false);
     }

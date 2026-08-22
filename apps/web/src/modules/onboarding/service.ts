@@ -17,6 +17,14 @@ import { getTemplateIdForBusinessType } from "../storefront/templates/template-m
 import { onboardingSchema, storeSlugSchema, type OnboardingInput } from "./schemas";
 
 /**
+ * Prisma's defaults are 2s to get a connection and 5s to finish. Seeding a demo
+ * pack is roughly fifty products and categories plus their images, which clears
+ * 5s comfortably on a production database — and when it does not, the rollback
+ * looks to the seller like store creation silently refusing to happen.
+ */
+const transactionLimits = { maxWait: 15_000, timeout: 120_000 };
+
+/**
  * Answers "can I have this URL?" while the seller is still typing it.
  *
  * Advisory only: `createOnboardingWorkspace` re-checks inside its transaction,
@@ -46,6 +54,28 @@ export async function checkStoreSlugAvailability(value: unknown) {
   return existingStore
     ? { available: false, message: "This store URL is already taken." }
     : { available: true, message: null };
+}
+
+/**
+ * Whether this account already has a workspace, used to settle an onboarding
+ * POST whose answer never arrived.
+ */
+export async function userHasWorkspace(userId: string) {
+  const membership = await prisma.organizationMember.findFirst({
+    where: {
+      userId,
+      organization: {
+        stores: {
+          some: {}
+        }
+      }
+    },
+    select: {
+      id: true
+    }
+  });
+
+  return membership !== null;
 }
 
 export async function createOnboardingWorkspace(userId: string, input: OnboardingInput) {
@@ -174,7 +204,7 @@ export async function createOnboardingWorkspace(userId: string, input: Onboardin
       organization,
       store
     };
-  });
+  }, transactionLimits);
 
   try {
     await connectStoreOSForStore(workspace.store.id);

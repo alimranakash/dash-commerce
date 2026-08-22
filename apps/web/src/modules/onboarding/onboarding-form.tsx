@@ -57,21 +57,34 @@ export function OnboardingForm({ platformDomain }: { platformDomain: string }) {
     if (step < 5) { const validation = validateStep(); if (validation) { setError(validation); return; } setStep((current) => current + 1); return; }
 
     setIsSubmitting(true);
-    const response = await fetch("/api/onboarding", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        organizationName: draft.storeName,
-        storeName: draft.storeName,
-        storeSlug: draft.storeSlug,
-        businessType: draft.businessType,
-        country: draft.country,
-        currency: country.currency,
-        timezone: country.timezone
-      })
-    });
+    let response: Response | null = null;
 
-    if (!response.ok) { const body = (await response.json().catch(() => null)) as { error?: string } | null; setError(body?.error ?? "Workspace setup failed."); setIsSubmitting(false); return; }
+    try {
+      response = await fetch("/api/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          organizationName: draft.storeName,
+          storeName: draft.storeName,
+          storeSlug: draft.storeSlug,
+          businessType: draft.businessType,
+          country: draft.country,
+          currency: country.currency,
+          timezone: country.timezone
+        })
+      });
+    } catch {
+      // Seeding a demo catalog is a slow request; a connection that drops on
+      // the way back says nothing about whether it committed.
+    }
+
+    if (!response?.ok) {
+      const body = response ? ((await response.json().catch(() => null)) as { error?: string } | null) : null;
+      setError(body?.error ?? "We could not reach the server. Check your connection and try again.");
+      setIsSubmitting(false);
+      return;
+    }
+
     sessionStorage.removeItem("dash-store-setup-draft");
     router.refresh();
   }
