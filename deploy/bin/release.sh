@@ -30,6 +30,27 @@ npm ci --no-audit --no-fund
 echo "generating prisma client..."
 npm run db:generate
 
+# --- Relink Turbopack's externalised packages --------------------------------
+# next build rewrites native/server-only packages to content-hashed aliases
+# (@prisma/client-<hash>) and satisfies them with symlinks under
+# .next/node_modules that point into the build machine's own node_modules. The
+# workflow's --exclude='node_modules/' has no leading slash, so it matches at
+# every depth and that directory never ships; its absolute targets would be
+# wrong here anyway. Rebuild it against the node_modules npm ci just installed.
+# Reading the aliases back out of the build means a changed hash needs no edit
+# here. The `|| true` matters: with `set -o pipefail` a build that happens to
+# externalise nothing would otherwise fail the deploy.
+echo "relinking externalised packages..."
+NEXT_NM="$ROOT/apps/web/.next/node_modules"
+{ grep -rohE '"[@a-z0-9/._-]+-[0-9a-f]{16}' "$ROOT/apps/web/.next/server" 2>/dev/null || true; } \
+  | tr -d '"' | sed -E 's#.*node_modules/##' | sort -u | while read -r alias; do
+      real="${alias%-*}"
+      [ -d "$ROOT/node_modules/$real" ] || continue
+      mkdir -p "$NEXT_NM/$(dirname "$alias")"
+      ln -sfn "$ROOT/node_modules/$real" "$NEXT_NM/$alias"
+      echo "  $alias -> node_modules/$real"
+    done
+
 # Read DATABASE_URL exactly the way the app does, with dotenv, rather than
 # sourcing .env in the shell — that would expand a $ or a backtick in the
 # password. This has to come after npm ci, which is what installs dotenv.
