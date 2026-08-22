@@ -1,11 +1,14 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, BriefcaseBusiness, Check, CircleAlert, Clock, Eye, EyeOff, Globe2, LoaderCircle, LockKeyhole, MapPin, MessageSquare, Store, UserRound, WalletCards } from "lucide-react";
+import { ArrowLeft, ArrowRight, BriefcaseBusiness, Check, CircleAlert, Eye, EyeOff, LoaderCircle, LockKeyhole, MapPin, MessageSquare, Sparkles, Store, UserRound } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
+import ob from "../onboarding/onboarding-experience.module.css";
 import { businessTypes, countryOptions, currencyOptions, slugify, storeSlugPattern, timezoneOptions, type BusinessType, type CountryName } from "../onboarding/options";
+import { StepIntro, StorePreview } from "../onboarding/wizard-shell";
+import { AuthExperience } from "./auth-experience";
 import styles from "./auth-experience.module.css";
 import { CodeInput, codeLength } from "./code-input";
 import { GoogleAuthButton } from "./google-auth-button";
@@ -17,6 +20,7 @@ type DraftText = "identifier" | "name" | "password" | "storeName" | "storeSlug";
 type Challenge = { channel: "EMAIL" | "SMS"; devCode: string | null; identifier: string };
 type ErrorBody = { attemptsRemaining?: number; code?: string; error?: string; retryAfterSeconds?: number };
 type SlugCheck = { message: string | null; slug: string; state: "available" | "checking" | "taken" | "unknown" };
+type SlugTheme = { available: string | undefined; base: string | undefined; spinner: string | undefined; taken: string | undefined };
 type TicketBody = { channel: "EMAIL" | "SMS"; devCode?: string; identifier: string; resendAvailableAt: string };
 
 const initialDraft: Draft = { businessType: "General Store", country: "Bangladesh", currency: countryOptions.Bangladesh.currency, identifier: "", name: "", password: "", storeName: "", storeSlug: "", timezone: countryOptions.Bangladesh.timezone };
@@ -44,7 +48,6 @@ async function fetchSlugAvailability(slug: string): Promise<SlugCheck> {
     return { message: null, slug, state: "unknown" };
   }
 }
-
 
 /** Settles an onboarding POST whose answer never arrived, or that failed because an earlier attempt had already committed. */
 async function hasWorkspace() {
@@ -91,6 +94,13 @@ export function RegisterForm({ platformDomain }: { platformDomain: string }) {
   const [verified, setVerified] = useState(false);
   const firstBackStep = verified ? verifyStep + 1 : 1;
   const secondsLeft = resendAt === null ? 0 : Math.max(0, Math.ceil((resendAt - now) / 1000));
+  /**
+   * Naming a store is store setup, not sign-up, so from that step on the page
+   * becomes the same wizard the dashboard shows — full width, live preview of
+   * the storefront being described. An invited member never gets here.
+   */
+  const usesWizard = !inviteToken && step >= storeStep;
+  const previewDomain = `${draft.storeSlug || "yourstore"}.${platformDomain}`;
 
   useEffect(() => {
     if (step !== verifyStep) {
@@ -371,23 +381,61 @@ export function RegisterForm({ platformDomain }: { platformDomain: string }) {
     }
   }
 
+  function goBack() {
+    setStep((current) => current - 1);
+    setError(null);
+    setNotice(null);
+  }
+
+  const submitLabel = isSubmitting ? <><LoaderCircle className={usesWizard ? ob.spinner : styles.spinner} /> {submittingLabel(step, lastStep, Boolean(inviteToken))}</> : success ? <><Check /> {inviteToken ? "Signed in" : "Workspace ready"}</> : step === verifyStep ? <>Verify <ArrowRight /></> : step === lastStep ? <>{inviteToken ? "Join the team" : "Create my store"} {inviteToken ? <ArrowRight /> : <Sparkles />}</> : <>Continue <ArrowRight /></>;
+
+  if (usesWizard) {
+    return (
+      <main className={ob.onboardingPage}>
+        <header className={ob.topbar}>
+          <Link className={ob.brand} href="/"><b>S</b> Store<i>IM</i></Link>
+          <div><span>{draft.identifier}</span></div>
+        </header>
+        <section className={ob.onboardingShell} aria-labelledby="register-wizard-title">
+          <div className={ob.pageIntro}><span>Workspace setup</span><h1 id="register-wizard-title">Let’s build your commerce workspace.</h1><p>Your account is verified. A few more answers and your store is ready — storefront, products, payments, and shipping all prepared for you.</p></div>
+          <div className={ob.flowLayout}>
+            <section className={ob.formCard}>
+              <header className={ob.progressHeader}><div><span>Step {step} of {lastStep}</span><b>{stepLabels[step - 1]}</b></div><div className={ob.progressTrack}><i style={{ width: `${Math.round((step / lastStep) * 100)}%` }} /></div></header>
+              <form className={ob.stepForm} noValidate onSubmit={handleSubmit}>
+                <div className={ob.stepBody}>
+                  {step === storeStep ? <WizardStoreStep draft={draft} platformDomain={platformDomain} previewDomain={previewDomain} slugCheck={slugCheck} update={update} /> : null}
+                  {step === businessStep ? <WizardBusinessStep onChange={selectBusinessType} value={draft.businessType} /> : null}
+                  {step === regionStep ? <WizardRegionStep draft={draft} onCountryChange={selectCountry} onCurrencyChange={(value) => { setDraft((current) => ({ ...current, currency: value })); setError(null); }} onTimezoneChange={(value) => { setDraft((current) => ({ ...current, timezone: value })); setError(null); }} /> : null}
+                  {step === lastStep ? <WizardFinishStep draft={draft} previewDomain={previewDomain} success={success} /> : null}
+                </div>
+                {error ? <p className={ob.errorMessage}>{error}</p> : null}
+                <footer className={ob.stepActions}>{step > firstBackStep && !success ? <button className={ob.backButton} disabled={isSubmitting} onClick={goBack} type="button"><ArrowLeft /> Back</button> : <span />}<button className={ob.nextButton} disabled={isSubmitting || success} type="submit">{submitLabel}</button></footer>
+              </form>
+              {isSubmitting && step === lastStep ? <div className={ob.loadingOverlay} role="status"><span><LoaderCircle /></span><h3>Creating your workspace...</h3><p>Preparing your store, domain, payments, shipping, and settings.</p></div> : null}
+            </section>
+            <StorePreview country={draft.country} currency={draft.currency} domain={previewDomain} name={draft.storeName} />
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   return (
-    <div className={styles.formStack}>
-      <div className={styles.progress} aria-label={`Registration step ${step} of ${lastStep}`} style={{ "--steps": lastStep } as CSSProperties}>{stepLabels.map((label, index) => <span className={index + 1 <= step ? styles.progressActive : ""} key={label}><i>{index + 1 < step ? <Check /> : index + 1}</i><b>{label}</b></span>)}</div>
-      {step === 1 ? <><GoogleAuthButton callbackUrl={inviteToken ? `/invite/${encodeURIComponent(inviteToken)}` : "/dashboard"} /><div className={styles.divider}><span>or create with email or phone</span></div></> : null}
-      <form className={styles.authForm} noValidate onSubmit={handleSubmit}>
-        {step === 1 ? <AccountStep draft={draft} showPassword={showPassword} togglePassword={() => setShowPassword((value) => !value)} update={update} /> : null}
-        {step === verifyStep ? <VerifyStep challenge={challenge} code={code} isResending={isResending} onCodeChange={(value) => { setCode(value); setError(null); }} onResend={resendCode} secondsLeft={secondsLeft} /> : null}
-        {step === storeStep && !inviteToken ? <StoreStep draft={draft} platformDomain={platformDomain} slugCheck={slugCheck} update={update} /> : null}
-        {step === businessStep && !inviteToken ? <BusinessStep onChange={selectBusinessType} value={draft.businessType} /> : null}
-        {step === regionStep && !inviteToken ? <RegionStep draft={draft} onCountryChange={selectCountry} onCurrencyChange={(value) => { setDraft((current) => ({ ...current, currency: value })); setError(null); }} onTimezoneChange={(value) => { setDraft((current) => ({ ...current, timezone: value })); setError(null); }} /> : null}
-        {step === lastStep ? <FinishStep draft={draft} isInvite={Boolean(inviteToken)} platformDomain={platformDomain} success={success} /> : null}
-        {notice ? <p className={styles.successMessage}>{notice}</p> : null}
-        {error ? <p className={styles.errorMessage}>{error}</p> : null}
-        <div className={styles.stepActions}>{step > firstBackStep && !success ? <button className={styles.backButton} onClick={() => { setStep((current) => current - 1); setError(null); setNotice(null); }} type="button"><ArrowLeft /> Back</button> : null}<button className={styles.submitButton} disabled={isSubmitting || success || (step === verifyStep && code.length < codeLength)} type="submit">{isSubmitting ? <><LoaderCircle className={styles.spinner} /> {submittingLabel(step, lastStep, Boolean(inviteToken))}</> : success ? <><Check /> {inviteToken ? "Signed in" : "Workspace ready"}</> : step === verifyStep ? <>Verify <ArrowRight /></> : step === lastStep ? <>{inviteToken ? "Join the team" : "Create my store"} <ArrowRight /></> : <>Continue <ArrowRight /></>}</button></div>
-      </form>
-      <p className={styles.switchPrompt}>Already have an account? <Link href="/login">Log in</Link></p>
-    </div>
+    <AuthExperience description="Create your account, shape your store identity, and step into a calmer way to run commerce." eyebrow="Start building" title="Your next stage starts here.">
+      <div className={styles.formStack}>
+        <div className={styles.progress} aria-label={`Registration step ${step} of ${lastStep}`} style={{ "--steps": lastStep } as CSSProperties}>{stepLabels.map((label, index) => <span className={index + 1 <= step ? styles.progressActive : ""} key={label}><i>{index + 1 < step ? <Check /> : index + 1}</i><b>{label}</b></span>)}</div>
+        {step === 1 ? <><GoogleAuthButton callbackUrl={inviteToken ? `/invite/${encodeURIComponent(inviteToken)}` : "/dashboard"} /><div className={styles.divider}><span>or create with email or phone</span></div></> : null}
+        <form className={styles.authForm} noValidate onSubmit={handleSubmit}>
+          {step === 1 ? <AccountStep draft={draft} showPassword={showPassword} togglePassword={() => setShowPassword((value) => !value)} update={update} /> : null}
+          {step === verifyStep ? <VerifyStep challenge={challenge} code={code} isResending={isResending} onCodeChange={(value) => { setCode(value); setError(null); }} onResend={resendCode} secondsLeft={secondsLeft} /> : null}
+          {step === lastStep ? <InviteFinishStep draft={draft} success={success} /> : null}
+          {notice ? <p className={styles.successMessage}>{notice}</p> : null}
+          {error ? <p className={styles.errorMessage}>{error}</p> : null}
+          <div className={styles.stepActions}>{step > firstBackStep && !success ? <button className={styles.backButton} onClick={goBack} type="button"><ArrowLeft /> Back</button> : null}<button className={styles.submitButton} disabled={isSubmitting || success || (step === verifyStep && code.length < codeLength)} type="submit">{submitLabel}</button></div>
+        </form>
+        <p className={styles.switchPrompt}>Already have an account? <Link href="/login">Log in</Link></p>
+      </div>
+    </AuthExperience>
   );
 }
 
@@ -416,47 +464,67 @@ function VerifyStep({ challenge, code, isResending, onCodeChange, onResend, seco
   );
 }
 
-function StoreStep({ draft, platformDomain, slugCheck, update }: { draft: Draft; platformDomain: string; slugCheck: SlugCheck | null; update: (field: DraftText, value: string) => void }) {
+/** The narrow layout's only ending: an owner is on the wizard by this point. */
+function InviteFinishStep({ draft, success }: { draft: Draft; success: boolean }) {
+  return <div className={styles.finishState}><span className={styles.finishIcon}>{success ? <Check /> : <UserRound />}</span><h2>{success ? "You are signed in." : "Your account is verified."}</h2><p>{success ? "Taking you back to your invite..." : "Continue, and we will take you straight back to the invite to join the team."}</p><div><span><small>Name</small><b>{draft.name}</b></span><span><small>Account</small><b>{draft.identifier}</b></span></div></div>;
+}
+
+function WizardStoreStep({ draft, platformDomain, previewDomain, slugCheck, update }: { draft: Draft; platformDomain: string; previewDomain: string; slugCheck: SlugCheck | null; update: (field: DraftText, value: string) => void }) {
   // A verdict on a slug they have since edited says nothing about the one on screen.
   const status = slugCheck && slugCheck.slug === draft.storeSlug ? slugCheck : null;
 
   return (
-    <>
-      <div className={styles.stepHeading}><span><Store /></span><div><h2>Name your store</h2><p>You can refine your branding and business settings later.</p></div></div>
-      <label>Store name<div className={styles.inputShell}><Store /><input onChange={(event) => update("storeName", event.target.value)} placeholder="Akash Atelier" type="text" value={draft.storeName} /></div></label>
-      <label>Store URL<div className={styles.urlInput}><input aria-label="Store URL slug" onChange={(event) => update("storeSlug", slugify(event.target.value))} placeholder="yourstore" value={draft.storeSlug} /><span>.{platformDomain}</span></div></label>
-      {status ? <p className={`${styles.slugStatus} ${status.state === "available" ? styles.slugAvailable : ""} ${status.state === "taken" ? styles.slugTaken : ""}`} role="status">{status.state === "checking" ? <><LoaderCircle className={styles.spinner} /> Checking availability...</> : status.state === "available" ? <><Check /> That URL is available.</> : status.state === "taken" ? <><CircleAlert /> {status.message}</> : <>We could not check this URL just now. It will be confirmed when your store is created.</>}</p> : null}
-      <div className={styles.urlPreview}><small>Your storefront</small><b>{draft.storeSlug || "yourstore"}.{platformDomain}</b></div>
-    </>
+    <StepIntro eyebrow="Your store identity" icon={Store} text="Choose the customer-facing name for your brand, and the address your customers will visit." title="What should we call your store?">
+      <label className={ob.fieldLabel}>Store Name<div className={ob.inputShell}><Store /><input autoFocus maxLength={100} onChange={(event) => update("storeName", event.target.value)} placeholder="Akash Atelier" value={draft.storeName} /></div><small>You can update this later from store settings.</small></label>
+      <label className={ob.fieldLabel}>Store URL<div className={ob.slugInput}><span>https://</span><input aria-label="Store URL slug" maxLength={40} onChange={(event) => update("storeSlug", slugify(event.target.value))} placeholder="yourstore" value={draft.storeSlug} /><b>.{platformDomain}</b></div><small>Preview: {previewDomain}</small></label>
+      {status ? <SlugStatusLine status={status} theme={{ available: ob.slugAvailable, base: ob.slugStatus, spinner: ob.spinner, taken: ob.slugTaken }} /> : null}
+    </StepIntro>
   );
 }
 
-function BusinessStep({ onChange, value }: { onChange: (value: BusinessType) => void; value: BusinessType }) {
+function WizardBusinessStep({ onChange, value }: { onChange: (value: BusinessType) => void; value: BusinessType }) {
   return (
-    <>
-      <div className={styles.stepHeading}><span><BriefcaseBusiness /></span><div><h2>What are you selling?</h2><p>This picks your storefront template and the demo catalog we set up for you.</p></div></div>
-      <div className={styles.optionGrid}>{businessTypes.map((type) => <button className={value === type ? styles.optionActive : ""} key={type} onClick={() => onChange(type)} type="button"><span>{type.charAt(0)}</span><b>{type}</b>{value === type ? <Check /> : null}</button>)}</div>
-    </>
+    <StepIntro eyebrow="Tailor your workspace" icon={BriefcaseBusiness} text="This picks your storefront template and the starter catalog we prepare for you." title="What kind of business are you building?">
+      <div className={ob.optionGrid}>{businessTypes.map((type) => <button className={value === type ? ob.optionActive : ""} key={type} onClick={() => onChange(type)} type="button"><span>{type.charAt(0)}</span><b>{type}</b>{value === type ? <Check /> : null}</button>)}</div>
+    </StepIntro>
   );
 }
 
-function RegionStep({ draft, onCountryChange, onCurrencyChange, onTimezoneChange }: { draft: Draft; onCountryChange: (value: CountryName) => void; onCurrencyChange: (value: string) => void; onTimezoneChange: (value: string) => void }) {
+function WizardRegionStep({ draft, onCountryChange, onCurrencyChange, onTimezoneChange }: { draft: Draft; onCountryChange: (value: CountryName) => void; onCurrencyChange: (value: string) => void; onTimezoneChange: (value: string) => void }) {
   return (
-    <>
-      <div className={styles.stepHeading}><span><MapPin /></span><div><h2>Where do you sell?</h2><p>Currency and timezone follow your country. Change either one if you need to.</p></div></div>
-      <label>Country<div className={styles.selectShell}><Globe2 /><select onChange={(event) => onCountryChange(event.target.value as CountryName)} value={draft.country}>{Object.keys(countryOptions).map((name) => <option key={name}>{name}</option>)}</select></div></label>
-      <div className={styles.splitFields}>
-        <label>Currency<div className={styles.selectShell}><WalletCards /><select onChange={(event) => onCurrencyChange(event.target.value)} value={draft.currency}>{currencyOptions.map((currency) => <option key={currency}>{currency}</option>)}</select></div></label>
-        <label>Timezone<div className={styles.selectShell}><Clock /><select onChange={(event) => onTimezoneChange(event.target.value)} value={draft.timezone}>{timezoneOptions.map((timezone) => <option key={timezone}>{timezone}</option>)}</select></div></label>
+    <StepIntro eyebrow="Localize your store" icon={MapPin} text="Currency and timezone follow your country. Change either one if you need to." title="Where is your business based?">
+      <label className={ob.fieldLabel}>Country<select autoFocus onChange={(event) => onCountryChange(event.target.value as CountryName)} value={draft.country}>{Object.keys(countryOptions).map((name) => <option key={name}>{name}</option>)}</select></label>
+      <div className={ob.fieldRow}>
+        <label className={ob.fieldLabel}>Currency<select onChange={(event) => onCurrencyChange(event.target.value)} value={draft.currency}>{currencyOptions.map((currency) => <option key={currency}>{currency}</option>)}</select></label>
+        <label className={ob.fieldLabel}>Timezone<select onChange={(event) => onTimezoneChange(event.target.value)} value={draft.timezone}>{timezoneOptions.map((timezone) => <option key={timezone}>{timezone}</option>)}</select></label>
       </div>
-    </>
+    </StepIntro>
   );
 }
 
-function FinishStep({ draft, isInvite, platformDomain, success }: { draft: Draft; isInvite: boolean; platformDomain: string; success: boolean }) {
-  if (isInvite) {
-    return <div className={styles.finishState}><span className={styles.finishIcon}>{success ? <Check /> : <UserRound />}</span><h2>{success ? "You are signed in." : "Your account is verified."}</h2><p>{success ? "Taking you back to your invite..." : "Continue, and we will take you straight back to the invite to join the team."}</p><div><span><small>Name</small><b>{draft.name}</b></span><span><small>Account</small><b>{draft.identifier}</b></span></div></div>;
-  }
+function WizardFinishStep({ draft, previewDomain, success }: { draft: Draft; previewDomain: string; success: boolean }) {
+  return (
+    <StepIntro eyebrow="Ready to launch" icon={Sparkles} text={success ? "Taking you to your dashboard..." : "Review the essentials. StoreIM will prepare the rest automatically."} title={success ? "Your workspace is ready." : "Your workspace is ready to be created."}>
+      <div className={ob.reviewList}>
+        <WizardReview label="Account" value={draft.identifier} />
+        <WizardReview label="Store" value={draft.storeName} />
+        <WizardReview label="Domain" value={previewDomain} />
+        <WizardReview label="Business" value={draft.businessType} />
+        <WizardReview label="Location" value={`${draft.country} · ${draft.currency} · ${draft.timezone}`} />
+      </div>
+      <p className={ob.creationNote}><Check /> Default payments, shipping zones, theme settings, and StoreOS connection will be prepared.</p>
+    </StepIntro>
+  );
+}
 
-  return <div className={styles.finishState}><span className={styles.finishIcon}>{success ? <Check /> : <Store />}</span><h2>{success ? "Your workspace is ready." : "Everything is ready to build."}</h2><p>{success ? "Taking you to your dashboard..." : "We will create your store, storefront, payments, and shipping now — nothing else to set up afterwards."}</p><div><span><small>Account</small><b>{draft.identifier}</b></span><span><small>Store</small><b>{draft.storeName}</b></span><span><small>URL</small><b>{draft.storeSlug}.{platformDomain}</b></span><span><small>Business</small><b>{draft.businessType}</b></span><span><small>Region</small><b>{draft.country} · {draft.currency} · {draft.timezone}</b></span></div></div>;
+function WizardReview({ label, value }: { label: string; value: string }) { return <div><span>{label}</span><b>{value}</b></div>; }
+
+function SlugStatusLine({ status, theme }: { status: SlugCheck; theme: SlugTheme }) {
+  const tone = status.state === "available" ? theme.available : status.state === "taken" ? theme.taken : undefined;
+
+  return (
+    <p className={[theme.base, tone].filter(Boolean).join(" ")} role="status">
+      {status.state === "checking" ? <><LoaderCircle className={theme.spinner} /> Checking availability...</> : status.state === "available" ? <><Check /> That URL is available.</> : status.state === "taken" ? <><CircleAlert /> {status.message}</> : <>We could not check this URL just now. It will be confirmed when your store is created.</>}
+    </p>
+  );
 }

@@ -1,12 +1,16 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "../../lib/auth";
-import { AuthExperience } from "../../modules/auth/auth-experience";
 import { getPlatformRootDomain } from "../../lib/host-routing";
 import { RegisterForm } from "../../modules/auth/register-form";
 
+/**
+ * The form owns its own shell: sign-up steps render in the narrow auth layout,
+ * and from the store step on it becomes the full setup wizard, so the page
+ * cannot wrap it in a fixed one.
+ */
 export default async function RegisterPage() {
   const user = await getCurrentUser();
   if (user) redirect("/dashboard");
 
-  return <AuthExperience description="Create your account, shape your store identity, and step into a calmer way to run commerce." eyebrow="Start building" title="Your next stage starts here."><RegisterForm platformDomain={getPlatformRootDomain()} /></AuthExperience>;
+  return <RegisterForm platformDomain={getPlatformRootDomain()} />;
 }
