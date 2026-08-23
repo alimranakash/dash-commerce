@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Loader2, RefreshCcw, ShieldQuestion, Truck, X } from "lucide-react";
+import { Copy, Eye, Loader2, Pencil, RefreshCcw, ShieldQuestion, Truck, X } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import {
@@ -329,17 +329,14 @@ function RowActions({
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <Link className="text-xs font-semibold text-[#6d3cf5]" href={`/dashboard/orders/${row.id}`}>
-        View
-      </Link>
+      <IconLink href={`/dashboard/orders/${row.id}`} label="View order" primary>
+        <Eye className="h-3.5 w-3.5" />
+      </IconLink>
       {/* Beside View so a wrong name or address can be corrected without
           opening the order first. */}
-      <Link
-        className="text-xs font-semibold text-[#5f616d] hover:text-[#6d3cf5]"
-        href={`/dashboard/orders/${row.id}/edit`}
-      >
-        Edit
-      </Link>
+      <IconLink href={`/dashboard/orders/${row.id}/edit`} label="Edit order">
+        <Pencil className="h-3.5 w-3.5" />
+      </IconLink>
       {row.shipmentId ? (
         <IconButton
           disabled={isPending}
@@ -381,6 +378,37 @@ function RowActions({
   );
 }
 
+/** Shared chrome for the row's action strip, buttons and links alike. */
+const iconActionClass =
+  "grid h-7 w-7 place-items-center rounded-lg border border-[#e5e3f1] bg-white transition hover:border-[#bdb6da] hover:text-[#6d3cf5] disabled:cursor-not-allowed disabled:opacity-50";
+
+/**
+ * The navigating twin of IconButton, so View and Edit read as part of the same
+ * strip as the courier and fraud actions rather than as stray text links.
+ */
+function IconLink({
+  children,
+  href,
+  label,
+  primary
+}: {
+  children: React.ReactNode;
+  href: string;
+  label: string;
+  primary?: boolean;
+}) {
+  return (
+    <Link
+      aria-label={label}
+      className={`${iconActionClass} ${primary ? "text-[#6d3cf5]" : "text-[#5f616d]"}`}
+      href={href}
+      title={label}
+    >
+      {children}
+    </Link>
+  );
+}
+
 function IconButton({
   children,
   disabled,
@@ -395,7 +423,7 @@ function IconButton({
   return (
     <button
       aria-label={label}
-      className="grid h-7 w-7 place-items-center rounded-lg border border-[#e5e3f1] bg-white text-[#5f616d] transition hover:border-[#bdb6da] hover:text-[#6d3cf5] disabled:cursor-not-allowed disabled:opacity-50"
+      className={`${iconActionClass} text-[#5f616d]`}
       disabled={disabled}
       onClick={onClick}
       title={label}
