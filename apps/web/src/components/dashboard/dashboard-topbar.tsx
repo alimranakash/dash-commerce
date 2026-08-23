@@ -3,6 +3,7 @@
 import { Bot, ChevronRight, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { FreeTrialBadge } from "../../modules/billing/components/free-trial-badge";
 import { UserAvatarMenu } from "./user-avatar-menu";
 
 type DashboardTopbarProps = {
@@ -55,6 +56,7 @@ export function DashboardTopbar({ onMenuClick }: DashboardTopbarProps) {
       </div>
 
       <div className="flex items-center gap-3 text-[11px]">
+        <FreeTrialBadge />
         <Link className="hidden text-[#6d3cf5] hover:underline md:block" href="/dashboard/settings">Addons</Link>
         <Link className="hidden text-[#30313d] hover:text-[#6d3cf5] lg:block" href="/dashboard/settings">Contact Support</Link>
         <Link className="hidden text-[#30313d] hover:text-[#6d3cf5] xl:block" href="/dashboard/settings">Share Feedback</Link>

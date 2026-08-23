@@ -16,7 +16,9 @@ import type { PlanFeatureKey } from "./plan-features";
  */
 export async function getEntitledFeaturesAction(): Promise<PlanFeatureKey[]> {
   try {
-    const store = await requireStore();
+    // Read-only decoration, and the sidebar still draws on the billing page an
+    // expired store is redirected to, so it opts out of the lock.
+    const store = await requireStore({ allowLocked: true });
     return await listPlanFeatures(store.id);
   } catch {
     return [];

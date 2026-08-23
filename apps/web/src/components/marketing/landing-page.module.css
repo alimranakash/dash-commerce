@@ -85,3 +85,36 @@
 .faqSection .sectionIntro p,.faqList p{color:#707487}
 .faqList,.faqList details{border-color:#e3deee}
 .faqList summary span{color:#7253df}
+
+/* Free-year offer. The page's loudest single moment, sat directly above pricing
+   so the plan list is read after the gift rather than before it. Its own band
+   colour and glow keep it from reading as more of the AI section above. */
+.offerPill{align-items:center;background:linear-gradient(90deg,rgba(124,58,237,.34),rgba(59,89,229,.2));border:1px solid rgba(167,139,250,.5);border-radius:99px;box-shadow:0 12px 34px rgba(76,45,168,.28);color:#e4dcff;display:inline-flex;font-size:12px;font-weight:800;gap:9px;letter-spacing:.06em;margin:0 0 24px;padding:10px 18px}
+.offerPill svg{color:#c4b2ff;height:15px;width:15px}
+.offerSection{background:radial-gradient(120% 130% at 50% 0%,#1a1246 0%,#0b0d20 46%,#07080f 100%);box-shadow:0 0 0 100vmax #07080f;clip-path:inset(0 -100vmax);overflow:hidden;padding:150px 24px;position:relative;text-align:center}
+.offerGlow{background:radial-gradient(closest-side,rgba(124,58,237,.5),rgba(59,89,229,.15),transparent);filter:blur(46px);height:520px;left:50%;pointer-events:none;position:absolute;top:-150px;transform:translateX(-50%);width:min(980px,120%)}
+.offerInner{margin:0 auto;max-width:820px;position:relative;z-index:1}
+.offerEyebrow{align-items:center;background:rgba(124,58,237,.16);border:1px solid rgba(167,139,250,.4);border-radius:99px;color:#cbbcff;display:inline-flex;font-size:11px;font-weight:800;gap:8px;letter-spacing:.14em;padding:9px 16px;text-transform:uppercase}
+.offerEyebrow svg{height:14px;width:14px}
+.offerInner h2{font-size:66px;line-height:1.03;margin:26px 0 0}
+.offerInner>p{color:#a7abc2;font-size:17px;line-height:1.75;margin:22px auto 0;max-width:640px}
+.offerCount{align-items:center;display:flex;gap:18px;justify-content:center;margin:46px 0 0}
+.offerCount b{color:#fff;font-size:118px;letter-spacing:-.04em;line-height:.86}
+.offerCount span{display:grid;font-size:22px;font-weight:700;gap:4px;text-align:left}
+.offerCount small{color:#8f93ab;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+.offerPoints{display:grid;gap:12px;justify-content:center;list-style:none;margin:44px 0 0;padding:0}
+.offerPoints li{align-items:center;color:#c3c6d6;display:flex;font-size:14px;gap:10px;text-align:left}
+.offerPoints svg{color:#7dd3a7;flex:0 0 16px;height:16px;width:16px}
+.offerCta{align-items:center;background:#7c3aed;border-radius:8px;display:inline-flex;font-size:14px;font-weight:800;gap:10px;justify-content:center;margin-top:44px;min-height:56px;padding:0 30px;transition:background .2s,box-shadow .2s,transform .2s}
+.offerCta:hover{background:#8b5cf6;box-shadow:0 22px 50px rgba(124,58,237,.42);transform:translateY(-2px)}
+.offerCta svg{height:16px;width:16px}
+.offerFinePrint{color:#7a7e94;display:block;font-size:12px;line-height:1.7;margin:22px auto 0;max-width:540px}
+@supports ((background-clip:text) or (-webkit-background-clip:text)){.offerCount b{background:linear-gradient(180deg,#fff,#b9a4ff);-webkit-background-clip:text;background-clip:text;color:transparent}}
+
+/* The free tier's card, marked so the offer is legible from the price list alone. */
+.freePricing{border-color:#b9a6f5;box-shadow:0 26px 60px rgba(74,52,150,.16)}
+.freeRibbon{background:linear-gradient(90deg,#7c3aed,#4f7df3);border-radius:99px;color:#fff;font-size:8px;font-weight:900;letter-spacing:.08em;padding:5px 9px;position:absolute;right:18px;text-transform:uppercase;top:18px}
+
+@media(max-width:1000px){.offerSection{padding:110px 20px}.offerInner h2{font-size:48px}.offerCount b{font-size:88px}}
+@media(max-width:720px){.offerSection{padding:88px 18px}.offerInner h2{font-size:36px}.offerInner>p{font-size:15px}.offerCount{gap:12px;margin-top:36px}.offerCount b{font-size:64px}.offerCount span{font-size:17px}.offerPoints li{font-size:13px}.offerCta{width:100%}.offerPill{font-size:11px;padding:9px 14px}}
+@media(prefers-reduced-motion:reduce){.offerCta:hover{transform:none}}

@@ -95,13 +95,25 @@ export type PlanCatalogEntry = {
 export const DEFAULT_PLAN_SLUG = "free";
 export const FALLBACK_DEFAULT_PLAN_SLUG = "starter";
 
+/**
+ * How long the free tier stays usable: one full year from the day the store is
+ * created. This is the platform's headline offer, so it is defined once here and
+ * read by everything that states or enforces it — the marketing page's "365 days
+ * free" band, the dashboard countdown, the subscription seeded for a new store,
+ * and the lock that stops an expired store from selling.
+ *
+ * It is a *trial* rather than a permanently free plan on purpose: the whole
+ * point is that the seller is asked to upgrade when the year is up.
+ */
+export const FREE_PLAN_TRIAL_DAYS = 365;
+
 export const PLAN_CATALOG: PlanCatalogEntry[] = [
   {
     aiEnabled: false,
     currency: "BDT",
     customDomainEnabled: false,
     customerLimit: 100,
-    description: "Core commerce only. Best for validating your first storefront.",
+    description: "Everything you need to sell online, free for a full year.",
     features: [],
     isActive: true,
     isFeatured: false,
@@ -115,7 +127,7 @@ export const PLAN_CATALOG: PlanCatalogEntry[] = [
     sortOrder: 0,
     staffLimit: 1,
     storeLimit: 1,
-    trialDays: 0
+    trialDays: FREE_PLAN_TRIAL_DAYS
   },
   {
     aiEnabled: false,

@@ -4,6 +4,7 @@ import {
   resolveCartAfterCheckout
 } from "../abandoned-carts/abandoned-cart.service";
 import { clearCart, getCart, getCartToken } from "../cart/cart.service";
+import { assertStoreUnlocked } from "../billing/free-trial";
 import { canCreateOrder } from "../billing/subscription-limits";
 import { assessOrderSafely } from "../fake-orders/fake-order.assessment";
 import {
@@ -38,6 +39,12 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
     name: data.name,
     phone: data.phone
   });
+
+  // A store whose free year ran out stops selling until someone upgrades it.
+  // Enforced here rather than on the checkout page so it cannot be bypassed by
+  // posting the form directly, and after the contact capture so the seller still
+  // keeps the lead they would otherwise lose entirely.
+  await assertStoreUnlocked(store.id);
 
   // After the contact capture, so a checkout blocked by the plan still leaves
   // the seller a recoverable cart, and before any stock is touched.

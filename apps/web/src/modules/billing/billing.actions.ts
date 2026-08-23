@@ -22,7 +22,9 @@ export async function submitManualPaymentAction(
     // Paying for the store's plan is an owner/admin decision, not day-to-day
     // work. The guard sits inside the `try` because it throws rather than
     // redirecting, and `billingErrorState` already surfaces its message.
-    const { store } = await requireStoreManager();
+    // `allowLocked`: paying is exactly what an expired store is here to do, so
+    // this action has to survive the lock that redirects everything else.
+    const { store } = await requireStoreManager({ allowLocked: true });
 
     await submitManualSubscriptionPayment(store, manualPaymentFromFormData(formData));
   } catch (error) {

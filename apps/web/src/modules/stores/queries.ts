@@ -1,7 +1,23 @@
 import { prisma } from "@dash/db";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "../../lib/auth";
+import { isStoreLocked } from "../billing/free-trial";
 import { getCurrentOrganization } from "../organizations/queries";
+
+/** Where a store whose free year has run out is sent, and the only page it may reach. */
+const LOCKED_STORE_PATH = "/dashboard/billing";
+
+export type StoreGuardOptions = {
+  /**
+   * Let the caller through even when the free year has expired.
+   *
+   * Only billing surfaces may set this — the billing page itself and the action
+   * that submits a payment — because they are how the seller gets unlocked.
+   * Everything else leaves it unset and is redirected, which is what makes the
+   * lock hold across all 130-odd call sites without each having to know about it.
+   */
+  allowLocked?: boolean | undefined;
+};
 
 export async function getCurrentStore() {
   const organization = await getCurrentOrganization();
@@ -32,11 +48,22 @@ export async function getCurrentStore() {
   });
 }
 
-export async function requireStore() {
+/**
+ * The tenant guard every dashboard page and server action starts with — and,
+ * since the free year became a real deadline, the single place that enforces it.
+ *
+ * A redirect rather than a thrown error: a page lands the seller on Billing with
+ * the upgrade prompt, which is the only thing an expired store can usefully do.
+ */
+export async function requireStore(options: StoreGuardOptions = {}) {
   const store = await getCurrentStore();
 
   if (!store) {
     redirect("/dashboard");
+  }
+
+  if (!options.allowLocked && (await isStoreLocked(store.id))) {
+    redirect(LOCKED_STORE_PATH);
   }
 
   return store;
@@ -65,10 +92,10 @@ export function isStoreManager(params: {
   );
 }
 
-export async function getStoreAccess() {
+export async function getStoreAccess(options: StoreGuardOptions = {}) {
   const [organization, store, user] = await Promise.all([
     getCurrentOrganization(),
-    requireStore(),
+    requireStore(options),
     getCurrentUser()
   ]);
   const isPlatformAdmin = user?.role === "ADMIN";
@@ -105,8 +132,8 @@ export async function getViewerCanManageStore() {
  * a read-only form, but every mutation re-checks here — a disabled input is not
  * a permission check.
  */
-export async function requireStoreManager() {
-  const access = await getStoreAccess();
+export async function requireStoreManager(options: StoreGuardOptions = {}) {
+  const access = await getStoreAccess(options);
 
   if (!access.canManage) {
     throw new StoreAccessError("Only the store owner or an admin can change these settings.");

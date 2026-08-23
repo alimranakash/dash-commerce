@@ -1,6 +1,7 @@
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { submitManualPaymentAction } from "../../../modules/billing/billing.actions";
 import { BillingDashboard } from "../../../modules/billing/components/billing-dashboard";
+import { FreeTrialNotice } from "../../../modules/billing/components/free-trial-notice";
 import {
   getBillingDashboardData,
   getTrialRemaining
@@ -8,7 +9,9 @@ import {
 import { requireStore } from "../../../modules/stores/queries";
 
 export default async function BillingPage() {
-  const store = await requireStore();
+  // The one page an expired store may still open — it is where it is redirected
+  // to, and submitting a payment here is the only way back out of the lock.
+  const store = await requireStore({ allowLocked: true });
   const data = await getBillingDashboardData(store);
 
   return (
@@ -20,6 +23,7 @@ export default async function BillingPage() {
             Manage your plan, manual payments, invoices, and subscription status.
           </p>
         </div>
+        <FreeTrialNotice />
         <BillingDashboard
           action={submitManualPaymentAction}
           billingSettings={{

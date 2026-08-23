@@ -8,6 +8,7 @@ import {
   CircleDollarSign,
   Clock3,
   CreditCard,
+  Gift,
   PackageCheck,
   Percent,
   ReceiptText,
@@ -23,7 +24,7 @@ import Link from "next/link";
 import type { ComponentType, ReactNode } from "react";
 import { ParallaxStage, TypingText } from "./landing-interactions";
 import styles from "./landing-page.module.css";
-import { PLAN_CATALOG } from "../../modules/admin/plan-catalog";
+import { DEFAULT_PLAN_SLUG, FREE_PLAN_TRIAL_DAYS, PLAN_CATALOG } from "../../modules/admin/plan-catalog";
 
 const features = [
   { icon: Store, title: "1 Minute Store Builder", text: "Launch a polished storefront with your brand, products, and domain." },
@@ -57,14 +58,14 @@ export function LandingPage() {
       <section className={styles.hero}>
         <div className={styles.heroGlow} /><div className={styles.heroGrid} />
         <div className={styles.heroCopy}>
-          <div className={styles.eyebrow}><Sparkles /> Commerce, finally in command</div>
+          <div className={styles.offerPill}><Gift /> Free for your first year — all {FREE_PLAN_TRIAL_DAYS} days</div>
           <h1>Launch, manage, and grow your online store with <span>AI.</span></h1>
           <p>Create a professional ecommerce store in minutes. Manage products, orders, payments, courier, reports, and AI insights from one powerful dashboard.</p>
           <div className={styles.heroActions}>
-            <Link className={styles.primaryButtonLarge} href="/register">Start Free <ArrowRight /></Link>
+            <Link className={styles.primaryButtonLarge} href="/register">Start your free year <ArrowRight /></Link>
             <a className={styles.secondaryButton} href="#preview">View Demo <ChevronRight /></a>
           </div>
-          <div className={styles.heroProof}><span><Check /> No code required</span><span><Check /> Built for Bangladesh</span><span><Check /> AI ready</span></div>
+          <div className={styles.heroProof}><span><Check /> {FREE_PLAN_TRIAL_DAYS} days free</span><span><Check /> No card required</span><span><Check /> Built for Bangladesh</span></div>
         </div>
 
         <ParallaxStage className={styles.previewStage} id="preview">
@@ -154,11 +155,33 @@ export function LandingPage() {
         </div>
       </section>
 
+      <section className={styles.offerSection} id="offer">
+        <div className={styles.offerGlow} />
+        <div className={styles.offerInner}>
+          <span className={styles.offerEyebrow}><Gift /> Launch offer</span>
+          <h2>Your first year<br />is on us.</h2>
+          <p>Open your store today and run the whole thing free for a full year. Real products, real orders, real customers — not a limited demo, and not a two-week trial that ends before your first good month.</p>
+          <div className={styles.offerCount}>
+            <b>{FREE_PLAN_TRIAL_DAYS}</b>
+            <span>days<small>of free commerce</small></span>
+          </div>
+          <ul className={styles.offerPoints}>
+            <li><Check /> Storefront, products, orders and payments included</li>
+            <li><Check /> No credit card, no charge, no surprise invoice</li>
+            <li><Check /> Upgrade only once your store has outgrown it</li>
+          </ul>
+          <Link className={styles.offerCta} href="/register">Claim your free year <ArrowRight /></Link>
+          <small className={styles.offerFinePrint}>Counted from the day you create your store. We show the days remaining in your dashboard the whole way through.</small>
+        </div>
+      </section>
+
       <section className={styles.pricingSection} id="pricing">
-        <SectionIntro eyebrow="Simple pricing" title="Choose the operating power you need." text="Clear plans for stores at every stage. Start lean, then expand as your volume grows." centered />
+        <SectionIntro eyebrow="Simple pricing" title="Free for a year. Then whatever you have grown into." text={`Every store starts on Free for ${FREE_PLAN_TRIAL_DAYS} days. These are the plans waiting for you when the year is up.`} centered />
         <div className={styles.pricingGrid}>
           {pricingPlans.map((plan) => (
             <PricingCard
+              badge={plan.badge}
+              cta={plan.cta}
               featured={plan.featured}
               features={plan.features}
               key={plan.name}
@@ -174,8 +197,8 @@ export function LandingPage() {
         <div className={styles.finalGlow} />
         <div className={styles.eyebrow}><ShieldCheck /> Built for serious sellers</div>
         <h2>Your business deserves an operating system.</h2>
-        <p>Turn today’s hustle into tomorrow’s durable commerce brand.</p>
-        <Link className={styles.primaryButtonLarge} href="/register">Start Building Your Store <ArrowRight /></Link>
+        <p>Turn today’s hustle into tomorrow’s durable commerce brand — free for the first {FREE_PLAN_TRIAL_DAYS} days.</p>
+        <Link className={styles.primaryButtonLarge} href="/register">Start your free year <ArrowRight /></Link>
       </section>
 
       <footer className={styles.footer}>
@@ -260,7 +283,7 @@ function PainCard({ icon: Icon, text, title }: CardProps) { return <article clas
 function FeatureCard({ featured, icon: Icon, text, title }: CardProps & { featured: boolean }) { return <article className={`${styles.featureCard} ${featured ? styles.featuredCard : ""}`}><span><Icon /></span><small>StoreIM module</small><h3>{title}</h3><p>{text}</p><i><ArrowRight /></i></article>; }
 function OperationTile({ icon: Icon, label, note, value }: { icon: CardProps["icon"]; label: string; note: string; value: string }) { return <div className={styles.operationTile}><span><Icon /></span><small>{label}</small><b>{value}</b><p>{note}</p></div>; }
 function MockStat({ accent, label, value }: { accent: string; label: string; value: string }) { return <div data-accent={accent}><span>{label}</span><b>{value}</b></div>; }
-function PricingCard({ featured, features, name, price, text }: { featured?: boolean; features: string[]; name: string; price: string; text: string }) { return <article className={`${styles.pricingCard} ${featured ? styles.featuredPricing : ""}`}>{featured ? <span className={styles.popular}>Most popular</span> : null}<h3>{name}</h3><p>{text}</p><div><b>{price}</b><span>/ month</span></div><ul>{features.map((item) => <li key={item}><Check /> {item}</li>)}</ul><Link href="/register">Start Free <ArrowRight /></Link></article>; }
+function PricingCard({ badge, cta, featured, features, name, price, text }: { badge: string | null; cta: string; featured?: boolean; features: string[]; name: string; price: string; text: string }) { return <article className={`${styles.pricingCard} ${featured ? styles.featuredPricing : ""} ${badge ? styles.freePricing : ""}`}>{featured ? <span className={styles.popular}>Most popular</span> : null}{badge ? <span className={styles.freeRibbon}>{badge}</span> : null}<h3>{name}</h3><p>{text}</p><div><b>{price}</b><span>/ month</span></div><ul>{features.map((item) => <li key={item}><Check /> {item}</li>)}</ul><Link href="/register">{cta} <ArrowRight /></Link></article>; }
 
 /**
  * Capability copy per tier. Prices and limits are NOT written here — they are
@@ -280,9 +303,14 @@ const pricingPlans = [...PLAN_CATALOG]
   .map((plan, index, ordered) => {
     const previous = ordered[index - 1];
 
+    const isFreePlan = plan.slug === DEFAULT_PLAN_SLUG;
+
     return {
+      badge: isFreePlan ? `${plan.trialDays} days free` : null,
+      cta: isFreePlan ? "Claim your free year" : "Start Free",
       featured: plan.isFeatured,
       features: [
+        ...(isFreePlan ? [`Everything below, free for ${plan.trialDays} days`] : []),
         ...(previous ? [`Everything in ${previous.name}`] : []),
         `${planLimit(plan.productLimit)} products · ${planLimit(plan.orderLimit)} orders / month`,
         `${planLimit(plan.customerLimit)} customers · ${plan.staffLimit} staff`,

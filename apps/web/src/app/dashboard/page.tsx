@@ -19,6 +19,8 @@ import { LogoutButton } from "../../modules/auth/logout-button";
 import { getPlatformRootDomain } from "../../lib/host-routing";
 import { OnboardingForm } from "../../modules/onboarding/onboarding-form";
 import onboardingStyles from "../../modules/onboarding/onboarding-experience.module.css";
+import { redirect } from "next/navigation";
+import { isStoreLocked } from "../../modules/billing/free-trial";
 import { getCurrentStore } from "../../modules/stores/queries";
 
 export default async function DashboardPage() {
@@ -35,6 +37,13 @@ export default async function DashboardPage() {
         </section>
       </main>
     );
+  }
+
+  // The only dashboard page that reads the store without `requireStore()` — it
+  // has to render onboarding when there is no store at all — so the free-year
+  // lock is applied by hand here instead of being inherited from the guard.
+  if (await isStoreLocked(store.id)) {
+    redirect("/dashboard/billing");
   }
 
   return (
