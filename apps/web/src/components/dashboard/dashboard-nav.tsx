@@ -288,8 +288,8 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
     >
       <div className="flex h-16 items-center justify-between border-b border-[#f0f0f7] px-5">
         <Link className="flex items-center gap-2" href="/dashboard" onClick={onClose}>
-          <span className="bg-[#6941ff] px-2.5 py-1 text-[13px] font-semibold tracking-[0.28em] text-white" suppressHydrationWarning>{"DASH"}</span>
-          <span className="text-[10px] font-semibold tracking-wide text-[#111827]" suppressHydrationWarning>{"COMMERCE"}</span>
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#6941ff] text-[15px] font-bold leading-none text-white" suppressHydrationWarning>{"S"}</span>
+          <span className="text-[15px] font-semibold tracking-tight text-[#111827]" suppressHydrationWarning>{"Store"}<span className="text-[#6941ff]">{"IM"}</span></span>
         </Link>
         <button className="text-gray-500 lg:hidden" onClick={onClose} type="button">
           <X className="h-5 w-5" />
