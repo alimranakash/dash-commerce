@@ -332,6 +332,14 @@ function RowActions({
       <Link className="text-xs font-semibold text-[#6d3cf5]" href={`/dashboard/orders/${row.id}`}>
         View
       </Link>
+      {/* Beside View so a wrong name or address can be corrected without
+          opening the order first. */}
+      <Link
+        className="text-xs font-semibold text-[#5f616d] hover:text-[#6d3cf5]"
+        href={`/dashboard/orders/${row.id}/edit`}
+      >
+        Edit
+      </Link>
       {row.shipmentId ? (
         <IconButton
           disabled={isPending}
