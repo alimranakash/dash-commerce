@@ -56,7 +56,7 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
                 <span className="inline-flex items-center gap-1.5"><UserRound className="h-3.5 w-3.5" />{order.customerName}</span>
               </div>
             </div>
-            <OrderHeaderActions />
+            <OrderHeaderActions orderId={order.id} />
           </div>
         </header>
 

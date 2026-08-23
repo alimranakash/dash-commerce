@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, BadgeCheck, Download, FileText, PackageCheck, Printer, RefreshCcw, XCircle } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Download, FileText, PackageCheck, Pencil, Printer, RefreshCcw, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { SendToCourierButton } from "../../courier/components/send-to-courier-button";
@@ -10,12 +10,14 @@ import {
   updatePaymentStatusFormAction
 } from "../order.actions";
 
-export function OrderHeaderActions() {
+export function OrderHeaderActions({ orderId }: { orderId: string }) {
   const [message, setMessage] = useState("");
   return (
     <div className="grid gap-2">
       <div className="flex flex-wrap justify-end gap-2">
         <Link className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#dedcea] bg-white px-3.5 text-xs font-semibold text-[#555762] hover:bg-[#f8f7fc]" href="/dashboard/orders"><ArrowLeft className="h-4 w-4" />Back to Orders</Link>
+        {/* The one way to correct a name, phone or address a shopper got wrong. */}
+        <Link className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#dedcea] bg-white px-3.5 text-xs font-semibold text-[#555762] hover:bg-[#f8f7fc]" href={`/dashboard/orders/${orderId}/edit`}><Pencil className="h-4 w-4" />Edit Order</Link>
         <button className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#7c3aed] bg-white px-3.5 text-xs font-semibold text-[#6d3cf5] hover:bg-[#f7f3ff]" onClick={() => window.print()} type="button"><Printer className="h-4 w-4" />Print Invoice</button>
         <button className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#7548f5] px-3.5 text-xs font-semibold text-white hover:bg-[#6436e8]" onClick={() => setMessage("Invoice download will be available when PDF invoices are connected.")} type="button"><Download className="h-4 w-4" />Download Invoice</button>
       </div>

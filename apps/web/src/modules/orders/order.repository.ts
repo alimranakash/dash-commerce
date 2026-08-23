@@ -1,4 +1,5 @@
 import { prisma } from "@dash/db";
+import type { UpdateOrderDetailsInput } from "./order.schema";
 
 type OrderStatus = "PENDING" | "CONFIRMED" | "PROCESSING" | "COMPLETED" | "CANCELLED";
 export type FulfillmentStatus =
@@ -148,5 +149,117 @@ export async function getPublicOrderByNumber(storeId: string, orderNumber: strin
         }
       }
     }
+  });
+}
+
+/** The order's own copy of the customer/address fields a seller may correct. */
+export async function getOrderEditableDetailsForStore(storeId: string, orderId: string) {
+  return prisma.order.findFirst({
+    where: {
+      id: orderId,
+      storeId
+    },
+    select: {
+      billingAddressId: true,
+      customerEmail: true,
+      customerName: true,
+      customerPhone: true,
+      id: true,
+      notes: true,
+      orderNumber: true,
+      shippingAddress: true,
+      shippingAddressId: true,
+      shippingArea: true,
+      shippingCity: true,
+      shippingDistrict: true
+    }
+  });
+}
+
+/**
+ * Writes a seller's correction across the two rows that hold it: the order's
+ * denormalised customer snapshot and the Address the courier is actually given.
+ *
+ * `shippingDistrict`/`City`/`Area` on the order are deliberately left alone —
+ * those are the snapshot of the shipping *rate* the shopper paid for, and this
+ * form does not re-price the order. The courier draft prefers the address row
+ * over them anyway (see courier.service buildShipmentDraft).
+ */
+export async function updateOrderDetailsForStore(
+  storeId: string,
+  orderId: string,
+  data: UpdateOrderDetailsInput
+) {
+  const order = await prisma.order.findFirst({
+    where: {
+      id: orderId,
+      storeId
+    },
+    select: {
+      billingAddressId: true,
+      customerId: true,
+      shippingAddressId: true
+    }
+  });
+
+  if (!order) {
+    return null;
+  }
+
+  const addressData = {
+    addressLine1: data.addressLine1,
+    addressLine2: data.addressLine2 ?? null,
+    area: data.area ?? null,
+    city: data.city ?? null,
+    country: data.country,
+    district: data.district,
+    email: data.customerEmail ?? null,
+    name: data.customerName,
+    phone: data.customerPhone,
+    postalCode: data.postalCode ?? null
+  };
+
+  return prisma.$transaction(async (tx) => {
+    let shippingAddressId = order.shippingAddressId;
+
+    if (shippingAddressId) {
+      // Scoped by storeId as well as id: an address id can only be corrected by
+      // the store that owns it, even though we reached it through the order.
+      await tx.address.updateMany({
+        where: {
+          id: shippingAddressId,
+          storeId
+        },
+        data: addressData
+      });
+    } else {
+      const created = await tx.address.create({
+        data: {
+          storeId,
+          customerId: order.customerId,
+          ...addressData
+        }
+      });
+
+      shippingAddressId = created.id;
+    }
+
+    return tx.order.update({
+      where: {
+        id: orderId,
+        storeId
+      },
+      data: {
+        customerEmail: data.customerEmail ?? null,
+        customerName: data.customerName,
+        customerPhone: data.customerPhone,
+        notes: data.notes ?? null,
+        shippingAddressId,
+        // Checkout points both ids at one row. Keep that shape when the order
+        // had no address yet, but never repoint a billing address that was
+        // deliberately separate.
+        ...(order.billingAddressId ? {} : { billingAddressId: shippingAddressId })
+      }
+    });
   });
 }

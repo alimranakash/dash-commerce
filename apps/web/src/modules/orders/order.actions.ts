@@ -2,9 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { ZodError } from "zod";
 import { requireStore } from "../stores/queries";
 import type { FulfillmentStatus } from "./order.repository";
+import type { UpdateOrderDetailsInput } from "./order.schema";
 import {
+  updateOrderDetails,
   updateOrderFulfillmentStatus,
   updateOrderPaymentStatus,
   updateOrderStatus
@@ -51,8 +54,88 @@ export async function updatePaymentStatusFormAction(orderId: string, status: Pay
   redirect(`/dashboard/orders/${orderId}?updated=1`);
 }
 
+export type OrderDetailsActionState = {
+  status: "idle" | "error";
+  message?: string;
+  fieldErrors?: Record<string, string>;
+};
+
+/**
+ * The correction path for an order a shopper filled in wrong — a misspelt name,
+ * a phone digit short, a delivery address that would never be found.
+ *
+ * Unlike the status buttons above this is a full form, so it returns an error
+ * state instead of redirecting: a rejected phone number has to come back to the
+ * field the seller was typing in.
+ */
+export async function updateOrderDetailsFormAction(
+  orderId: string,
+  _state: OrderDetailsActionState,
+  formData: FormData
+): Promise<OrderDetailsActionState> {
+  const store = await requireStore();
+
+  try {
+    const order = await updateOrderDetails(store.id, orderId, orderDetailsFromFormData(formData));
+
+    if (!order) {
+      return {
+        status: "error",
+        message: "Order not found."
+      };
+    }
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return {
+        status: "error",
+        message: "Please fix the highlighted fields.",
+        fieldErrors: Object.fromEntries(
+          error.issues.map((issue) => [String(issue.path[0] ?? "form"), issue.message])
+        )
+      };
+    }
+
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Could not update this order."
+    };
+  }
+
+  revalidateOrderPaths(orderId);
+  redirect(`/dashboard/orders/${orderId}?updated=1`);
+}
+
+function orderDetailsFromFormData(formData: FormData): UpdateOrderDetailsInput {
+  return {
+    addressLine1: getValue(formData, "addressLine1"),
+    addressLine2: optionalValue(formData, "addressLine2"),
+    area: optionalValue(formData, "area"),
+    city: optionalValue(formData, "city"),
+    country: getValue(formData, "country") || "Bangladesh",
+    customerEmail: optionalValue(formData, "customerEmail"),
+    customerName: getValue(formData, "customerName"),
+    customerPhone: getValue(formData, "customerPhone"),
+    district: getValue(formData, "district"),
+    notes: optionalValue(formData, "notes"),
+    postalCode: optionalValue(formData, "postalCode")
+  };
+}
+
+function getValue(formData: FormData, key: string) {
+  return String(formData.get(key) ?? "").trim();
+}
+
+function optionalValue(formData: FormData, key: string) {
+  const value = getValue(formData, key);
+
+  return value || undefined;
+}
+
 function revalidateOrderPaths(orderId: string) {
   revalidatePath("/dashboard/orders");
   revalidatePath("/dashboard/transactions");
+  revalidatePath("/dashboard/orders/verification");
+  revalidatePath("/dashboard/customers");
   revalidatePath(`/dashboard/orders/${orderId}`);
+  revalidatePath(`/dashboard/orders/${orderId}/edit`);
 }
