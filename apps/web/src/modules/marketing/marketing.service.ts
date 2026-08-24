@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { requirePlanFeature } from "../billing/subscription-limits";
 import { createSystemLog } from "../../lib/system-log";
 import { encryptSecret, isSecretEncryptionConfigured, secretHintFor } from "../../lib/secret-box";
 import { validateCustomTrackingCode } from "./marketing-code";
@@ -91,6 +92,18 @@ export async function updateMarketingSettings(params: {
 
   const next = parsed.data;
   const existing = await getMarketingSettingsRecord(params.storeId);
+
+  // Turning a server-side channel *on* is the gated act, not having one on:
+  // a store that drops to a plan without the feature keeps its stored config
+  // and can still edit everything else on this page. Nothing leaves the server
+  // meanwhile — `ga4-mp` and `meta-capi` re-check entitlement at send time, so
+  // a lapsed store goes quiet rather than tracking on a plan that dropped it.
+  if (
+    (next.ga4MpEnabled && !existing?.ga4MpEnabled) ||
+    (next.metaCapiEnabled && !existing?.metaCapiEnabled)
+  ) {
+    await requirePlanFeature(params.storeId, "server_side_tracking");
+  }
 
   // Blank secret means "keep what is stored"; clearing is an explicit action.
   const tokenAction = resolveTokenAction({

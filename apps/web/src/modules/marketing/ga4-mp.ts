@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { hasPlanFeature } from "../billing/subscription-limits";
 import { decryptSecret } from "../../lib/secret-box";
 import { createSystemLog } from "../../lib/system-log";
 import { getMarketingSettingsRecord, getOrderForGa4Event } from "./marketing.repository";
@@ -177,6 +178,20 @@ async function resolveConfig(
     return {
       ok: false,
       result: { message: "GA4 server-side tracking is turned off.", ok: false, reason: "disabled" }
+    };
+  }
+
+  // Re-checked at send time, not just at save time: a store that lapses to a
+  // plan without server-side tracking keeps the saved config but must stop
+  // sending, and nothing rewrites `ga4MpEnabled` when a subscription changes.
+  if (!(await hasPlanFeature(storeId, "server_side_tracking"))) {
+    return {
+      ok: false,
+      result: {
+        message: "Server-side tracking is not included in this store's plan.",
+        ok: false,
+        reason: "disabled"
+      }
     };
   }
 

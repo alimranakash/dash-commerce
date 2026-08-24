@@ -40,6 +40,7 @@ export const PLAN_FEATURE_KEYS = [
   "pixel_tracking",
   "purchases",
   "sales",
+  "server_side_tracking",
   "sms_automation",
   "suppliers",
   "tiktok_tracking",
@@ -167,6 +168,12 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
   sales: {
     description: "Manual sales entry and counter-sale records.",
     label: "Sales",
+    status: "available"
+  },
+  server_side_tracking: {
+    description:
+      "Purchases sent to GA4 and Meta from our server, so sales are still counted when a browser blocks the pixel.",
+    label: "Server-Side Tracking",
     status: "available"
   },
   sms_automation: {

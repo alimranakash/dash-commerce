@@ -98,7 +98,7 @@ export async function sendMetaTestEventAction(): Promise<MarketingTestEventState
   try {
     const access = await requireStoreManager();
 
-    await requirePlanFeature(access.store.id, "pixel_tracking");
+    await requirePlanFeature(access.store.id, "server_side_tracking");
 
     const result = await sendMetaTestEvent({
       storeId: access.store.id,
@@ -139,7 +139,7 @@ export async function sendGa4TestEventAction(): Promise<MarketingTestEventState>
   try {
     const access = await requireStoreManager();
 
-    await requirePlanFeature(access.store.id, "marketing_analytics");
+    await requirePlanFeature(access.store.id, "server_side_tracking");
 
     const result = await sendGa4TestEvent({
       storeId: access.store.id,

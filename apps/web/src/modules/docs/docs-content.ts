@@ -1129,24 +1129,27 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         slug: "settings/marketing-tracking",
         title: "Marketing / Analytics",
         intro:
-          "Marketing / Analytics page platform গুলোকে ID দিয়ে connect করার UI — Google (GA4, GTM, Verification), Meta (Pixel, Conversions API, Domain Verification), TikTok Pixel এবং Google Ads Conversion ID। Script tag paste করতে হয় না; আমরা প্রতিটি platform-এর official snippet generate করি।",
+          "Marketing / Analytics page platform গুলোকে ID দিয়ে connect করার UI — Google (GA4, GTM, Verification), Meta (Pixel, Domain Verification), TikTok Pixel এবং Google Ads Conversion ID। Script tag paste করতে হয় না; আমরা প্রতিটি platform-এর official snippet generate করি। এর নিচে আলাদা Server-Side Tracking section — GA4 Measurement Protocol ও Meta Conversions API — যেটি Growth plan ও তার উপরে পাওয়া যায়।",
         useCase: [
           "GA4/GTM বা Meta Pixel শুধু ID দিয়ে connect করতে।",
           "Domain verification-এর content value রাখতে।",
-          "Meta Conversions API-এর server-side token নিরাপদে রাখতে।",
-          "GA4-তে server-side purchase পাঠাতে (Measurement Protocol)।"
+          "Meta Conversions API-এর server-side token নিরাপদে রাখতে (Growth plan ও তার উপরে)।",
+          "GA4-তে server-side purchase পাঠাতে — Measurement Protocol (Growth plan ও তার উপরে)।"
         ],
         steps: [
           "Settings > Marketing খুলুন।",
           "Google card-এ GA4 Measurement ID (G-...) ও GTM Container ID (GTM-...) দিন।",
-          "GA4-তে server-side tracking লাগলে toggle on করে Measurement Protocol API secret দিন (GA4 Admin > Data streams > আপনার stream > Measurement Protocol API secrets)।",
-          "Meta card-এ Pixel ID দিন; Conversions API লাগলে toggle on করে access token দিন।",
+          "Meta card-এ Pixel ID ও Domain Verification দিন।",
+          "Server-Side Tracking section-এ (Growth plan ও তার উপরে) GA4-এর জন্য toggle on করে Measurement Protocol API secret দিন (GA4 Admin > Data streams > আপনার stream > Measurement Protocol API secrets)।",
+          "একই section-এ Meta Conversions API toggle on করে access token দিন (Events Manager > Settings > Generate access token)।",
           "TikTok Pixel ID এবং Google Ads Conversion ID (AW-...) দিন।",
           "প্রয়োজন হলে Custom Tracking enable করে header/body/footer code দিন।",
           "Save Marketing Settings চাপুন।"
         ],
         important: [
           "শুধু store owner বা admin এই settings change করতে পারেন; অন্যরা দেখতে পারেন।",
+          "Server-Side Tracking (GA4 Measurement Protocol ও Meta Conversions API) Growth plan থেকে পাওয়া যায়। Free ও Starter-এ section-টি দেখা যায় কিন্তু toggle on করা যায় না; page-এর বাকি সব ID (pixel, GTM, verification) আগের মতোই কাজ করে।",
+          "Plan Growth-এর নিচে নেমে গেলে saved secret মুছে যায় না, কিন্তু server থেকে আর কোনো event যায় না — আবার upgrade করলে সেটি যেখানে ছিল সেখান থেকেই চালু হয়।",
           "Conversions API token ও GA4 API secret encrypt করে রাখা হয়, browser-এ কখনও যায় না — শুধু শেষ চারটি character দেখা যায়।",
           "Server-side purchase order confirm হওয়ার পরে যায়; কোনো কারণে fail করলেও checkout-এ কোনো প্রভাব পড়ে না, শুধু activity log-এ record হয়।",
           "Custom Tracking-এ শুধু tracking tag এবং পরিচিত analytics host allow করা হয়; বাকিটা save-এর সময় reject হয়।",

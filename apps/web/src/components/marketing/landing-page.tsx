@@ -293,7 +293,7 @@ function PricingCard({ badge, cta, featured, features, name, price, text }: { ba
  */
 const pricingHighlights: Record<string, string[]> = {
   free: ["Storefront, products and orders", "COD and manual payments"],
-  growth: ["StoreIM AI assistant and POS", "Advanced analytics and reports", "Google Ads and TikTok tracking", "API access"],
+  growth: ["StoreIM AI assistant and POS", "Advanced analytics and reports", "Server-side tracking (GA4 + Meta Conversions API)", "Google Ads and TikTok tracking", "API access"],
   pro: ["Marketing, WhatsApp, email and SMS automation (coming soon)", "Affiliate tracking and advanced attribution (coming soon)"],
   starter: ["Custom domain", "Courier API and fraud check", "Abandoned cart recovery", "Marketing analytics and pixel tracking"]
 };

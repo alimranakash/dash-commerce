@@ -1,4 +1,5 @@
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
+import { hasPlanFeature } from "../../../../modules/billing/subscription-limits";
 import { MarketingSettingsForm } from "../../../../modules/marketing/components/marketing-settings-form";
 import {
   sendGa4TestEventAction,
@@ -10,7 +11,10 @@ import { getStoreAccess } from "../../../../modules/stores/queries";
 
 export default async function MarketingSettingsPage() {
   const access = await getStoreAccess();
-  const settings = await getMarketingSettingsView(access.store.id);
+  const [settings, serverSideLocked] = await Promise.all([
+    getMarketingSettingsView(access.store.id),
+    hasPlanFeature(access.store.id, "server_side_tracking").then((entitled) => !entitled)
+  ]);
 
   return (
     <DashboardShell storeSlug={access.store.slug}>
@@ -32,6 +36,7 @@ export default async function MarketingSettingsPage() {
           canManage={access.canManage}
           onSendGa4TestEvent={sendGa4TestEventAction}
           onSendMetaTestEvent={sendMetaTestEventAction}
+          serverSideLocked={serverSideLocked}
           settings={settings}
         />
       </section>

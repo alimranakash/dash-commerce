@@ -51,6 +51,7 @@ const GROWTH_FEATURES: PlanFeatureKey[] = [
   "advanced_analytics",
   "api_access",
   "google_ads_tracking",
+  "server_side_tracking",
   "tiktok_tracking"
 ];
 
