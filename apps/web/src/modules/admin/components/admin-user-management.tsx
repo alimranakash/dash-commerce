@@ -13,8 +13,11 @@ import {
 } from "../admin-users.actions";
 
 export type AdminUserListItem = {
+  /** Email if the account has one, otherwise the phone number it signed up with. */
+  contact: string;
   createdAt: string;
-  email: string;
+  /** Null for a phone-only account, so the verified note can tell that apart from an unverified address. */
+  email: string | null;
   emailVerified: boolean;
   id: string;
   image?: string | null;
@@ -87,7 +90,7 @@ export function AdminUserManagement({ activeRole, activeStatus, platformDomain, 
               className="h-11 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none placeholder:text-[#a2a3b0] focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10"
               defaultValue={search}
               name="search"
-              placeholder="Search name or email"
+              placeholder="Search name, email, or phone"
               type="search"
             />
             <select className="h-11 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10" defaultValue={activeRole} name="role">
@@ -109,7 +112,7 @@ export function AdminUserManagement({ activeRole, activeStatus, platformDomain, 
                 <thead className="bg-[#f7f7fa] text-[#565762]">
                   <tr>
                     <th className="px-4 py-3 font-semibold">User</th>
-                    <th className="px-4 py-3 font-semibold">Email</th>
+                    <th className="px-4 py-3 font-semibold">Contact</th>
                     <th className="px-4 py-3 font-semibold">Role</th>
                     <th className="px-4 py-3 font-semibold">Stores</th>
                     <th className="px-4 py-3 font-semibold">Status</th>
@@ -132,7 +135,7 @@ export function AdminUserManagement({ activeRole, activeStatus, platformDomain, 
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-[#565762]">{user.email}</td>
+                      <td className="px-4 py-4 text-[#565762]">{user.contact}</td>
                       <td className="px-4 py-4"><RoleBadge role={user.role} /></td>
                       <td className="px-4 py-4">{user.storesCount}</td>
                       <td className="px-4 py-4"><UserStatusBadge suspended={user.isSuspended} /></td>
@@ -215,7 +218,7 @@ function UserDetailsModal({ onClose, platformDomain, user }: { onClose: () => vo
           <div>
             <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7c3aed]">User Details</p>
             <h2 className="m-0 mt-1 text-xl font-semibold text-[#20212c]">{user.name}</h2>
-            <p className="m-0 mt-1 text-sm text-[#74758a]">{user.email}</p>
+            <p className="m-0 mt-1 text-sm text-[#74758a]">{user.contact}</p>
           </div>
           <button className="grid h-9 w-9 place-items-center rounded-lg border border-[#e6e4ef] text-[#626370] hover:bg-[#f7f5ff]" onClick={onClose} type="button">
             <X className="h-4 w-4" />
@@ -227,8 +230,8 @@ function UserDetailsModal({ onClose, platformDomain, user }: { onClose: () => vo
             <DetailRow label="Name" value={user.name} />
             <DetailRow
               label="Email"
-              note={user.email === "No email" ? undefined : { ok: user.emailVerified, text: user.emailVerified ? "Verified" : "Unverified" }}
-              value={user.email}
+              note={user.email === null ? undefined : { ok: user.emailVerified, text: user.emailVerified ? "Verified" : "Unverified" }}
+              value={user.email ?? "No email"}
             />
             <DetailRow
               label="Phone"

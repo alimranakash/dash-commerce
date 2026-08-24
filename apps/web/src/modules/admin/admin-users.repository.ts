@@ -58,6 +58,14 @@ export async function getAdminUsers(filters: {
                   contains: search,
                   mode: "insensitive"
                 }
+              },
+              // A phone-only account is listed by its number, so it has to be
+              // findable by it too.
+              {
+                phone: {
+                  contains: search,
+                  mode: "insensitive"
+                }
               }
             ]
           }

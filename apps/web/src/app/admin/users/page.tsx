@@ -7,6 +7,7 @@ import {
   type AdminUserRoleFilter,
   type AdminUserStatusFilter
 } from "../../../modules/admin/admin-users.service";
+import { formatAdminDateTime, getAdminTimeZone } from "../../../modules/admin/admin-datetime";
 import { getPlatformRootDomain } from "../../../lib/host-routing";
 import { AdminUserManagement, type AdminUserListItem } from "../../../modules/admin/components/admin-user-management";
 
@@ -19,13 +20,16 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
   const search = singleValue(params.search).trim();
   const activeRole = parseRoleFilter(singleValue(params.role));
   const activeStatus = parseStatusFilter(singleValue(params.status));
-  const [metrics, users] = await Promise.all([
+  const [metrics, users, timeZone] = await Promise.all([
     getAdminUserMetrics(),
     getAdminUsers({
       role: activeRole,
       search,
       status: activeStatus
-    })
+    }),
+    // Every date on this page is rendered in the admin's own timezone rather
+    // than the server's, which is UTC in production.
+    getAdminTimeZone(admin.id)
   ]);
 
   return (
@@ -42,7 +46,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
         activeStatus={activeStatus}
         platformDomain={getPlatformRootDomain()}
         search={search}
-        users={users.map((user) => toUserListItem(user, admin.id))}
+        users={users.map((user) => toUserListItem(user, admin.id, timeZone))}
       />
     </section>
   );
@@ -50,7 +54,11 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
 
 type AdminUserRecord = Awaited<ReturnType<typeof getAdminUsers>>[number];
 
-function toUserListItem(user: AdminUserRecord, currentAdminId: string): AdminUserListItem {
+function toUserListItem(
+  user: AdminUserRecord,
+  currentAdminId: string,
+  timeZone: string
+): AdminUserListItem {
   const joinedStores = user.memberships.flatMap((membership) =>
     membership.organization.stores.map((store) => ({
       name: store.name,
@@ -61,15 +69,19 @@ function toUserListItem(user: AdminUserRecord, currentAdminId: string): AdminUse
   );
 
   return {
-    createdAt: formatDate(user.createdAt),
-    email: user.email ?? "No email",
+    // What identifies the account in a list: sellers who signed up with a phone
+    // number have no email at all, and a row reading "No email" says nothing
+    // about who they are.
+    contact: user.email ?? user.phone ?? "No contact",
+    createdAt: formatAdminDateTime(user.createdAt, timeZone),
+    email: user.email,
     emailVerified: user.emailVerified !== null,
     id: user.id,
     image: user.image,
     isCurrentAdmin: user.id === currentAdminId,
     isSuspended: user.isSuspended,
     joinedStores,
-    lastActivity: formatDate(user.updatedAt),
+    lastActivity: formatAdminDateTime(user.updatedAt, timeZone),
     loginProviders: user.accounts.map((account) => account.provider),
     name: user.name ?? user.email ?? user.phone ?? "Unnamed user",
     phone: user.phone,
@@ -93,9 +105,3 @@ function singleValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] ?? "" : value ?? "";
 }
 
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat("en", {
-    dateStyle: "medium",
-    timeStyle: "short"
-  }).format(date);
-}
