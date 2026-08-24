@@ -101,6 +101,9 @@ const orderLinks = [
   { href: "/dashboard/orders", label: "All Orders" },
   { href: "/dashboard/orders/new", label: "Create Order" },
   { href: "/dashboard/orders/tracking", label: "Order Tracking" },
+  { href: "/dashboard/orders/returns", label: "Returns" },
+  { href: "/dashboard/orders/exchanges", label: "Exchanges" },
+  { href: "/dashboard/orders/refunds", label: "Refunds" },
   { href: "/dashboard/orders/fake", label: "Fake Orders" },
   { href: "/dashboard/orders/verification", label: "Verification Queue" },
   // Lives at /dashboard/fraud-check rather than under /dashboard/orders, so the
@@ -504,7 +507,13 @@ function isOrderLinkActive(pathname: string, href: string) {
     return matchesRoute(pathname, href);
   }
 
-  if (href === "/dashboard/orders/tracking" || href === "/dashboard/orders/new") {
+  if (
+    href === "/dashboard/orders/tracking" ||
+    href === "/dashboard/orders/new" ||
+    href === "/dashboard/orders/returns" ||
+    href === "/dashboard/orders/exchanges" ||
+    href === "/dashboard/orders/refunds"
+  ) {
     return matchesRoute(pathname, href);
   }
 

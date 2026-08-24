@@ -13,6 +13,7 @@ type DashboardTopbarProps = {
 const labels: Record<string, string> = {
   ai: "AI Assistant",
   categories: "Categories",
+  exchanges: "Exchanges",
   expenses: "Expenses",
   fake: "Fake Orders",
   inventory: "Inventory",
@@ -23,6 +24,7 @@ const labels: Record<string, string> = {
   profile: "Profile",
   products: "Products",
   purchases: "Purchases",
+  refunds: "Refunds",
   returns: "Returns",
   sales: "Sales",
   settings: "Settings",

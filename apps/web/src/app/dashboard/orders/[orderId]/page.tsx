@@ -14,6 +14,7 @@ import {
 } from "../../../../modules/courier/courier.service";
 import { getCourierProvider } from "../../../../modules/courier/providers/registry";
 import { getOrderByIdForStore } from "../../../../modules/orders/order.service";
+import { OrderReturnsPanel } from "../../../../modules/returns/components/order-returns-panel";
 import { hasPlanFeature } from "../../../../modules/billing/subscription-limits";
 import { requireStore } from "../../../../modules/stores/queries";
 
@@ -136,6 +137,8 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
             total: Number(item.total)
           }))}
         />
+
+        <OrderReturnsPanel currency={order.currency} orderId={order.id} storeId={store.id} />
 
         <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,0.7fr)]">
           <OrderTimeline createdAt={order.createdAt} fulfillmentStatus={order.fulfillmentStatus} orderStatus={order.status} paymentStatus={order.paymentStatus} updatedAt={order.updatedAt} />
