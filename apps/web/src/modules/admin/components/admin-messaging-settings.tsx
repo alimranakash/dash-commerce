@@ -26,6 +26,42 @@ type Action = (state: MessagingSettingsState, formData: FormData) => Promise<Mes
 type ClearAction = (channel: "EMAIL" | "SMS") => Promise<MessagingSettingsState>;
 
 const initialState: MessagingSettingsState = { status: "idle" };
+
+/**
+ * The per-gateway copy, kept beside the dropdown that switches between them.
+ *
+ * The differences are not cosmetic. Alpha SMS resends unbranded when a sender ID
+ * is refused; BulkSMS BD refuses the message outright and also wants this
+ * server's IP whitelisted. An admin picking a gateway has to be told which of
+ * those they have just signed up for, so the copy follows the selection.
+ */
+const smsGateways = [
+  {
+    key: "alpha",
+    label: "Alpha SMS (api.sms.net.bd)",
+    senderIdNote:
+      "Only works once the gateway has approved it. A rejected ID falls back to unbranded automatically.",
+    senderIdPlaceholder: "Leave blank to send unbranded",
+    testNote:
+      "A new Alpha SMS account can only message its own registered number until the first balance recharge, so test with that number before trusting any other."
+  },
+  {
+    key: "bulksmsbd",
+    label: "BulkSMS BD (bulksmsbd.net)",
+    senderIdNote:
+      "Required — BulkSMS BD refuses a send with no approved sender ID instead of falling back to an unbranded one. A masking ID only carries Bengali text.",
+    senderIdPlaceholder: "Approved sender ID",
+    testNote:
+      "BulkSMS BD needs an approved sender ID, credit on the account, and this server's outbound IP whitelisted in their panel. A test says which of the three is missing."
+  }
+] as const;
+
+const defaultGateway = smsGateways[0];
+
+function gatewayFor(key: string) {
+  return smsGateways.find((gateway) => gateway.key === key) ?? defaultGateway;
+}
+
 const inputClass =
   "mt-2 h-11 w-full rounded-lg border border-[#e4e3ee] bg-white px-3.5 text-sm text-[#30313d] outline-none transition placeholder:text-[#a2a3b0] focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10";
 const labelClass = "block text-sm font-semibold text-[#20212c]";
@@ -45,6 +81,10 @@ export function AdminMessagingSettings({
   // Only so the port placeholder can follow the toggle: a blank field reading
   // "587" beside a ticked implicit-TLS box promises a pair that cannot connect.
   const [implicitTls, setImplicitTls] = useState(settings.smtpSecure);
+  // The two gateways fail differently enough that the sender-ID field and the
+  // test note have to say different things — see `smsGateways`.
+  const [smsProvider, setSmsProvider] = useState(settings.smsProvider);
+  const gateway = gatewayFor(smsProvider);
 
   return (
     <div className="grid gap-4">
@@ -85,9 +125,22 @@ export function AdminMessagingSettings({
           <div className="grid gap-4 sm:grid-cols-2">
             <label className={labelClass}>
               Provider
-              <select className={inputClass} defaultValue={settings.smsProvider} name="smsProvider">
-                <option value="alpha">Alpha SMS (api.sms.net.bd)</option>
+              <select
+                className={inputClass}
+                name="smsProvider"
+                onChange={(event) => setSmsProvider(event.target.value)}
+                value={smsProvider}
+              >
+                {smsGateways.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
+              <span className="mt-1 block text-xs font-normal text-[#74758a]">
+                Changing this drops the stored API key — one key belongs to one gateway. Paste the
+                new gateway&rsquo;s key below before saving.
+              </span>
             </label>
             <label className={labelClass}>
               Sender ID
@@ -95,11 +148,10 @@ export function AdminMessagingSettings({
                 className={inputClass}
                 defaultValue={settings.smsSenderId}
                 name="smsSenderId"
-                placeholder="Leave blank to send unbranded"
+                placeholder={gateway.senderIdPlaceholder}
               />
               <span className="mt-1 block text-xs font-normal text-[#74758a]">
-                Only works once the gateway has approved it. A rejected ID falls back to unbranded
-                automatically.
+                {gateway.senderIdNote}
               </span>
             </label>
           </div>
@@ -167,7 +219,7 @@ export function AdminMessagingSettings({
         </div>
       </form>
 
-      <TestSender action={testAction} />
+      <TestSender action={testAction} note={gateway.testNote} />
     </div>
   );
 }
@@ -179,7 +231,7 @@ export function AdminMessagingSettings({
  * still refuse every message, and a mail relay can accept a message and have it
  * land in spam. Neither shows up in a saved form.
  */
-function TestSender({ action }: { action: Action }) {
+function TestSender({ action, note }: { action: Action; note: string }) {
   const [state, formAction, isPending] = useActionState(action, initialState);
 
   return (
@@ -190,10 +242,7 @@ function TestSender({ action }: { action: Action }) {
         </span>
         <h2 className="m-0 text-base font-semibold text-[#20212c]">Send a test</h2>
       </div>
-      <p className="m-0 mt-1 text-sm text-[#74758a]">
-        A new Alpha SMS account can only message its own registered number until the first balance
-        recharge, so test with that number before trusting any other.
-      </p>
+      <p className="m-0 mt-1 text-sm text-[#74758a]">{note}</p>
 
       {state.message ? (
         <p

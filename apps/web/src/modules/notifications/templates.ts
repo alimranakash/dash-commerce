@@ -10,8 +10,14 @@
 
 const brand = "StoreIM";
 
+/**
+ * The opening sentence is not free wording. Bangladeshi gateways route OTP
+ * traffic on the shape `Your {Brand} OTP is XXXX` — BulkSMS BD publishes it as a
+ * requirement — and a code that arrives in some other phrasing can be held or
+ * dropped by the operator. Everything after that first full stop is ours.
+ */
 export function otpCodeSms(input: { code: string; expiresInMinutes: number }) {
-  return `${brand} verification code: ${input.code}. Valid for ${input.expiresInMinutes} minutes. Do not share it with anyone.`;
+  return `Your ${brand} OTP is ${input.code}. Valid for ${input.expiresInMinutes} minutes. Do not share it with anyone.`;
 }
 
 /**

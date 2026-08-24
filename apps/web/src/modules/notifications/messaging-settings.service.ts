@@ -3,7 +3,11 @@ import {
   getMessagingSettingRecord,
   saveMessagingSettingRecord
 } from "./messaging-settings.repository";
-import { smsProviderKeys, type SmsProviderKey } from "./notifications.config";
+import {
+  readEnvironmentSmsApiKey,
+  smsProviderKeys,
+  type SmsProviderKey
+} from "./notifications.config";
 
 /**
  * Reading and writing the platform's gateway credentials from the admin panel.
@@ -35,18 +39,21 @@ export type MessagingSettingsView = {
 
 export async function getMessagingSettingsView(): Promise<MessagingSettingsView> {
   const record = await getMessagingSettingRecord();
+  // The fallback behind a blank panel is the selected gateway's own variable, so
+  // the note about it has to be answered for that gateway and no other.
+  const smsProvider = toProviderKey(record?.smsProvider);
 
   return {
     emailEnabled: record?.emailEnabled ?? true,
     emailFrom: record?.emailFrom ?? "",
     environmentFallback: {
       email: Boolean(process.env.SMTP_HOST?.trim() && process.env.SMTP_USER?.trim()),
-      sms: Boolean(process.env.ALPHA_SMS_API_KEY?.trim())
+      sms: Boolean(readEnvironmentSmsApiKey(smsProvider))
     },
     secretsStorable: isSecretEncryptionConfigured(),
     smsApiKeyHint: record?.smsApiKeyHint ?? null,
     smsEnabled: record?.smsEnabled ?? true,
-    smsProvider: toProviderKey(record?.smsProvider),
+    smsProvider,
     smsSenderId: record?.smsSenderId ?? "",
     smtpHost: record?.smtpHost ?? "",
     smtpPasswordHint: record?.smtpPasswordHint ?? null,
@@ -71,7 +78,14 @@ export async function saveMessagingSettings(input: {
 }) {
   const existing = await getMessagingSettingRecord();
   const smsApiKey = input.smsApiKey.trim();
+  const smsProvider = toProviderKey(input.smsProvider);
   const smtpPassword = input.smtpPassword.trim();
+  // An API key belongs to one gateway and is meaningless at any other, so
+  // switching gateway without pasting a new one drops the old key rather than
+  // carrying it over. Keeping it would send a live credential to a gateway that
+  // never issued it, and the resulting "key not recognised" reads like an outage
+  // rather than the half-finished switch it actually is.
+  const gatewayChanged = existing !== null && toProviderKey(existing.smsProvider) !== smsProvider;
 
   if ((smsApiKey || smtpPassword) && !isSecretEncryptionConfigured()) {
     // Better to refuse than to write a credential in the clear. The message
@@ -85,14 +99,15 @@ export async function saveMessagingSettings(input: {
     emailEnabled: input.emailEnabled,
     emailFrom: blankToNull(input.emailFrom),
     // Absent keys are left alone rather than cleared, so editing one field does
-    // not silently drop a credential the admin did not retype.
+    // not silently drop a credential the admin did not retype. A gateway switch
+    // is the one exception, for the reason given above.
     ...(smsApiKey
       ? { smsApiKeyCipher: encryptSecret(smsApiKey), smsApiKeyHint: hint(smsApiKey) }
-      : existing
+      : existing && !gatewayChanged
         ? {}
         : { smsApiKeyCipher: null, smsApiKeyHint: null }),
     smsEnabled: input.smsEnabled,
-    smsProvider: toProviderKey(input.smsProvider),
+    smsProvider,
     smsSenderId: blankToNull(input.smsSenderId),
     smtpHost: blankToNull(input.smtpHost),
     ...(smtpPassword

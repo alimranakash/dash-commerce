@@ -16,9 +16,26 @@ import { getMessagingSettingRecord } from "./messaging-settings.repository";
  * StoreOS client extends when its own credentials are missing.
  */
 
-export const smsProviderKeys = ["alpha"] as const;
+export const smsProviderKeys = ["alpha", "bulksmsbd"] as const;
 
 export type SmsProviderKey = (typeof smsProviderKeys)[number];
+
+/**
+ * Each gateway reads its own variable, and there is deliberately no shared
+ * `SMS_API_KEY` behind them. Two accounts can then sit in `.env` at once with
+ * `SMS_PROVIDER` deciding which is live — switching gateways during an outage is
+ * one line rather than a re-paste of a key nobody has to hand — and no key can
+ * ever be handed to the gateway it does not belong to.
+ */
+const smsApiKeyVariables: Record<SmsProviderKey, string> = {
+  alpha: "ALPHA_SMS_API_KEY",
+  bulksmsbd: "BULKSMSBD_API_KEY"
+};
+
+/** What `.env` would supply for a gateway if the admin panel is left blank. */
+export function readEnvironmentSmsApiKey(provider: SmsProviderKey) {
+  return trimmed(process.env[smsApiKeyVariables[provider]]);
+}
 
 export type SmtpSettings = {
   from: string;
@@ -92,7 +109,12 @@ function readSmtpSettings(record: MessagingRecord): SmtpSettings | null {
 }
 
 function readSmsSettings(record: MessagingRecord): MessagingConfig["sms"] {
-  const apiKey = openSecret(record?.smsApiKeyCipher) ?? trimmed(process.env.ALPHA_SMS_API_KEY);
+  // The provider is settled first because the environment fallback behind the
+  // stored key is per-gateway: a key saved for Alpha SMS is not one BulkSMS BD
+  // would accept, and reaching for the wrong variable would send a live message
+  // through a gateway with a stranger's credentials on it.
+  const provider = toProviderKey(trimmed(record?.smsProvider) ?? trimmed(process.env.SMS_PROVIDER));
+  const apiKey = openSecret(record?.smsApiKeyCipher) ?? readEnvironmentSmsApiKey(provider);
 
   if (!apiKey) {
     return null;
@@ -103,7 +125,7 @@ function readSmsSettings(record: MessagingRecord): MessagingConfig["sms"] {
       apiKey,
       senderId: trimmed(record?.smsSenderId) ?? trimmed(process.env.SMS_SENDER_ID) ?? null
     },
-    provider: toProviderKey(trimmed(record?.smsProvider) ?? trimmed(process.env.SMS_PROVIDER))
+    provider
   };
 }
 

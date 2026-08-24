@@ -1,5 +1,6 @@
 import type { SmsProviderKey } from "../notifications.config";
 import { alphaSmsProvider } from "./alpha-sms";
+import { bulkSmsBdProvider } from "./bulksmsbd";
 import type { SmsProvider } from "./provider.types";
 
 /**
@@ -7,7 +8,8 @@ import type { SmsProvider } from "./provider.types";
  * provider by name — the service asks for whichever one the settings name.
  */
 const providers: Record<SmsProviderKey, SmsProvider> = {
-  alpha: alphaSmsProvider
+  alpha: alphaSmsProvider,
+  bulksmsbd: bulkSmsBdProvider
 };
 
 export function getSmsProvider(key: SmsProviderKey) {
