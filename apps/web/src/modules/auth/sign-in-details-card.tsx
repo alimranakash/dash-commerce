@@ -86,8 +86,8 @@ export function SignInDetailsCard({
             <CodeInput onChange={setCode} value={code} />
             {challenge.devCode ? (
               <p className="m-0 rounded-lg bg-[#edfbf5] px-3 py-2 text-sm text-[#177356]">
-                Development build: nothing is configured to send messages, so the code is{" "}
-                <b>{challenge.devCode}</b>.
+                Development build: the code could not be sent, so it is <b>{challenge.devCode}</b>. The
+                server log says why.
               </p>
             ) : null}
           </>

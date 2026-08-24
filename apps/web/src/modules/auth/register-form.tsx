@@ -459,7 +459,7 @@ function VerifyStep({ challenge, code, isResending, onCodeChange, onResend, seco
       <p className={styles.sentTo}>We sent a {codeLength}-digit code by {sentBy} to<br /><b>{challenge?.identifier ?? "your account"}</b></p>
       <CodeInput onChange={onCodeChange} value={code} />
       <div className={styles.resendRow}>{secondsLeft > 0 ? <span>You can ask for another code in {secondsLeft}s</span> : <><span>Did not get it?</span><button disabled={isResending} onClick={onResend} type="button">{isResending ? "Sending..." : "Send another code"}</button></>}</div>
-      {challenge?.devCode ? <p className={styles.successMessage}>Development build: nothing is configured to send messages, so the code is <b>{challenge.devCode}</b>. It is in the server log too.</p> : null}
+      {challenge?.devCode ? <p className={styles.successMessage}>Development build: the code could not be sent, so it is <b>{challenge.devCode}</b>. The server log says why.</p> : null}
     </>
   );
 }

@@ -16,8 +16,9 @@ import type { OtpChannel } from "./otp.schema";
 
 export type OtpDeliveryResult = {
   /**
-   * Only when nothing was configured to send the code and this is a development
-   * build. A real send never echoes it, and neither does production.
+   * Only in a development build, and only when the code never reached a gateway
+   * — either nothing is configured to send it, or the gateway refused it. A real
+   * send never echoes it, and neither does production.
    */
   devCode?: string;
   delivered: boolean;
@@ -54,6 +55,22 @@ export async function deliverOtpCode(input: {
       ...(echo ? { devCode: input.code } : {})
     };
   } catch (error) {
+    // A gateway that refuses everything — an unwhitelisted IP, an unapproved
+    // sender ID, an empty balance — is fixed in that gateway's own panel and not
+    // from here, so failing hard would leave local sign-up impossible to walk
+    // through until somebody else fixes an account. Development therefore falls
+    // back to the same echo an unconfigured install gets. Production still
+    // fails, and either way the refusal is already loud in the log.
+    if (process.env.NODE_ENV === "development") {
+      console.warn(
+        `[otp] the gateway would not take this code, so it is being shown in the browser instead — development build only: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+
+      return { delivered: false, devCode: input.code };
+    }
+
     throw toOtpDeliveryError(error, input.channel);
   }
 }

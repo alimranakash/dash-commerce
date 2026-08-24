@@ -193,7 +193,7 @@ export function ResetPasswordForm() {
             <div className={styles.resendRow}>{secondsLeft > 0 ? <span>You can ask for another code in {secondsLeft}s</span> : <><span>Did not get it?</span><button disabled={isResending} onClick={resendCode} type="button">{isResending ? "Sending..." : "Send another code"}</button></>}</div>
             <label>New password<div className={styles.inputShell}><LockKeyhole /><input autoComplete="new-password" onChange={(event) => { setPassword(event.target.value); setError(null); }} placeholder="At least 8 characters" type={showPassword ? "text" : "password"} value={password} /><button aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((value) => !value)} type="button">{showPassword ? <EyeOff /> : <Eye />}</button></div></label>
             <label>Confirm new password<div className={styles.inputShell}><LockKeyhole /><input autoComplete="new-password" onChange={(event) => { setConfirmPassword(event.target.value); setError(null); }} placeholder="Type it again" type={showPassword ? "text" : "password"} value={confirmPassword} /></div></label>
-            {challenge.devCode ? <p className={styles.successMessage}>Development build: nothing is configured to send messages, so the code is <b>{challenge.devCode}</b>.</p> : null}
+            {challenge.devCode ? <p className={styles.successMessage}>Development build: the code could not be sent, so it is <b>{challenge.devCode}</b>. The server log says why.</p> : null}
           </>
         )}
         {notice ? <p className={styles.successMessage}>{notice}</p> : null}
