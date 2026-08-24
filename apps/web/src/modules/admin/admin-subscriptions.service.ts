@@ -1,5 +1,7 @@
 import {
+  deleteAdminSubscription,
   extendAdminSubscriptionTrial,
+  findAdminSubscriptionStore,
   getAdminSubscriptionMetrics,
   getAdminSubscriptionPlans,
   getAdminSubscriptions,
@@ -28,6 +30,22 @@ export async function setSubscriptionSmsLimit(subscriptionId: string, input: Sms
 export async function extendSubscriptionTrial(subscriptionId: string, input: ExtendTrialInput) {
   const data = extendTrialSchema.parse(input);
   return extendAdminSubscriptionTrial(subscriptionId, data.days);
+}
+
+/**
+ * Deletes a subscription and returns the store it belonged to, so the caller can
+ * record what was removed once the row no longer exists.
+ */
+export async function deleteSubscription(subscriptionId: string) {
+  const subscription = await findAdminSubscriptionStore(subscriptionId);
+
+  if (!subscription) {
+    throw new Error("Subscription could not be found.");
+  }
+
+  await deleteAdminSubscription(subscriptionId);
+
+  return subscription;
 }
 
 export async function activateSubscription(subscriptionId: string) {

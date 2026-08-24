@@ -252,6 +252,11 @@ export async function getAdminSubscriptions(filters: {
   return prisma.subscription.findMany({
     where,
     include: {
+      _count: {
+        select: {
+          payments: true
+        }
+      },
       organization: {
         include: {
           members: {
@@ -401,6 +406,46 @@ export async function extendAdminSubscriptionTrial(subscriptionId: string, days:
       id: subscriptionId
     },
     data
+  });
+}
+
+/**
+ * The store behind a subscription, read before deleting it so the caller can
+ * name the store in its log entry once the row itself is gone.
+ */
+export async function findAdminSubscriptionStore(subscriptionId: string) {
+  return prisma.subscription.findUnique({
+    where: {
+      id: subscriptionId
+    },
+    select: {
+      id: true,
+      organizationId: true,
+      store: {
+        select: {
+          id: true,
+          name: true,
+          status: true
+        }
+      }
+    }
+  });
+}
+
+/**
+ * Removes one subscription outright. Its `Payment` rows cascade with it, so the
+ * store's billing history goes too — which is why the admin UI names the payment
+ * count before asking to confirm.
+ *
+ * This never leaves a live store unbilled: `ensureDefaultSubscriptionsForStores`
+ * hands any non-archived store a fresh default subscription on the next admin
+ * read, so only an archived store stays without one.
+ */
+export async function deleteAdminSubscription(subscriptionId: string) {
+  return prisma.subscription.delete({
+    where: {
+      id: subscriptionId
+    }
   });
 }
 

@@ -1,13 +1,14 @@
 "use client";
 
 import { Button } from "@dash/ui";
-import { CalendarClock, CheckCircle2, Edit3, Eye, MessageSquare, PauseCircle, RotateCcw, Search, TimerReset, X } from "lucide-react";
+import { CalendarClock, CheckCircle2, Edit3, Eye, MessageSquare, PauseCircle, RotateCcw, Search, TimerReset, Trash2, X } from "lucide-react";
 import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
 import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 import {
   activateSubscriptionAction,
   cancelSubscriptionAction,
   changeSubscriptionPlanAction,
+  deleteSubscriptionAction,
   extendSubscriptionTrialAction,
   markSubscriptionPastDueAction,
   resumeSubscriptionAction,
@@ -26,11 +27,13 @@ export type AdminSubscriptionListItem = {
   ownerEmail: string;
   ownerImage?: string | null;
   ownerName: string;
+  paymentCount: number;
   planId: string;
   planName: string;
   planSmsLimit: number;
   smsLimitOverride: number | null;
   status: "ACTIVE" | "CANCELLED" | "EXPIRED" | "PAST_DUE" | "TRIALING";
+  storeArchived: boolean;
   storeDomain: string;
   storeName: string;
   storeSlug: string;
@@ -91,6 +94,8 @@ export function AdminSubscriptionManagement({
   const [trialTarget, setTrialTarget] = useState<AdminSubscriptionListItem | null>(null);
   const [smsTarget, setSmsTarget] = useState<AdminSubscriptionListItem | null>(null);
   const [statusTarget, setStatusTarget] = useState<{ action: StatusAction; subscription: AdminSubscriptionListItem } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminSubscriptionListItem | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const hasSubscriptions = subscriptions.length > 0;
   const filterLabel = useMemo(() => {
@@ -107,9 +112,21 @@ export function AdminSubscriptionManagement({
     });
   }
 
+  function deleteSubscription(subscriptionId: string) {
+    startTransition(async () => {
+      const result = await deleteSubscriptionAction(subscriptionId);
+
+      setDeleteError(result.ok ? null : result.message);
+      setDeleteTarget(null);
+    });
+  }
+
   return (
     <>
       <section className="rounded-xl border border-[#ececf5] bg-white p-5 shadow-sm">
+        {deleteError ? (
+          <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{deleteError}</p>
+        ) : null}
         <div className="mb-5 flex flex-col gap-4 2xl:flex-row 2xl:items-center 2xl:justify-between">
           <div>
             <h2 className="m-0 text-base font-semibold text-[#20212c]">Subscriptions</h2>
@@ -203,6 +220,9 @@ export function AdminSubscriptionManagement({
                               <PauseCircle className="h-4 w-4" />
                             </button>
                           )}
+                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-red-600 hover:bg-red-50" disabled={pending} onClick={() => setDeleteTarget(subscription)} title="Delete" type="button">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -220,6 +240,14 @@ export function AdminSubscriptionManagement({
       {planTarget ? <ChangePlanModal onClose={() => setPlanTarget(null)} plans={plans} subscription={planTarget} /> : null}
       {trialTarget ? <ExtendTrialModal onClose={() => setTrialTarget(null)} subscription={trialTarget} /> : null}
       {smsTarget ? <SmsAllowanceModal onClose={() => setSmsTarget(null)} subscription={smsTarget} /> : null}
+      {deleteTarget ? (
+        <DeleteSubscriptionModal
+          disabled={pending}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={() => deleteSubscription(deleteTarget.id)}
+          subscription={deleteTarget}
+        />
+      ) : null}
       {statusTarget ? (
         <StatusConfirmModal
           disabled={pending}
@@ -472,6 +500,53 @@ function StatusConfirmModal({
           <button className="h-11 cursor-pointer rounded-lg border border-[#dedcf0] font-semibold text-[#30313d] hover:bg-[#f7f5ff]" disabled={disabled} onClick={onClose} type="button">Cancel</button>
           <Button className="h-11 cursor-pointer rounded-lg bg-[#7c3aed] font-semibold text-white hover:bg-[#6d28d9] disabled:opacity-60" disabled={disabled} onClick={onConfirm} type="button">
             {disabled ? "Updating..." : statusAction.label}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Deleting takes the payment history with it, and — for a store that is still
+ * live — is undone by the platform handing that store a fresh default
+ * subscription on the next load. Both are spelled out here rather than left for
+ * the admin to discover after confirming.
+ */
+function DeleteSubscriptionModal({
+  disabled,
+  onClose,
+  onConfirm,
+  subscription
+}: {
+  disabled: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  subscription: AdminSubscriptionListItem;
+}) {
+  return (
+    <div aria-modal="true" className="fixed inset-0 z-[110] grid place-items-center bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-red-50 text-red-600">
+          <Trash2 className="h-6 w-6" />
+        </div>
+        <h2 className="mt-5 text-center text-xl font-semibold text-[#20212c]">Delete Subscription</h2>
+        <p className="mt-2 text-center text-sm leading-6 text-[#74758a]">
+          Delete the {subscription.planName} subscription for {subscription.storeName}?
+          {subscription.paymentCount > 0
+            ? ` Its ${subscription.paymentCount} payment record${subscription.paymentCount === 1 ? "" : "s"} go with it.`
+            : ""}{" "}
+          This action cannot be undone.
+        </p>
+        {subscription.storeArchived ? null : (
+          <p className="mt-3 rounded-lg bg-amber-50 px-4 py-3 text-center text-xs font-medium leading-5 text-amber-800">
+            {subscription.storeName} is still live, so it is given a fresh free-plan trial subscription the next time this page loads. Archive the store from Stores first if the row should stay gone.
+          </p>
+        )}
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          <button className="h-11 cursor-pointer rounded-lg border border-[#dedcf0] font-semibold text-[#30313d] hover:bg-[#f7f5ff]" disabled={disabled} onClick={onClose} type="button">Cancel</button>
+          <Button className="h-11 cursor-pointer rounded-lg bg-red-600 font-semibold text-white hover:bg-red-700 disabled:opacity-60" disabled={disabled} onClick={onConfirm} type="button">
+            {disabled ? "Deleting..." : "Delete"}
           </Button>
         </div>
       </div>

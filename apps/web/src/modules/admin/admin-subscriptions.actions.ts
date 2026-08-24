@@ -2,11 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { ZodError } from "zod";
+import { createSystemLog } from "../../lib/system-log";
 import { requirePlatformAdmin } from "./admin.auth";
 import {
   activateSubscription,
   cancelSubscription,
   changeSubscriptionPlan,
+  deleteSubscription,
   extendSubscriptionTrial,
   markSubscriptionPastDue,
   resumeSubscription,
@@ -105,6 +107,38 @@ export async function resumeSubscriptionAction(subscriptionId: string) {
   await requirePlatformAdmin();
   await resumeSubscription(subscriptionId);
   revalidatePath("/admin/subscriptions");
+}
+
+/**
+ * Deleting is the one subscription action with nothing left to read afterwards,
+ * so it writes a log entry naming the store and reports failure to the caller
+ * rather than throwing an unhandled error into the client.
+ */
+export async function deleteSubscriptionAction(subscriptionId: string) {
+  const admin = await requirePlatformAdmin();
+
+  try {
+    const subscription = await deleteSubscription(subscriptionId);
+
+    await createSystemLog({
+      level: "WARNING",
+      message: `Deleted subscription: ${subscription.store.name}`,
+      organizationId: subscription.organizationId,
+      source: "SUBSCRIPTION",
+      storeId: subscription.store.id,
+      userId: admin.id
+    });
+  } catch (error) {
+    return {
+      message: error instanceof Error ? error.message : "This subscription could not be deleted.",
+      ok: false as const
+    };
+  }
+
+  revalidatePath("/admin/subscriptions");
+  return {
+    ok: true as const
+  };
 }
 
 function subscriptionErrorState(error: unknown): SubscriptionActionState {
