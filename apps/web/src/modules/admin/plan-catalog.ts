@@ -107,6 +107,27 @@ export const FALLBACK_DEFAULT_PLAN_SLUG = "starter";
  */
 export const FREE_PLAN_TRIAL_DAYS = 365;
 
+/**
+ * How many trial days a brand-new store's subscription is stamped with.
+ *
+ * Normally the plan's own `trialDays` column. The free tier is the exception: a
+ * database seeded before the free year — `Plan.trialDays` defaults to `0` — or a
+ * plan row edited down to zero would otherwise hand a new store a trial that
+ * ended the instant it was created, so the seller's first visit to the dashboard
+ * is the "your free year has ended" lock. The offer is stated to the world from
+ * `FREE_PLAN_TRIAL_DAYS`, so that is what a non-positive column falls back to.
+ *
+ * Only a non-positive value is overridden. An admin who deliberately shortens
+ * the free trial keeps their edit.
+ */
+export function newStoreTrialDays(plan: { slug: string; trialDays: number }) {
+  if (plan.slug === DEFAULT_PLAN_SLUG && plan.trialDays <= 0) {
+    return FREE_PLAN_TRIAL_DAYS;
+  }
+
+  return plan.trialDays;
+}
+
 export const PLAN_CATALOG: PlanCatalogEntry[] = [
   {
     aiEnabled: false,

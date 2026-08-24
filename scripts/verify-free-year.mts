@@ -18,14 +18,20 @@
  * - `assertStoreUnlocked` — the exact call checkout makes — refusing an order;
  * - a *paid* plan with an elapsed trial staying unlocked, since the lock is the
  *   free year running out and nothing else;
- * - failing open for a subscription with no trial end date at all.
+ * - failing open for a subscription with no trial end date at all;
+ * - a free plan row carrying `trialDays: 0` — every database seeded before the
+ *   free year — still handing a new store the full year rather than a trial that
+ *   has already ended, and a store already stamped with one not being locked.
  *
  * Run with: npm run verify:free-year
  */
 import { prisma } from "@dash/db";
 import { ensureDefaultPlans } from "../apps/web/src/modules/admin/admin-plans.repository";
 import { createDefaultSubscriptionRecord } from "../apps/web/src/modules/admin/admin-subscriptions.repository";
-import { FREE_PLAN_TRIAL_DAYS } from "../apps/web/src/modules/admin/plan-catalog";
+import {
+  FREE_PLAN_TRIAL_DAYS,
+  newStoreTrialDays
+} from "../apps/web/src/modules/admin/plan-catalog";
 import {
   SubscriptionLockedError,
   assertStoreUnlocked,
@@ -47,12 +53,20 @@ function check(label: string, passed: boolean, detail = "") {
   }
 }
 
-/** Moves the store's trial end date, the way time passing would. */
+/**
+ * Moves the store's trial end date, the way time passing would.
+ *
+ * `trialStartsAt` moves with it and stays a full year behind: time passing
+ * shifts the whole window. A start date left at "today" with an end date in the
+ * past would instead be a zero-or-negative trial, which no store reaches by
+ * waiting and which the reader deliberately treats as "no trial was granted".
+ */
 async function setTrialEnd(storeId: string, endsAt: Date | null) {
   await prisma.subscription.update({
     data: {
       currentPeriodEndsAt: endsAt,
-      trialEndsAt: endsAt
+      trialEndsAt: endsAt,
+      trialStartsAt: endsAt ? new Date(endsAt.getTime() - FREE_PLAN_TRIAL_DAYS * DAY_MS) : null
     },
     where: {
       storeId
@@ -77,7 +91,15 @@ async function main() {
   check(
     `free plan grants ${FREE_PLAN_TRIAL_DAYS} trial days`,
     freePlan.trialDays === FREE_PLAN_TRIAL_DAYS,
-    `trialDays=${freePlan.trialDays} (run npm run db:backfill-plans if this fails)`
+    `trialDays=${freePlan.trialDays} (ensureDefaultPlans repairs a zero here)`
+  );
+  check(
+    "a zeroed free plan row still grants the year",
+    newStoreTrialDays({ slug: "free", trialDays: 0 }) === FREE_PLAN_TRIAL_DAYS
+  );
+  check(
+    "a deliberately shortened free trial is honoured",
+    newStoreTrialDays({ slug: "free", trialDays: 30 }) === 30
   );
   check("daysUntil rounds up and floors at zero", daysUntil(new Date(Date.now() - DAY_MS)) === 0);
 
@@ -187,6 +209,24 @@ async function main() {
     await setTrialEnd(store.id, null);
 
     check("no countdown without a date", (await getStoreFreeTrialState(store.id)) === null);
+    check("and no lock", (await isStoreLocked(store.id)) === false);
+
+    console.log("\n=== Scope: a trial that ended when it started ===");
+    // Exactly what a store created against a `trialDays: 0` free plan row was
+    // stamped with. It has to read as "no trial was granted" rather than as a
+    // year that elapsed, or the seller is locked out on their first visit.
+    const stampedAt = new Date(Date.now() - 30 * DAY_MS);
+
+    await prisma.subscription.update({
+      data: {
+        currentPeriodEndsAt: stampedAt,
+        trialEndsAt: stampedAt,
+        trialStartsAt: stampedAt
+      },
+      where: { storeId: store.id }
+    });
+
+    check("no countdown on a zero-length trial", (await getStoreFreeTrialState(store.id)) === null);
     check("and no lock", (await isStoreLocked(store.id)) === false);
   } finally {
     // Cascades to the store and its subscription.

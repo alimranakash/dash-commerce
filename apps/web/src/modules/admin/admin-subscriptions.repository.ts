@@ -1,6 +1,6 @@
 import { prisma, type Prisma } from "@dash/db";
 import { ensureDefaultPlans } from "./admin-plans.repository";
-import { DEFAULT_PLAN_SLUG, FALLBACK_DEFAULT_PLAN_SLUG } from "./plan-catalog";
+import { DEFAULT_PLAN_SLUG, FALLBACK_DEFAULT_PLAN_SLUG, newStoreTrialDays } from "./plan-catalog";
 import { BILLING_CYCLE_DAYS } from "./admin-subscriptions.schema";
 
 export type AdminSubscriptionStatusFilter = "all" | "active" | "cancelled" | "expired" | "past_due" | "trialing";
@@ -34,19 +34,24 @@ export async function createDefaultSubscriptionRecord(
   }
 
   const now = new Date();
-  const trialEndsAt = addDays(now, defaultPlan.trialDays);
+  const trialDays = newStoreTrialDays(defaultPlan);
+  // A plan with no trial gets no trial *dates*, rather than dates equal to `now`.
+  // A `trialEndsAt` that has already passed is exactly what the free-year lock
+  // reads as expired, and a `currentPeriodEndsAt` in the past costs the store its
+  // entitlements — both on the day the seller registered.
+  const trialEndsAt = trialDays > 0 ? addDays(now, trialDays) : null;
 
   return tx.subscription.upsert({
     create: {
       billingCycle: "MONTHLY",
-      currentPeriodEndsAt: trialEndsAt,
+      currentPeriodEndsAt: trialEndsAt ?? addDays(now, BILLING_CYCLE_DAYS.MONTHLY),
       currentPeriodStartsAt: now,
       organizationId: input.organizationId,
       planId: defaultPlan.id,
-      status: "TRIALING",
+      status: trialEndsAt ? "TRIALING" : "ACTIVE",
       storeId: input.storeId,
       trialEndsAt,
-      trialStartsAt: now
+      trialStartsAt: trialEndsAt ? now : null
     },
     update: {},
     where: {

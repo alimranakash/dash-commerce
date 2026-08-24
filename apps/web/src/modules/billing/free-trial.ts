@@ -51,6 +51,16 @@ export async function getStoreFreeTrialState(storeId: string): Promise<FreeTrial
     return null;
   }
 
+  // A trial that ends the moment it starts was never a year. It is what a store
+  // created against a `trialDays: 0` free plan row was stamped with — every
+  // database seeded before the free year shipped had one — and reading it as an
+  // elapsed trial locks a seller out on the day they registered. Treat a
+  // non-positive window as "no trial was granted" and fail open, the same way a
+  // subscription with no trial end date at all does.
+  if (subscription.trialStartsAt && subscription.trialEndsAt <= subscription.trialStartsAt) {
+    return null;
+  }
+
   return {
     daysRemaining: daysUntil(subscription.trialEndsAt),
     endsAt: subscription.trialEndsAt,

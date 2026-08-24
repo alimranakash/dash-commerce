@@ -1,16 +1,18 @@
 import { prisma } from "@dash/db";
-import { PLAN_CATALOG } from "./plan-catalog";
+import { DEFAULT_PLAN_SLUG, FREE_PLAN_TRIAL_DAYS, PLAN_CATALOG } from "./plan-catalog";
 import type { PlanInput } from "./admin-plans.schema";
 
 /**
  * Seeds the plan catalog into an empty table only. This deliberately stays a
  * no-op once any plan exists, so it can never revert an admin's edits — a
- * populated database is brought up to date by `scripts/backfill-plans.ts`.
+ * populated database is brought up to date by `scripts/backfill-plans.ts`. The
+ * one exception is `repairFreePlanTrialDays()` below.
  */
 export async function ensureDefaultPlans() {
   const count = await prisma.plan.count();
 
   if (count > 0) {
+    await repairFreePlanTrialDays();
     return;
   }
 
@@ -26,6 +28,33 @@ export async function ensureDefaultPlans() {
       }
     });
   }
+}
+
+/**
+ * The single value repaired on a populated table.
+ *
+ * `trialDays: 0` on the free tier is not a setting anyone can have meant: the
+ * plan *is* the platform's year-long offer, and a zero stamps every store
+ * created afterwards with a trial that has already ended — the "your free year
+ * has ended" lock on the day the seller registered. `Plan.trialDays` defaults to
+ * `0`, so every database seeded before the free year shipped carries it.
+ *
+ * Any positive number is left alone, so an admin who shortens the free trial
+ * keeps their edit. Existing subscriptions are not touched here; the store-level
+ * half of the repair is `scripts/backfill-free-trials.mts`.
+ */
+async function repairFreePlanTrialDays() {
+  await prisma.plan.updateMany({
+    data: {
+      trialDays: FREE_PLAN_TRIAL_DAYS
+    },
+    where: {
+      slug: DEFAULT_PLAN_SLUG,
+      trialDays: {
+        lte: 0
+      }
+    }
+  });
 }
 
 export async function getAdminPlans() {
