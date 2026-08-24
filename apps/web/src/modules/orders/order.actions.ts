@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
+import type { PaymentMethodTypeValue } from "../payments/payment.schema";
 import { requireStore } from "../stores/queries";
+import type { CreateManualOrderInput } from "./order-create.schema";
+import { createManualOrder } from "./order-create.service";
+import { sendCustomOrderSms, sendOrderConfirmationSms } from "./order-sms.service";
 import type { FulfillmentStatus } from "./order.repository";
 import type { UpdateOrderDetailsInput } from "./order.schema";
 import {
@@ -103,6 +107,119 @@ export async function updateOrderDetailsFormAction(
 
   revalidateOrderPaths(orderId);
   redirect(`/dashboard/orders/${orderId}?updated=1`);
+}
+
+/**
+ * The dashboard's own way of taking an order — the phone call, the Messenger
+ * thread, the customer standing at the counter.
+ *
+ * Returns an error state rather than redirecting on failure for the same reason
+ * the edit form does: a rejected phone number or a product that ran out has to
+ * come back to a form the seller has already spent a minute filling in.
+ */
+export async function createOrderFormAction(
+  _state: OrderDetailsActionState,
+  formData: FormData
+): Promise<OrderDetailsActionState> {
+  const store = await requireStore();
+  let createdOrderId: string;
+
+  try {
+    const { order, sendSms } = await createManualOrder(store, manualOrderFromFormData(formData));
+
+    createdOrderId = order.id;
+
+    if (sendSms) {
+      // Same contract as the storefront checkout: the order is already
+      // committed, so neither sender may turn a saved order into a failure.
+      // Each store toggle still decides whether anything actually goes out.
+      await Promise.all([
+        sendOrderConfirmationSms({
+          currency: store.currency,
+          orderNumber: order.orderNumber,
+          phone: order.customerPhone,
+          storeId: store.id,
+          storeName: store.name,
+          total: Number(order.totalAmount)
+        }).catch(() => undefined),
+        sendCustomOrderSms({
+          currency: store.currency,
+          customerName: order.customerName,
+          orderNumber: order.orderNumber,
+          phone: order.customerPhone,
+          storeId: store.id,
+          storeName: store.name,
+          total: Number(order.totalAmount)
+        }).catch(() => undefined)
+      ]);
+    }
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return {
+        status: "error",
+        message: "Please fix the highlighted fields.",
+        fieldErrors: Object.fromEntries(
+          error.issues.map((issue) => [String(issue.path[0] ?? "form"), issue.message])
+        )
+      };
+    }
+
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Could not create this order."
+    };
+  }
+
+  revalidateOrderPaths(createdOrderId);
+  // Stock moved, so the catalog counts on these pages are now stale.
+  revalidatePath("/dashboard/products");
+  revalidatePath("/dashboard/inventory");
+  redirect(`/dashboard/orders/${createdOrderId}?created=1`);
+}
+
+function manualOrderFromFormData(formData: FormData): CreateManualOrderInput {
+  return {
+    addressLine1: getValue(formData, "addressLine1"),
+    addressLine2: optionalValue(formData, "addressLine2"),
+    area: optionalValue(formData, "area"),
+    city: optionalValue(formData, "city"),
+    country: getValue(formData, "country") || "Bangladesh",
+    customerEmail: optionalValue(formData, "customerEmail"),
+    customerName: getValue(formData, "customerName"),
+    customerPhone: getValue(formData, "customerPhone"),
+    discountAmount: getValue(formData, "discountAmount"),
+    district: getValue(formData, "district"),
+    items: manualOrderLinesFromFormData(formData),
+    notes: optionalValue(formData, "notes"),
+    paymentMethod: getValue(formData, "paymentMethod") as PaymentMethodTypeValue,
+    paymentNote: optionalValue(formData, "paymentNote"),
+    paymentReference: optionalValue(formData, "paymentReference"),
+    paymentStatus: getValue(formData, "paymentStatus") === "PAID" ? "PAID" : "PENDING",
+    postalCode: optionalValue(formData, "postalCode"),
+    sendSms: formData.get("sendSms") === "on",
+    shippingAmount: getValue(formData, "shippingAmount"),
+    shippingRateId: optionalValue(formData, "shippingRateId"),
+    status: getValue(formData, "status") as CreateManualOrderInput["status"]
+  };
+}
+
+/**
+ * The order lines arrive as one JSON field rather than as indexed inputs.
+ *
+ * The cart the seller builds is edited in the browser — rows added, removed,
+ * re-priced — and `items[3][price]` names would have to be renumbered on every
+ * removal, with a half-renumbered form silently posting the wrong basket. One
+ * hidden field the client keeps in sync cannot get into that state. Nothing here
+ * is trusted: every line goes through `manualOrderItemSchema` in the service.
+ */
+function manualOrderLinesFromFormData(formData: FormData): CreateManualOrderInput["items"] {
+  try {
+    const parsed: unknown = JSON.parse(String(formData.get("items") ?? "[]"));
+
+    return Array.isArray(parsed) ? (parsed as CreateManualOrderInput["items"]) : [];
+  } catch {
+    return [];
+  }
 }
 
 function orderDetailsFromFormData(formData: FormData): UpdateOrderDetailsInput {

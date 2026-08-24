@@ -204,6 +204,53 @@ export async function getProductVariantForCart(storeId: string, productId: strin
   return normalizeCartVariant(variant);
 }
 
+export type StoreVariantOption = {
+  continueSelling: boolean;
+  id: string;
+  price: string;
+  productId: string;
+  sku: string | null;
+  stockQuantity: number;
+  title: string;
+};
+
+/**
+ * Every sellable variant in the store, in one query.
+ *
+ * The dashboard's manual order form has to offer options for whichever products
+ * the seller picks, and it cannot know which those are before it renders — so
+ * asking per product would mean one round trip per catalog row. Grouped by
+ * product id on the caller's side.
+ */
+export async function getStoreVariantOptions(storeId: string) {
+  await ensureProductVariantSchema();
+
+  const rows = await prisma.$queryRawUnsafe<StoreVariantOption[]>(
+    `SELECT "id", "productId", "title", "sku", "price", "stockQuantity", "continueSelling"
+     FROM ${tableName("ProductVariant")}
+     WHERE "storeId" = $1 AND "status" = 'ACTIVE'
+     ORDER BY "productId" ASC, "position" ASC, "createdAt" ASC`,
+    storeId
+  );
+  const byProductId = new Map<string, StoreVariantOption[]>();
+
+  for (const row of rows) {
+    const variant: StoreVariantOption = {
+      continueSelling: Boolean(row.continueSelling),
+      id: row.id,
+      price: String(row.price),
+      productId: row.productId,
+      sku: row.sku ?? null,
+      stockQuantity: Number(row.stockQuantity ?? 0),
+      title: row.title
+    };
+
+    byProductId.set(variant.productId, [...(byProductId.get(variant.productId) ?? []), variant]);
+  }
+
+  return byProductId;
+}
+
 export async function decrementProductVariantStock(
   tx: Prisma.TransactionClient,
   storeId: string,

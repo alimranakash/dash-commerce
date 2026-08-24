@@ -1,4 +1,4 @@
-import { prisma, type Prisma } from "@dash/db";
+import { prisma } from "@dash/db";
 import {
   captureCheckoutContact,
   resolveCartAfterCheckout
@@ -12,6 +12,7 @@ import {
   isManualPaymentType
 } from "../payments/payment.service";
 import { decrementProductVariantStock, type CartVariantRecord } from "../products/product-variants.service";
+import { generateOrderNumber } from "../orders/order-number";
 import { getEnabledShippingRateForCheckout } from "../shipping/shipping.service";
 import { checkoutSchema, type CheckoutInput } from "./checkout.schema";
 import { assertCheckoutPhoneVerified } from "./checkout-verification.service";
@@ -231,22 +232,4 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
   await assessOrderSafely(store.id, order.id);
 
   return order;
-}
-
-async function generateOrderNumber(tx: Prisma.TransactionClient, storeId: string) {
-  const latestOrder = await tx.order.findFirst({
-    where: {
-      storeId
-    },
-    orderBy: {
-      createdAt: "desc"
-    },
-    select: {
-      orderNumber: true
-    }
-  });
-  const latestNumber = latestOrder ? Number(latestOrder.orderNumber.replace("DASH-", "")) : 1000;
-  const nextNumber = Number.isFinite(latestNumber) ? latestNumber + 1 : 1001;
-
-  return `DASH-${nextNumber}`;
 }

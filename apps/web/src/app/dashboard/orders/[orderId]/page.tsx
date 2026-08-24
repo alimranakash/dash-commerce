@@ -26,7 +26,9 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
   const { orderId } = await params;
   const store = await requireStore();
   const order = await getOrderByIdForStore(store.id, orderId);
-  const updated = Boolean((await searchParams).updated);
+  const flags = await searchParams;
+  const updated = Boolean(flags.updated);
+  const created = Boolean(flags.created);
 
   if (!order) notFound();
 
@@ -60,6 +62,7 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
           </div>
         </header>
 
+        {created ? <p className="success-message">Order created.</p> : null}
         {updated ? <p className="success-message">Order updated.</p> : null}
 
         <OrderStatusCards fulfillmentStatus={order.fulfillmentStatus} orderStatus={order.status} paymentStatus={order.paymentStatus} />

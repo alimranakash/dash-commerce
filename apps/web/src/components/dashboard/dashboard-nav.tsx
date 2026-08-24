@@ -99,6 +99,7 @@ const productLinks = [
 
 const orderLinks = [
   { href: "/dashboard/orders", label: "All Orders" },
+  { href: "/dashboard/orders/new", label: "Create Order" },
   { href: "/dashboard/orders/tracking", label: "Order Tracking" },
   { href: "/dashboard/orders/fake", label: "Fake Orders" },
   { href: "/dashboard/orders/verification", label: "Verification Queue" },
@@ -503,7 +504,7 @@ function isOrderLinkActive(pathname: string, href: string) {
     return matchesRoute(pathname, href);
   }
 
-  if (href === "/dashboard/orders/tracking") {
+  if (href === "/dashboard/orders/tracking" || href === "/dashboard/orders/new") {
     return matchesRoute(pathname, href);
   }
 

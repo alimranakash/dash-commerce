@@ -1,3 +1,5 @@
+import { Plus } from "lucide-react";
+import Link from "next/link";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { CourierAutoSyncChip } from "../../../modules/courier/components/courier-auto-sync-chip";
 import { CourierBalance } from "../../../modules/courier/components/courier-balance";
@@ -83,7 +85,16 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
     <DashboardShell storeSlug={store.slug}>
       <section className="resource-page">
         <div className="catalog-page-heading">
-          <h1>Orders</h1>
+          <div className="flex items-center gap-3">
+            <h1>Orders</h1>
+            <Link
+              className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-[#7c3aed] px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-[#6d28d9]"
+              href="/dashboard/orders/new"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Create Order
+            </Link>
+          </div>
           <span className="flex flex-wrap items-center gap-2">
             {autoSync ? <CourierAutoSyncChip autoSync={autoSync} /> : null}
             {courierBalance ? <CourierBalance balance={courierBalance} showRefresh={false} /> : null}
@@ -96,7 +107,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         {visibleRows.length === 0 ? (
           <div className="empty-state">
             <h2>{orders.length ? "No matching orders" : "No orders yet"}</h2>
-            <p>{orders.length ? "Try another status, courier state, or search term." : "Orders from the public storefront checkout will appear here."}</p>
+            <p>{orders.length ? "Try another status, courier state, or search term." : "Storefront checkouts land here, and you can write one down yourself with Create Order."}</p>
           </div>
         ) : (
           <OrdersCourierTable
