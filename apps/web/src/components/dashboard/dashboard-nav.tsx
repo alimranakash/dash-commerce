@@ -98,7 +98,10 @@ const productLinks = [
   { href: "/dashboard/categories", label: "Categories" },
   { href: "/dashboard/tags", label: "Tags" },
   { href: "/dashboard/brands", label: "Brands" },
-  { href: "/dashboard/products/reviews", label: "Reviews" }
+  { href: "/dashboard/products/reviews", label: "Reviews" },
+  // Filed under Products rather than Orders: the question it answers is what to
+  // buy, and the seller is looking at the catalog when they ask it.
+  { href: "/dashboard/products/preorders", label: "Pre-orders" }
 ];
 
 const orderLinks = [

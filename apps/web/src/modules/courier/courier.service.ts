@@ -990,6 +990,17 @@ function buildShipmentDraft(order: OrderForShipment): CreateShipmentInput {
     );
   }
 
+  const waiting = order.items.filter((item) => item.isPreorder);
+
+  if (waiting.length > 0) {
+    throw new CourierError(
+      "VALIDATION",
+      `This order is waiting on stock that has not arrived (${waiting
+        .map((item) => item.title)
+        .join(", ")}), so it cannot be booked yet. The pickup would be paid for and nothing would be there to collect.`
+    );
+  }
+
   const alternatePhone = normalizeBangladeshPhone(address?.phone);
   const addressLine = toSteadfastAddressLine([
     address?.addressLine1,

@@ -61,6 +61,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
       id: order.id,
       itemCount: order.items.length,
       lastSyncedLabel: shipment?.lastSyncedAt ? `checked ${formatRelative(shipment.lastSyncedAt)}` : null,
+      preorderCount: order.items.filter((item) => item.isPreorder).length,
       orderNumber: order.orderNumber,
       paymentStatus: order.paymentStatus,
       providerStatus: shipment?.providerStatus ?? null,

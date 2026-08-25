@@ -32,6 +32,8 @@ export type OrderCourierRow = {
   customerPhone: string;
   id: string;
   itemCount: number;
+  /** Lines waiting on stock. A row with any cannot be sent to a carrier. */
+  preorderCount: number;
   lastSyncedLabel: string | null;
   orderNumber: string;
   paymentStatus: string;
@@ -200,6 +202,13 @@ export function OrdersCourierTable({
                 <td data-label="Order">
                   <strong>{row.orderNumber}</strong>
                   <span>{row.itemCount} item(s)</span>
+                  {row.preorderCount ? (
+                    <span className="mt-1 inline-flex w-fit whitespace-nowrap rounded-full bg-[#fff1df] px-2 py-0.5 text-[10px] font-semibold text-[#a7650c]">
+                      {row.preorderCount === row.itemCount
+                        ? "Pre-order"
+                        : `${row.preorderCount} pre-ordered`}
+                    </span>
+                  ) : null}
                 </td>
                 <td data-label="Customer">
                   {row.customerName}
