@@ -35,6 +35,8 @@ type CheckoutExperienceProps = {
   phoneOtpRequired: boolean;
   shippingRates: CheckoutShippingRate[];
   storeSlug: string;
+  /** Identifies this page load, so one submission cannot become two orders. */
+  submissionId: string;
 };
 
 export function CheckoutExperience({
@@ -44,7 +46,8 @@ export function CheckoutExperience({
   paymentMethods,
   phoneOtpRequired,
   shippingRates,
-  storeSlug
+  storeSlug,
+  submissionId
 }: CheckoutExperienceProps) {
   const [selectedShippingId, setSelectedShippingId] = useState(shippingRates[0]?.id ?? "");
   const selectedShippingRate = useMemo(
@@ -148,6 +151,7 @@ export function CheckoutExperience({
         selectedShippingId={selectedShippingRate?.id ?? ""}
         shippingRates={shippingRates}
         storeSlug={storeSlug}
+        submissionId={submissionId}
         onShippingChange={setSelectedShippingId}
       />
       <CheckoutOrderSummary

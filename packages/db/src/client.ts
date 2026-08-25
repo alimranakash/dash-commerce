@@ -15,7 +15,7 @@ const globalForPrisma = globalThis as unknown as {
   prismaSignature?: string;
 };
 
-const PRISMA_CLIENT_SIGNATURE = "dash-commerce-os-incomplete-orders-v1";
+const PRISMA_CLIENT_SIGNATURE = "dash-commerce-os-checkout-submission-v1";
 
 function createPrismaClient() {
   const connectionString = process.env.DATABASE_URL ?? "";

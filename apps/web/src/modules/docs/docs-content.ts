@@ -608,7 +608,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         slug: "orders/fake-order-detection",
         title: "Fake Order Detection",
         intro:
-          "Fake Orders module rule-based risk score দিয়ে সন্দেহজনক order review করতে সাহায্য করে। Duplicate phone, cancellation history, high COD amount এবং missing information-এর মতো signal ব্যবহার করা হয়।",
+          "Fake Orders module rule-based risk score দিয়ে সন্দেহজনক order review করতে সাহায্য করে। Duplicate phone, possible duplicate order, cancellation history, high COD amount এবং missing information-এর মতো signal ব্যবহার করা হয়।",
         useCase: [
           "High risk COD order dispatch করার আগে যাচাই করতে।",
           "Verification Queue-তে manual review করতে।",

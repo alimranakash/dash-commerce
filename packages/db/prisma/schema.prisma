@@ -1508,6 +1508,21 @@ model Order {
   shippingAddressId     String?
   billingAddressId      String?
   notes                 String?
+  /// The checkout submission that produced this order.
+  ///
+  /// Generated once per checkout page load and posted back with the form, so a
+  /// double tap, a request retried after its response was lost, or the back
+  /// button returns the order that was already placed instead of placing a
+  /// second one. Null for orders the seller typed in by hand and for every
+  /// order placed before this column existed.
+  ///
+  /// The uniqueness this relies on is a real unique index, but it is created by
+  /// `ensureCheckoutSubmissionSchema` rather than declared here as `@@unique`.
+  /// That file explains why: `db push` will not add a unique constraint
+  /// unattended, and it drops a plain index it does not know about — so the
+  /// index is partial (`WHERE ... IS NOT NULL`), which Prisma cannot express
+  /// and therefore leaves alone. Keep the two in sync.
+  checkoutSubmissionId  String?
   /// The address the checkout was posted from, as reported by the reverse
   /// proxy. Null for orders the seller typed in by hand and for every order
   /// placed before this column existed. Read only by the fraud tooling: it is

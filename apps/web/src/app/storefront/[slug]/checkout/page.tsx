@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { storefrontBasePath } from "../../../../modules/storefront/base-path";
 import Link from "next/link";
 import { getCart } from "../../../../modules/cart/cart.service";
@@ -62,6 +63,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
             phoneOtpRequired={phoneOtpRequired}
             shippingRates={checkoutShippingRates}
             storeSlug={store.slug}
+            submissionId={randomUUID()}
           />
       )}
       <StorefrontFooter primaryDomain={primaryDomain?.domain} store={store} />

@@ -374,6 +374,30 @@ export async function markIncompleteOrderConverted(
   }
 }
 
+/**
+ * The order this cart has already become, if it has become one.
+ *
+ * Set two ways, and the shopper cannot tell them apart: the seller typed the
+ * order in from the incomplete orders list while the shopper still had the page
+ * open, or the shopper checked out themselves and came back through a recovery
+ * link, which rebuilds the cart under its original token. Either way the basket
+ * has been bought, and checking out again would buy it twice.
+ *
+ * Returns null on any failure, like everything else here: not knowing must fall
+ * back to letting the checkout through, never to blocking a sale.
+ */
+export async function findConvertedOrderIdForCart(storeId: string, token: string) {
+  try {
+    const snapshot = await findAbandonedCartByToken(storeId, token);
+
+    return snapshot?.status === "RECOVERED" ? snapshot.recoveredOrderId : null;
+  } catch (error) {
+    console.error("Failed to look up the order behind a cart", error);
+
+    return null;
+  }
+}
+
 /** Shoppers filling in the checkout form right now, not yet listed as stalled. */
 export async function countActiveCheckoutSessions(storeId: string) {
   return countActiveCheckouts(storeId, getAbandonedCartCutoff());

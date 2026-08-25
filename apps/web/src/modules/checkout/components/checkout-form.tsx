@@ -54,6 +54,8 @@ type CheckoutFormProps = {
   selectedShippingId: string;
   shippingRates: CheckoutShippingRate[];
   storeSlug: string;
+  /** Identifies this page load, so one submission cannot become two orders. */
+  submissionId: string;
   onShippingChange: (shippingRateId: string) => void;
 };
 
@@ -67,6 +69,7 @@ export function CheckoutForm({
   selectedShippingId,
   shippingRates,
   storeSlug,
+  submissionId,
   onShippingChange
 }: CheckoutFormProps) {
   const selectedShippingRate = shippingRates.find((rate) => rate.id === selectedShippingId) ?? shippingRates[0];
@@ -80,12 +83,32 @@ export function CheckoutForm({
   // order has already cost the buyer money, so its number is not what is at risk.
   const needsPhoneCode = phoneOtpRequired && selectedPaymentMethod === "COD";
   const formRef = useRef<HTMLFormElement>(null);
+  const [isPlacing, setIsPlacing] = useState(false);
 
   useCheckoutContactCapture(formRef, storeSlug);
+  useRestoredPageReset(setIsPlacing);
 
   return (
-    <form action="/api/checkout" className="sf-checkout-form" method="post" ref={formRef}>
+    <form
+      action="/api/checkout"
+      className="sf-checkout-form"
+      method="post"
+      onSubmit={(event) => {
+        // The first submission is already on its way by the time this runs; the
+        // guard is for the second tap, which arrives while the page is still
+        // sitting there waiting for the redirect. The server does not trust it
+        // either — the submission key below is what actually decides.
+        if (isPlacing) {
+          event.preventDefault();
+          return;
+        }
+
+        setIsPlacing(true);
+      }}
+      ref={formRef}
+    >
       <input name="storeSlug" type="hidden" value={storeSlug} />
+      <input name="submissionId" type="hidden" value={submissionId} />
       <input name="couponCode" type="hidden" value={couponCode} />
       <input name="country" type="hidden" value="Bangladesh" />
       <input name="city" type="hidden" value={selectedShippingRate?.city ?? ""} />
@@ -196,8 +219,8 @@ export function CheckoutForm({
       ) : (
         <input name="verificationCode" type="hidden" value="" />
       )}
-      <button disabled={!canSubmit} type="submit">
-        {settings.confirmButtonText}
+      <button disabled={!canSubmit || isPlacing} type="submit">
+        {isPlacing ? "Placing order..." : settings.confirmButtonText}
       </button>
     </form>
   );
@@ -291,6 +314,28 @@ function CheckoutPhoneVerification({
       {message ? <p className="sf-alert">{message}</p> : null}
     </fieldset>
   );
+}
+
+/**
+ * Puts the Place Order button back after a trip through the back button.
+ *
+ * A page restored from the back/forward cache comes back with the state it had
+ * when it was hidden — which, for a page that was just submitted, is a dead
+ * button. Resubmitting from a restored page is safe: it carries the same
+ * submission key, so it lands on the order that was already placed.
+ */
+function useRestoredPageReset(setIsPlacing: (value: boolean) => void) {
+  useEffect(() => {
+    const onShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setIsPlacing(false);
+      }
+    };
+
+    window.addEventListener("pageshow", onShow);
+
+    return () => window.removeEventListener("pageshow", onShow);
+  }, [setIsPlacing]);
 }
 
 /**

@@ -49,6 +49,12 @@ export type RiskSignals = {
   hasCustomerPhone: boolean;
   hasShippingAddress: boolean;
   isCashOnDelivery: boolean;
+  /**
+   * Live same-phone orders for the same amount within ±6 hours, **excluding**
+   * this one — so one is enough to mean "there is a twin". Cancelled siblings
+   * do not count: the seller has already dealt with that one.
+   */
+  duplicateOrderCount: number;
   /** Same-phone orders within ±1 hour of this one, including this one. */
   recentOrderCount: number;
   /** Same-phone orders in the store, including this one. */

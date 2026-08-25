@@ -75,6 +75,16 @@ export const checkoutSchema = z.object({
     .trim()
     .max(40)
     .optional()
+    .transform((value) => value || undefined),
+  // Generated once per checkout page load, so the same submission arriving
+  // twice can be told apart from a shopper deliberately ordering twice.
+  // Optional: a form rendered before this shipped, or one submitted with the
+  // key stripped, still checks out — it just loses the protection.
+  submissionId: z
+    .string()
+    .trim()
+    .max(64)
+    .optional()
     .transform((value) => value || undefined)
 });
 

@@ -2,6 +2,7 @@ import { prisma } from "@dash/db";
 import type { Prisma } from "@dash/db";
 import {
   captureCheckoutAttempt,
+  findConvertedOrderIdForCart,
   recordCheckoutFailure,
   resolveCartAfterCheckout
 } from "../abandoned-carts/abandoned-cart.service";
@@ -23,6 +24,7 @@ import { decrementProductVariantStock, type CartVariantRecord } from "../product
 import { generateOrderNumber } from "../orders/order-number";
 import { getEnabledShippingRateForCheckout } from "../shipping/shipping.service";
 import { checkoutSchema, type CheckoutInput } from "./checkout.schema";
+import { ensureCheckoutSubmissionSchema } from "./checkout-submission-schema";
 import { assertCheckoutPhoneVerified } from "./checkout-verification.service";
 
 /**
@@ -42,36 +44,137 @@ type CheckoutStore = {
   slug: string;
 };
 
+/** What the route needs to know to decide whether the side effects should run. */
+export type CheckoutOrderResult = {
+  order: Awaited<ReturnType<typeof placeCheckoutOrder>>;
+  /**
+   * True when the order came back rather than being created — the same
+   * submission arriving twice, or a cart the seller had already turned into an
+   * order. The caller must not re-send the confirmation or re-report the sale.
+   */
+  replayed: boolean;
+};
+
 /**
  * Places an order, and leaves the seller a lead behind when it cannot.
  *
  * Everything that decides whether the order happens is in `placeCheckoutOrder`.
- * This wrapper is only the bookkeeping around it, and that is deliberately
- * outside the attempt: the draft is captured before the form is even validated,
- * so a shopper stopped by a typo in their phone number is as recoverable as one
+ * This wrapper is the bookkeeping around it, and that is deliberately outside
+ * the attempt: the draft is captured before the form is even validated, so a
+ * shopper stopped by a typo in their phone number is as recoverable as one
  * stopped by an out-of-stock line, and the reason is filed from the error on
  * the way back out.
+ *
+ * It is also where one submission is kept to one order. A shopper on a slow
+ * connection taps Place Order twice, a dropped response gets retried, a back
+ * button re-posts a cached form — all three used to buy the same basket twice,
+ * because nothing downstream could tell them apart from a customer who really
+ * did want two. The submission key can.
  */
 export async function createCheckoutOrder(
   store: CheckoutStore,
   input: CheckoutInput,
   context: CheckoutContext
-) {
+): Promise<CheckoutOrderResult> {
+  await ensureCheckoutSubmissionSchema();
+
+  const submissionId = readSubmissionId(input);
+  const placed = submissionId ? await findOrderBySubmission(store.id, submissionId) : null;
+
+  // Already bought. Returned rather than re-created, and flagged so the caller
+  // does not send the confirmation SMS or report the purchase a second time.
+  if (placed) {
+    return { order: placed, replayed: true };
+  }
+
   const cartToken = await getCartToken(store.id);
+  const convertedOrderId = await findConvertedOrderIdForCart(store.id, cartToken);
+  const converted = convertedOrderId ? await findStoreOrder(store.id, convertedOrderId) : null;
+
+  // The seller rang this customer and typed the order in themselves while the
+  // shopper still had checkout open. Placing it again would send the same
+  // parcel twice and collect for it twice.
+  //
+  // The cart is cleared rather than left sitting there: it is the only way the
+  // shopper gets a fresh token, and without one they would meet this same wall
+  // on every future visit. It does mean anything they added after the seller
+  // rang goes with it — worth it against a duplicate parcel, and they can add
+  // it again and order normally.
+  if (converted) {
+    await clearCart(store.id);
+
+    return { order: converted, replayed: true };
+  }
 
   await captureCheckoutAttempt(store.id, cartToken, toCheckoutDraft(input), {
     ipAddress: context.ipAddress
   });
 
   try {
-    return await placeCheckoutOrder(store, input, context, cartToken);
+    return { order: await placeCheckoutOrder(store, input, context, cartToken), replayed: false };
   } catch (error) {
+    // Two taps close enough together both got past the read above; the unique
+    // index is what broke the tie, and the one that lost it is looking at its
+    // twin's order, not at a failure.
+    if (submissionId && isDuplicateSubmissionError(error)) {
+      const winner = await findOrderBySubmission(store.id, submissionId);
+
+      if (winner) {
+        return { order: winner, replayed: true };
+      }
+    }
+
     // The shopper is already being shown this error; the seller gets the same
     // sentence, filed against the cart it happened to.
     await recordCheckoutFailure(store.id, cartToken, classifyCheckoutFailure(error));
 
     throw error;
   }
+}
+
+function readSubmissionId(input: CheckoutInput) {
+  return String(input.submissionId ?? "").trim().slice(0, 64) || null;
+}
+
+function findOrderBySubmission(storeId: string, checkoutSubmissionId: string) {
+  return prisma.order.findFirst({
+    where: {
+      checkoutSubmissionId,
+      storeId
+    }
+  });
+}
+
+/**
+ * Scoped by store, and nullable on purpose: the id comes off a snapshot that
+ * can outlive the order it names, and a deleted order must let the checkout
+ * through rather than wedge it.
+ */
+function findStoreOrder(storeId: string, id: string) {
+  return prisma.order.findFirst({
+    where: {
+      id,
+      storeId
+    }
+  });
+}
+
+/**
+ * A unique violation on the submission index, and nothing else.
+ *
+ * Duck-typed rather than checked with `instanceof`: `@dash/db` exports Prisma
+ * as a type only, so the error class is not available here as a value. The
+ * target is stringified because the pg adapter reports it as the constraint
+ * name where the library reports a field list — both spell the column out.
+ */
+function isDuplicateSubmissionError(error: unknown) {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+
+  const { code, meta } = error as { code?: unknown; meta?: { target?: unknown } };
+
+  return code === "P2002" && String(meta?.target ?? "").includes("checkoutSubmissionId");
 }
 
 /**
@@ -106,6 +209,7 @@ async function placeCheckoutOrder(
   cartToken: string
 ) {
   const data = checkoutSchema.parse(input);
+  const submissionId = data.submissionId ?? null;
   // Canonicalised once, here, and used for both the block check and the stored
   // column. The blocklist holds canonical addresses, so an order row that spelled
   // the same address differently would split the per-address aggregates the
@@ -305,6 +409,7 @@ async function placeCheckoutOrder(
         customerName: data.name,
         customerEmail: data.email ?? null,
         customerPhone: data.phone,
+        checkoutSubmissionId: submissionId,
         ipAddress,
         shippingAddressId: address.id,
         billingAddressId: address.id,

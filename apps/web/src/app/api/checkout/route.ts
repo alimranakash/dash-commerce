@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const order = await createCheckoutOrder(store, {
+    const { order, replayed } = await createCheckoutOrder(store, {
       name: getValue(formData, "name"),
       phone: getValue(formData, "phone"),
       email: getValue(formData, "email"),
@@ -41,10 +41,19 @@ export async function POST(request: NextRequest) {
       paymentReference: getValue(formData, "paymentReference"),
       paymentNote: getValue(formData, "paymentNote"),
       verificationCode: getValue(formData, "verificationCode"),
-      couponCode: getValue(formData, "couponCode")
+      couponCode: getValue(formData, "couponCode"),
+      submissionId: getValue(formData, "submissionId")
     }, {
       ipAddress: readClientIp(request.headers)
     });
+
+    // The same submission arriving twice: the shopper is sent to the order they
+    // already have. Nothing below this line may run again — a second
+    // confirmation SMS and a second reported purchase are exactly the damage
+    // the submission key exists to prevent, and nothing changed to revalidate.
+    if (replayed) {
+      return await redirectTo(request, store.slug, `/thank-you/${order.orderNumber}`);
+    }
 
     // Internal route on purpose: /s/<slug> is what Next serves, and the clean
     // address is a rewrite onto it — revalidating that would revalidate nothing.

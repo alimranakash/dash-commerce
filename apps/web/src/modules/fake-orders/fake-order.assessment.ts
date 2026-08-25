@@ -163,7 +163,15 @@ async function assessBatch(storeId: string, orderIds: string[]) {
 
 function buildSignals(
   order: RiskOrderInput,
-  counts: { cancelledOrderCount: number; fakeOrderCount: number; recentOrderCount: number; samePhoneOrderCount: number } | undefined,
+  counts:
+    | {
+        cancelledOrderCount: number;
+        duplicateOrderCount: number;
+        fakeOrderCount: number;
+        recentOrderCount: number;
+        samePhoneOrderCount: number;
+      }
+    | undefined,
   courierScores: CourierScoreLookup
 ): RiskSignals {
   const courierScore = courierScores.get(normalizeBangladeshPhone(order.customerPhone) ?? "");
@@ -173,6 +181,9 @@ function buildSignals(
     courierSuccessRatio: courierScore?.successRatio ?? null,
     courierTotalParcels: courierScore?.totalParcels ?? 0,
     customerFlagStatus: order.customerFlagStatus,
+    // No row means no siblings were found, which is not the same as a twin
+    // going unnoticed — the query returns a row per target order either way.
+    duplicateOrderCount: counts?.duplicateOrderCount ?? 0,
     fakeOrderCount: counts?.fakeOrderCount ?? 0,
     hasCustomerName: Boolean(order.customerName),
     hasCustomerPhone: Boolean(order.customerPhone),
