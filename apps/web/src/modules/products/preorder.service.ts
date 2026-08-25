@@ -1,4 +1,4 @@
-import { prisma } from "@dash/db";
+import { prisma, type Prisma } from "@dash/db";
 
 /**
  * What the store has sold and cannot yet ship.
@@ -128,4 +128,94 @@ export async function getPreorderWaitingOrders(storeId: string): Promise<Preorde
     orderNumber: order.orderNumber,
     status: order.status
   }));
+}
+
+/**
+ * Marks pre-ordered lines shippable once the stock behind them has landed.
+ *
+ * Called after a delivery moves stock, inside that same transaction. The debt
+ * is whatever the product's stock is still under by, and it is settled from the
+ * oldest promise forward — the person who has waited longest gets the units
+ * first, which is also the order the pre-orders page lists them in.
+ *
+ * Deliberately conservative at the boundary. Lines are walked newest-first and
+ * left waiting until the outstanding debt is fully accounted for, so a line
+ * that is only half covered stays waiting: a seller told an order is ready
+ * cannot half-pack it, and being told too early is worse than being told late.
+ *
+ * Variants are not settled here. Their stock lives on the variant row and a
+ * purchase restocks products, so there is nothing in a delivery that says which
+ * option arrived — those lines stay flagged until someone says otherwise.
+ */
+export async function settlePreordersForProducts(
+  tx: Prisma.TransactionClient,
+  storeId: string,
+  productIds: string[]
+) {
+  const unique = [...new Set(productIds)];
+
+  for (const productId of unique) {
+    const product = await tx.product.findFirst({
+      where: {
+        id: productId,
+        storeId
+      },
+      select: {
+        stockQuantity: true
+      }
+    });
+
+    if (!product) {
+      continue;
+    }
+
+    const owed = Math.max(0, -product.stockQuantity);
+    const waiting = await tx.orderItem.findMany({
+      where: {
+        isPreorder: true,
+        order: {
+          status: {
+            not: "CANCELLED"
+          },
+          storeId
+        },
+        productId,
+        variantId: null
+      },
+      orderBy: {
+        createdAt: "desc"
+      },
+      select: {
+        id: true,
+        quantity: true
+      }
+    });
+
+    const settled: string[] = [];
+    let accountedFor = 0;
+
+    for (const line of waiting) {
+      if (accountedFor >= owed) {
+        settled.push(line.id);
+        continue;
+      }
+
+      accountedFor += line.quantity;
+    }
+
+    if (settled.length === 0) {
+      continue;
+    }
+
+    await tx.orderItem.updateMany({
+      where: {
+        id: {
+          in: settled
+        }
+      },
+      data: {
+        isPreorder: false
+      }
+    });
+  }
 }

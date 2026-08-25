@@ -1,4 +1,5 @@
 import { prisma } from "@dash/db";
+import { settlePreordersForProducts } from "../products/preorder.service";
 import {
   countPurchasesForStore,
   getPurchaseByIdForStore,
@@ -71,6 +72,7 @@ export async function createPurchase(context: PurchaseContext, input: CreatePurc
 
     if (shouldReceive) {
       await applyProductStock(tx, context.organizationId, context.storeId, purchase.id, items);
+      await settlePreordersForProducts(tx, context.storeId, productIdsOf(items));
     }
 
     return purchase;
@@ -140,6 +142,7 @@ export async function updatePurchase(
 
     if (shouldReceiveNow) {
       await applyProductStock(tx, context.organizationId, context.storeId, purchase.id, items);
+      await settlePreordersForProducts(tx, context.storeId, productIdsOf(items));
     } else if (existing.receivedAt) {
       await applyProductStock(
         tx,
@@ -149,6 +152,13 @@ export async function updatePurchase(
         stockChangesBetween(existing.items, items),
         "Purchase updated"
       );
+      // Editing a received purchase moves stock in either direction, so this
+      // has to run for a correction downwards too — a line that was settled on
+      // stock since taken away is waiting again.
+      await settlePreordersForProducts(tx, context.storeId, [
+        ...productIdsOf(existing.items),
+        ...productIdsOf(items)
+      ]);
     }
 
     return purchase;
@@ -178,6 +188,7 @@ export async function markPurchaseReceived(context: PurchaseContext, purchaseId:
 
     if (!purchase.receivedAt) {
       await applyProductStock(tx, context.organizationId, context.storeId, purchase.id, purchase.items);
+      await settlePreordersForProducts(tx, context.storeId, productIdsOf(purchase.items));
     }
 
     return tx.purchase.update({
@@ -326,6 +337,11 @@ function calculateTotals(
   };
 }
 
+/** The products a delivery touched, deduplicated, ignoring free-text lines. */
+function productIdsOf(items: Array<{ productId?: string | null }>) {
+  return [...new Set(items.map((item) => item.productId).filter((id): id is string => Boolean(id)))];
+}
+
 function stockChangesBetween(
   previous: Array<{ productId?: string | null; productName?: string; quantity: number }>,
   next: Array<{ productId?: string | null; productName?: string; quantity: number }>
@@ -381,7 +397,12 @@ async function applyProductStock(
     }
 
     const previousQuantity = product.stockQuantity;
-    const newQuantity = Math.max(previousQuantity + item.quantity, 0);
+    // No floor at zero. It was harmless when stock could not go under, but a
+    // pre-ordered product sits at minus what it owes, and clamping would wipe
+    // that debt the moment a partial delivery arrived — seven owed, four
+    // received, and the remaining three would vanish from every list that
+    // reads negative stock.
+    const newQuantity = previousQuantity + item.quantity;
 
     await tx.product.update({
       where: {
