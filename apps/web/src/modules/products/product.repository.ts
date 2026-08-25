@@ -8,6 +8,8 @@ type ProductWriteData = {
   price: string;
   stockQuantity: number;
   lowStockThreshold: number;
+  allowPreorder?: boolean;
+  preorderReleaseAt?: Date | null;
   status: ProductStatus;
   visibility: ProductVisibility;
   description?: string | null;
@@ -278,6 +280,8 @@ function buildProductCreateData(
     price: data.price,
     stockQuantity: data.stockQuantity,
     lowStockThreshold: data.lowStockThreshold,
+    ...(data.allowPreorder === undefined ? {} : { allowPreorder: data.allowPreorder }),
+    ...(data.preorderReleaseAt === undefined ? {} : { preorderReleaseAt: data.preorderReleaseAt }),
     status: data.status,
     visibility: data.visibility,
     images: {
@@ -327,6 +331,8 @@ function buildProductUpdateData(
   if (data.compareAtPrice !== undefined) productData.compareAtPrice = data.compareAtPrice;
   if (data.costPrice !== undefined) productData.costPrice = data.costPrice;
   if (data.stockQuantity !== undefined) productData.stockQuantity = data.stockQuantity;
+  if (data.allowPreorder !== undefined) productData.allowPreorder = data.allowPreorder;
+  if (data.preorderReleaseAt !== undefined) productData.preorderReleaseAt = data.preorderReleaseAt;
   if (data.lowStockThreshold !== undefined) {
     productData.lowStockThreshold = data.lowStockThreshold;
   }

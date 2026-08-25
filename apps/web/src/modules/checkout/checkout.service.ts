@@ -274,6 +274,7 @@ async function placeCheckoutOrder(
         visibility: "PUBLIC"
       },
       select: {
+        allowPreorder: true,
         id: true,
         sku: true,
         stockQuantity: true
@@ -281,6 +282,9 @@ async function placeCheckoutOrder(
     });
     const productsById = new Map(products.map((product) => [product.id, product]));
     const variantsByLineId = new Map<string, CartVariantRecord>();
+    // Lines the shopper is waiting on, decided here where the stock on hand is
+    // still known — after the decrements it would be too late to tell.
+    const preorderLineIds = new Set<string>();
 
     for (const item of cart.items) {
       const product = productsById.get(item.productId);
@@ -291,12 +295,24 @@ async function placeCheckoutOrder(
 
       if (item.variantId) {
         const variant = await decrementProductVariantStock(tx, store.id, item.productId, item.variantId, item.quantity);
+
+        if (item.quantity > variant.stockQuantity) {
+          preorderLineIds.add(item.lineId);
+        }
+
         variantsByLineId.set(item.lineId, variant);
         continue;
       }
 
-      if (item.quantity > product.stockQuantity) {
+      // A product that takes pre-orders is allowed to go under. The shortfall
+      // is not an error to correct later: negative stock is the record of what
+      // the seller now owes, and the line is marked so the order can say so.
+      if (!product.allowPreorder && item.quantity > product.stockQuantity) {
         throw new CheckoutError("OUT_OF_STOCK", `${item.title} does not have enough stock.`);
+      }
+
+      if (item.quantity > product.stockQuantity) {
+        preorderLineIds.add(item.lineId);
       }
     }
 
@@ -347,9 +363,15 @@ async function placeCheckoutOrder(
           storeId: store.id,
           status: "ACTIVE",
           visibility: "PUBLIC",
-          stockQuantity: {
-            gte: item.quantity
-          }
+          // A pre-order product has no floor to check against; every other one
+          // must still have the units on the shelf when this runs.
+          ...(productsById.get(item.productId)?.allowPreorder
+            ? {}
+            : {
+                stockQuantity: {
+                  gte: item.quantity
+                }
+              })
         },
         data: {
           stockQuantity: {
@@ -418,6 +440,7 @@ async function placeCheckoutOrder(
           create: cart.items.map((item) => ({
             productId: item.productId,
             variantId: item.variantId ?? null,
+            isPreorder: preorderLineIds.has(item.lineId),
             title: item.variantTitle ? `${item.title} - ${item.variantTitle}` : item.title,
             sku: variantsByLineId.get(item.lineId)?.sku ?? productsById.get(item.productId)?.sku ?? null,
             price: item.price,

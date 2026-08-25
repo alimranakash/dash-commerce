@@ -76,6 +76,25 @@ export async function setCartNote(storeId: string, note: string) {
   return getCart(storeId);
 }
 
+/**
+ * How many of a line the shopper may hold, which is not always what is on the
+ * shelf.
+ *
+ * A product taking pre-orders has no ceiling, and neither does an option the
+ * seller set to keep selling. Both are the same promise to the buyer — it is
+ * coming, just not yet — and the storefront says so beside the button.
+ */
+function availableStockFor(
+  product: { allowPreorder: boolean; stockQuantity: number },
+  variant: { continueSelling?: boolean; stockQuantity: number } | null
+) {
+  if (product.allowPreorder || variant?.continueSelling) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  return variant?.stockQuantity ?? product.stockQuantity;
+}
+
 export async function addToCart(storeId: string, productId: string, quantity: number, variantId?: string | null) {
   const requestedQuantity = normalizeQuantity(quantity);
   const product = await getPublicProductForCart(storeId, productId);
@@ -84,9 +103,8 @@ export async function addToCart(storeId: string, productId: string, quantity: nu
   const lineId = cartLineId(product.id, variant?.id);
   const existingItem = currentCart.items.find((item) => item.lineId === lineId);
   const nextQuantity = (existingItem?.quantity ?? 0) + requestedQuantity;
-  const availableStock = variant?.continueSelling ? Number.MAX_SAFE_INTEGER : variant?.stockQuantity ?? product.stockQuantity;
 
-  ensureStockAllows(availableStock, nextQuantity);
+  ensureStockAllows(availableStockFor(product, variant), nextQuantity);
 
   const image = variant?.imageUrl || product.images[0]?.url || null;
   const nextItem: StoredCartItem = {
@@ -121,9 +139,8 @@ export async function updateCartItemQuantity(
 
   const product = await getPublicProductForCart(storeId, currentItem.productId);
   const variant = currentItem.variantId ? await getActiveCartVariant(storeId, product.id, currentItem.variantId) : null;
-  const availableStock = variant?.continueSelling ? Number.MAX_SAFE_INTEGER : variant?.stockQuantity ?? product.stockQuantity;
 
-  ensureStockAllows(availableStock, nextQuantity);
+  ensureStockAllows(availableStockFor(product, variant), nextQuantity);
 
   const nextItems = currentCart.items.map((item) =>
     item.lineId === currentItem.lineId ? { ...item, quantity: nextQuantity } : item

@@ -1,4 +1,5 @@
 import { storefrontBasePath } from "../../base-path";
+import { preorderLabel } from "../../components/product-card";
 import type { ComponentType } from "react";
 import Link from "next/link";
 import {
@@ -112,14 +113,18 @@ export async function GeneralProductPage({
           ) : (
             <>
               <p className="general-product-stock">
-                {product.stockQuantity > 0 ? `${product.stockQuantity} in Stock` : "Out of Stock"}
+                {product.stockQuantity > 0
+                  ? `${product.stockQuantity} in Stock`
+                  : product.allowPreorder
+                    ? preorderLabel(product.preorderReleaseAt)
+                    : "Out of Stock"}
               </p>
               <ProductPurchasePanel
                 addToCartButtonColor={productPage.addToCartButtonColor}
                 addToCartButtonRadius={productPage.addToCartButtonRadius}
                 addToCartText={productPage.addToCartText}
                 buyNowEnabled={productPage.buyNowEnabled}
-                maxQuantity={product.stockQuantity}
+                maxQuantity={product.allowPreorder ? 999999 : product.stockQuantity}
                 productId={product.id}
                 productSlug={product.slug}
                 secondaryActionsEnabled={false}

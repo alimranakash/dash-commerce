@@ -186,6 +186,11 @@ function productPayloadFromFormData(formData: FormData): ProductFormPayload {
       costPrice: nullableValue(formData, "costPrice"),
       stockQuantity: Number(getValue(formData, "stockQuantity") || 0),
       lowStockThreshold: Number(getValue(formData, "lowStockThreshold") || 0),
+      // An unchecked box posts nothing at all, which is the difference between
+      // "off" and "leave it alone" everywhere else in this form — here it can
+      // only mean off, because the box is always rendered.
+      allowPreorder: formData.get("allowPreorder") === "on",
+      preorderReleaseAt: dateValue(formData, "preorderReleaseAt"),
       categoryId: categoryIds[0] ?? null,
       status: getValue(formData, "status") as CreateProductInput["status"],
       visibility: getValue(formData, "visibility") as CreateProductInput["visibility"],
@@ -319,6 +324,19 @@ function productImageFromFormData(formData: FormData, valueField: string, positi
   const url = getValue(formData, valueField);
 
   return url ? { position, url } : null;
+}
+
+/** A date input posts "" when it is left empty, which means no date at all. */
+function dateValue(formData: FormData, key: string) {
+  const value = getValue(formData, key);
+
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function getValue(formData: FormData, key: string) {

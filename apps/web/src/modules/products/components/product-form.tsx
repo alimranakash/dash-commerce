@@ -32,6 +32,8 @@ export type ProductFormValue = {
   costPrice?: string | undefined;
   stockQuantity?: number;
   lowStockThreshold?: number;
+  allowPreorder?: boolean;
+  preorderReleaseAt?: Date | string | null;
   categoryId?: string | undefined;
   categoryIds?: string[] | undefined;
   status?: "DRAFT" | "ACTIVE" | "ARCHIVED";
@@ -243,6 +245,34 @@ export function ProductForm({
                   <input defaultValue={product?.stockQuantity ?? 0} min={0} name="stockQuantity" required type="number" />
                 </label>
               </FieldError>
+              <FieldError errors={state.fieldErrors} name="allowPreorder">
+                <label className="field-check">
+                  <input
+                    defaultChecked={Boolean(product?.allowPreorder)}
+                    name="allowPreorder"
+                    type="checkbox"
+                  />
+                  Take pre-orders when this runs out
+                  <small>
+                    Customers can keep buying past zero and the stock goes negative, which is what
+                    you still owe them. Say when it ships below.
+                  </small>
+                </label>
+              </FieldError>
+              <FieldError errors={state.fieldErrors} name="preorderReleaseAt">
+                <label>
+                  Pre-order ships on
+                  <input
+                    defaultValue={toDateInput(product?.preorderReleaseAt)}
+                    name="preorderReleaseAt"
+                    type="date"
+                  />
+                  <small>
+                    Only used when pre-orders are on. Shown to the customer beside the button, so
+                    they know what they are waiting for.
+                  </small>
+                </label>
+              </FieldError>
               <FieldError errors={state.fieldErrors} name="lowStockThreshold">
                 <label>
                   Low stock threshold
@@ -386,6 +416,17 @@ function MoneyField({
       </label>
     </FieldError>
   );
+}
+
+/** A Date, a string, or nothing, as the browsers  date input wants it. */
+function toDateInput(value: Date | string | null | undefined) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
 }
 
 function FieldError({

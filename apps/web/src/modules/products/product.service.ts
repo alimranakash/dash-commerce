@@ -45,7 +45,9 @@ export async function createProduct(storeId: string, input: CreateProductInput) 
       slug,
       price: productData.price,
       stockQuantity: productData.stockQuantity,
+      allowPreorder: productData.allowPreorder,
       lowStockThreshold: productData.lowStockThreshold,
+      preorderReleaseAt: productData.preorderReleaseAt,
       status: productData.status,
       visibility: productData.visibility,
       ...optionalProductFields(productData)

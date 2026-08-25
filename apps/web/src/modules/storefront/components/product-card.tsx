@@ -55,7 +55,39 @@ export function ProductPrice({
   );
 }
 
-export function StockStatus({ stockQuantity }: { stockQuantity: number }) {
+/**
+ * What a shopper is told when they are buying something that is not here yet.
+ *
+ * The date is the point of it: "pre-order" on its own reads as a delay of
+ * unknown length, which is how a seller loses the order they just took.
+ */
+export function preorderLabel(releaseAt: Date | string | null | undefined) {
+  if (!releaseAt) {
+    return "Pre-order";
+  }
+
+  const date = new Date(releaseAt);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Pre-order";
+  }
+
+  return `Pre-order · ships around ${new Intl.DateTimeFormat("en", { day: "numeric", month: "short" }).format(date)}`;
+}
+
+export function StockStatus({
+  allowPreorder,
+  preorderReleaseAt,
+  stockQuantity
+}: {
+  allowPreorder?: boolean | undefined;
+  preorderReleaseAt?: Date | string | null | undefined;
+  stockQuantity: number;
+}) {
+  if (stockQuantity <= 0 && allowPreorder) {
+    return <p className="sf-stock in-stock">{preorderLabel(preorderReleaseAt)}</p>;
+  }
+
   return (
     <p className={stockQuantity > 0 ? "sf-stock in-stock" : "sf-stock out-stock"}>
       {stockQuantity > 0 ? `${stockQuantity} in stock` : "Out of stock"}

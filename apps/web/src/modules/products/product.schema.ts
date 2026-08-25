@@ -48,6 +48,25 @@ const productBaseSchema = z.object({
   costPrice: optionalMoneySchema,
   stockQuantity: z.coerce.number().int().min(0).default(0),
   lowStockThreshold: z.coerce.number().int().min(0).default(0),
+  /**
+   * Taking orders for stock that has not arrived.
+   *
+   * The date is what the shopper is shown beside the button, so it is worth
+   * asking for even though it is optional — "pre-order" with no date reads as
+   * a delay of unknown length.
+   */
+  allowPreorder: z.coerce.boolean().default(false),
+  preorderReleaseAt: z
+    .union([z.string().trim(), z.date(), z.null(), z.undefined()])
+    .transform((value) => {
+      if (!value) {
+        return null;
+      }
+
+      const date = new Date(value);
+
+      return Number.isNaN(date.getTime()) ? null : date;
+    }),
   status: productStatusSchema.default("DRAFT"),
   visibility: z.enum(["PUBLIC", "HIDDEN"]).default("HIDDEN"),
   categoryId: z
