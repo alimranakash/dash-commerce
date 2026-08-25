@@ -247,9 +247,14 @@ function orderDetailsFromFormData(formData: FormData): UpdateOrderDetailsInput {
     customerEmail: optionalValue(formData, "customerEmail"),
     customerName: getValue(formData, "customerName"),
     customerPhone: getValue(formData, "customerPhone"),
+    discountAmount: getValue(formData, "discountAmount"),
     district: getValue(formData, "district"),
     notes: optionalValue(formData, "notes"),
-    postalCode: optionalValue(formData, "postalCode")
+    paymentMethod: getValue(formData, "paymentMethod") as PaymentMethodTypeValue,
+    paymentNote: optionalValue(formData, "paymentNote"),
+    paymentReference: optionalValue(formData, "paymentReference"),
+    postalCode: optionalValue(formData, "postalCode"),
+    shippingAmount: getValue(formData, "shippingAmount")
   };
 }
 

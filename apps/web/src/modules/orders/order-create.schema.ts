@@ -17,7 +17,7 @@ const optionalText = (max: number) =>
  * fall back to the shipping rate, not silently zero it. So the raw value is
  * normalised to a string first and only then checked.
  */
-const optionalAmount = (label: string) =>
+export const optionalAmount = (label: string) =>
   z
     .union([z.string(), z.number(), z.null(), z.undefined()])
     .transform((value) => (value === null || value === undefined ? "" : String(value).trim()))

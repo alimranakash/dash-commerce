@@ -1,4 +1,5 @@
 import { prisma } from "@dash/db";
+import type { PaymentMethodTypeValue } from "../payments/payment.schema";
 import type { UpdateOrderDetailsInput } from "./order.schema";
 
 type OrderStatus = "PENDING" | "CONFIRMED" | "PROCESSING" | "COMPLETED" | "CANCELLED";
@@ -161,17 +162,37 @@ export async function getOrderEditableDetailsForStore(storeId: string, orderId: 
     },
     select: {
       billingAddressId: true,
+      currency: true,
       customerEmail: true,
       customerName: true,
       customerPhone: true,
+      discountAmount: true,
       id: true,
       notes: true,
       orderNumber: true,
+      paymentMethodType: true,
+      paymentNote: true,
+      paymentReference: true,
       shippingAddress: true,
       shippingAddressId: true,
+      shippingAmount: true,
       shippingArea: true,
       shippingCity: true,
-      shippingDistrict: true
+      shippingDistrict: true,
+      subtotalAmount: true
+    }
+  });
+}
+
+/** The lines' total, which the edit form re-prices around but never changes. */
+export async function getOrderSubtotalForStore(storeId: string, orderId: string) {
+  return prisma.order.findFirst({
+    where: {
+      id: orderId,
+      storeId
+    },
+    select: {
+      subtotalAmount: true
     }
   });
 }
@@ -181,14 +202,26 @@ export async function getOrderEditableDetailsForStore(storeId: string, orderId: 
  * denormalised customer snapshot and the Address the courier is actually given.
  *
  * `shippingDistrict`/`City`/`Area` on the order are deliberately left alone —
- * those are the snapshot of the shipping *rate* the shopper paid for, and this
- * form does not re-price the order. The courier draft prefers the address row
- * over them anyway (see courier.service buildShipmentDraft).
+ * those are the snapshot of the shipping *zone* the shopper picked, and the
+ * form changes what was charged, not which zone was chosen. The courier draft
+ * prefers the address row over them anyway (see courier.service
+ * buildShipmentDraft).
+ *
+ * `money` arrives already resolved and already added up: the service owns that
+ * arithmetic because it owns the rule that an order cannot total less than
+ * nothing.
  */
 export async function updateOrderDetailsForStore(
   storeId: string,
   orderId: string,
-  data: UpdateOrderDetailsInput
+  data: UpdateOrderDetailsInput,
+  money: {
+    discountAmount: string;
+    paymentMethodName: string;
+    paymentMethodType: PaymentMethodTypeValue;
+    shippingAmount: string;
+    totalAmount: string;
+  }
 ) {
   const order = await prisma.order.findFirst({
     where: {
@@ -253,8 +286,15 @@ export async function updateOrderDetailsForStore(
         customerEmail: data.customerEmail ?? null,
         customerName: data.customerName,
         customerPhone: data.customerPhone,
+        discountAmount: money.discountAmount,
         notes: data.notes ?? null,
+        paymentMethodName: money.paymentMethodName,
+        paymentMethodType: money.paymentMethodType,
+        paymentNote: data.paymentNote ?? null,
+        paymentReference: data.paymentReference ?? null,
         shippingAddressId,
+        shippingAmount: money.shippingAmount,
+        totalAmount: money.totalAmount,
         // Checkout points both ids at one row. Keep that shape when the order
         // had no address yet, but never repoint a billing address that was
         // deliberately separate.

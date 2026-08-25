@@ -5,6 +5,7 @@ import { getOrderShipments } from "../../../../../modules/courier/courier.servic
 import { OrderEditForm } from "../../../../../modules/orders/components/order-edit-form";
 import { updateOrderDetailsFormAction } from "../../../../../modules/orders/order.actions";
 import { getOrderEditableDetailsForStore } from "../../../../../modules/orders/order.service";
+import { getPaymentMethods } from "../../../../../modules/payments/payment.service";
 import { requireStore } from "../../../../../modules/stores/queries";
 
 type EditOrderPageProps = {
@@ -25,6 +26,7 @@ export default async function EditOrderPage({ params }: EditOrderPageProps) {
   // A booked shipment carries the address the carrier already printed, so a
   // correction made here has to be phoned through to them as well.
   const booked = (await getOrderShipments(store.id, order.id)).length > 0;
+  const paymentMethods = await getPaymentMethods(store.id);
 
   return (
     <DashboardShell storeSlug={store.slug}>
@@ -34,8 +36,9 @@ export default async function EditOrderPage({ params }: EditOrderPageProps) {
             <p className="eyebrow">Orders</p>
             <h1>Edit order {orderNumber}</h1>
             <p className="auth-copy">
-              Fix the customer name, phone, email, or delivery address the shopper entered wrong.
-              Products and totals are not changed.
+              Fix the customer name, phone, email, or delivery address the shopper entered wrong,
+              and set the delivery charge, discount, and payment details you agreed with them.
+              Which products were bought is not changed here — that would move stock.
             </p>
           </div>
           <Link className="secondary link-button" href={`/dashboard/orders/${order.id}`}>
@@ -46,6 +49,7 @@ export default async function EditOrderPage({ params }: EditOrderPageProps) {
           <OrderEditForm
             action={updateOrderDetailsFormAction.bind(null, order.id)}
             cancelHref={`/dashboard/orders/${order.id}`}
+            currency={order.currency}
             order={{
               addressLine1: address?.addressLine1 ?? null,
               addressLine2: address?.addressLine2 ?? null,
@@ -55,10 +59,21 @@ export default async function EditOrderPage({ params }: EditOrderPageProps) {
               customerEmail: order.customerEmail,
               customerName: order.customerName,
               customerPhone: order.customerPhone,
+              discountAmount: Number(order.discountAmount).toFixed(2),
               district: address?.district ?? order.shippingDistrict,
               notes: order.notes,
-              postalCode: address?.postalCode ?? null
+              paymentMethod: order.paymentMethodType,
+              paymentNote: order.paymentNote,
+              paymentReference: order.paymentReference,
+              postalCode: address?.postalCode ?? null,
+              shippingAmount: Number(order.shippingAmount).toFixed(2),
+              subtotalAmount: String(order.subtotalAmount)
             }}
+            paymentMethods={paymentMethods.map((method) => ({
+              isEnabled: method.isEnabled,
+              name: method.name,
+              type: method.type
+            }))}
             {...(booked
               ? {
                   bookedWarning:

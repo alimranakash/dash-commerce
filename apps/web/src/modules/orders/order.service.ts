@@ -1,9 +1,11 @@
 import { assessOrdersForCustomerSafely } from "../fake-orders/fake-order.assessment";
 import { normalizePhoneKey } from "../fake-orders/fake-order.rules";
+import { getPaymentMethods } from "../payments/payment.service";
 import {
   getOrderByIdForStore,
   getOrderEditableDetailsForStore,
   getOrderRiskKeyForStore,
+  getOrderSubtotalForStore,
   getOrdersForStore,
   getPublicOrderByNumber,
   updateOrderDetailsForStore,
@@ -69,6 +71,56 @@ export async function updateOrderPaymentStatus(storeId: string, orderId: string,
  * moves the order between two customer histories — both have to be re-scored,
  * not just the one it landed in.
  */
+/**
+ * Re-prices an order around the lines it already has.
+ *
+ * The subtotal is read rather than sent: it is the sum of the order's items,
+ * and this form cannot touch those. Everything else is the seller's to set —
+ * the delivery charge they agreed on the phone, a discount they gave, the
+ * method the customer actually paid by. Any configured payment method is
+ * allowed, not only the ones switched on for the storefront, because a seller
+ * may take bKash on a call while public checkout offers only cash.
+ */
+async function resolveEditedMoney(
+  storeId: string,
+  orderId: string,
+  data: UpdateOrderDetailsInput
+) {
+  const order = await getOrderSubtotalForStore(storeId, orderId);
+
+  if (!order) {
+    return null;
+  }
+
+  const paymentMethod = (await getPaymentMethods(storeId)).find(
+    (method) => method.type === data.paymentMethod
+  );
+
+  if (!paymentMethod) {
+    throw new Error("Selected payment method is not available.");
+  }
+
+  const shippingAmount = data.shippingAmount ?? "0.00";
+  const discountAmount = data.discountAmount ?? "0.00";
+  const totalAmount = (
+    Number(order.subtotalAmount) +
+    Number(shippingAmount) -
+    Number(discountAmount)
+  ).toFixed(2);
+
+  if (Number(totalAmount) < 0) {
+    throw new Error("The discount is larger than the order total.");
+  }
+
+  return {
+    discountAmount,
+    paymentMethodName: paymentMethod.name,
+    paymentMethodType: paymentMethod.type,
+    shippingAmount,
+    totalAmount
+  };
+}
+
 export async function updateOrderDetails(
   storeId: string,
   orderId: string,
@@ -76,7 +128,13 @@ export async function updateOrderDetails(
 ) {
   const data = updateOrderDetailsSchema.parse(input);
   const before = await getOrderRiskKeyForStore(storeId, orderId);
-  const order = await updateOrderDetailsForStore(storeId, orderId, data);
+  const money = await resolveEditedMoney(storeId, orderId, data);
+
+  if (!money) {
+    return null;
+  }
+
+  const order = await updateOrderDetailsForStore(storeId, orderId, data, money);
 
   if (!order) {
     return null;
