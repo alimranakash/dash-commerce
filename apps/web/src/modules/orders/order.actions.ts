@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
+import { markIncompleteOrderConverted } from "../abandoned-carts/abandoned-cart.service";
 import type { PaymentMethodTypeValue } from "../payments/payment.schema";
 import { requireStore } from "../stores/queries";
 import type { CreateManualOrderInput } from "./order-create.schema";
@@ -122,12 +123,21 @@ export async function createOrderFormAction(
   formData: FormData
 ): Promise<OrderDetailsActionState> {
   const store = await requireStore();
+  // Set when the seller reached this form from the incomplete orders list.
+  const incompleteOrderId = getValue(formData, "incompleteOrderId");
   let createdOrderId: string;
 
   try {
     const { order, sendSms } = await createManualOrder(store, manualOrderFromFormData(formData));
 
     createdOrderId = order.id;
+
+    // Straight after the order commits and before the SMS: a snapshot left on
+    // the incomplete list has the seller ringing a customer who has already
+    // bought, which is a worse failure than a confirmation that did not send.
+    if (incompleteOrderId) {
+      await markIncompleteOrderConverted(store.id, incompleteOrderId, order);
+    }
 
     if (sendSms) {
       // Same contract as the storefront checkout: the order is already
@@ -174,6 +184,11 @@ export async function createOrderFormAction(
   // Stock moved, so the catalog counts on these pages are now stale.
   revalidatePath("/dashboard/products");
   revalidatePath("/dashboard/inventory");
+
+  if (incompleteOrderId) {
+    revalidatePath("/dashboard/orders/incomplete");
+  }
+
   redirect(`/dashboard/orders/${createdOrderId}?created=1`);
 }
 

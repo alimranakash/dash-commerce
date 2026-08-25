@@ -669,10 +669,47 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         related: ["Manage Orders", "Reports", "Abandoned Carts"]
       }),
       page({
+        slug: "orders/incomplete-orders",
+        title: "Incomplete Orders",
+        intro:
+          "Incomplete Orders page সেই customer-দের দেখায় যারা checkout form পূরণ করেছে কিন্তু order শেষ করেনি। Cart ফেলে যাওয়া আর checkout-এ আটকে যাওয়া এক জিনিস নয়, তাই cart গুলো থাকে Abandoned Cart page-এ আর পূরণ করা checkout গুলো এখানে। নাম, ফোন, পুরো ঠিকানা, cart items এবং কেন order হয়নি সব এক জায়গায়।",
+        useCase: [
+          "Place Order চেপে refuse হওয়া customer-কে সাথে সাথে ফোন করতে।",
+          "ঠিকানা-সহ lead পেয়ে এক ক্লিকে manual order বানাতে।",
+          "কোন কারণে সবচেয়ে বেশি order হারাচ্ছেন সেটা বের করতে (stock, OTP, blocked IP, coupon)।"
+        ],
+        steps: [
+          "Dashboard > Orders > Incomplete Orders খুলুন।",
+          "All, Failed, Not Submitted, Contacted বা Recovered tab বেছে নিন।",
+          "Why It Stopped কলামে দেখুন কী কারণে order আটকে গেছে।",
+          "View চেপে drawer-এ ঠিকানা, payment method, coupon, attempt count ও IP address দেখুন।",
+          "WhatsApp বা Email দিয়ে যোগাযোগ করুন, অথবা Create Order চেপে prefilled form থেকে order বানান।",
+          "Analytics দেখতে Reports > Incomplete Orders খুলুন।"
+        ],
+        important: [
+          "Refuse হওয়া checkout সাথে সাথেই list-এ আসে; শুধু টাইপ করে ফেলে যাওয়া checkout ৬০ মিনিট চুপ থাকার পর আসে।",
+          "Create Order শুধু form prefill করে, নিজে থেকে কোনো order তৈরি করে না; আপনি ফোনে মিলিয়ে save করবেন।",
+          "Catalog থেকে delete বা archive হয়ে যাওয়া product prefill-এ আসে না, তবে নাম ধরে জানিয়ে দেওয়া হয়।",
+          "Customer-এর coupon auto apply হয় না; চাইলে Discount ঘরে হাতে বসাতে হবে।",
+          "এখান থেকে order তৈরি হলে row স্বয়ংক্রিয়ভাবে Recovered হয়ে যায়।"
+        ],
+        tips: [
+          "Failed tab আগে দেখুন; এরা কিনতে চেয়েছিল কিন্তু পারেনি।",
+          "একই customer বারবার চেষ্টা করলে (attempts সংখ্যা) তাকে priority দিন।",
+          "Out of stock বেশি দেখলে Inventory দেখুন, Number not verified বেশি দেখলে SMS settings দেখুন।"
+        ],
+        commonMistakes: [
+          "Abandoned Cart page-এ পূরণ করা checkout খোঁজা; ওগুলো এখন এই page-এ।",
+          "Create Order চাপলেই order হয়ে গেছে ধরে নেওয়া।",
+          "Recovered row-এ আবার ফোন করা।"
+        ],
+        related: ["Abandoned Carts", "Manage Orders", "Reports"]
+      }),
+      page({
         slug: "orders/abandoned-carts",
         title: "Abandoned Carts",
         intro:
-          "Abandoned Carts page operational recovery workspace। এখানে KPI cards, cart table structure, search/date filter এবং recovery action placeholders আছে। Analytics অংশ Reports > Abandoned Carts-এ রাখা হয়েছে।",
+          "Abandoned Carts page operational recovery workspace। এখানে KPI cards, cart table structure, search/date filter এবং recovery action placeholders আছে। Analytics অংশ Reports > Abandoned Carts-এ রাখা হয়েছে। এই page শুধু সেই cart গুলো দেখায় যেগুলো কখনো checkout পর্যন্ত যায়নি; checkout form পূরণ করা customer-রা Orders > Incomplete Orders-এ।",
         useCase: [
           "Checkout complete না করা cart review করার জন্য foundation।",
           "Not Contacted, Contacted, Recovered status দিয়ে recovery workflow plan করতে।",
@@ -698,7 +735,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
           "Send WhatsApp button চাপলেই automatic message যাবে ধরে নেয়া।",
           "Analytics খুঁজতে operational page-এ থাকা।"
         ],
-        related: ["Reports", "Customers", "Checkout"]
+        related: ["Incomplete Orders", "Reports", "Customers", "Checkout"]
       }),
       page({
         slug: "orders/transactions",

@@ -17,6 +17,15 @@ import {
   markAbandonedCartContactedAction,
   markAbandonedCartRecoveredAction
 } from "../abandoned-cart.actions";
+import {
+  ActionButton,
+  CartStatusBadge,
+  emailLink,
+  formatDate,
+  formatDuration,
+  formatMoney,
+  whatsappLink
+} from "./cart-recovery-ui";
 import { PlanUpgradeDialog } from "../../billing/components/plan-upgrade-dialog";
 import type { PlanFeatureKey } from "../../billing/plan-features";
 import type {
@@ -109,7 +118,10 @@ export function AbandonedCartDashboard({ activeCartCount, activeFilter, carts, c
    * contacted once that has actually happened.
    */
   function startOutreach(cart: AbandonedCartRecord, channel: "email" | "whatsapp") {
-    const target = channel === "email" ? emailLink(cart, storeName) : whatsappLink(cart, storeName);
+    const target =
+      channel === "email"
+        ? emailLink(cart, storeName, "cart")
+        : whatsappLink(cart, storeName, "cart");
 
     if (!target) {
       setNotice(channel === "email" ? "This cart has no email address on file." : "This cart has no phone number on file.");
@@ -217,84 +229,10 @@ function CartDetailsDrawer({ cart, onClose }: { cart: AbandonedCartRecord; onClo
   );
 }
 
-function CartStatusBadge({ status }: { status: AbandonedCartStatus }) {
-  const styles = status === "RECOVERED" ? "bg-[#e5f8f2] text-[#11815f]" : status === "CONTACTED" ? "bg-[#eeeaff] text-[#6846d8]" : "bg-[#fff1df] text-[#a7650c]";
-  return <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold ${styles}`}>{status === "NOT_CONTACTED" ? "Not Contacted" : status === "CONTACTED" ? "Contacted" : "Recovered"}</span>;
-}
-
-function ActionButton({ disabled, icon: Icon, label, onClick }: { disabled?: boolean; icon?: typeof Mail; label: string; onClick: () => void }) {
-  return <button className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-[#ded9ef] px-2.5 text-[11px] font-semibold text-[#5f3dc4] hover:bg-[#f5f1ff] disabled:opacity-50" disabled={disabled} onClick={onClick} type="button">{Icon ? <Icon className="h-3.5 w-3.5" /> : null}{label}</button>;
-}
-
 function statusToFilter(status: AbandonedCartStatus): AbandonedCartFilterKey {
   return status === "NOT_CONTACTED" ? "not-contacted" : status === "CONTACTED" ? "contacted" : "recovered";
 }
 
-function emailLink(cart: AbandonedCartRecord, storeName: string) {
-  if (!cart.email) {
-    return null;
-  }
-
-  const subject = `You left something in your cart at ${storeName}`;
-  const body = [
-    `Hi ${cart.customerName},`,
-    "",
-    "Your cart is still waiting for you:",
-    ...cart.items.map((item) => `- ${item.productName} x${item.quantity}`),
-    "",
-    `Pick up where you left off: ${cart.recoveryUrl}`,
-    "",
-    storeName
-  ].join("\n");
-
-  return `mailto:${encodeURIComponent(cart.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-}
-
-function whatsappLink(cart: AbandonedCartRecord, storeName: string) {
-  const number = toWhatsAppNumber(cart.phone);
-
-  if (!number) {
-    return null;
-  }
-
-  const message = `Hi ${cart.customerName}, you left ${cart.items.length === 1 ? "an item" : "some items"} in your cart at ${storeName}. You can finish your order here: ${cart.recoveryUrl}`;
-
-  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
-}
-
-/**
- * wa.me needs a full international number. Checkout collects local Bangladeshi
- * numbers (`01…`), which are expanded with the country code; anything already
- * carrying one is left alone.
- */
-function toWhatsAppNumber(phone: string | null) {
-  const digits = (phone ?? "").replace(/\D/g, "").replace(/^00/, "");
-
-  if (digits.length < 8) {
-    return null;
-  }
-
-  return digits.startsWith("0") ? `880${digits.slice(1)}` : digits;
-}
-
 function formatCartCount(count: number) {
   return `${count} cart${count === 1 ? " is" : "s are"}`;
-}
-
-function formatDuration(minutes: number) {
-  if (minutes < 60) {
-    return `${minutes} minute${minutes === 1 ? "" : "s"}`;
-  }
-
-  const hours = Math.round((minutes / 60) * 10) / 10;
-
-  return `${hours} hour${hours === 1 ? "" : "s"}`;
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
-}
-
-function formatMoney(value: number, currency: string) {
-  return new Intl.NumberFormat("en", { currency, style: "currency" }).format(value);
 }

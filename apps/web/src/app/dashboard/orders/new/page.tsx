@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
+import { getIncompleteOrderDraft } from "../../../../modules/abandoned-carts/abandoned-cart.service";
 import { isStoreOrderConfirmSmsEnabled } from "../../../../modules/notifications/store-messaging.service";
 import {
   OrderCreateForm,
+  type OrderCreatePrefill,
   type OrderFormProductOption
 } from "../../../../modules/orders/components/order-create-form";
 import { createOrderFormAction } from "../../../../modules/orders/order.actions";
@@ -12,15 +14,23 @@ import { getProductsForStore } from "../../../../modules/products/product.servic
 import { getEnabledShippingRates } from "../../../../modules/shipping/shipping.service";
 import { requireStore } from "../../../../modules/stores/queries";
 
-export default async function NewOrderPage() {
+type NewOrderPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function NewOrderPage({ searchParams }: NewOrderPageProps) {
   const store = await requireStore();
-  const [products, variantsByProductId, shippingRates, paymentMethods, smsEnabled] =
+  const params = await searchParams;
+  // Set when the seller followed "Create Order" out of the incomplete list.
+  const fromIncomplete = singleValue(params.fromIncomplete).trim();
+  const [products, variantsByProductId, shippingRates, paymentMethods, smsEnabled, draft] =
     await Promise.all([
       getProductsForStore(store.id),
       getStoreVariantOptions(store.id),
       getEnabledShippingRates(store.id),
       getPaymentMethods(store.id),
-      isStoreOrderConfirmSmsEnabled(store.id)
+      isStoreOrderConfirmSmsEnabled(store.id),
+      fromIncomplete ? getIncompleteOrderDraft(store.id, fromIncomplete) : null
     ]);
 
   // Archived products are the one thing the seller cannot sell here. Drafts and
@@ -46,6 +56,36 @@ export default async function NewOrderPage() {
       }))
     }));
 
+  const prefill: OrderCreatePrefill | undefined = draft
+    ? {
+        addressLine1: draft.addressLine1,
+        addressLine2: draft.addressLine2,
+        area: draft.area,
+        city: draft.city,
+        country: draft.country,
+        couponCode: draft.couponCode,
+        customerEmail: draft.customerEmail,
+        customerName: draft.customerName,
+        customerPhone: draft.customerPhone,
+        district: draft.district,
+        lines: draft.lines.map((line) => ({
+          price: line.price,
+          productId: line.productId,
+          quantity: line.quantity,
+          title: line.title,
+          variantId: line.variantId
+        })),
+        notes: draft.notes,
+        paymentMethod: draft.paymentMethod,
+        postalCode: draft.postalCode,
+        shippingRateId: draft.shippingRateId,
+        sourceId: draft.id
+      }
+    : undefined;
+  // Back where they came from, so converting one lead and returning for the
+  // next is a two-click loop rather than a hunt through the sidebar.
+  const backHref = fromIncomplete ? "/dashboard/orders/incomplete" : "/dashboard/orders";
+
   return (
     <DashboardShell storeSlug={store.slug}>
       <section className="resource-page">
@@ -58,21 +98,32 @@ export default async function NewOrderPage() {
               saved exactly like a storefront order, so stock, courier booking, and SMS all work on
               it.
             </p>
+            {/*
+              Only when the link pointed at something that has since gone: the
+              snapshot may have been converted, cleared or recovered between the
+              list being drawn and this page opening.
+            */}
+            {fromIncomplete && !draft ? (
+              <p className="m-0 mt-2 text-sm font-medium text-[#a3203a]">
+                That incomplete order is no longer available, so nothing was prefilled.
+              </p>
+            ) : null}
           </div>
-          <Link className="secondary link-button" href="/dashboard/orders">
+          <Link className="secondary link-button" href={backHref}>
             Back
           </Link>
         </div>
         <div className="panel-card">
           <OrderCreateForm
             action={createOrderFormAction}
-            cancelHref="/dashboard/orders"
+            cancelHref={backHref}
             currency={store.currency}
             paymentMethods={paymentMethods.map((method) => ({
               isEnabled: method.isEnabled,
               name: method.name,
               type: method.type
             }))}
+            prefill={prefill}
             products={options}
             shippingRates={shippingRates.map((rate) => ({
               amount: String(rate.amount),
@@ -85,4 +136,8 @@ export default async function NewOrderPage() {
       </section>
     </DashboardShell>
   );
+}
+
+function singleValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
 }

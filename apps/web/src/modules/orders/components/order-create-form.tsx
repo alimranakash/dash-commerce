@@ -36,11 +36,50 @@ export type OrderFormPaymentOption = {
   type: string;
 };
 
+/** One line of a cart the seller is converting, as ids rather than as display text. */
+export type OrderFormPrefillLine = {
+  price: string;
+  productId: string;
+  quantity: number;
+  /** What the shopper saw it called, so a line that has since gone can be named. */
+  title: string;
+  variantId: string | null;
+};
+
+/**
+ * A checkout the customer filled in but never completed, as a starting point.
+ *
+ * Every field is a default, not a decision: the seller is on the phone to this
+ * customer while they read it, and an address or a quantity may well change
+ * before the order is saved.
+ */
+export type OrderCreatePrefill = {
+  addressLine1: string;
+  addressLine2: string;
+  area: string;
+  city: string;
+  country: string;
+  /** Shown so the seller can honour it as a discount; never applied for them. */
+  couponCode: string | null;
+  customerEmail: string;
+  customerName: string;
+  customerPhone: string;
+  district: string;
+  lines: OrderFormPrefillLine[];
+  notes: string;
+  paymentMethod: string | null;
+  postalCode: string;
+  shippingRateId: string | null;
+  /** The incomplete-order row this came from, so it can be filed as recovered. */
+  sourceId: string;
+};
+
 type OrderCreateFormProps = {
   action: (state: OrderDetailsActionState, formData: FormData) => Promise<OrderDetailsActionState>;
   cancelHref: string;
   currency: string;
   paymentMethods: OrderFormPaymentOption[];
+  prefill?: OrderCreatePrefill | undefined;
   products: OrderFormProductOption[];
   shippingRates: OrderFormShippingOption[];
   /** Whether the store has order SMS switched on at all — the per-order box is pointless otherwise. */
@@ -66,23 +105,34 @@ export function OrderCreateForm({
   cancelHref,
   currency,
   paymentMethods,
+  prefill,
   products,
   shippingRates,
   smsEnabled
 }: OrderCreateFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
-  const [lines, setLines] = useState<OrderLine[]>([]);
+  const resolved = useMemo(
+    () => resolvePrefillLines(prefill?.lines ?? [], products),
+    [prefill, products]
+  );
+  const [lines, setLines] = useState<OrderLine[]>(resolved.lines);
   const [search, setSearch] = useState("");
   const [variantChoice, setVariantChoice] = useState<Record<string, string>>({});
-  const firstRate = shippingRates[0];
-  const [shippingRateId, setShippingRateId] = useState(firstRate?.id ?? "");
+  // The zone the shopper picked, when it is still on offer; otherwise the same
+  // first-zone default an order typed from scratch gets.
+  const startingRate =
+    shippingRates.find((rate) => rate.id === prefill?.shippingRateId) ?? shippingRates[0];
+  const [shippingRateId, setShippingRateId] = useState(startingRate?.id ?? "");
   const [shippingAmount, setShippingAmount] = useState(
-    firstRate ? Number(firstRate.amount).toFixed(2) : "0.00"
+    startingRate ? Number(startingRate.amount).toFixed(2) : "0.00"
   );
   const [discountAmount, setDiscountAmount] = useState("0");
   const [paymentStatus, setPaymentStatus] = useState("PENDING");
   const [paymentMethod, setPaymentMethod] = useState(
-    paymentMethods.find((method) => method.isEnabled)?.type ?? paymentMethods[0]?.type ?? "COD"
+    paymentMethods.find((method) => method.type === prefill?.paymentMethod)?.type ??
+      paymentMethods.find((method) => method.isEnabled)?.type ??
+      paymentMethods[0]?.type ??
+      "COD"
   );
 
   const matches = useMemo(() => {
@@ -179,7 +229,17 @@ export function OrderCreateForm({
         )}
       />
 
+      {prefill ? <input name="incompleteOrderId" type="hidden" value={prefill.sourceId} /> : null}
+
       {state.status === "error" ? <p className="form-error">{state.message}</p> : null}
+
+      {prefill ? (
+        <PrefillNotice
+          couponCode={prefill.couponCode}
+          customerName={prefill.customerName}
+          missingLines={resolved.missing}
+        />
+      ) : null}
 
       <h2 className="m-0 text-sm font-semibold text-[#292a34]">Products</h2>
       {state.fieldErrors?.items ? (
@@ -320,19 +380,36 @@ export function OrderCreateForm({
         <FieldError errors={state.fieldErrors} name="customerName">
           <label>
             Customer Name
-            <input name="customerName" placeholder="Full name" required type="text" />
+            <input
+              defaultValue={prefill?.customerName ?? ""}
+              name="customerName"
+              placeholder="Full name"
+              required
+              type="text"
+            />
           </label>
         </FieldError>
         <FieldError errors={state.fieldErrors} name="customerPhone">
           <label>
             Phone
-            <input name="customerPhone" placeholder="01XXXXXXXXX" required type="tel" />
+            <input
+              defaultValue={prefill?.customerPhone ?? ""}
+              name="customerPhone"
+              placeholder="01XXXXXXXXX"
+              required
+              type="tel"
+            />
           </label>
         </FieldError>
         <FieldError errors={state.fieldErrors} name="customerEmail">
           <label>
             Email
-            <input name="customerEmail" placeholder="customer@example.com" type="email" />
+            <input
+              defaultValue={prefill?.customerEmail ?? ""}
+              name="customerEmail"
+              placeholder="customer@example.com"
+              type="email"
+            />
           </label>
         </FieldError>
       </div>
@@ -341,44 +418,71 @@ export function OrderCreateForm({
       <FieldError errors={state.fieldErrors} name="addressLine1">
         <label>
           Address
-          <textarea name="addressLine1" placeholder="House, road, landmark" required rows={3} />
+          <textarea
+            defaultValue={prefill?.addressLine1 ?? ""}
+            name="addressLine1"
+            placeholder="House, road, landmark"
+            required
+            rows={3}
+          />
         </label>
       </FieldError>
       <FieldError errors={state.fieldErrors} name="addressLine2">
         <label>
           Address Line 2
-          <input name="addressLine2" placeholder="Optional" type="text" />
+          <input
+            defaultValue={prefill?.addressLine2 ?? ""}
+            name="addressLine2"
+            placeholder="Optional"
+            type="text"
+          />
         </label>
       </FieldError>
       <div className="form-grid">
         <FieldError errors={state.fieldErrors} name="area">
           <label>
             Area
-            <input name="area" placeholder="Area" type="text" />
+            <input defaultValue={prefill?.area ?? ""} name="area" placeholder="Area" type="text" />
           </label>
         </FieldError>
         <FieldError errors={state.fieldErrors} name="city">
           <label>
             City
-            <input name="city" placeholder="City" type="text" />
+            <input defaultValue={prefill?.city ?? ""} name="city" placeholder="City" type="text" />
           </label>
         </FieldError>
         <FieldError errors={state.fieldErrors} name="district">
           <label>
             District
-            <input name="district" placeholder="District" required type="text" />
+            <input
+              defaultValue={prefill?.district ?? ""}
+              name="district"
+              placeholder="District"
+              required
+              type="text"
+            />
           </label>
         </FieldError>
         <FieldError errors={state.fieldErrors} name="postalCode">
           <label>
             Postal Code
-            <input name="postalCode" placeholder="Optional" type="text" />
+            <input
+              defaultValue={prefill?.postalCode ?? ""}
+              name="postalCode"
+              placeholder="Optional"
+              type="text"
+            />
           </label>
         </FieldError>
         <FieldError errors={state.fieldErrors} name="country">
           <label>
             Country
-            <input defaultValue="Bangladesh" name="country" required type="text" />
+            <input
+              defaultValue={prefill?.country || "Bangladesh"}
+              name="country"
+              required
+              type="text"
+            />
           </label>
         </FieldError>
       </div>
@@ -503,7 +607,12 @@ export function OrderCreateForm({
       <FieldError errors={state.fieldErrors} name="notes">
         <label>
           Order Note
-          <textarea name="notes" placeholder="Delivery instructions for this order" rows={3} />
+          <textarea
+            defaultValue={prefill?.notes ?? ""}
+            name="notes"
+            placeholder="Delivery instructions for this order"
+            rows={3}
+          />
         </label>
       </FieldError>
 
@@ -528,6 +637,89 @@ export function OrderCreateForm({
       </div>
     </form>
   );
+}
+
+function PrefillNotice({
+  couponCode,
+  customerName,
+  missingLines
+}: {
+  couponCode: string | null;
+  customerName: string;
+  missingLines: string[];
+}) {
+  return (
+    <div className="rounded-lg border border-[#ded5ff] bg-[#f7f4ff] px-4 py-3 text-sm text-[#4b3fd6]">
+      <p className="m-0 font-semibold">
+        Prefilled from a checkout {customerName || "this customer"} did not finish.
+      </p>
+      <p className="m-0 mt-1 text-xs text-[#5f57b8]">
+        Check every field with them before saving — none of it was confirmed, and the prices are the
+        ones they were quoted at the time.
+      </p>
+      {missingLines.length ? (
+        <p className="m-0 mt-2 text-xs font-semibold text-[#a3203a]">
+          Not added back — no longer in your catalog: {missingLines.join(", ")}.
+        </p>
+      ) : null}
+      {couponCode ? (
+        <p className="m-0 mt-2 text-xs">
+          They had entered coupon <strong>{couponCode}</strong>. Enter the discount by hand below if
+          you want to honour it.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * Cart lines, matched back onto the catalog.
+ *
+ * A snapshot can be weeks old, so a product may have been archived or deleted
+ * since — and a line naming a variant that no longer exists is not the same
+ * line. Those are dropped rather than guessed at, and counted so the form can
+ * say so: a seller must not quietly ship a shorter order than the customer
+ * chose.
+ */
+function resolvePrefillLines(
+  prefillLines: OrderFormPrefillLine[],
+  products: OrderFormProductOption[]
+) {
+  const lines: OrderLine[] = [];
+  const missing: string[] = [];
+
+  for (const line of prefillLines) {
+    const product = products.find((entry) => entry.id === line.productId);
+    const variant = line.variantId
+      ? (product?.variants.find((entry) => entry.id === line.variantId) ?? null)
+      : null;
+
+    if (!product || (line.variantId && !variant)) {
+      missing.push(line.title || "an item");
+      continue;
+    }
+
+    const key = `${product.id}::${variant?.id ?? ""}`;
+    const quantity = Math.max(1, Math.floor(line.quantity) || 1);
+    const existing = lines.find((entry) => entry.key === key);
+
+    if (existing) {
+      existing.quantity += quantity;
+      continue;
+    }
+
+    lines.push({
+      key,
+      price: Number(line.price || (variant ? variant.price : product.price)).toFixed(2),
+      productId: product.id,
+      quantity,
+      stockLabel: `${variant ? variant.stockQuantity : product.stockQuantity} in stock`,
+      title: variant ? `${product.title} - ${variant.title}` : product.title,
+      variantId: variant?.id ?? null
+    });
+  }
+
+  return { lines, missing };
 }
 
 function SummaryRow({ label, value }: { label: string; value: string }) {

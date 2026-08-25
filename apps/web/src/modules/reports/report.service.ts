@@ -1,7 +1,12 @@
-import { getAbandonedCartReportRecords } from "../abandoned-carts/abandoned-cart.repository";
+import {
+  getAbandonedCartReportRecords,
+  getIncompleteOrderReportRecords
+} from "../abandoned-carts/abandoned-cart.repository";
 import { getAbandonedCartCutoff } from "../abandoned-carts/abandoned-cart.service";
+import { incompleteOrderFailureLabels } from "../abandoned-carts/incomplete-order-labels";
+import type { IncompleteOrderFailureCode } from "../abandoned-carts/abandoned-cart.types";
 import { getCustomersReportRecords, getOrdersReportRecords, getProductsReportRecords, getReportOverviewRecords, getRevenueReportRecords } from "./report.repository";
-import type { AbandonedCartsReportData, CustomersReportData, OrdersReportData, ProductsReportData, ReportOverviewData, ReportRangeKey, ReportSeriesPoint, ReportTopCustomer, ReportTopProduct, RevenuesReportData } from "./report.types";
+import type { AbandonedCartsReportData, CustomersReportData, IncompleteOrdersReportData, OrdersReportData, ProductsReportData, ReportOverviewData, ReportRangeKey, ReportSeriesPoint, ReportTopCustomer, ReportTopProduct, RevenuesReportData } from "./report.types";
 
 type ReportWindow = {
   length: number;
@@ -166,6 +171,80 @@ export async function getCustomersReport(storeId: string, fallbackCurrency: stri
   };
 }
 
+/**
+ * How many checkouts were filled in and never placed, and what stopped them.
+ *
+ * A sibling of the abandoned-cart report rather than a section of it: the two
+ * measure different halves of the funnel, and only this one can answer the
+ * question a seller actually acts on — whether the orders are being lost to
+ * their own settings or to the shoppers changing their minds.
+ */
+export async function getIncompleteOrdersReport(storeId: string, fallbackCurrency: string, range: ReportRangeKey = "30d"): Promise<IncompleteOrdersReportData> {
+  const window = reportWindow(range);
+  const orders = await getIncompleteOrderReportRecords(storeId, window.start, getAbandonedCartCutoff());
+  // Bucketed by last activity, the same as carts are, so a day's recovery rate
+  // compares like for like against the day the checkout was given up on.
+  const daily = Array.from({ length: window.length }, (_, index) => {
+    const date = new Date(window.start);
+    if (window.unit === "day") date.setDate(date.getDate() + index);
+    else date.setMonth(date.getMonth() + index);
+    const label = window.unit === "day" ? dayLabel(date) : monthLabel(date);
+    const bucket = orders.filter((order) => (window.unit === "day" ? dayLabel(order.lastActivityAt) : monthLabel(order.lastActivityAt)) === label);
+    const recovered = bucket.filter((order) => order.status === "RECOVERED");
+    const lost = bucket.filter((order) => order.status !== "RECOVERED");
+
+    return {
+      failed: bucket.filter((order) => order.stage === "CHECKOUT_FAILED").length,
+      incomplete: bucket.length,
+      label,
+      lostRevenue: sumCartValue(lost),
+      recovered: recovered.length,
+      recoveredRevenue: sumCartValue(recovered),
+      recoveryRate: bucket.length ? (recovered.length / bucket.length) * 100 : 0
+    };
+  });
+  const recoveredOrders = orders.filter((order) => order.status === "RECOVERED");
+  const channelLabels: Record<string, string> = { email: "Email", manual: "Manual outreach", whatsapp: "WhatsApp" };
+  const channelCounts = new Map<string, number>();
+  const failureCounts = new Map<string, number>();
+
+  for (const order of recoveredOrders) {
+    const label = channelLabels[order.contactChannel ?? ""] ?? "Returned on their own";
+    channelCounts.set(label, (channelCounts.get(label) ?? 0) + 1);
+  }
+
+  for (const order of orders) {
+    if (!order.failureCode) {
+      continue;
+    }
+
+    // An unrecognised code — one written by an older build — reads as "Other"
+    // rather than as a raw enum name nobody outside the codebase knows.
+    const label = incompleteOrderFailureLabels[order.failureCode as IncompleteOrderFailureCode] ?? incompleteOrderFailureLabels.UNKNOWN;
+    failureCounts.set(label, (failureCounts.get(label) ?? 0) + 1);
+  }
+
+  return {
+    currency: fallbackCurrency,
+    daily,
+    failureReasons: sortedCounts(failureCounts),
+    metrics: {
+      failed: orders.filter((order) => order.stage === "CHECKOUT_FAILED").length,
+      lostRevenue: sumCartValue(orders.filter((order) => order.status !== "RECOVERED")),
+      recoveredRevenue: sumCartValue(recoveredOrders),
+      recoveryRate: orders.length ? (recoveredOrders.length / orders.length) * 100 : 0,
+      total: orders.length
+    },
+    recoveryChannels: sortedCounts(channelCounts)
+  };
+}
+
+function sortedCounts(counts: Map<string, number>) {
+  return [...counts.entries()]
+    .map(([label, value]) => ({ label, value }))
+    .sort((first, second) => second.value - first.value);
+}
+
 export async function getAbandonedCartsReport(storeId: string, fallbackCurrency: string, range: ReportRangeKey = "30d"): Promise<AbandonedCartsReportData> {
   const window = reportWindow(range);
   const carts = await getAbandonedCartReportRecords(storeId, window.start, getAbandonedCartCutoff());
@@ -207,9 +286,7 @@ export async function getAbandonedCartsReport(storeId: string, fallbackCurrency:
       recoveryRate: carts.length ? (recoveredCarts.length / carts.length) * 100 : 0,
       total: carts.length
     },
-    recoveryChannels: [...channelCounts.entries()]
-      .map(([label, value]) => ({ label, value }))
-      .sort((first, second) => second.value - first.value)
+    recoveryChannels: sortedCounts(channelCounts)
   };
 }
 

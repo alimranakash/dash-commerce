@@ -1,13 +1,18 @@
 import { prisma } from "@dash/db";
 import type { Prisma } from "@dash/db";
 import {
-  captureCheckoutContact,
+  captureCheckoutAttempt,
+  recordCheckoutFailure,
   resolveCartAfterCheckout
 } from "../abandoned-carts/abandoned-cart.service";
+import type { AbandonedCartCheckoutDraftInput } from "../abandoned-carts/abandoned-cart.schema";
+import { CheckoutError, classifyCheckoutFailure } from "./checkout-failure";
 import { claimCouponUse, evaluateCoupon } from "../coupons/coupon-validation.service";
 import { createCouponRedemption } from "../coupons/coupon.repository";
 import { clearCart, getCart, getCartToken } from "../cart/cart.service";
 import { assertStoreUnlocked } from "../billing/free-trial";
+import { assertIpNotBlocked } from "../blocked-ips/blocked-ip.enforcement";
+import { normaliseIpAddress } from "../blocked-ips/blocked-ip.schema";
 import { canCreateOrder } from "../billing/subscription-limits";
 import { assessOrderSafely } from "../fake-orders/fake-order.assessment";
 import {
@@ -20,40 +25,116 @@ import { getEnabledShippingRateForCheckout } from "../shipping/shipping.service"
 import { checkoutSchema, type CheckoutInput } from "./checkout.schema";
 import { assertCheckoutPhoneVerified } from "./checkout-verification.service";
 
+/**
+ * Request-scoped facts about the shopper that are not part of the form.
+ *
+ * Passed in rather than read here because the headers only exist on the route:
+ * a service that reached for them would stop working the moment anything but
+ * an HTTP request called it.
+ */
+type CheckoutContext = {
+  ipAddress: string | null;
+};
+
 type CheckoutStore = {
   currency: string;
   id: string;
   slug: string;
 };
 
-export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutInput) {
+/**
+ * Places an order, and leaves the seller a lead behind when it cannot.
+ *
+ * Everything that decides whether the order happens is in `placeCheckoutOrder`.
+ * This wrapper is only the bookkeeping around it, and that is deliberately
+ * outside the attempt: the draft is captured before the form is even validated,
+ * so a shopper stopped by a typo in their phone number is as recoverable as one
+ * stopped by an out-of-stock line, and the reason is filed from the error on
+ * the way back out.
+ */
+export async function createCheckoutOrder(
+  store: CheckoutStore,
+  input: CheckoutInput,
+  context: CheckoutContext
+) {
+  const cartToken = await getCartToken(store.id);
+
+  await captureCheckoutAttempt(store.id, cartToken, toCheckoutDraft(input), {
+    ipAddress: context.ipAddress
+  });
+
+  try {
+    return await placeCheckoutOrder(store, input, context, cartToken);
+  } catch (error) {
+    // The shopper is already being shown this error; the seller gets the same
+    // sentence, filed against the cart it happened to.
+    await recordCheckoutFailure(store.id, cartToken, classifyCheckoutFailure(error));
+
+    throw error;
+  }
+}
+
+/**
+ * The posted form as it stands, for the snapshot.
+ *
+ * Reads `input` rather than the parsed `data` on purpose — a form that fails
+ * `checkoutSchema` is exactly the one worth keeping, and the draft schema caps
+ * every field rather than rejecting it.
+ */
+function toCheckoutDraft(input: CheckoutInput): AbandonedCartCheckoutDraftInput {
+  return {
+    addressLine1: input.addressLine1,
+    addressLine2: input.addressLine2,
+    area: input.area,
+    city: input.city,
+    country: input.country,
+    couponCode: input.couponCode,
+    district: input.district,
+    email: input.email,
+    name: input.name,
+    paymentMethod: input.paymentMethod,
+    phone: input.phone,
+    postalCode: input.postalCode,
+    shippingRateId: input.shippingRateId
+  };
+}
+
+async function placeCheckoutOrder(
+  store: CheckoutStore,
+  input: CheckoutInput,
+  context: CheckoutContext,
+  cartToken: string
+) {
   const data = checkoutSchema.parse(input);
+  // Canonicalised once, here, and used for both the block check and the stored
+  // column. The blocklist holds canonical addresses, so an order row that spelled
+  // the same address differently would split the per-address aggregates the
+  // suggestion list is built from and make "already blocked" read false on the
+  // review page for an address that is blocked. Unparseable becomes null: a value
+  // nothing can match on is worse than no value at all.
+  const ipAddress = context.ipAddress ? normaliseIpAddress(context.ipAddress) : null;
   const cart = await getCart(store.id);
 
   if (cart.items.length === 0) {
-    throw new Error("Your cart is empty.");
+    throw new CheckoutError("EMPTY_CART", "Your cart is empty.");
   }
 
-  const cartToken = await getCartToken(store.id);
-
-  // Before anything can fail: a checkout that dies on stock, payment or a
-  // closed tab is exactly the cart the seller most needs to be able to chase.
-  await captureCheckoutContact(store.id, cartToken, {
-    email: data.email,
-    name: data.name,
-    phone: data.phone
-  });
+  // First of the checks, and cheap on purpose: a blocked address should cost
+  // the store nothing, not a plan-limit read and certainly not an SMS. Order
+  // placement is the only thing the blocklist stops — browsing the storefront
+  // is unaffected. The lead was captured by the caller before any of this ran,
+  // so a shopper stopped here is still one the seller can see and ring.
+  await assertIpNotBlocked(store.id, ipAddress);
 
   // A store whose free year ran out stops selling until someone upgrades it.
   // Enforced here rather than on the checkout page so it cannot be bypassed by
-  // posting the form directly, and after the contact capture so the seller still
-  // keeps the lead they would otherwise lose entirely.
+  // posting the form directly.
   await assertStoreUnlocked(store.id);
 
-  // After the contact capture, so a checkout blocked by the plan still leaves
-  // the seller a recoverable cart, and before any stock is touched.
+  // Before any stock is touched.
   if (!(await canCreateOrder(store.id))) {
-    throw new Error(
+    throw new CheckoutError(
+      "ORDER_LIMIT",
       "This store has reached its monthly order limit and cannot accept new orders right now."
     );
   }
@@ -71,7 +152,10 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
   const shippingRate = await getEnabledShippingRateForCheckout(store.id, data.shippingRateId);
 
   if (isManualPaymentType(data.paymentMethod) && !data.paymentReference) {
-    throw new Error("Transaction ID or payment reference is required for this payment method.");
+    throw new CheckoutError(
+      "PAYMENT_REFERENCE",
+      "Transaction ID or payment reference is required for this payment method."
+    );
   }
 
   const order = await prisma.$transaction(async (tx) => {
@@ -98,7 +182,7 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
       const product = productsById.get(item.productId);
 
       if (!product) {
-        throw new Error(`${item.title} is no longer available.`);
+        throw new CheckoutError("OUT_OF_STOCK", `${item.title} is no longer available.`);
       }
 
       if (item.variantId) {
@@ -108,7 +192,7 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
       }
 
       if (item.quantity > product.stockQuantity) {
-        throw new Error(`${item.title} does not have enough stock.`);
+        throw new CheckoutError("OUT_OF_STOCK", `${item.title} does not have enough stock.`);
       }
     }
 
@@ -171,7 +255,7 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
       });
 
       if (updated.count !== 1) {
-        throw new Error(`${item.title} does not have enough stock.`);
+        throw new CheckoutError("OUT_OF_STOCK", `${item.title} does not have enough stock.`);
       }
     }
 
@@ -221,6 +305,7 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
         customerName: data.name,
         customerEmail: data.email ?? null,
         customerPhone: data.phone,
+        ipAddress,
         shippingAddressId: address.id,
         billingAddressId: address.id,
         notes: data.notes ?? null,
@@ -308,14 +393,14 @@ async function claimCheckoutCoupon(
   );
 
   if (!evaluation.ok) {
-    throw new Error(evaluation.message);
+    throw new CheckoutError("COUPON", evaluation.message);
   }
 
   // The read above can be stale by the time it lands; this is the check that
   // actually decides, and it is the one that holds the row for the rest of the
   // transaction — including the per-customer count `evaluateCoupon` just did.
   if (!(await claimCouponUse(tx, evaluation.couponId, input.storeId))) {
-    throw new Error(`${evaluation.couponCode} has been fully claimed.`);
+    throw new CheckoutError("COUPON", `${evaluation.couponCode} has been fully claimed.`);
   }
 
   return {

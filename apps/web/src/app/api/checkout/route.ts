@@ -2,6 +2,7 @@ import { getStorefrontOrigin } from "../../../modules/abandoned-carts/abandoned-
 import { storefrontBasePath, storefrontRequestOrigin } from "../../../modules/storefront/base-path";
 import { revalidatePath } from "next/cache";
 import { NextResponse, type NextRequest } from "next/server";
+import { readClientIp } from "../../../lib/request-ip";
 import { ZodError } from "zod";
 import { createCheckoutOrder } from "../../../modules/checkout/checkout.service";
 import { sendGa4PurchaseEvent } from "../../../modules/marketing/ga4-mp";
@@ -41,6 +42,8 @@ export async function POST(request: NextRequest) {
       paymentNote: getValue(formData, "paymentNote"),
       verificationCode: getValue(formData, "verificationCode"),
       couponCode: getValue(formData, "couponCode")
+    }, {
+      ipAddress: readClientIp(request.headers)
     });
 
     // Internal route on purpose: /s/<slug> is what Next serves, and the clean

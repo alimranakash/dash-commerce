@@ -57,5 +57,8 @@ export async function markAbandonedCartRecoveredAction(
 function revalidateAbandonedCartPaths() {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/abandoned-cart");
+  // The same rows, read through a different filter — both lists go stale on
+  // every status change, whichever page the seller made it from.
+  revalidatePath("/dashboard/orders/incomplete");
   revalidatePath("/dashboard/reports/abandoned-carts");
 }

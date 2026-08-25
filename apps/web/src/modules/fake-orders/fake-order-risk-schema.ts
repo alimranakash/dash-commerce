@@ -1,4 +1,5 @@
 import { prisma } from "@dash/db";
+import { ensureBlockedIpSchema } from "../blocked-ips/blocked-ip-schema";
 
 /**
  * Self-healing DDL for the stored risk assessment, in the same shape as
@@ -33,6 +34,12 @@ export function ensureFakeOrderRiskSchema() {
 }
 
 async function addRiskColumns() {
+  // The blocklist owns `Order.ipAddress`, but this is the guard every risk read
+  // already awaits, and those reads `include` the order — which selects every
+  // scalar column, that one included. Awaiting the owner here is what stops a
+  // database that has not had `db push` run from 500ing the fake-orders page.
+  await ensureBlockedIpSchema();
+
   const schema = getDatabaseSchemaName();
   const orderTable = `"${schema}"."Order"`;
 

@@ -6,6 +6,21 @@ import { defaultCheckoutSettings } from "../checkout-settings";
 
 const CONTACT_ENDPOINT = "/api/checkout/contact";
 const CONTACT_DEBOUNCE_MS = 900;
+const CAPTURED_FIELDS = [
+  "addressLine1",
+  "addressLine2",
+  "area",
+  "city",
+  "country",
+  "couponCode",
+  "district",
+  "email",
+  "name",
+  "paymentMethod",
+  "phone",
+  "postalCode",
+  "shippingRateId"
+] as const;
 
 type CheckoutPaymentMethod = {
   type: PaymentMethodTypeValue;
@@ -279,13 +294,18 @@ function CheckoutPhoneVerification({
 }
 
 /**
- * Saves the shopper's contact details as they type, and once more if they leave.
+ * Saves the checkout form as the shopper types it, and once more if they leave.
  *
- * A shopper who fills in their details and then closes the tab is the single
- * most recoverable kind of abandoned cart, and the form's own submit handler
- * never runs for them — so the details are sent to a side channel that only
- * updates the cart snapshot. `pagehide` (not `unload`) is what fires reliably
- * on mobile, and sendBeacon survives the page going away.
+ * A shopper who fills the form in and then closes the tab is the single most
+ * recoverable kind of lost order, and the form's own submit handler never runs
+ * for them — so the fields are sent to a side channel that only updates the
+ * cart snapshot. `pagehide` (not `unload`) is what fires reliably on mobile,
+ * and sendBeacon survives the page going away.
+ *
+ * `CAPTURED_FIELDS` is a list rather than the whole form on purpose: the
+ * verification code and the payment reference are the two things on this page
+ * that can authorise something, and neither belongs in a side channel that
+ * exists to be read by the seller later.
  */
 function useCheckoutContactCapture(
   formRef: React.RefObject<HTMLFormElement | null>,
@@ -305,15 +325,20 @@ function useCheckoutContactCapture(
     const send = (leaving: boolean) => {
       const data = new FormData(form);
       const read = (key: string) => String(data.get(key) ?? "").trim();
-      const phone = read("phone");
-      const email = read("email");
 
-      // Nothing reachable yet — a name alone gives the seller no way to follow up.
-      if (!phone && !email) {
+      // Nothing reachable yet — an address alone gives the seller no way to
+      // follow up, and a half-typed one is not worth a request either.
+      if (!read("phone") && !read("email")) {
         return;
       }
 
-      const body = new URLSearchParams({ email, name: read("name"), phone, storeSlug }).toString();
+      const fields = new URLSearchParams({ storeSlug });
+
+      for (const field of CAPTURED_FIELDS) {
+        fields.set(field, read(field));
+      }
+
+      const body = fields.toString();
 
       if (body === lastSent.current) {
         return;

@@ -57,10 +57,12 @@ const NAV_FEATURE_BY_HREF: Record<string, PlanFeatureKey> = {
   "/dashboard/fraud-check": "fraud_check",
   "/dashboard/inventory": "inventory",
   "/dashboard/orders/fake": "fake_orders",
+  "/dashboard/orders/incomplete": "abandoned_cart",
   "/dashboard/orders/tracking": "order_tracking",
   "/dashboard/orders/verification": "order_verification",
   "/dashboard/purchases": "purchases",
   "/dashboard/reports/abandoned-carts": "abandoned_cart",
+  "/dashboard/reports/incomplete-orders": "abandoned_cart",
   "/dashboard/sales": "sales",
   "/dashboard/settings/courier": "courier_api",
   "/dashboard/settings/domains": "custom_domain",
@@ -102,12 +104,17 @@ const productLinks = [
 const orderLinks = [
   { href: "/dashboard/orders", label: "All Orders" },
   { href: "/dashboard/orders/new", label: "Create Order" },
+  // Beside the orders that exist rather than in Marketing with the abandoned
+  // carts: a filled-in checkout is an order the seller nearly had, and it is
+  // worked from the same screen and the same phone as the rest of this list.
+  { href: "/dashboard/orders/incomplete", label: "Incomplete Orders" },
   { href: "/dashboard/orders/tracking", label: "Order Tracking" },
   { href: "/dashboard/orders/returns", label: "Returns" },
   { href: "/dashboard/orders/exchanges", label: "Exchanges" },
   { href: "/dashboard/orders/refunds", label: "Refunds" },
   { href: "/dashboard/orders/fake", label: "Fake Orders" },
   { href: "/dashboard/orders/verification", label: "Verification Queue" },
+  { href: "/dashboard/orders/blocked-ips", label: "Blocked IPs" },
   // Lives at /dashboard/fraud-check rather than under /dashboard/orders, so the
   // route checks below have to name it explicitly.
   { href: "/dashboard/fraud-check", label: "Fraud Check" }
@@ -119,7 +126,8 @@ const reportLinks = [
   { href: "/dashboard/reports/revenues", label: "Revenues" },
   { href: "/dashboard/reports/products", label: "Products" },
   { href: "/dashboard/reports/customers", label: "Customers" },
-  { href: "/dashboard/reports/abandoned-carts", label: "Abandoned Carts" }
+  { href: "/dashboard/reports/abandoned-carts", label: "Abandoned Carts" },
+  { href: "/dashboard/reports/incomplete-orders", label: "Incomplete Orders" }
 ];
 
 const settingsLinks = [
@@ -641,6 +649,7 @@ function isOrderLinkActive(pathname: string, href: string) {
   }
 
   if (
+    href === "/dashboard/orders/blocked-ips" ||
     href === "/dashboard/orders/tracking" ||
     href === "/dashboard/orders/new" ||
     href === "/dashboard/orders/returns" ||

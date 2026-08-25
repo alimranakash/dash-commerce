@@ -1,14 +1,15 @@
 import { notFound } from "next/navigation";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
-import { AbandonedCartsReportDashboard, CustomersReportDashboard, OrdersReportDashboard, ProductsReportDashboard, RevenuesReportDashboard } from "../../../../modules/reports/components/report-section-dashboards";
+import { AbandonedCartsReportDashboard, CustomersReportDashboard, IncompleteOrdersReportDashboard, OrdersReportDashboard, ProductsReportDashboard, RevenuesReportDashboard } from "../../../../modules/reports/components/report-section-dashboards";
 import { DateRangeFilter } from "../../../../modules/reports/components/report-section-components";
-import { getAbandonedCartsReport, getCustomersReport, getOrdersReport, getProductsReport, getRevenuesReport } from "../../../../modules/reports/report.service";
+import { getAbandonedCartsReport, getCustomersReport, getIncompleteOrdersReport, getOrdersReport, getProductsReport, getRevenuesReport } from "../../../../modules/reports/report.service";
 import { parseReportRange, type ReportRangeKey } from "../../../../modules/reports/report.types";
 import { requireStore } from "../../../../modules/stores/queries";
 
 const reportTitles: Record<string, string> = {
   "abandoned-carts": "Abandoned Carts",
   customers: "Customers",
+  "incomplete-orders": "Incomplete Orders",
   orders: "Orders",
   products: "Products",
   revenues: "Revenues"
@@ -40,6 +41,7 @@ export default async function ReportSectionPage({ params, searchParams }: Report
 
 async function loadReportDashboard(report: string, storeId: string, currency: string, range: ReportRangeKey) {
   if (report === "abandoned-carts") return <AbandonedCartsReportDashboard data={await getAbandonedCartsReport(storeId, currency, range)} />;
+  if (report === "incomplete-orders") return <IncompleteOrdersReportDashboard data={await getIncompleteOrdersReport(storeId, currency, range)} />;
   if (report === "orders") return <OrdersReportDashboard data={await getOrdersReport(storeId, currency, range)} />;
   if (report === "revenues") return <RevenuesReportDashboard data={await getRevenuesReport(storeId, currency, range)} />;
   if (report === "products") return <ProductsReportDashboard data={await getProductsReport(storeId, currency, range)} />;

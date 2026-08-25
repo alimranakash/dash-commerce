@@ -1,6 +1,6 @@
-import { BadgeDollarSign, Ban, Box, CheckCircle2, CircleDollarSign, Clock3, PackageCheck, PackageOpen, Percent, ReceiptText, RefreshCcw, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, UserPlus, Users } from "lucide-react";
+import { BadgeDollarSign, Ban, Box, CheckCircle2, CircleAlert, CircleDollarSign, ClipboardList, Clock3, PackageCheck, PackageOpen, Percent, ReceiptText, RefreshCcw, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
-import type { AbandonedCartsReportData, CustomersReportData, OrdersReportData, ProductsReportData, RevenuesReportData } from "../report.types";
+import type { AbandonedCartsReportData, CustomersReportData, IncompleteOrdersReportData, OrdersReportData, ProductsReportData, RevenuesReportData } from "../report.types";
 import { ReportCard } from "./report-card";
 import { ReportLineChart } from "./report-line-chart";
 import { ReportBarList, ReportEmptyState, ReportMetricCard, ReportTable, formatMoney, formatNumber } from "./report-section-components";
@@ -30,6 +30,48 @@ export function AbandonedCartsReportDashboard({ data }: { data: AbandonedCartsRe
     </ReportCard>
   </div>;
 }
+
+export function IncompleteOrdersReportDashboard({ data }: { data: IncompleteOrdersReportData }) {
+  const hasActivity = data.metrics.total > 0;
+  const labels = data.daily.map((point) => point.label);
+
+  return <div className="grid gap-4">
+    <MetricGrid metrics={[
+      { icon: ClipboardList, label: "Incomplete Orders", value: formatNumber(data.metrics.total) },
+      { icon: CircleAlert, label: "Failed at Checkout", value: formatNumber(data.metrics.failed) },
+      { icon: Percent, label: "Recovery Rate", value: `${data.metrics.recoveryRate.toFixed(1)}%` },
+      { icon: CircleDollarSign, label: "Recovered Revenue", value: formatMoney(data.metrics.recoveredRevenue, data.currency) },
+      { icon: TrendingDown, label: "Lost Revenue", value: formatMoney(data.metrics.lostRevenue, data.currency) }
+    ]} />
+    {/*
+      First card on the page, because it is the only one that names something
+      the seller can go and change. Everything below it is the size of the
+      problem; this is the cause.
+    */}
+    <ReportCard title="Why Checkouts Failed">
+      {data.failureReasons.length ? <ReportBarList items={data.failureReasons} /> : <ReportEmptyState message="No checkout was refused in this period. Everything here was left unfinished by the shopper." />}
+    </ReportCard>
+    <div className="grid gap-4 xl:grid-cols-2">
+      <ReportCard title="Incomplete Order Trends">{hasActivity ? <ReportLineChart labels={labels} series={[
+        { color: "#7650e8", label: "Incomplete Orders", values: data.daily.map((point) => point.incomplete) },
+        { color: "#ef6f61", label: "Failed at Checkout", values: data.daily.map((point) => point.failed) },
+        { color: "#20a66a", label: "Recovered", values: data.daily.map((point) => point.recovered) }
+      ]} /> : <IncompleteEmpty />}</ReportCard>
+      <ReportCard title="Recovery Performance">{hasActivity ? <ReportLineChart labels={labels} series={[
+        { color: "#2789e8", label: "Recovery Rate", values: data.daily.map((point) => point.recoveryRate) }
+      ]} /> : <IncompleteEmpty />}</ReportCard>
+    </div>
+    <ReportCard title="Recovered Revenue & Lost Revenue Trends">{hasActivity ? <ReportLineChart labels={labels} series={[
+      { color: "#20a66a", label: "Recovered Revenue", values: data.daily.map((point) => point.recoveredRevenue) },
+      { color: "#ef6f61", label: "Lost Revenue", values: data.daily.map((point) => point.lostRevenue) }
+    ]} /> : <IncompleteEmpty />}</ReportCard>
+    <ReportCard title="Top Recovery Channels">
+      {data.recoveryChannels.length ? <ReportBarList items={data.recoveryChannels} /> : <ReportEmptyState message="Recovery channels appear here once a contacted checkout turns into an order." />}
+    </ReportCard>
+  </div>;
+}
+
+function IncompleteEmpty() { return <ReportEmptyState message="No incomplete checkout activity is available for this reporting period." />; }
 
 export function OrdersReportDashboard({ data }: { data: OrdersReportData }) {
   const metrics = [

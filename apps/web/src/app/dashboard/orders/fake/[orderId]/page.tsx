@@ -3,6 +3,8 @@ import { AlertTriangle, Bot, MessageCircle, PhoneCall, ShieldCheck } from "lucid
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { DashboardShell } from "../../../../../components/dashboard/dashboard-shell";
+import { BlockOrderIpButton } from "../../../../../modules/blocked-ips/components/blocked-ip-buttons";
+import { isIpBlocked } from "../../../../../modules/blocked-ips/blocked-ip.enforcement";
 import { FakeOrderActionButtons } from "../../../../../modules/fake-orders/components/fake-order-action-buttons";
 import { CustomerFlagBadge, RiskLevelBadge, VerificationStatusBadge } from "../../../../../modules/fake-orders/components/fake-order-badges";
 import { getFakeOrderDetails } from "../../../../../modules/fake-orders/fake-order.service";
@@ -29,6 +31,7 @@ export default async function FakeOrderDetailsPage({ params }: FakeOrderDetailsP
   }
 
   const { assessment, cancellationHistory, order, previousOrders } = details;
+  const ipAlreadyBlocked = await isIpBlocked(store.id, order.ipAddress);
 
   return (
     <DashboardShell storeSlug={store.slug}>
@@ -104,6 +107,26 @@ export default async function FakeOrderDetailsPage({ params }: FakeOrderDetailsP
             <div className="mt-5">
               <FakeOrderActionButtons orderId={order.id} />
             </div>
+            {/*
+              The address is shown next to its own button rather than among the
+              customer fields: on its own it means little to a seller, and the
+              only thing they can usefully do with it is the thing beside it.
+            */}
+            {order.ipAddress ? (
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#efeff5] bg-[#fbfaff] p-3">
+                <div>
+                  <p className="m-0 text-[11px] font-semibold uppercase text-[#7b7c88]">Order IP address</p>
+                  <p className="m-0 mt-1 text-sm font-semibold text-[#20212c]">{order.ipAddress}</p>
+                </div>
+                {ipAlreadyBlocked ? (
+                  <Link className="text-xs font-semibold text-[#6d3cf5]" href="/dashboard/orders/blocked-ips">
+                    Already blocked
+                  </Link>
+                ) : (
+                  <BlockOrderIpButton ipAddress={order.ipAddress} orderId={order.id} />
+                )}
+              </div>
+            ) : null}
           </section>
         </div>
 

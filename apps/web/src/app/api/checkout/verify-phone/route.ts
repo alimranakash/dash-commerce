@@ -1,5 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { readClientIp } from "../../../../lib/request-ip";
+import {
+  BLOCKED_IP_MESSAGE,
+  isIpBlocked
+} from "../../../../modules/blocked-ips/blocked-ip.enforcement";
 import { requestCheckoutPhoneCode } from "../../../../modules/checkout/checkout-verification.service";
 import { getStorefrontBySlug } from "../../../../modules/storefront/resolver";
 import { otpErrorResponse, readJsonBody } from "../../auth/_otp-response";
@@ -18,10 +22,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ code: "UNKNOWN", error: "Storefront not found." }, { status: 404 });
     }
 
+    const ipAddress = readClientIp(request.headers);
+
+    // Checked before the send, not only at order placement: the order would be
+    // refused anyway, and every code sent in between is the seller's SMS credit
+    // spent on somebody who cannot buy anything.
+    if (await isIpBlocked(store.id, ipAddress)) {
+      return NextResponse.json(
+        { code: "BLOCKED", error: BLOCKED_IP_MESSAGE },
+        { status: 403 }
+      );
+    }
+
     const ticket = await requestCheckoutPhoneCode(
       store.id,
       { phone: String(body.phone ?? "") },
-      { ipAddress: readClientIp(request.headers) }
+      { ipAddress }
     );
 
     return NextResponse.json(

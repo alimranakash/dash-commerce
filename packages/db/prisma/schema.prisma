@@ -161,6 +161,20 @@ enum AbandonedCartStatus {
   RECOVERED
 }
 
+/**
+ * How far down the funnel a snapshot got before it stopped.
+ *
+ * CART is a cart that was never carried into checkout; the two CHECKOUT_ values
+ * are what the dashboard calls an incomplete order — the shopper filled the
+ * checkout form, and either walked away from it or pressed Place Order and was
+ * refused. A snapshot only ever moves forward through these.
+ */
+enum AbandonedCartStage {
+  CART
+  CHECKOUT_STARTED
+  CHECKOUT_FAILED
+}
+
 enum FulfillmentStatus {
   UNFULFILLED
   SHIPPED
@@ -531,6 +545,7 @@ model Store {
   campaigns                  Campaign[]
   campaignAudiences          CampaignAudience[]
   campaignTemplates          CampaignTemplate[]
+  blockedIps                 BlockedIp[]
   createdAt                  DateTime                    @default(now())
   updatedAt                  DateTime                    @default(now()) @updatedAt
 
@@ -1406,6 +1421,33 @@ model Customer {
   @@index([flagStatus])
 }
 
+/// One store's IP blocklist.
+///
+/// Per store on purpose: an address abusing one shop is not thereby abusing the
+/// platform, and no seller should be able to lock a shopper out of somebody
+/// else's storefront. Enforced at order placement only — see
+/// `modules/blocked-ips/blocked-ip.enforcement.ts`.
+model BlockedIp {
+  id        String    @id @default(cuid())
+  storeId   String
+  /// Normalised by `normaliseIpAddress` before every read and write — lower
+  /// cased, IPv6 collapsed to its canonical short form — so the unique index
+  /// below actually holds and a lookup cannot miss on spelling alone.
+  ipAddress String
+  reason    String?
+  /// Null blocks forever. A dated block is how a seller undoes a mistake they
+  /// have not noticed yet, which matters more here than it looks: carrier-grade
+  /// NAT means one address can be thousands of unrelated shoppers.
+  expiresAt DateTime?
+  store     Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+
+  @@unique([storeId, ipAddress])
+  @@index([storeId])
+  @@index([storeId, expiresAt])
+}
+
 model Address {
   id             String    @id @default(cuid())
   storeId        String
@@ -1466,6 +1508,11 @@ model Order {
   shippingAddressId     String?
   billingAddressId      String?
   notes                 String?
+  /// The address the checkout was posted from, as reported by the reverse
+  /// proxy. Null for orders the seller typed in by hand and for every order
+  /// placed before this column existed. Read only by the fraud tooling: it is
+  /// client-controllable, so it is a signal, never an identity.
+  ipAddress             String?
   verifiedAt            DateTime?
   markedFakeAt          DateTime?
   /// Stored output of the rule-based risk engine (modules/fake-orders).
@@ -1497,6 +1544,7 @@ model Order {
   @@index([storeId, verificationStatus])
   @@index([storeId, riskLevel])
   @@index([storeId, riskAssessedAt])
+  @@index([storeId, ipAddress])
   @@index([shippingAddressId])
   @@index([billingAddressId])
 }
@@ -1646,10 +1694,31 @@ model AbandonedCart {
   customerEmail        String?
   customerPhone        String?
   status               AbandonedCartStatus @default(NOT_CONTACTED)
+  stage                AbandonedCartStage  @default(CART)
   itemCount            Int                 @default(0)
   subtotalAmount       Decimal             @default(0) @db.Decimal(12, 2)
   items                Json
   note                 String?
+  // Everything the shopper had typed into checkout when they stopped. Nullable
+  // and unvalidated on purpose: a half-filled form is exactly what this is for,
+  // and none of it has been through checkoutSchema the way an order's has.
+  country              String?
+  district             String?
+  city                 String?
+  area                 String?
+  addressLine1         String?
+  addressLine2         String?
+  postalCode           String?
+  shippingRateId       String?
+  paymentMethod        String?
+  couponCode           String?
+  ipAddress            String?
+  // How many times Place Order was pressed, and why the last press did not
+  // become an order. `failureCode` holds an IncompleteOrderFailureCode value.
+  attemptCount         Int                 @default(0)
+  failureCode          String?
+  failureReason        String?
+  failedAt             DateTime?
   contactChannel       String?
   contactedAt          DateTime?
   recoveredAt          DateTime?
@@ -1664,6 +1733,7 @@ model AbandonedCart {
   @@unique([storeId, token])
   @@index([storeId, lastActivityAt])
   @@index([storeId, status])
+  @@index([storeId, stage, lastActivityAt])
   @@index([customerId])
 }
 

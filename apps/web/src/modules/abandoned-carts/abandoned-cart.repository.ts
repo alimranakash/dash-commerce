@@ -1,4 +1,5 @@
 import { prisma, type Prisma } from "@dash/db";
+import type { AbandonedCartStage } from "./abandoned-cart.types";
 
 export type AbandonedCartSnapshotInput = {
   itemCount: number;
@@ -9,11 +10,11 @@ export type AbandonedCartSnapshotInput = {
   token: string;
 };
 
-export type AbandonedCartContactUpdate = {
-  customerEmail: string | null;
-  customerId: string | null;
-  customerName: string | null;
-  customerPhone: string | null;
+export type AbandonedCartStageQuery = {
+  from: AbandonedCartStage[];
+  storeId: string;
+  to: AbandonedCartStage;
+  token: string;
 };
 
 export type AbandonedCartListQuery = {
@@ -89,17 +90,49 @@ export async function findAbandonedCartByToken(storeId: string, token: string) {
   });
 }
 
-export async function updateAbandonedCartContact(
+/**
+ * Writes what the shopper had typed onto the snapshot for their cart.
+ *
+ * Takes a Prisma payload rather than a fixed shape because two callers write
+ * overlapping subsets of the same columns — the checkout page as it is filled
+ * in, and the order attempt that follows it.
+ */
+export async function updateAbandonedCartCheckoutDraft(
   storeId: string,
   token: string,
-  contact: AbandonedCartContactUpdate
+  // The unchecked variant because `customerId` is a relation key, and matching
+  // a guest onto an existing customer row is half of what this write is for.
+  data: Prisma.AbandonedCartUncheckedUpdateManyInput
 ) {
   return prisma.abandonedCart.updateMany({
     where: {
       storeId,
       token
     },
-    data: contact
+    data
+  });
+}
+
+/**
+ * Moves a snapshot forward through the funnel, and only forward.
+ *
+ * The stage a shopper reached is a fact about them, so a shopper who was
+ * refused at Place Order and then goes back to editing the form must not have
+ * that refusal quietly downgraded to "still typing" by the next keystroke —
+ * which is exactly what an unconditional write would do.
+ */
+export async function promoteAbandonedCartStage(query: AbandonedCartStageQuery) {
+  return prisma.abandonedCart.updateMany({
+    where: {
+      stage: {
+        in: query.from
+      },
+      storeId: query.storeId,
+      token: query.token
+    },
+    data: {
+      stage: query.to
+    }
   });
 }
 
@@ -142,31 +175,15 @@ export async function markAbandonedCartRecovered(
  * outreach history does not disappear when a shopper comes back.
  */
 export async function getAbandonedCartRecords(query: AbandonedCartListQuery) {
-  const conditions: Prisma.AbandonedCartWhereInput[] = [
-    {
-      OR: [{ lastActivityAt: { lte: query.cutoff } }, { status: { not: "NOT_CONTACTED" } }]
-    }
-  ];
-  const search = query.search?.trim();
-  const activityRange = parseDateRange(query.dateRange);
-
-  if (search) {
-    conditions.push({
-      OR: [
-        { customerName: { contains: search, mode: "insensitive" } },
-        { customerEmail: { contains: search, mode: "insensitive" } },
-        { customerPhone: { contains: search, mode: "insensitive" } }
-      ]
-    });
-  }
-
-  if (activityRange) {
-    conditions.push({ lastActivityAt: activityRange });
-  }
-
   return prisma.abandonedCart.findMany({
     where: {
-      AND: conditions,
+      AND: [
+        { stage: "CART" },
+        {
+          OR: [{ lastActivityAt: { lte: query.cutoff } }, { status: { not: "NOT_CONTACTED" } }]
+        },
+        ...filterConditions(query)
+      ],
       storeId: query.storeId
     },
     orderBy: { lastActivityAt: "desc" },
@@ -186,10 +203,137 @@ export async function getAbandonedCartRecords(query: AbandonedCartListQuery) {
   });
 }
 
+/**
+ * Every checkout a seller should still chase.
+ *
+ * A refused attempt is urgent from the second it happens, so unlike a cart it
+ * is listed without waiting out the inactivity window — the shopper is very
+ * probably still on the page. One that is only half typed does wait, or the
+ * list would fill with people who are mid-checkout right now. Anything already
+ * contacted or recovered stays regardless, so outreach history does not vanish.
+ */
+export async function getIncompleteOrderRecords(query: AbandonedCartListQuery) {
+  return prisma.abandonedCart.findMany({
+    where: {
+      AND: [
+        { stage: { not: "CART" } },
+        {
+          OR: [
+            { stage: "CHECKOUT_FAILED" },
+            { lastActivityAt: { lte: query.cutoff } },
+            { status: { not: "NOT_CONTACTED" } }
+          ]
+        },
+        ...filterConditions(query)
+      ],
+      storeId: query.storeId
+    },
+    orderBy: { lastActivityAt: "desc" },
+    ...(query.limit ? { take: query.limit } : {}),
+    select: {
+      addressLine1: true,
+      addressLine2: true,
+      area: true,
+      attemptCount: true,
+      city: true,
+      country: true,
+      couponCode: true,
+      customerEmail: true,
+      customerName: true,
+      customerPhone: true,
+      district: true,
+      failedAt: true,
+      failureCode: true,
+      failureReason: true,
+      id: true,
+      ipAddress: true,
+      itemCount: true,
+      items: true,
+      lastActivityAt: true,
+      paymentMethod: true,
+      postalCode: true,
+      stage: true,
+      status: true,
+      subtotalAmount: true,
+      token: true
+    }
+  });
+}
+
+/**
+ * One incomplete order, by row id rather than by cart token.
+ *
+ * The token is the shopper's; the id is what the dashboard has a handle on. A
+ * seller converting a checkout into an order is working from a table row, so
+ * this is the read that backs it — scoped by store like every other, so one
+ * tenant cannot open another's draft by guessing an id.
+ */
+export async function findIncompleteOrderById(storeId: string, id: string) {
+  return prisma.abandonedCart.findFirst({
+    where: {
+      id,
+      stage: { not: "CART" },
+      storeId
+    },
+    select: {
+      addressLine1: true,
+      addressLine2: true,
+      area: true,
+      city: true,
+      country: true,
+      couponCode: true,
+      customerEmail: true,
+      customerName: true,
+      customerPhone: true,
+      district: true,
+      id: true,
+      items: true,
+      note: true,
+      paymentMethod: true,
+      postalCode: true,
+      shippingRateId: true,
+      status: true
+    }
+  });
+}
+
+/** The seller-typed search box and date range, shared by both lists. */
+function filterConditions(query: AbandonedCartListQuery): Prisma.AbandonedCartWhereInput[] {
+  const conditions: Prisma.AbandonedCartWhereInput[] = [];
+  const search = query.search?.trim();
+  const activityRange = parseDateRange(query.dateRange);
+
+  if (search) {
+    conditions.push({
+      OR: [
+        { customerName: { contains: search, mode: "insensitive" } },
+        { customerEmail: { contains: search, mode: "insensitive" } },
+        { customerPhone: { contains: search, mode: "insensitive" } }
+      ]
+    });
+  }
+
+  if (activityRange) {
+    conditions.push({ lastActivityAt: activityRange });
+  }
+
+  return conditions;
+}
+
+/**
+ * The abandoned-cart report's rows: carts only.
+ *
+ * Scoped to the same stage its dashboard is, so the report and the page it
+ * reports on can never disagree about how many there are — which is the whole
+ * reason a seller trusts either of them.
+ */
 export async function getAbandonedCartReportRecords(storeId: string, start: Date, cutoff: Date) {
   return prisma.abandonedCart.findMany({
     where: {
-      OR: [{ lastActivityAt: { lte: cutoff } }, { status: { not: "NOT_CONTACTED" } }],
+      AND: [
+        { stage: "CART" },
+        { OR: [{ lastActivityAt: { lte: cutoff } }, { status: { not: "NOT_CONTACTED" } }] }
+      ],
       lastActivityAt: { gte: start },
       storeId
     },
@@ -198,6 +342,36 @@ export async function getAbandonedCartReportRecords(storeId: string, start: Date
       contactChannel: true,
       lastActivityAt: true,
       recoveredAt: true,
+      status: true,
+      subtotalAmount: true
+    }
+  });
+}
+
+/** The same window over incomplete orders, matching their list row for row. */
+export async function getIncompleteOrderReportRecords(storeId: string, start: Date, cutoff: Date) {
+  return prisma.abandonedCart.findMany({
+    where: {
+      AND: [
+        { stage: { not: "CART" } },
+        {
+          OR: [
+            { stage: "CHECKOUT_FAILED" },
+            { lastActivityAt: { lte: cutoff } },
+            { status: { not: "NOT_CONTACTED" } }
+          ]
+        }
+      ],
+      lastActivityAt: { gte: start },
+      storeId
+    },
+    orderBy: { lastActivityAt: "asc" },
+    select: {
+      contactChannel: true,
+      failureCode: true,
+      lastActivityAt: true,
+      recoveredAt: true,
+      stage: true,
       status: true,
       subtotalAmount: true
     }
@@ -214,6 +388,24 @@ export async function countActiveAbandonedCarts(storeId: string, cutoff: Date) {
   return prisma.abandonedCart.count({
     where: {
       lastActivityAt: { gt: cutoff },
+      status: "NOT_CONTACTED",
+      storeId
+    }
+  });
+}
+
+/**
+ * Shoppers filling in the checkout form right now.
+ *
+ * The incomplete list holds these back until they go quiet, so this is what
+ * tells a seller the difference between "nothing is happening" and "three
+ * people are typing their address this minute".
+ */
+export async function countActiveCheckouts(storeId: string, cutoff: Date) {
+  return prisma.abandonedCart.count({
+    where: {
+      lastActivityAt: { gt: cutoff },
+      stage: "CHECKOUT_STARTED",
       status: "NOT_CONTACTED",
       storeId
     }
@@ -276,3 +468,6 @@ function parseDateRange(dateRange: string | undefined): Prisma.DateTimeFilter | 
 }
 
 export type AbandonedCartListRecord = Awaited<ReturnType<typeof getAbandonedCartRecords>>[number];
+export type IncompleteOrderListRecord = Awaited<
+  ReturnType<typeof getIncompleteOrderRecords>
+>[number];

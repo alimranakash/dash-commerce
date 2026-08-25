@@ -1,9 +1,9 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { prisma } from "@dash/db";
 import { cookies } from "next/headers";
-import type { AbandonedCartContactInput } from "../abandoned-carts/abandoned-cart.schema";
+import type { AbandonedCartCheckoutDraftInput } from "../abandoned-carts/abandoned-cart.schema";
 import {
-  captureCheckoutContact,
+  captureCheckoutDraft,
   discardCartSnapshot,
   findAbandonedCartSnapshot,
   trackCartActivity
@@ -39,12 +39,17 @@ export async function getCartToken(storeId: string) {
  * Saves what a shopper has typed into checkout, before they submit anything.
  *
  * Most abandoned checkouts never reach the submit handler, so waiting for the
- * order attempt loses exactly the contact details that make a cart recoverable.
- * The snapshot is (re)written first, both to guarantee a row exists to attach
- * the details to and because typing is activity — a shopper mid-checkout must
- * not age into the abandoned list while they are still there.
+ * order attempt loses exactly the details that make one recoverable — who they
+ * are, and where the parcel was going. The snapshot is (re)written first, both
+ * to guarantee a row exists to attach the draft to and because typing is
+ * activity — a shopper mid-checkout must not age into the incomplete list while
+ * they are still there.
  */
-export async function recordCheckoutContact(storeId: string, contact: AbandonedCartContactInput) {
+export async function recordCheckoutDraft(
+  storeId: string,
+  draft: AbandonedCartCheckoutDraftInput,
+  context: { ipAddress: string | null }
+) {
   const cart = await readStoredCart(storeId);
 
   if (cart.items.length === 0) {
@@ -57,7 +62,7 @@ export async function recordCheckoutContact(storeId: string, contact: AbandonedC
     storeId,
     token: cart.token
   });
-  await captureCheckoutContact(storeId, cart.token, contact);
+  await captureCheckoutDraft(storeId, cart.token, draft, context);
 
   return true;
 }

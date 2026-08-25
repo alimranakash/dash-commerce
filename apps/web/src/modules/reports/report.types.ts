@@ -108,6 +108,29 @@ export type CustomersReportData = {
   topCustomers: ReportTopCustomer[];
 };
 
+export type IncompleteOrdersReportData = {
+  currency: string;
+  daily: Array<{
+    failed: number;
+    incomplete: number;
+    label: string;
+    lostRevenue: number;
+    recovered: number;
+    recoveredRevenue: number;
+    recoveryRate: number;
+  }>;
+  /** Why checkouts were refused, commonest first — the point of this report. */
+  failureReasons: Array<{ label: string; value: number }>;
+  metrics: {
+    failed: number;
+    lostRevenue: number;
+    recoveredRevenue: number;
+    recoveryRate: number;
+    total: number;
+  };
+  recoveryChannels: Array<{ label: string; value: number }>;
+};
+
 export type AbandonedCartsReportData = {
   currency: string;
   daily: Array<{
