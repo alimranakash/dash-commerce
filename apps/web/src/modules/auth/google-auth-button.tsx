@@ -3,7 +3,7 @@
 import { LoaderCircle } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styles from "./auth-experience.module.css";
 
 const oauthErrors: Record<string, string> = {
@@ -23,6 +23,23 @@ export function GoogleAuthButton({ callbackUrl = "/dashboard" }: { callbackUrl?:
     const error = searchParams?.get("error");
     return error ? oauthErrors[error] ?? "Google sign-in failed. Please try again." : null;
   }, [searchParams]);
+
+  // Backing out of Google's account chooser restores this page from the mobile
+  // browser's back/forward cache with its React state intact, so the button comes
+  // back disabled and still reading "Connecting to Google...", leaving no way to
+  // retry short of a reload. `pageshow` is the only event fired on that restore;
+  // an ordinary load reports `persisted: false` and is left alone.
+  useEffect(() => {
+    function resetOnRestoreFromCache(event: PageTransitionEvent) {
+      if (event.persisted) {
+        setIsLoading(false);
+      }
+    }
+
+    window.addEventListener("pageshow", resetOnRestoreFromCache);
+
+    return () => window.removeEventListener("pageshow", resetOnRestoreFromCache);
+  }, []);
 
   async function startGoogleSignIn() {
     setLocalError(null);

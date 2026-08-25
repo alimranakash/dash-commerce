@@ -1,8 +1,11 @@
 import { prisma } from "@dash/db";
+import type { Prisma } from "@dash/db";
 import {
   captureCheckoutContact,
   resolveCartAfterCheckout
 } from "../abandoned-carts/abandoned-cart.service";
+import { claimCouponUse, evaluateCoupon } from "../coupons/coupon-validation.service";
+import { createCouponRedemption } from "../coupons/coupon.repository";
 import { clearCart, getCart, getCartToken } from "../cart/cart.service";
 import { assertStoreUnlocked } from "../billing/free-trial";
 import { canCreateOrder } from "../billing/subscription-limits";
@@ -175,9 +178,22 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
     const orderNumber = await generateOrderNumber(tx, store.id);
     const subtotalAmount = cart.totals.subtotal;
     const shippingAmount = Number(shippingRate.amount).toFixed(2);
-    const totalAmount = (Number(subtotalAmount) + Number(shippingAmount)).toFixed(2);
+    // Re-evaluated and claimed here, against the subtotal this transaction just
+    // computed. Whatever the browser was shown is a quote; this is the price.
+    const discount = await claimCheckoutCoupon(tx, {
+      code: data.couponCode,
+      customerPhone: data.phone,
+      shippingAmount,
+      storeId: store.id,
+      subtotal: subtotalAmount
+    });
+    const totalAmount = (
+      Number(subtotalAmount) +
+      Number(shippingAmount) -
+      Number(discount.discountAmount)
+    ).toFixed(2);
 
-    return tx.order.create({
+    const created = await tx.order.create({
       data: {
         storeId: store.id,
         customerId: customer.id,
@@ -197,7 +213,9 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
         shippingDistrict: shippingRate.district ?? data.district,
         shippingCity: shippingRate.city ?? data.city ?? null,
         shippingArea: shippingRate.area ?? data.area ?? null,
-        discountAmount: "0.00",
+        discountAmount: discount.discountAmount,
+        couponId: discount.couponId,
+        couponCode: discount.couponCode,
         taxAmount: "0.00",
         totalAmount,
         customerName: data.name,
@@ -219,6 +237,21 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
         }
       }
     });
+
+    // After the order exists, so the ledger row can point at it. Same
+    // transaction, so a failure past this line gives the coupon use back.
+    if (discount.couponId) {
+      await createCouponRedemption(tx, {
+        couponId: discount.couponId,
+        customerId: customer.id,
+        customerPhone: data.phone,
+        discountAmount: discount.discountAmount,
+        orderId: created.id,
+        storeId: store.id
+      });
+    }
+
+    return created;
   });
 
   // Settled before the cookie goes: `clearCart` can no longer find the token,
@@ -232,4 +265,62 @@ export async function createCheckoutOrder(store: CheckoutStore, input: CheckoutI
   await assessOrderSafely(store.id, order.id);
 
   return order;
+}
+
+type ClaimedCoupon = {
+  couponCode: string | null;
+  couponId: string | null;
+  discountAmount: string;
+};
+
+/**
+ * Turns the posted code into a discount, and takes the use that pays for it.
+ *
+ * Runs inside the order transaction so the two cannot come apart: an order that
+ * commits has spent exactly one use of the coupon, and an order that rolls back
+ * has spent none. A code that has become invalid between the shopper seeing the
+ * quote and pressing Place Order throws rather than silently charging them full
+ * price — they went to the trouble of entering it, so they get told.
+ */
+async function claimCheckoutCoupon(
+  tx: Prisma.TransactionClient,
+  input: {
+    code: string | undefined;
+    customerPhone: string;
+    shippingAmount: string;
+    storeId: string;
+    subtotal: string;
+  }
+): Promise<ClaimedCoupon> {
+  if (!input.code) {
+    return { couponCode: null, couponId: null, discountAmount: "0.00" };
+  }
+
+  const evaluation = await evaluateCoupon(
+    {
+      code: input.code,
+      customerPhone: input.customerPhone,
+      shippingAmount: input.shippingAmount,
+      storeId: input.storeId,
+      subtotal: input.subtotal
+    },
+    tx
+  );
+
+  if (!evaluation.ok) {
+    throw new Error(evaluation.message);
+  }
+
+  // The read above can be stale by the time it lands; this is the check that
+  // actually decides, and it is the one that holds the row for the rest of the
+  // transaction — including the per-customer count `evaluateCoupon` just did.
+  if (!(await claimCouponUse(tx, evaluation.couponId, input.storeId))) {
+    throw new Error(`${evaluation.couponCode} has been fully claimed.`);
+  }
+
+  return {
+    couponCode: evaluation.couponCode,
+    couponId: evaluation.couponId,
+    discountAmount: evaluation.discountAmount
+  };
 }

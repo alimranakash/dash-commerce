@@ -66,6 +66,15 @@ export const checkoutSchema = z.object({
     .trim()
     .max(10)
     .optional()
+    .transform((value) => value || undefined),
+  // Only the code travels with the form. The discount it is worth is worked out
+  // again on the server against the server's own cart — a posted amount would
+  // be a price the shopper chose.
+  couponCode: z
+    .string()
+    .trim()
+    .max(40)
+    .optional()
     .transform((value) => value || undefined)
 });
 

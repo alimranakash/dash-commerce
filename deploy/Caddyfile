@@ -29,9 +29,11 @@
 	reverse_proxy 127.0.0.1:3000
 
 	# Caddy reaches the authorisation endpoint directly on 127.0.0.1, so it never
-	# needs to be answerable from the outside.
-	@authorize path /api/domains/authorize*
-	handle @authorize {
+	# needs to be answerable from the outside. The campaign scheduler is the same
+	# shape: a local timer calls it, and nothing on the internet should be able to
+	# make this server start sending SMS. See deploy/campaign-scheduler.md.
+	@internal path /api/domains/authorize* /api/cron/*
+	handle @internal {
 		respond "not found" 404
 	}
 }

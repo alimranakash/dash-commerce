@@ -5,7 +5,17 @@ import { PlanFeatureError, requirePlanFeature } from "../billing/subscription-li
 import type { PlanFeatureKey } from "../billing/plan-features";
 import { StoreAccessError, requireStoreManager } from "../stores/queries";
 import { sendGa4TestEvent } from "./ga4-mp";
-import { MarketingSettingsError, updateMarketingSettings } from "./marketing.service";
+import {
+  MarketingSettingsError,
+  getMarketingSettingsView,
+  updateMarketingSettings
+} from "./marketing.service";
+import type { MarketingSettingsFormInput } from "./marketing.schema";
+import {
+  TRACKING_SECTIONS,
+  trackingInputFromView,
+  type TrackingSectionKey
+} from "./tracking-sections";
 import { sendMetaTestEvent } from "./meta-capi";
 
 export type MarketingActionState = {
@@ -16,72 +26,94 @@ export type MarketingActionState = {
   status: "error" | "idle" | "success";
 };
 
-export async function updateMarketingSettingsFormAction(
+/**
+ * Saves one Analytics & Tracking page.
+ *
+ * Rebuilds the whole settings object from what is stored, overlays only the
+ * fields this section owns, and writes that. The merge is what keeps the split
+ * pages honest — and it also means the cross-field rules in the schema (the
+ * Conversions API needing a pixel ID, server-side GA4 needing a measurement ID)
+ * still see the full picture even though the form only posted part of it.
+ *
+ * One consequence worth knowing: a stored value that no longer validates — a
+ * row edited straight in the database, or an ID format we later tightened —
+ * will fail the save of an unrelated section, naming the offending field. That
+ * is noisy but honest; the alternative is writing around a value we know is bad.
+ */
+export async function updateTrackingSectionAction(
+  section: TrackingSectionKey,
   _state: MarketingActionState,
   formData: FormData
 ): Promise<MarketingActionState> {
   let storeSlug: string;
 
   try {
-    // Re-checked here on purpose: the page renders a read-only form for members,
-    // but a disabled input is not a permission check.
     const access = await requireStoreManager();
 
     storeSlug = access.store.slug;
 
-    // Free plans can open the settings page and read it; saving tracking
-    // configuration is the paid part.
     await requirePlanFeature(access.store.id, "marketing_analytics");
+
+    const stored = await getMarketingSettingsView(access.store.id);
+    const input = trackingInputFromView(stored);
+
+    for (const field of TRACKING_SECTIONS[section].fields) {
+      applyTrackingField(input, field, formData);
+    }
+
     await updateMarketingSettings({
-      input: {
-        customBodyCode: text(formData, "customBodyCode"),
-        customEnabled: checkbox(formData, "customEnabled"),
-        customFooterCode: text(formData, "customFooterCode"),
-        customHeaderCode: text(formData, "customHeaderCode"),
-        ga4ApiSecret: text(formData, "ga4ApiSecret"),
-        ga4ApiSecretCleared: checkbox(formData, "ga4ApiSecretCleared"),
-        ga4MeasurementId: text(formData, "ga4MeasurementId"),
-        ga4MpEnabled: checkbox(formData, "ga4MpEnabled"),
-        googleAdsConversionId: text(formData, "googleAdsConversionId"),
-        googleSiteVerification: text(formData, "googleSiteVerification"),
-        gtmContainerId: text(formData, "gtmContainerId"),
-        metaCapiEnabled: checkbox(formData, "metaCapiEnabled"),
-        metaCapiToken: text(formData, "metaCapiToken"),
-        metaCapiTokenCleared: checkbox(formData, "metaCapiTokenCleared"),
-        metaDomainVerification: text(formData, "metaDomainVerification"),
-        metaPixelId: text(formData, "metaPixelId"),
-        tiktokPixelId: text(formData, "tiktokPixelId")
-      },
+      input,
       storeId: access.store.id,
       ...(access.organizationId ? { organizationId: access.organizationId } : {}),
       ...(access.userId ? { userId: access.userId } : {})
     });
   } catch (error) {
-    if (error instanceof StoreAccessError) {
-      return { message: error.message, status: "error" };
-    }
-
-    if (error instanceof PlanFeatureError) {
-      return { lockedFeature: error.featureKey, message: error.message, status: "error" };
-    }
-
-    if (error instanceof MarketingSettingsError) {
-      return { fieldErrors: error.fieldErrors, message: error.message, status: "error" };
-    }
-
-    return {
-      message: error instanceof Error ? error.message : "Could not save marketing settings.",
-      status: "error"
-    };
+    return trackingErrorState(error);
   }
 
-  revalidatePath("/dashboard/settings/marketing");
-  // The internal route on purpose: /s/<slug> is what Next serves, and a
-  // storefront hostname is a rewrite onto it. Revalidating the clean
-  // address would quietly revalidate nothing.
+  revalidatePath("/dashboard/analytics", "layout");
   revalidatePath(`/s/${storeSlug}`);
 
-  return { message: "Marketing settings saved.", status: "success" };
+  return { message: `${TRACKING_SECTIONS[section].label} saved.`, status: "success" };
+}
+
+/** Booleans come off a checkbox, everything else is text. */
+function applyTrackingField(
+  input: MarketingSettingsFormInput,
+  field: keyof MarketingSettingsFormInput,
+  formData: FormData
+) {
+  if (
+    field === "customEnabled" ||
+    field === "ga4MpEnabled" ||
+    field === "metaCapiEnabled" ||
+    field === "ga4ApiSecretCleared" ||
+    field === "metaCapiTokenCleared"
+  ) {
+    input[field] = checkbox(formData, field);
+    return;
+  }
+
+  input[field] = text(formData, field);
+}
+
+function trackingErrorState(error: unknown): MarketingActionState {
+  if (error instanceof StoreAccessError) {
+    return { message: error.message, status: "error" };
+  }
+
+  if (error instanceof PlanFeatureError) {
+    return { lockedFeature: error.featureKey, message: error.message, status: "error" };
+  }
+
+  if (error instanceof MarketingSettingsError) {
+    return { fieldErrors: error.fieldErrors, message: error.message, status: "error" };
+  }
+
+  return {
+    message: error instanceof Error ? error.message : "Could not save these settings.",
+    status: "error"
+  };
 }
 
 export type MarketingTestEventState = {

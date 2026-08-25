@@ -798,7 +798,6 @@ function revalidateSettingsPaths(storeSlug: string) {
   revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard/settings/courier");
   revalidatePath("/dashboard/settings/invoice");
-  revalidatePath("/dashboard/settings/marketing");
   revalidatePath("/dashboard/settings/social");
   revalidatePath("/dashboard/theme");
   revalidatePath("/dashboard/storefront/themes");

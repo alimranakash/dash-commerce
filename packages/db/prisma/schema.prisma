@@ -527,6 +527,10 @@ model Store {
   searchRedirects            SearchRedirect[]
   searchQueryStats           SearchQueryStat[]
   orderReturns               OrderReturn[]
+  coupons                    Coupon[]
+  campaigns                  Campaign[]
+  campaignAudiences          CampaignAudience[]
+  campaignTemplates          CampaignTemplate[]
   createdAt                  DateTime                    @default(now())
   updatedAt                  DateTime                    @default(now()) @updatedAt
 
@@ -1377,12 +1381,23 @@ model Customer {
   email          String?
   phone          String
   flagStatus     CustomerFlagStatus @default(NORMAL)
+  /// Marketing consent, per channel. Transactional messages — order
+  /// confirmations, delivery updates, verification codes — ignore these
+  /// entirely; opting out of promotions is not opting out of being told where
+  /// your parcel is. Only campaign sends read them.
+  ///
+  /// Present from the first campaign rather than added later on purpose: a
+  /// campaign that already went out cannot retroactively have respected a
+  /// column that did not exist when it ran.
+  marketingSmsOptOut   Boolean        @default(false)
+  marketingEmailOptOut Boolean        @default(false)
   store          Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
   orders         Order[]
   sales          Sale[]
   addresses      Address[]
   abandonedCarts AbandonedCart[]
   returns        OrderReturn[]
+  campaignRecipients CampaignRecipient[]
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @default(now()) @updatedAt
 
@@ -1438,6 +1453,11 @@ model Order {
   shippingCity          String?
   shippingArea          String?
   discountAmount        Decimal                 @default(0) @db.Decimal(12, 2)
+  /// The coupon this order's `discountAmount` came from, if any. Deliberately
+  /// not a relation: the code is copied alongside it so an order still explains
+  /// its own discount after the coupon row is gone.
+  couponId              String?
+  couponCode            String?
   taxAmount             Decimal                 @default(0) @db.Decimal(12, 2)
   totalAmount           Decimal                 @db.Decimal(12, 2)
   customerName          String
@@ -1823,4 +1843,240 @@ model SearchQueryStat {
 
   @@unique([storeId, query])
   @@index([storeId])
+}
+
+enum CouponDiscountType {
+  /// Percent off the cart subtotal, optionally capped by `maxDiscountAmount`.
+  PERCENTAGE
+  /// Flat amount off the cart subtotal.
+  FIXED_CART
+  /// The shipping charge is waived. `discountValue` is unused.
+  FREE_SHIPPING
+}
+
+enum CouponStatus {
+  ACTIVE
+  INACTIVE
+}
+
+/// A discount code a shopper can enter at checkout.
+///
+/// `usedCount` is denormalised from `redemptions` on purpose: the total-usage
+/// cap has to be enforced with a single atomic increment inside the order
+/// transaction, and counting rows first would be a check-then-write race that
+/// lets a "100 uses" coupon go to 105 under load.
+///
+/// Whether a coupon is *usable* is never just `status` — the window, the caps
+/// and the subtotal bounds all participate. `modules/coupons` derives that in
+/// one place so the dashboard and checkout cannot answer it differently.
+model Coupon {
+  id                    String             @id @default(cuid())
+  storeId               String
+  /// Always stored upper-cased, so `@@unique([storeId, code])` is effectively
+  /// case-insensitive: every write goes through `normaliseCouponCode` first.
+  code                  String
+  name                  String
+  description           String?
+  discountType          CouponDiscountType
+  /// Percent (0-100) for PERCENTAGE, money for FIXED_CART, unused for FREE_SHIPPING.
+  discountValue         Decimal            @default(0) @db.Decimal(12, 2)
+  /// Ceiling on what a PERCENTAGE coupon may take off — "20% off, up to 500".
+  maxDiscountAmount     Decimal?           @db.Decimal(12, 2)
+  /// Cart subtotal bounds the code is accepted between. Null means unbounded.
+  minSubtotal           Decimal?           @db.Decimal(12, 2)
+  maxSubtotal           Decimal?           @db.Decimal(12, 2)
+  /// Null means unlimited.
+  usageLimitTotal       Int?
+  usageLimitPerCustomer Int?
+  usedCount             Int                @default(0)
+  startsAt              DateTime?
+  expiresAt             DateTime?
+  status                CouponStatus       @default(ACTIVE)
+  store                 Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  redemptions           CouponRedemption[]
+  campaigns             Campaign[]
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @default(now()) @updatedAt
+
+  @@unique([storeId, code])
+  @@index([storeId, status])
+  @@index([storeId, createdAt])
+}
+
+/// One successful use of a coupon, written in the same transaction as the order.
+///
+/// The per-customer cap is keyed on `customerPhone` rather than `customerId`
+/// because a COD checkout can produce an order without ever resolving a
+/// `Customer` row, and phone is what `Customer` is already unique on within a
+/// store. `customerId` is kept when there is one, for reporting.
+model CouponRedemption {
+  id             String   @id @default(cuid())
+  couponId       String
+  storeId        String
+  orderId        String
+  customerId     String?
+  customerPhone  String
+  discountAmount Decimal  @db.Decimal(12, 2)
+  coupon         Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+
+  /// Replaying an order write must not double-count a redemption.
+  @@unique([couponId, orderId])
+  @@index([couponId, customerPhone])
+  @@index([storeId, createdAt])
+}
+
+enum CampaignChannel {
+  EMAIL
+  SMS
+}
+
+enum CampaignStatus {
+  CANCELLED
+  /// Every recipient has been attempted and at least one campaign-level step failed.
+  FAILED
+  DRAFT
+  PAUSED
+  SCHEDULED
+  /// Recipients have been materialised and the runner is working through them.
+  SENDING
+  SENT
+}
+
+enum CampaignRecipientStatus {
+  /// The store's plan allowance was used up before this one was reached.
+  BLOCKED
+  FAILED
+  PENDING
+  /// Claimed by a runner batch. A row stuck here is a crashed batch, not a lost message.
+  SENDING
+  SENT
+  /// Deliberately not attempted — no usable address, or opted out after the send began.
+  SKIPPED
+}
+
+/// A saved segment of a store's customers.
+///
+/// `rules` is the segment as the seller described it, not the customers it
+/// matched — the same audience run a week later should reach the people who
+/// qualify then. `cachedCount` is only ever a display figure; nothing decides
+/// anything from it.
+model CampaignAudience {
+  id          String     @id @default(cuid())
+  storeId     String
+  name        String
+  description String?
+  rules       Json
+  /// Last computed size, for the list screen. Recomputed on demand, never trusted.
+  cachedCount Int?
+  countedAt   DateTime?
+  store       Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  campaigns   Campaign[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
+
+  @@index([storeId, createdAt])
+}
+
+/// A reusable message body, with `{{name}}`-style placeholders left in.
+model CampaignTemplate {
+  id        String          @id @default(cuid())
+  storeId   String
+  channel   CampaignChannel @default(SMS)
+  name      String
+  subject   String?
+  body      String
+  store     Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @default(now()) @updatedAt
+
+  @@unique([storeId, name])
+  @@index([storeId, channel])
+}
+
+/// One marketing send: a message, an audience, and the state of getting it out.
+///
+/// `audienceSnapshot` freezes the rules at the moment the send started. Editing
+/// an audience mid-send must not change who a running campaign is reaching, and
+/// a campaign finished months ago has to still be able to say who it went to.
+///
+/// The three counters are denormalised from `recipients`. They are what the
+/// progress bar reads, and counting several thousand rows on every dashboard
+/// poll to render one percentage is not worth it.
+model Campaign {
+  id               String              @id @default(cuid())
+  storeId          String
+  name             String
+  channel          CampaignChannel     @default(SMS)
+  status           CampaignStatus      @default(DRAFT)
+  /// Rendered per recipient at send time; placeholders are stored as written.
+  body             String
+  /// EMAIL only.
+  subject          String?
+  /// Offer attached to this send, surfaced to the body as `{{coupon_code}}`.
+  couponId         String?
+  audienceId       String?
+  audienceSnapshot Json?
+  scheduledAt      DateTime?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  /// Set when the campaign itself failed, as opposed to individual recipients.
+  errorMessage     String?
+  totalCount       Int                 @default(0)
+  sentCount        Int                 @default(0)
+  failedCount      Int                 @default(0)
+  store            Store               @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  audience         CampaignAudience?   @relation(fields: [audienceId], references: [id], onDelete: SetNull)
+  coupon           Coupon?             @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  recipients       CampaignRecipient[]
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @default(now()) @updatedAt
+
+  @@index([storeId, status])
+  @@index([storeId, createdAt])
+  /// The runner's sweep: campaigns due to start, oldest first.
+  @@index([status, scheduledAt])
+}
+
+/// One intended message, and what became of it.
+///
+/// This table *is* the queue. A runner claims a batch of `PENDING` rows, sends
+/// them, and writes back — which buys idempotency, resumability after a crash,
+/// a per-recipient audit trail and honest progress, all without a queue server
+/// this project would otherwise have to run and operate.
+///
+/// `recipient` is denormalised from the customer rather than joined at send
+/// time: a campaign must go to the number it was addressed to, even if the
+/// customer edits their phone while it is running.
+model CampaignRecipient {
+  id                String                  @id @default(cuid())
+  campaignId        String
+  customerId        String?
+  /// Phone or email, depending on the campaign's channel.
+  recipient         String
+  /// Copied for `{{name}}`, so rendering needs no join.
+  name              String?
+  status            CampaignRecipientStatus @default(PENDING)
+  /// What the gateway called this message, when it gave it a name. The matching
+  /// `MessageDelivery` row is the fuller record; this is what a provider's own
+  /// dashboard can be searched by.
+  providerMessageId String?
+  /// Set by the runner when it takes a batch, so it can read back exactly the
+  /// rows it won rather than the rows another runner claimed a moment earlier.
+  /// Cleared once the row reaches a terminal status.
+  claimToken        String?
+  errorMessage      String?
+  sentAt            DateTime?
+  attempts          Int                     @default(0)
+  campaign          Campaign                @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  customer          Customer?               @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @default(now()) @updatedAt
+
+  /// One message per address per campaign, however many times enqueue is run.
+  @@unique([campaignId, recipient])
+  /// The claim query: pending rows for one campaign.
+  @@index([campaignId, status])
+  @@index([claimToken])
+  @@index([customerId])
 }

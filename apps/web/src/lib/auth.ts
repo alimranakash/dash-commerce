@@ -16,6 +16,25 @@ const nextAuthSecret = process.env.NEXTAUTH_SECRET ?? "dash-commerce-local-dev-s
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 const platformOwnerEmail = "alimranakash.bd@gmail.com";
+/**
+ * Mirrors how NextAuth derives the flag itself, so the cookie names below keep
+ * the `__Secure-` prefix it expects on a deployed HTTPS origin and drop it in
+ * local development.
+ */
+const useSecureCookies = (process.env.NEXTAUTH_URL ?? "").startsWith("https://");
+const cookiePrefix = useSecureCookies ? "__Secure-" : "";
+/**
+ * How long the OAuth `state` and PKCE `code_verifier` cookies stay valid.
+ *
+ * NextAuth defaults both to 15 minutes, which is a short window on a phone: the
+ * account chooser, a password prompt, and a verification code that has to be
+ * fetched from the SMS app can easily outlast it, and a browser backgrounded
+ * mid-flow adds however long the user was away. When either has expired by the
+ * time Google redirects back, the callback fails with `OAuthCallback` even
+ * though the sign-in itself was authorised. An hour costs nothing: both cookies
+ * are cleared the moment the callback consumes them.
+ */
+const oauthCheckCookieMaxAge = 60 * 60;
 const CredentialsProvider = resolveDefaultExport(CredentialsProviderModule);
 const GoogleProvider = resolveDefaultExport(GoogleProviderModule);
 
@@ -89,6 +108,30 @@ export const authOptions: NextAuthOptions = {
   pages: {
     error: "/login",
     signIn: "/login"
+  },
+  // Only the two OAuth check cookies are overridden; every other name and option
+  // stays on the NextAuth default.
+  cookies: {
+    pkceCodeVerifier: {
+      name: `${cookiePrefix}next-auth.pkce.code_verifier`,
+      options: {
+        httpOnly: true,
+        maxAge: oauthCheckCookieMaxAge,
+        path: "/",
+        sameSite: "lax",
+        secure: useSecureCookies
+      }
+    },
+    state: {
+      name: `${cookiePrefix}next-auth.state`,
+      options: {
+        httpOnly: true,
+        maxAge: oauthCheckCookieMaxAge,
+        path: "/",
+        sameSite: "lax",
+        secure: useSecureCookies
+      }
+    }
   },
   providers,
   callbacks: {

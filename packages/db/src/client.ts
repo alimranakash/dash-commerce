@@ -15,7 +15,7 @@ const globalForPrisma = globalThis as unknown as {
   prismaSignature?: string;
 };
 
-const PRISMA_CLIENT_SIGNATURE = "dash-commerce-os-order-returns-v1";
+const PRISMA_CLIENT_SIGNATURE = "dash-commerce-os-campaign-delivery-v1";
 
 function createPrismaClient() {
   const connectionString = process.env.DATABASE_URL ?? "";
@@ -50,3 +50,14 @@ if (process.env.NODE_ENV !== "production") {
 
 export type { PrismaClient } from "./generated/prisma/client";
 export type { Prisma } from "./generated/prisma/client";
+
+/**
+ * The `Prisma` namespace as a value, for the handful of runtime members that
+ * have no type-level equivalent — `Prisma.DbNull` above all, which is the only
+ * way to write SQL NULL into a nullable Json column (a plain `null` there means
+ * the JSON value `null`, which is a different thing).
+ *
+ * Exported under a separate name so the type-only `Prisma` export above keeps
+ * working everywhere it is already imported.
+ */
+export { Prisma as PrismaValues } from "./generated/prisma/client";

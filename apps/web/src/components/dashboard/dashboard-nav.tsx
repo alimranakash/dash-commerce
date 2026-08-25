@@ -9,13 +9,13 @@ import {
   FileText,
   Images,
   LayoutDashboard,
+  Megaphone,
   Package,
-  Percent,
+  Radar,
   Receipt,
   ReceiptText,
   ShoppingBag,
   Settings,
-  ShoppingCart,
   Store,
   Truck,
   WalletCards,
@@ -52,6 +52,8 @@ type NavItem = {
 const NAV_FEATURE_BY_HREF: Record<string, PlanFeatureKey> = {
   "/dashboard/abandoned-cart": "abandoned_cart",
   "/dashboard/expenses": "expenses",
+  "/dashboard/marketing/campaigns": "sms_automation",
+  "/dashboard/marketing/campaigns/new": "sms_automation",
   "/dashboard/fraud-check": "fraud_check",
   "/dashboard/inventory": "inventory",
   "/dashboard/orders/fake": "fake_orders",
@@ -62,7 +64,7 @@ const NAV_FEATURE_BY_HREF: Record<string, PlanFeatureKey> = {
   "/dashboard/sales": "sales",
   "/dashboard/settings/courier": "courier_api",
   "/dashboard/settings/domains": "custom_domain",
-  "/dashboard/settings/marketing": "marketing_analytics",
+  "/dashboard/analytics/server-side": "server_side_tracking",
   "/dashboard/suppliers": "suppliers"
 };
 
@@ -124,7 +126,6 @@ const settingsLinks = [
   { href: "/dashboard/settings/general", label: "General" },
   { href: "/dashboard/settings/team", label: "Team" },
   { href: "/dashboard/settings/domains", label: "Domains" },
-  { href: "/dashboard/settings/marketing", label: "Marketing" },
   { href: "/dashboard/settings/courier", label: "Courier" },
   { href: "/dashboard/settings/sms", label: "SMS" },
   { href: "/dashboard/settings/invoice", label: "Invoice" },
@@ -155,14 +156,48 @@ const mainLinks: NavItem[] = [
   { href: "/dashboard/purchases", icon: ClipboardList, label: "Purchases" },
   { href: "/dashboard/inventory", icon: Boxes, label: "Inventory" },
   { href: "/dashboard/expenses", icon: Receipt, label: "Expenses" },
-  { href: "/dashboard/coupons", icon: Percent, label: "Coupons" },
   { href: "/dashboard/billing", icon: WalletCards, label: "Billing" }
 ];
 
-const trailingLinks: NavItem[] = [
-  { href: "/dashboard/media", icon: Images, label: "Media" },
-  { href: "/dashboard/abandoned-cart", icon: ShoppingCart, label: "Abandoned cart" }
+/**
+ * Everything that reaches a customer on purpose.
+ *
+ * Coupons and Abandoned cart moved here from the flat lists: both are things a
+ * seller does to bring people back, and having them three groups apart from the
+ * campaigns that carry them made the sidebar a worse map than the product is.
+ * Tracking & Pixels points at the existing settings page — it is read by the
+ * same person on the same errand, so it is listed where they will look.
+ */
+const marketingLinks: Array<{ href: string; label: string }> = [
+  { href: "/dashboard/marketing", label: "Overview" },
+  { href: "/dashboard/marketing/campaigns", label: "Campaigns" },
+  { href: "/dashboard/marketing/campaigns/new", label: "Create Campaign" },
+  { href: "/dashboard/marketing/audiences", label: "Audiences" },
+  { href: "/dashboard/marketing/templates", label: "Templates" },
+  { href: "/dashboard/coupons", label: "Coupons" },
+  { href: "/dashboard/abandoned-cart", label: "Abandoned Cart" }
 ];
+
+/**
+ * Pixels, tags and server-side senders — a section of its own rather than a
+ * page inside Settings or Marketing.
+ *
+ * It used to be one long form at /dashboard/settings/marketing. Sellers set
+ * these up per platform, following that platform's own documentation, so a page
+ * per platform is the shape the work actually has.
+ */
+const analyticsLinks: Array<{ href: string; label: string }> = [
+  { href: "/dashboard/analytics", label: "Overview" },
+  { href: "/dashboard/analytics/google-analytics", label: "Google Analytics" },
+  { href: "/dashboard/analytics/meta-pixel", label: "Meta Pixel" },
+  { href: "/dashboard/analytics/google-ads", label: "Google Ads" },
+  { href: "/dashboard/analytics/tiktok-pixel", label: "TikTok Pixel" },
+  { href: "/dashboard/analytics/gtm", label: "GTM" },
+  { href: "/dashboard/analytics/server-side", label: "Server-Side Tracking" },
+  { href: "/dashboard/analytics/custom", label: "Custom Tracking" }
+];
+
+const trailingLinks: NavItem[] = [{ href: "/dashboard/media", icon: Images, label: "Media" }];
 
 /**
  * Sections only an owner or admin can act on, hidden from members so the sidebar
@@ -178,12 +213,20 @@ const trailingLinks: NavItem[] = [
  */
 const MANAGER_ONLY_HREFS: ReadonlySet<string> = new Set([
   "/dashboard/billing",
+  // Sending a campaign spends the store's SMS allowance, so composing one is
+  // not something a member should be invited to start.
+  "/dashboard/marketing/campaigns",
+  "/dashboard/marketing/campaigns/new",
+  "/dashboard/marketing/audiences",
+  "/dashboard/marketing/templates",
+  // The whole Analytics & Tracking section changes what loads on the storefront
+  // for every visitor, so it is manager-only in the same way Storefront is.
+  "/dashboard/analytics",
   "/dashboard/payments",
   "/dashboard/settings/courier",
   "/dashboard/settings/domains",
   "/dashboard/settings/general",
   "/dashboard/settings/invoice",
-  "/dashboard/settings/marketing",
   "/dashboard/settings/sms",
   "/dashboard/settings/social",
   "/dashboard/shipping"
@@ -192,18 +235,18 @@ const MANAGER_ONLY_HREFS: ReadonlySet<string> = new Set([
 function isManagerOnlyHref(href: string) {
   return (
     MANAGER_ONLY_HREFS.has(href) ||
+    href.startsWith("/dashboard/analytics") ||
     href.startsWith("/dashboard/storefront") ||
     href.startsWith("/dashboard/theme")
   );
 }
 
 const iconColors: Record<string, string> = {
-  "Abandoned cart": "text-fuchsia-500",
   Billing: "text-violet-600",
-  Coupons: "text-violet-600",
   Customers: "text-sky-500",
   Expenses: "text-rose-500",
   Inventory: "text-lime-600",
+  Marketing: "text-fuchsia-500",
   Media: "text-teal-500",
   Orders: "text-blue-600",
   Purchases: "text-indigo-500",
@@ -223,6 +266,13 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
   const orderRouteActive =
     pathname.startsWith("/dashboard/orders") || pathname.startsWith("/dashboard/fraud-check");
   const reportRouteActive = pathname.startsWith("/dashboard/reports");
+  // Coupons and the abandoned-cart page live under this group now, so standing
+  // on either has to light it up even though their paths sit elsewhere.
+  const marketingRouteActive =
+    pathname.startsWith("/dashboard/marketing") ||
+    pathname.startsWith("/dashboard/coupons") ||
+    pathname.startsWith("/dashboard/abandoned-cart");
+  const analyticsRouteActive = pathname.startsWith("/dashboard/analytics");
   const storefrontRouteActive = pathname.startsWith("/dashboard/storefront") || pathname.startsWith("/dashboard/theme");
   const settingsRouteActive = pathname.startsWith("/dashboard/settings") || ["/dashboard/payments", "/dashboard/shipping", "/dashboard/ai"].some(
     (route) => pathname.startsWith(route)
@@ -230,6 +280,8 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
   const [productsOpen, setProductsOpen] = useState(productRouteActive);
   const [ordersOpen, setOrdersOpen] = useState(orderRouteActive);
   const [reportsOpen, setReportsOpen] = useState(reportRouteActive);
+  const [marketingOpen, setMarketingOpen] = useState(marketingRouteActive);
+  const [analyticsOpen, setAnalyticsOpen] = useState(analyticsRouteActive);
   const [storefrontOpen, setStorefrontOpen] = useState(storefrontRouteActive);
   const [settingsOpen, setSettingsOpen] = useState(settingsRouteActive);
   const [entitledFeatures, setEntitledFeatures] = useState<ReadonlySet<string> | null>(null);
@@ -237,6 +289,9 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
   // The server refuses members regardless of what is drawn here.
   const [canManage, setCanManage] = useState(true);
   const visibleMainLinks = mainLinks.filter((link) => canManage || !isManagerOnlyHref(link.href));
+  const visibleMarketingLinks = marketingLinks.filter(
+    (link) => canManage || !isManagerOnlyHref(link.href)
+  );
   const visibleSettingsLinks = settingsLinks.filter(
     (link) => canManage || !isManagerOnlyHref(link.href)
   );
@@ -395,6 +450,62 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
           </div>
         ) : null}
 
+        <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${marketingRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
+          <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/marketing" onClick={onClose}>
+            <Megaphone className="h-4 w-4 text-fuchsia-500" />
+            <SafeNavText text="Marketing" />
+          </Link>
+          <button aria-label="Toggle marketing menu" className="p-2" onClick={() => setMarketingOpen((current) => !current)} type="button">
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${marketingOpen ? "rotate-180" : ""}`} />
+          </button>
+        </div>
+        {marketingOpen ? (
+          <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
+            {visibleMarketingLinks.map((link) => (
+              <Link
+                aria-current={isMarketingLinkActive(pathname, link.href) ? "page" : undefined}
+                className={`block rounded-md px-3 py-2 text-[12px] transition ${isMarketingLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                href={link.href}
+                key={link.href}
+                onClick={onClose}
+              >
+                <SafeNavText text={link.label} />
+                <NavFeatureBadge href={link.href} />
+              </Link>
+            ))}
+          </div>
+        ) : null}
+
+        {/* Every page here changes what loads on the storefront for visitors, so
+            members do not get the group at all rather than a list of dead ends. */}
+        {canManage ? (
+        <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${analyticsRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
+          <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/analytics" onClick={onClose}>
+            <Radar className="h-4 w-4 text-sky-500" />
+            <SafeNavText text="Analytics & Tracking" />
+          </Link>
+          <button aria-label="Toggle analytics menu" className="p-2" onClick={() => setAnalyticsOpen((current) => !current)} type="button">
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${analyticsOpen ? "rotate-180" : ""}`} />
+          </button>
+        </div>
+        ) : null}
+        {canManage && analyticsOpen ? (
+          <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
+            {analyticsLinks.map((link) => (
+              <Link
+                aria-current={isAnalyticsLinkActive(pathname, link.href) ? "page" : undefined}
+                className={`block rounded-md px-3 py-2 text-[12px] transition ${isAnalyticsLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                href={link.href}
+                key={link.href}
+                onClick={onClose}
+              >
+                <SafeNavText text={link.label} />
+                <NavFeatureBadge href={link.href} />
+              </Link>
+            ))}
+          </div>
+        ) : null}
+
         {/* The whole group edits the customer-facing storefront, so members do
             not get it at all rather than an expandable section of dead ends. */}
         {canManage ? (
@@ -488,6 +599,28 @@ function isProductLinkActive(pathname: string, href: string) {
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function isAnalyticsLinkActive(pathname: string, href: string) {
+  // Overview owns only its own path; every other page sits beneath it and would
+  // otherwise light Overview up as well as itself.
+  return href === "/dashboard/analytics" ? pathname === href : matchesRoute(pathname, href);
+}
+
+function isMarketingLinkActive(pathname: string, href: string) {
+  // Overview owns only its own path. Without this, every page in the group
+  // would light up "Overview" as well as itself, since they all sit under it.
+  if (href === "/dashboard/marketing" || href === "/dashboard/marketing/campaigns/new") {
+    return pathname === href;
+  }
+
+  // "Campaigns" covers the detail and edit pages beneath it, but must not claim
+  // /campaigns/new — that is its sibling, listed separately above.
+  if (href === "/dashboard/marketing/campaigns") {
+    return matchesRoute(pathname, href) && pathname !== "/dashboard/marketing/campaigns/new";
+  }
+
+  return matchesRoute(pathname, href);
 }
 
 function isReportLinkActive(pathname: string, href: string) {

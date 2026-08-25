@@ -30,6 +30,8 @@ type CheckoutShippingRate = {
 
 type CheckoutFormProps = {
   checkoutError: string | undefined;
+  /** Owned by `CheckoutExperience`; carried here only so the POST includes it. */
+  couponCode: string;
   currency: string;
   notes: string;
   paymentMethods: CheckoutPaymentMethod[];
@@ -42,6 +44,7 @@ type CheckoutFormProps = {
 
 export function CheckoutForm({
   checkoutError,
+  couponCode,
   currency,
   notes,
   paymentMethods,
@@ -68,6 +71,7 @@ export function CheckoutForm({
   return (
     <form action="/api/checkout" className="sf-checkout-form" method="post" ref={formRef}>
       <input name="storeSlug" type="hidden" value={storeSlug} />
+      <input name="couponCode" type="hidden" value={couponCode} />
       <input name="country" type="hidden" value="Bangladesh" />
       <input name="city" type="hidden" value={selectedShippingRate?.city ?? ""} />
       <input name="addressLine2" type="hidden" value="" />

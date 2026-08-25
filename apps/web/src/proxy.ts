@@ -1,9 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { resolveStoreFromHost } from "./lib/host-routing";
+import { normalizeHostname, resolveStoreFromHost } from "./lib/host-routing";
 import { resolveCustomDomainRoute } from "./modules/domains/domain-routing";
 
 const PUBLIC_FILE = /\.(.*)$/;
-const SELLER_APP_PATHS = ["/admin", "/dashboard", "/invite", "/login", "/register"];
+const SELLER_APP_PATHS = [
+  "/admin",
+  "/dashboard",
+  "/invite",
+  "/login",
+  "/register",
+  "/reset-password"
+];
 /** Where an unknown or unverified custom domain lands. */
 const DOMAIN_NOT_CONFIGURED_PATH = "/domain-not-configured";
 
@@ -14,13 +21,19 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const canonicalRedirect = redirectToCanonicalAuthOrigin(request, pathname);
+
+  if (canonicalRedirect) {
+    return canonicalRedirect;
+  }
+
   const hostRoute = resolveStoreFromHost(request.headers.get("host") ?? request.nextUrl.hostname);
 
   if (hostRoute.type !== "storefront" && hostRoute.type !== "custom-domain") {
     return NextResponse.next();
   }
 
-  if (SELLER_APP_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))) {
+  if (isSellerAppPath(pathname)) {
     return NextResponse.next();
   }
 
@@ -48,6 +61,73 @@ export async function proxy(request: NextRequest) {
     redirectAwaySlugPrefix(request, route.slug, pathname) ??
     rewriteToStorefront(request, route.slug, pathname)
   );
+}
+
+/**
+ * Pins the seller app to the one origin NextAuth signs its cookies for.
+ *
+ * `/login` and its siblings are exempt from the storefront rewrite, so they
+ * render on *any* hostname this server answers on — including `storeim.com`,
+ * whose landing page links to a relative `/login`. That is harmless for the
+ * password form and fatal for Google.
+ *
+ * `next-auth/react` posts to a *relative* `/api/auth/signin/google`, so the
+ * `state` and `pkce.code_verifier` cookies are written on whichever hostname the
+ * page was served from. The `redirect_uri` handed to Google is built server-side
+ * from `NEXTAUTH_URL` instead, so the browser returns to the app host — where
+ * those two cookies do not exist. NextAuth fails the callback with "State cookie
+ * was missing." and bounces to `/login?error=OAuthCallback`, which is why the
+ * sign-in only breaks for visitors who arrived from the marketing site instead
+ * of typing the app host: on mobile, most of them.
+ *
+ * Moving the page to the canonical origin first puts the cookies where the
+ * callback will look for them. `NEXTAUTH_URL` is the source of truth rather than
+ * `PLATFORM_APP_HOST` because it is the value NextAuth actually derives the
+ * `redirect_uri` from, and a deployment where the two disagree would reintroduce
+ * the bug. Unset, unparseable, or already matching leaves the request alone, so
+ * `localhost:3000` in development is untouched.
+ */
+function redirectToCanonicalAuthOrigin(request: NextRequest, pathname: string) {
+  if (!isSellerAppPath(pathname)) {
+    return null;
+  }
+
+  const canonicalOrigin = getCanonicalAuthOrigin();
+
+  if (!canonicalOrigin) {
+    return null;
+  }
+
+  const host = normalizeHostname(request.headers.get("host") ?? request.nextUrl.hostname);
+
+  if (!host || host === normalizeHostname(canonicalOrigin.host)) {
+    return null;
+  }
+
+  // 307 rather than 308: the target comes from the environment, and a permanent
+  // redirect cached on a phone would outlive any change to NEXTAUTH_URL.
+  return NextResponse.redirect(
+    new URL(`${pathname}${request.nextUrl.search}`, canonicalOrigin.origin),
+    307
+  );
+}
+
+function getCanonicalAuthOrigin() {
+  const configuredUrl = process.env.NEXTAUTH_URL;
+
+  if (!configuredUrl) {
+    return null;
+  }
+
+  try {
+    return new URL(configuredUrl);
+  } catch {
+    return null;
+  }
+}
+
+function isSellerAppPath(pathname: string) {
+  return SELLER_APP_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 }
 
 /**

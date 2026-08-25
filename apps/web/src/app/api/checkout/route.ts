@@ -39,7 +39,8 @@ export async function POST(request: NextRequest) {
       paymentMethod: getValue(formData, "paymentMethod") as PaymentMethodTypeValue,
       paymentReference: getValue(formData, "paymentReference"),
       paymentNote: getValue(formData, "paymentNote"),
-      verificationCode: getValue(formData, "verificationCode")
+      verificationCode: getValue(formData, "verificationCode"),
+      couponCode: getValue(formData, "couponCode")
     });
 
     // Internal route on purpose: /s/<slug> is what Next serves, and the clean
