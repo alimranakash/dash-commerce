@@ -1,6 +1,8 @@
 import { assessOrdersForCustomerSafely } from "../fake-orders/fake-order.assessment";
 import { normalizePhoneKey } from "../fake-orders/fake-order.rules";
+import { prisma } from "@dash/db";
 import { getPaymentMethods } from "../payments/payment.service";
+import { assertOrderItemsEditable, replaceOrderItems } from "./order-edit.service";
 import {
   getOrderByIdForStore,
   getOrderEditableDetailsForStore,
@@ -14,7 +16,11 @@ import {
   updateOrderStatusForStore,
   type FulfillmentStatus
 } from "./order.repository";
-import { updateOrderDetailsSchema, type UpdateOrderDetailsInput } from "./order.schema";
+import {
+  updateOrderDetailsSchema,
+  type UpdateOrderDetailsFormInput,
+  type UpdateOrderDetailsInput
+} from "./order.schema";
 
 export {
   getOrderByIdForStore,
@@ -72,26 +78,18 @@ export async function updateOrderPaymentStatus(storeId: string, orderId: string,
  * not just the one it landed in.
  */
 /**
- * Re-prices an order around the lines it already has.
+ * The money a seller is setting, resolved against the store.
  *
- * The subtotal is read rather than sent: it is the sum of the order's items,
- * and this form cannot touch those. Everything else is the seller's to set —
- * the delivery charge they agreed on the phone, a discount they gave, the
- * method the customer actually paid by. Any configured payment method is
- * allowed, not only the ones switched on for the storefront, because a seller
- * may take bKash on a call while public checkout offers only cash.
+ * Any configured payment method is allowed, not only the ones switched on for
+ * the storefront, because a seller may take bKash on a call while public
+ * checkout offers only cash. The subtotal is not theirs to state — it arrives
+ * from the lines that were just written.
  */
 async function resolveEditedMoney(
   storeId: string,
-  orderId: string,
-  data: UpdateOrderDetailsInput
+  data: UpdateOrderDetailsInput,
+  subtotalAmount: string
 ) {
-  const order = await getOrderSubtotalForStore(storeId, orderId);
-
-  if (!order) {
-    return null;
-  }
-
   const paymentMethod = (await getPaymentMethods(storeId)).find(
     (method) => method.type === data.paymentMethod
   );
@@ -103,7 +101,7 @@ async function resolveEditedMoney(
   const shippingAmount = data.shippingAmount ?? "0.00";
   const discountAmount = data.discountAmount ?? "0.00";
   const totalAmount = (
-    Number(order.subtotalAmount) +
+    Number(subtotalAmount) +
     Number(shippingAmount) -
     Number(discountAmount)
   ).toFixed(2);
@@ -117,24 +115,47 @@ async function resolveEditedMoney(
     paymentMethodName: paymentMethod.name,
     paymentMethodType: paymentMethod.type,
     shippingAmount,
+    subtotalAmount,
     totalAmount
   };
 }
 
+/**
+ * One transaction for the whole correction.
+ *
+ * The guards run first and outside it: refusing a booked or returned order is
+ * a decision about the order, not a write, and there is nothing to roll back.
+ * Everything after that — stock returned, stock taken, lines rewritten,
+ * address corrected, order re-totalled — commits together or not at all.
+ */
 export async function updateOrderDetails(
   storeId: string,
   orderId: string,
-  input: UpdateOrderDetailsInput
+  input: UpdateOrderDetailsFormInput
 ) {
   const data = updateOrderDetailsSchema.parse(input);
+  const items = data.items;
   const before = await getOrderRiskKeyForStore(storeId, orderId);
-  const money = await resolveEditedMoney(storeId, orderId, data);
 
-  if (!money) {
-    return null;
+  // Only a correction that actually rewrites the basket has to answer to the
+  // courier and to open returns. One that is fixing a phone number does not.
+  if (items) {
+    await assertOrderItemsEditable(storeId, orderId);
   }
 
-  const order = await updateOrderDetailsForStore(storeId, orderId, data, money);
+  const order = await prisma.$transaction(async (tx) => {
+    const subtotalAmount = items
+      ? (await replaceOrderItems(tx, storeId, orderId, items)).subtotalAmount
+      : (await getOrderSubtotalForStore(tx, storeId, orderId))?.subtotalAmount;
+
+    if (subtotalAmount === undefined) {
+      return null;
+    }
+
+    const money = await resolveEditedMoney(storeId, data, String(subtotalAmount));
+
+    return updateOrderDetailsForStore(tx, storeId, orderId, data, money);
+  });
 
   if (!order) {
     return null;

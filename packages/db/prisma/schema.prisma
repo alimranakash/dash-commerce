@@ -1568,6 +1568,14 @@ model OrderItem {
   id          String            @id @default(cuid())
   orderId     String
   productId   String?
+  /// Which option of the product was sold, when the product has options.
+  ///
+  /// Stock lives on the variant for these lines and on the product for the
+  /// rest, so editing an order cannot put a unit back without knowing which.
+  /// Null on lines written before this column existed, and on every line for a
+  /// product that has no options at all — order editing tells the two apart by
+  /// looking the SKU up rather than guessing.
+  variantId   String?
   title       String
   sku         String?
   price       Decimal           @db.Decimal(12, 2)

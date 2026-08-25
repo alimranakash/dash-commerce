@@ -2,8 +2,9 @@
 
 import { Button } from "@dash/ui";
 import Link from "next/link";
-import { useActionState, useState, type ReactNode } from "react";
+import { useActionState, useMemo, useState, type ReactNode } from "react";
 import type { OrderDetailsActionState } from "../order.actions";
+import type { OrderFormProductOption } from "./order-create-form";
 
 export type OrderEditFormValue = {
   addressLine1?: string | null;
@@ -22,8 +23,16 @@ export type OrderEditFormValue = {
   paymentReference?: string | null;
   postalCode?: string | null;
   shippingAmount?: string | null;
-  /** The lines' total. Shown, never edited: changing it means moving stock. */
-  subtotalAmount: string;
+  /** What the order is currently for, as the picker below works in. */
+  lines: OrderEditLine[];
+};
+
+export type OrderEditLine = {
+  price: string;
+  productId: string;
+  quantity: number;
+  title: string;
+  variantId: string | null;
 };
 
 export type OrderEditPaymentOption = {
@@ -38,8 +47,15 @@ type OrderEditFormProps = {
   /** Set once the order is with a carrier: the booking keeps the old address. */
   bookedWarning?: string | undefined;
   currency: string;
+  /**
+   * Why the products are read-only, when they are. The carrier is holding a
+   * label with an amount on it, or a return has been filed against these exact
+   * lines — either way the basket is no longer only ours to change.
+   */
+  itemsLockedReason?: string | undefined;
   order: OrderEditFormValue;
   paymentMethods: OrderEditPaymentOption[];
+  products: OrderFormProductOption[];
 };
 
 const initialState: OrderDetailsActionState = {
@@ -51,16 +67,80 @@ export function OrderEditForm({
   bookedWarning,
   cancelHref,
   currency,
+  itemsLockedReason,
   order,
-  paymentMethods
+  paymentMethods,
+  products
 }: OrderEditFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
+  const [lines, setLines] = useState<OrderEditLine[]>(order.lines);
+  const [search, setSearch] = useState("");
+  const [variantChoice, setVariantChoice] = useState<Record<string, string>>({});
   const [shippingAmount, setShippingAmount] = useState(order.shippingAmount ?? "0.00");
   const [discountAmount, setDiscountAmount] = useState(order.discountAmount ?? "0.00");
   const [paymentMethod, setPaymentMethod] = useState(
     order.paymentMethod ?? paymentMethods[0]?.type ?? "COD"
   );
-  const subtotal = Number(order.subtotalAmount) || 0;
+  const editable = !itemsLockedReason;
+  const matches = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const scoped = query
+      ? products.filter(
+          (product) =>
+            product.title.toLowerCase().includes(query) ||
+            (product.sku ?? "").toLowerCase().includes(query)
+        )
+      : products;
+
+    // A picker, not a catalog: a large store's whole list would bury the box.
+    return scoped.slice(0, 40);
+  }, [products, search]);
+  const subtotal = lines.reduce((sum, line) => sum + Number(line.price || 0) * line.quantity, 0);
+
+  function addLine(product: OrderFormProductOption) {
+    const variantId = product.variants.length
+      ? (variantChoice[product.id] ?? product.variants[0]?.id ?? null)
+      : null;
+    const variant = product.variants.find((entry) => entry.id === variantId) ?? null;
+
+    if (product.variants.length && !variant) {
+      return;
+    }
+
+    setLines((current) => {
+      const existing = current.find(
+        (line) => line.productId === product.id && line.variantId === (variant?.id ?? null)
+      );
+
+      // The same option twice means one more of it, not a second row.
+      if (existing) {
+        return current.map((line) =>
+          line === existing ? { ...line, quantity: line.quantity + 1 } : line
+        );
+      }
+
+      return [
+        ...current,
+        {
+          price: Number(variant ? variant.price : product.price).toFixed(2),
+          productId: product.id,
+          quantity: 1,
+          title: variant ? `${product.title} - ${variant.title}` : product.title,
+          variantId: variant?.id ?? null
+        }
+      ];
+    });
+  }
+
+  function updateLine(index: number, patch: Partial<OrderEditLine>) {
+    setLines((current) =>
+      current.map((line, position) => (position === index ? { ...line, ...patch } : line))
+    );
+  }
+
+  function removeLine(index: number) {
+    setLines((current) => current.filter((_, position) => position !== index));
+  }
   const total = subtotal + (Number(shippingAmount) || 0) - (Number(discountAmount) || 0);
   // Same rule as the create form: the reference only means something on a
   // method that has one to quote.
@@ -75,7 +155,164 @@ export function OrderEditForm({
         </p>
       ) : null}
 
-      <h2 className="m-0 text-sm font-semibold text-[#292a34]">Customer</h2>
+      {/*
+        Only posted when the products are the seller's to change. Absent tells
+        the server to leave the basket exactly as it is, which is what keeps a
+        booked order's address correctable.
+      */}
+      {editable ? (
+        <input
+          name="items"
+          type="hidden"
+          value={JSON.stringify(
+            lines.map((line) => ({
+              price: line.price,
+              productId: line.productId,
+              quantity: line.quantity,
+              variantId: line.variantId ?? undefined
+            }))
+          )}
+        />
+      ) : null}
+
+      <h2 className="m-0 text-sm font-semibold text-[#292a34]">Products</h2>
+      {state.fieldErrors?.items ? (
+        <span className="field-error">{state.fieldErrors.items}</span>
+      ) : null}
+      {itemsLockedReason ? (
+        <p className="m-0 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-medium text-amber-800">
+          {itemsLockedReason}
+        </p>
+      ) : (
+        <div className="rounded-lg border border-[#ececf5] bg-[#fbfbfe] p-3">
+          <input
+            className="w-full"
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search products by name or SKU"
+            type="search"
+            value={search}
+          />
+          <div className="mt-3 max-h-64 overflow-y-auto">
+            {matches.length === 0 ? (
+              <p className="m-0 px-1 py-4 text-center text-xs text-[#7b7c92]">
+                No products match that search.
+              </p>
+            ) : (
+              <ul className="m-0 flex list-none flex-col gap-1 p-0">
+                {matches.map((product) => (
+                  <li
+                    className="flex flex-wrap items-center gap-3 rounded-lg bg-white px-3 py-2"
+                    key={product.id}
+                  >
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-sm font-medium text-[#292a34]">
+                        {product.title}
+                      </span>
+                      <span className="text-xs text-[#7b7c92]">
+                        {formatMoney(Number(product.price), currency)} · {product.stockQuantity} in
+                        stock
+                      </span>
+                    </span>
+                    {product.variants.length ? (
+                      <select
+                        onChange={(event) =>
+                          setVariantChoice((current) => ({
+                            ...current,
+                            [product.id]: event.target.value
+                          }))
+                        }
+                        value={variantChoice[product.id] ?? product.variants[0]?.id ?? ""}
+                      >
+                        {product.variants.map((variant) => (
+                          <option key={variant.id} value={variant.id}>
+                            {variant.title} ({variant.stockQuantity})
+                          </option>
+                        ))}
+                      </select>
+                    ) : null}
+                    <button
+                      className="rounded-lg border border-[#d9d8ea] bg-white px-3 py-1.5 text-xs font-semibold text-[#4b3fd6]"
+                      onClick={() => addLine(product)}
+                      type="button"
+                    >
+                      Add
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+
+      {lines.length === 0 ? (
+        <p className="m-0 rounded-lg border border-dashed border-[#d9d8ea] px-4 py-6 text-center text-xs text-[#7b7c92]">
+          This order has no products. Add at least one before saving.
+        </p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[520px] border-collapse text-sm">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-wide text-[#7b7c92]">
+                <th className="py-2 pr-3 font-semibold">Product</th>
+                <th className="py-2 pr-3 font-semibold">Unit price</th>
+                <th className="py-2 pr-3 font-semibold">Qty</th>
+                <th className="py-2 pr-3 text-right font-semibold">Total</th>
+                <th className="py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              {lines.map((line, index) => (
+                <tr className="border-t border-[#ececf5]" key={`${line.productId}::${line.variantId ?? ""}::${index}`}>
+                  <td className="py-2 pr-3">
+                    <span className="block text-sm font-medium text-[#292a34]">{line.title}</span>
+                  </td>
+                  <td className="py-2 pr-3">
+                    <input
+                      className="w-24"
+                      disabled={!editable}
+                      inputMode="decimal"
+                      onChange={(event) => updateLine(index, { price: event.target.value })}
+                      type="text"
+                      value={line.price}
+                    />
+                  </td>
+                  <td className="py-2 pr-3">
+                    <input
+                      className="w-20"
+                      disabled={!editable}
+                      min={1}
+                      onChange={(event) =>
+                        updateLine(index, {
+                          quantity: Math.max(1, Number(event.target.value) || 1)
+                        })
+                      }
+                      type="number"
+                      value={line.quantity}
+                    />
+                  </td>
+                  <td className="py-2 pr-3 text-right text-sm font-medium text-[#292a34]">
+                    {formatMoney(Number(line.price || 0) * line.quantity, currency)}
+                  </td>
+                  <td className="py-2 text-right">
+                    {editable ? (
+                      <button
+                        className="text-xs font-semibold text-[#c0392b]"
+                        onClick={() => removeLine(index)}
+                        type="button"
+                      >
+                        Remove
+                      </button>
+                    ) : null}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <h2 className="m-0 mt-2 text-sm font-semibold text-[#292a34]">Customer</h2>
       <div className="form-grid">
         <FieldError errors={state.fieldErrors} name="customerName">
           <label>
@@ -201,11 +438,6 @@ export function OrderEditForm({
       </FieldError>
 
       <h2 className="m-0 mt-2 text-sm font-semibold text-[#292a34]">Charges</h2>
-      {/*
-        The subtotal is the sum of this order's products, so it is read-only
-        here — changing what was bought means putting stock back and taking it
-        out again, which this form does not do.
-      */}
       <div className="form-grid">
         <FieldError errors={state.fieldErrors} name="shippingAmount">
           <label>
@@ -234,7 +466,7 @@ export function OrderEditForm({
       </div>
 
       <dl className="m-0 rounded-lg border border-[#ececf5] bg-[#fbfbfe] px-4 py-3 text-sm">
-        <SummaryRow label="Products (not editable here)" value={formatMoney(subtotal, currency)} />
+        <SummaryRow label="Products" value={formatMoney(subtotal, currency)} />
         <SummaryRow label="Delivery" value={formatMoney(Number(shippingAmount) || 0, currency)} />
         <SummaryRow
           label="Discount"
@@ -295,7 +527,11 @@ export function OrderEditForm({
         <Link className="catalog-cancel-button" href={cancelHref}>
           Cancel
         </Link>
-        <Button className="catalog-submit-button" disabled={isPending} type="submit">
+        <Button
+          className="catalog-submit-button"
+          disabled={isPending || lines.length === 0}
+          type="submit"
+        >
           {isPending ? "Saving..." : "Save Changes"}
         </Button>
       </div>

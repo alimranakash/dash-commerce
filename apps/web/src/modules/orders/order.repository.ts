@@ -1,4 +1,4 @@
-import { prisma } from "@dash/db";
+import { prisma, type Prisma } from "@dash/db";
 import type { PaymentMethodTypeValue } from "../payments/payment.schema";
 import type { UpdateOrderDetailsInput } from "./order.schema";
 
@@ -175,6 +175,18 @@ export async function getOrderEditableDetailsForStore(storeId: string, orderId: 
       paymentReference: true,
       shippingAddress: true,
       shippingAddressId: true,
+      items: {
+        orderBy: {
+          createdAt: "asc"
+        },
+        select: {
+          price: true,
+          productId: true,
+          quantity: true,
+          title: true,
+          variantId: true
+        }
+      },
       shippingAmount: true,
       shippingArea: true,
       shippingCity: true,
@@ -184,9 +196,23 @@ export async function getOrderEditableDetailsForStore(storeId: string, orderId: 
   });
 }
 
-/** The lines' total, which the edit form re-prices around but never changes. */
-export async function getOrderSubtotalForStore(storeId: string, orderId: string) {
-  return prisma.order.findFirst({
+/** Whether anyone else is already acting on this order's lines. */
+export async function getOrderItemLocksForStore(storeId: string, orderId: string) {
+  return prisma.orderReturn.count({
+    where: {
+      orderId,
+      storeId
+    }
+  });
+}
+
+/** The lines' total, for a correction that is leaving the lines alone. */
+export async function getOrderSubtotalForStore(
+  tx: Prisma.TransactionClient,
+  storeId: string,
+  orderId: string
+) {
+  return tx.order.findFirst({
     where: {
       id: orderId,
       storeId
@@ -210,8 +236,13 @@ export async function getOrderSubtotalForStore(storeId: string, orderId: string)
  * `money` arrives already resolved and already added up: the service owns that
  * arithmetic because it owns the rule that an order cannot total less than
  * nothing.
+ *
+ * Takes the caller's transaction because a correction can now move stock too,
+ * and a half-applied edit — new lines against an old total, or units taken out
+ * for a line that was never written — is worse than a rejected one.
  */
 export async function updateOrderDetailsForStore(
+  tx: Prisma.TransactionClient,
   storeId: string,
   orderId: string,
   data: UpdateOrderDetailsInput,
@@ -220,10 +251,11 @@ export async function updateOrderDetailsForStore(
     paymentMethodName: string;
     paymentMethodType: PaymentMethodTypeValue;
     shippingAmount: string;
+    subtotalAmount: string;
     totalAmount: string;
   }
 ) {
-  const order = await prisma.order.findFirst({
+  const order = await tx.order.findFirst({
     where: {
       id: orderId,
       storeId
@@ -252,7 +284,7 @@ export async function updateOrderDetailsForStore(
     postalCode: data.postalCode ?? null
   };
 
-  return prisma.$transaction(async (tx) => {
+  {
     let shippingAddressId = order.shippingAddressId;
 
     if (shippingAddressId) {
@@ -294,6 +326,7 @@ export async function updateOrderDetailsForStore(
         paymentReference: data.paymentReference ?? null,
         shippingAddressId,
         shippingAmount: money.shippingAmount,
+        subtotalAmount: money.subtotalAmount,
         totalAmount: money.totalAmount,
         // Checkout points both ids at one row. Keep that shape when the order
         // had no address yet, but never repoint a billing address that was
@@ -301,5 +334,5 @@ export async function updateOrderDetailsForStore(
         ...(order.billingAddressId ? {} : { billingAddressId: shippingAddressId })
       }
     });
-  });
+  }
 }

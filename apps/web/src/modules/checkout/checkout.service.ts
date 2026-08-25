@@ -417,6 +417,7 @@ async function placeCheckoutOrder(
         items: {
           create: cart.items.map((item) => ({
             productId: item.productId,
+            variantId: item.variantId ?? null,
             title: item.variantTitle ? `${item.title} - ${item.variantTitle}` : item.title,
             sku: variantsByLineId.get(item.lineId)?.sku ?? productsById.get(item.productId)?.sku ?? null,
             price: item.price,

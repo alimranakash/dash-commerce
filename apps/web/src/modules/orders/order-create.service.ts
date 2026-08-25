@@ -25,6 +25,8 @@ type OrderLineWrite = {
   sku: string | null;
   title: string;
   total: string;
+  /** Null for a product sold without options; see OrderItem.variantId. */
+  variantId: string | null;
 };
 
 /**
@@ -161,7 +163,8 @@ export async function createManualOrder(store: ManualOrderStore, input: CreateMa
         quantity: item.quantity,
         sku: variant?.sku ?? product.sku ?? null,
         title: variant ? `${product.title} - ${variant.title}` : product.title,
-        total: (Number(price) * item.quantity).toFixed(2)
+        total: (Number(price) * item.quantity).toFixed(2),
+        variantId: variant?.id ?? null
       });
     }
 

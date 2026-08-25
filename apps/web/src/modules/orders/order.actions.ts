@@ -10,7 +10,7 @@ import type { CreateManualOrderInput } from "./order-create.schema";
 import { createManualOrder } from "./order-create.service";
 import { sendCustomOrderSms, sendOrderConfirmationSms } from "./order-sms.service";
 import type { FulfillmentStatus } from "./order.repository";
-import type { UpdateOrderDetailsInput } from "./order.schema";
+import type { UpdateOrderDetailsFormInput } from "./order.schema";
 import {
   updateOrderDetails,
   updateOrderFulfillmentStatus,
@@ -237,7 +237,7 @@ function manualOrderLinesFromFormData(formData: FormData): CreateManualOrderInpu
   }
 }
 
-function orderDetailsFromFormData(formData: FormData): UpdateOrderDetailsInput {
+function orderDetailsFromFormData(formData: FormData): UpdateOrderDetailsFormInput {
   return {
     addressLine1: getValue(formData, "addressLine1"),
     addressLine2: optionalValue(formData, "addressLine2"),
@@ -249,6 +249,11 @@ function orderDetailsFromFormData(formData: FormData): UpdateOrderDetailsInput {
     customerPhone: getValue(formData, "customerPhone"),
     discountAmount: getValue(formData, "discountAmount"),
     district: getValue(formData, "district"),
+    // The same one-hidden-field basket the create form posts, read by the same
+    // helper, so both paths hand the service an identically shaped order. The
+    // field is absent when the form is not offering to change the products at
+    // all, and absent has to stay absent: an empty basket is a different claim.
+    items: formData.has("items") ? manualOrderLinesFromFormData(formData) : undefined,
     notes: optionalValue(formData, "notes"),
     paymentMethod: getValue(formData, "paymentMethod") as PaymentMethodTypeValue,
     paymentNote: optionalValue(formData, "paymentNote"),

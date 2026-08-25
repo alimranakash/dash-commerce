@@ -292,6 +292,86 @@ export async function decrementProductVariantStock(
   return variant;
 }
 
+/**
+ * Puts units back on a variant, for an order line that shrank or went away.
+ *
+ * The mirror of `decrementProductVariantStock`, and deliberately far less
+ * fussy than it: giving stock back is always safe, so an option that has since
+ * been deactivated or deleted is not an error here. It is simply a row that is
+ * no longer there to credit, and refusing the seller's edit over it would
+ * strand the order instead.
+ */
+export async function incrementProductVariantStock(
+  tx: Prisma.TransactionClient,
+  storeId: string,
+  productId: string,
+  variantId: string,
+  quantity: number
+) {
+  await ensureProductVariantSchema(tx);
+
+  if (quantity <= 0) {
+    return;
+  }
+
+  await tx.$executeRawUnsafe(
+    `UPDATE ${tableName("ProductVariant")}
+     SET "stockQuantity" = "stockQuantity" + $4, "updatedAt" = CURRENT_TIMESTAMP
+     WHERE "storeId" = $1 AND "productId" = $2 AND "id" = $3`,
+    storeId,
+    productId,
+    variantId,
+    quantity
+  );
+}
+
+/**
+ * The variant a line was sold from, found by SKU.
+ *
+ * Only for lines written before `OrderItem.variantId` existed. A null answer
+ * is ambiguous rather than negative — it means "no variant claims this SKU",
+ * which for a product that has options is exactly the case order editing
+ * refuses to guess at.
+ */
+export async function findProductVariantIdBySku(
+  tx: Prisma.TransactionClient,
+  storeId: string,
+  productId: string,
+  sku: string
+) {
+  await ensureProductVariantSchema(tx);
+
+  const rows = await tx.$queryRawUnsafe<Array<{ id: string }>>(
+    `SELECT "id" FROM ${tableName("ProductVariant")}
+     WHERE "storeId" = $1 AND "productId" = $2 AND "sku" = $3
+     LIMIT 1`,
+    storeId,
+    productId,
+    sku
+  );
+
+  return rows[0]?.id ?? null;
+}
+
+/** Whether a product sells through options at all. */
+export async function productHasVariants(
+  tx: Prisma.TransactionClient,
+  storeId: string,
+  productId: string
+) {
+  await ensureProductVariantSchema(tx);
+
+  const rows = await tx.$queryRawUnsafe<Array<{ id: string }>>(
+    `SELECT "id" FROM ${tableName("ProductVariant")}
+     WHERE "storeId" = $1 AND "productId" = $2
+     LIMIT 1`,
+    storeId,
+    productId
+  );
+
+  return rows.length > 0;
+}
+
 function uniqueVariants(variants: ProductVariantInput[]) {
   const seen = new Set<string>();
 
