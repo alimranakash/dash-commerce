@@ -636,6 +636,18 @@ function isReportLinkActive(pathname: string, href: string) {
 }
 
 function isOrderLinkActive(pathname: string, href: string) {
+  // All Orders owns only its own path; every other page in this group sits
+  // beneath it and would otherwise light it up as well as itself.
+  //
+  // Written this way round rather than as a list of the sub-routes. The list
+  // version treated anything it did not recognise as All Orders, so each link
+  // added to the group afterwards lit up on /dashboard/orders until someone
+  // remembered to extend it — which is how Incomplete Orders arrived broken.
+  if (href === "/dashboard/orders") {
+    return pathname === href;
+  }
+
+  // These two also answer to the paths they used to live at.
   if (href === "/dashboard/orders/fake") {
     return matchesRoute(pathname, href) || matchesRoute(pathname, "/dashboard/orders/fake-orders");
   }
@@ -644,22 +656,9 @@ function isOrderLinkActive(pathname: string, href: string) {
     return matchesRoute(pathname, href) || matchesRoute(pathname, "/dashboard/orders/verification-queue");
   }
 
-  if (href === "/dashboard/fraud-check") {
-    return matchesRoute(pathname, href);
-  }
-
-  if (
-    href === "/dashboard/orders/blocked-ips" ||
-    href === "/dashboard/orders/tracking" ||
-    href === "/dashboard/orders/new" ||
-    href === "/dashboard/orders/returns" ||
-    href === "/dashboard/orders/exchanges" ||
-    href === "/dashboard/orders/refunds"
-  ) {
-    return matchesRoute(pathname, href);
-  }
-
-  return pathname === "/dashboard/orders";
+  // Everything else, /dashboard/fraud-check included — it is listed in this
+  // group even though it does not sit under /dashboard/orders.
+  return matchesRoute(pathname, href);
 }
 
 function isStorefrontLinkActive(pathname: string, href: string, label: string) {
