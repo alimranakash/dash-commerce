@@ -9,7 +9,13 @@ import {
   trackCartActivity
 } from "../abandoned-carts/abandoned-cart.service";
 import { getProductVariantForCart } from "../products/product-variants.service";
-import type { Cart, StoredCart, StoredCartItem } from "./cart.types";
+import {
+  parseCartItemSource,
+  type Cart,
+  type CartItemSource,
+  type StoredCart,
+  type StoredCartItem
+} from "./cart.types";
 
 const CART_COOKIE_PREFIX = "dash_cart";
 const CART_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
@@ -95,7 +101,20 @@ function availableStockFor(
   return variant?.stockQuantity ?? product.stockQuantity;
 }
 
-export async function addToCart(storeId: string, productId: string, quantity: number, variantId?: string | null) {
+/**
+ * `source` records which surface asked for the add, for the merchandising
+ * report. It is only ever set when the line is created: a shopper who took a
+ * suggestion and then raised its quantity on the cart page took the suggestion,
+ * and the rail never offers something already in the cart, so a merge can only
+ * mean the line was already the shopper's own.
+ */
+export async function addToCart(
+  storeId: string,
+  productId: string,
+  quantity: number,
+  variantId?: string | null,
+  source: CartItemSource = "CART"
+) {
   const requestedQuantity = normalizeQuantity(quantity);
   const product = await getPublicProductForCart(storeId, productId);
   const currentCart = await readStoredCart(storeId);
@@ -109,6 +128,7 @@ export async function addToCart(storeId: string, productId: string, quantity: nu
   const image = variant?.imageUrl || product.images[0]?.url || null;
   const nextItem: StoredCartItem = {
     lineId,
+    source: existingItem?.source ?? source,
     productId: product.id,
     sku: variant?.sku ?? product.sku ?? null,
     title: product.title,
@@ -323,7 +343,10 @@ function normalizeStoredItem(item: StoredCartItem): StoredCartItem | null {
     variantTitle: item.variantTitle ? String(item.variantTitle) : null,
     price: moneyString(Number(item.price)),
     image: item.image ? String(item.image) : null,
-    quantity
+    quantity,
+    // Cookies written before this column existed carry no source, and their
+    // lines were all the shopper's own doing.
+    source: parseCartItemSource(item.source)
   };
 }
 

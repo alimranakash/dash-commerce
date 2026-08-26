@@ -11,6 +11,10 @@ import { CheckoutError, classifyCheckoutFailure } from "./checkout-failure";
 import { claimCouponUse, evaluateCoupon } from "../coupons/coupon-validation.service";
 import { createCouponRedemption } from "../coupons/coupon.repository";
 import { clearCart, getCart, getCartToken } from "../cart/cart.service";
+import type { CartItem, CartItemSource } from "../cart/cart.types";
+import { createOrderBundles, priceCartBundles } from "../merchandising/bundle.service";
+import { resolveOrderBumpForCheckout } from "../merchandising/order-bump.service";
+import type { OrderBumpOffer } from "../merchandising/order-bump.schema";
 import { assertStoreUnlocked } from "../billing/free-trial";
 import { assertIpNotBlocked } from "../blocked-ips/blocked-ip.enforcement";
 import { normaliseIpAddress } from "../blocked-ips/blocked-ip.schema";
@@ -36,6 +40,24 @@ import { assertCheckoutPhoneVerified } from "./checkout-verification.service";
  */
 type CheckoutContext = {
   ipAddress: string | null;
+};
+
+/**
+ * The line id the checkout's own offer travels under.
+ *
+ * It never came out of the cart, so it needs an id of its own for the two
+ * loops that key on one — and it is what marks the order line afterwards.
+ */
+const ORDER_BUMP_LINE_ID = "order-bump";
+
+/**
+ * A cart line, or the offer that is only ever added here.
+ *
+ * The cart's own source union deliberately excludes ORDER_BUMP — a bump never
+ * enters a cart — so this widens it for the one list that holds both.
+ */
+type CheckoutLine = Omit<CartItem, "source"> & {
+  source: CartItemSource | "ORDER_BUMP";
 };
 
 type CheckoutStore = {
@@ -223,6 +245,45 @@ async function placeCheckoutOrder(
     throw new CheckoutError("EMPTY_CART", "Your cart is empty.");
   }
 
+  // The tick box posted an id; everything else about the offer — the discount,
+  // and therefore the price — is read here from the store's own configuration
+  // against the product's live price. The browser cannot name a price.
+  //
+  // An offer that no longer stands stops the order rather than being dropped
+  // from it. The shopper chose the item; shipping them an order quietly missing
+  // it is the worse of the two surprises, and their cart survives either way.
+  const bump = data.orderBumpProductId
+    ? await resolveOrderBumpForCheckout({
+        cartProductIds: cart.items.map((item) => item.productId),
+        productId: data.orderBumpProductId,
+        storeId: store.id
+      })
+    : null;
+
+  if (data.orderBumpProductId && !bump) {
+    throw new CheckoutError(
+      "OUT_OF_STOCK",
+      "The add-on offer is no longer available. Please review your order and place it again."
+    );
+  }
+
+  // One list from here down. Once the offer has a server-decided price it is a
+  // line like any other, and nothing below has to know where it came from.
+  const lines: CheckoutLine[] = bump ? [...cart.items, orderBumpLine(bump)] : cart.items;
+
+  // Priced against the cart alone. The bump is already discounted, and letting
+  // a bundle take a second cut off it would discount one item twice — the same
+  // rule the coupon follows below, for the same reason.
+  const bundles = await priceCartBundles(
+    store.id,
+    cart.items.map((item) => ({
+      lineId: item.lineId,
+      price: item.price,
+      productId: item.productId,
+      quantity: item.quantity
+    }))
+  );
+
   // First of the checks, and cheap on purpose: a blocked address should cost
   // the store nothing, not a plan-limit read and certainly not an SMS. Order
   // placement is the only thing the blocklist stops — browsing the storefront
@@ -263,7 +324,7 @@ async function placeCheckoutOrder(
   }
 
   const order = await prisma.$transaction(async (tx) => {
-    const productIds = cart.items.map((item) => item.productId);
+    const productIds = lines.map((item) => item.productId);
     const products = await tx.product.findMany({
       where: {
         id: {
@@ -286,7 +347,7 @@ async function placeCheckoutOrder(
     // still known — after the decrements it would be too late to tell.
     const preorderLineIds = new Set<string>();
 
-    for (const item of cart.items) {
+    for (const item of lines) {
       const product = productsById.get(item.productId);
 
       if (!product) {
@@ -352,7 +413,7 @@ async function placeCheckoutOrder(
       }
     });
 
-    for (const item of cart.items) {
+    for (const item of lines) {
       if (item.variantId) {
         continue;
       }
@@ -386,21 +447,35 @@ async function placeCheckoutOrder(
     }
 
     const orderNumber = await generateOrderNumber(tx, store.id);
-    const subtotalAmount = cart.totals.subtotal;
+    const subtotalAmount = bump
+      ? (Number(cart.totals.subtotal) + Number(bump.offerPrice)).toFixed(2)
+      : cart.totals.subtotal;
     const shippingAmount = Number(shippingRate.amount).toFixed(2);
     // Re-evaluated and claimed here, against the subtotal this transaction just
     // computed. Whatever the browser was shown is a quote; this is the price.
+    //
+    // Deliberately the cart's subtotal, minus what the bundles already took:
+    // the bump is discounted and the bundle lines are discounted, so a coupon
+    // measured against the full figure would be spending money twice. What is
+    // left is what the shopper still owes on their own cart, which is the only
+    // honest base for "10% off".
+    const bundleDiscountAmount = bundles.discountAmount;
+    const couponBase = Math.max(
+      0,
+      Number(cart.totals.subtotal) - Number(bundleDiscountAmount)
+    ).toFixed(2);
     const discount = await claimCheckoutCoupon(tx, {
       code: data.couponCode,
       customerPhone: data.phone,
       shippingAmount,
       storeId: store.id,
-      subtotal: subtotalAmount
+      subtotal: couponBase
     });
     const totalAmount = (
       Number(subtotalAmount) +
       Number(shippingAmount) -
-      Number(discount.discountAmount)
+      Number(discount.discountAmount) -
+      Number(bundleDiscountAmount)
     ).toFixed(2);
 
     const created = await tx.order.create({
@@ -424,6 +499,7 @@ async function placeCheckoutOrder(
         shippingCity: shippingRate.city ?? data.city ?? null,
         shippingArea: shippingRate.area ?? data.area ?? null,
         discountAmount: discount.discountAmount,
+        bundleDiscountAmount,
         couponId: discount.couponId,
         couponCode: discount.couponCode,
         taxAmount: "0.00",
@@ -437,10 +513,11 @@ async function placeCheckoutOrder(
         billingAddressId: address.id,
         notes: data.notes ?? null,
         items: {
-          create: cart.items.map((item) => ({
+          create: lines.map((item) => ({
             productId: item.productId,
             variantId: item.variantId ?? null,
             isPreorder: preorderLineIds.has(item.lineId),
+            source: item.source,
             title: item.variantTitle ? `${item.title} - ${item.variantTitle}` : item.title,
             sku: variantsByLineId.get(item.lineId)?.sku ?? productsById.get(item.productId)?.sku ?? null,
             price: item.price,
@@ -450,6 +527,19 @@ async function placeCheckoutOrder(
           }))
         }
       }
+    });
+
+    // Same transaction as the order, so an order that rolls back leaves no
+    // record of a saving it never gave.
+    await createOrderBundles(tx, {
+      bundles: bundles.applied.map((entry) => ({
+        bundleId: entry.bundleId,
+        discountAmount: entry.discountAmount,
+        name: entry.name,
+        timesApplied: entry.timesApplied
+      })),
+      orderId: created.id,
+      storeId: store.id
     });
 
     // After the order exists, so the ledger row can point at it. Same
@@ -479,6 +569,28 @@ async function placeCheckoutOrder(
   await assessOrderSafely(store.id, order.id);
 
   return order;
+}
+
+/**
+ * The resolved offer as a cart line.
+ *
+ * Quantity is fixed at one: the box is a yes-or-no, and a shopper who wants two
+ * of something is doing more thinking than this offer is for.
+ */
+function orderBumpLine(offer: OrderBumpOffer): CheckoutLine {
+  return {
+    image: offer.imageUrl,
+    lineId: ORDER_BUMP_LINE_ID,
+    lineTotal: offer.offerPrice,
+    price: offer.offerPrice,
+    productId: offer.productId,
+    quantity: 1,
+    sku: null,
+    source: "ORDER_BUMP",
+    title: offer.title,
+    variantId: null,
+    variantTitle: null
+  };
 }
 
 type ClaimedCoupon = {

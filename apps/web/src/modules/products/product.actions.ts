@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import { canCreateProduct } from "../billing/subscription-limits";
 import { createCategory } from "../categories/category.service";
+import { setProductRelations } from "../merchandising/merchandising.service";
+import type { SetProductRelationsInput } from "../merchandising/merchandising.schema";
 import { requireStore } from "../stores/queries";
 import {
   archiveProduct,
@@ -66,6 +68,7 @@ export async function createProductFormAction(
       storeId: store.id,
       variants: payload.variants
     });
+    await setProductRelations(store.id, product.id, payload.relations);
   } catch (error) {
     return productErrorState(error);
   }
@@ -111,6 +114,7 @@ export async function updateProductFormAction(
       storeId: store.id,
       variants: payload.variants
     });
+    await setProductRelations(store.id, product.id, payload.relations);
   } catch (error) {
     return productErrorState(error);
   }
@@ -155,6 +159,7 @@ type ProductFormPayload = {
   brandIds: string[];
   categoryIds: string[];
   input: CreateProductInput;
+  relations: SetProductRelationsInput;
   tagIds: string[];
   variants: ProductVariantInput[];
 };
@@ -195,6 +200,11 @@ function productPayloadFromFormData(formData: FormData): ProductFormPayload {
       status: getValue(formData, "status") as CreateProductInput["status"],
       visibility: getValue(formData, "visibility") as CreateProductInput["visibility"],
       images
+    },
+    relations: {
+      ACCESSORY: getValues(formData, "accessoryProductIds"),
+      CROSS_SELL: getValues(formData, "crossSellProductIds"),
+      UPSELL: getValues(formData, "upsellProductIds")
     },
     tagIds: getValues(formData, "tagIds"),
     variants

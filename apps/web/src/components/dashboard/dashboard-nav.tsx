@@ -129,6 +129,7 @@ const reportLinks = [
   { href: "/dashboard/reports/revenues", label: "Revenues" },
   { href: "/dashboard/reports/products", label: "Products" },
   { href: "/dashboard/reports/customers", label: "Customers" },
+  { href: "/dashboard/reports/merchandising", label: "Upsell & Cross-sell" },
   { href: "/dashboard/reports/abandoned-carts", label: "Abandoned Carts" },
   { href: "/dashboard/reports/incomplete-orders", label: "Incomplete Orders" }
 ];
@@ -186,6 +187,8 @@ const marketingLinks: Array<{ href: string; label: string }> = [
   { href: "/dashboard/marketing/audiences", label: "Audiences" },
   { href: "/dashboard/marketing/templates", label: "Templates" },
   { href: "/dashboard/coupons", label: "Coupons" },
+  { href: "/dashboard/marketing/order-bump", label: "Order Bump" },
+  { href: "/dashboard/marketing/bundles", label: "Bundles" },
   { href: "/dashboard/abandoned-cart", label: "Abandoned Cart" }
 ];
 

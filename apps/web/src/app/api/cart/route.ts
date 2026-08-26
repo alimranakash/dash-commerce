@@ -1,6 +1,7 @@
 import { storefrontBasePath, storefrontRequestOrigin } from "../../../modules/storefront/base-path";
 import { revalidatePath } from "next/cache";
 import { NextResponse, type NextRequest } from "next/server";
+import { parseCartItemSource } from "../../../modules/cart/cart.types";
 import {
   addToCart,
   clearCart,
@@ -22,7 +23,16 @@ export async function POST(request: NextRequest) {
 
   try {
     if (cartAction === "add") {
-      await addToCart(storeId, productId, Number(getValue(formData, "quantity") || 1), variantId || null);
+      await addToCart(
+        storeId,
+        productId,
+        Number(getValue(formData, "quantity") || 1),
+        variantId || null,
+        // Anything unrecognised reads as an ordinary add rather than being
+        // rejected: a mislabelled line is a reporting nit, a failed add is lost
+        // revenue.
+        parseCartItemSource(getValue(formData, "source"))
+      );
       revalidateStorefrontCart(storeSlug);
 
       if (wantsJson) {

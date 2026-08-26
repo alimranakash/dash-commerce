@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import type { Cart } from "../../cart/cart.types";
+import type { AppliedBundle } from "../../merchandising/bundle-pricing";
+import type { OrderBumpOffer } from "../../merchandising/order-bump.schema";
 
 export type AppliedCoupon = {
   code: string;
@@ -11,31 +13,39 @@ export type AppliedCoupon = {
 
 type CheckoutOrderSummaryProps = {
   appliedCoupon: AppliedCoupon | null;
+  bundles: AppliedBundle[];
   cart: Cart;
   currency: string;
   onApplyCoupon: (code: string) => Promise<string | null>;
   onRemoveCoupon: () => void;
+  /** Only ever the accepted offer; an unticked one is not part of the order. */
+  orderBump: OrderBumpOffer | null;
   shippingAmount?: unknown;
   shippingLabel?: string;
 };
 
 export function CheckoutOrderSummary({
   appliedCoupon,
+  bundles,
   cart,
   currency,
   onApplyCoupon,
   onRemoveCoupon,
+  orderBump,
   shippingAmount,
   shippingLabel
 }: CheckoutOrderSummaryProps) {
   const [couponCode, setCouponCode] = useState("");
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
   const [applying, setApplying] = useState(false);
-  const subtotal = Number(cart.totals.subtotal);
+  const subtotal = Number(cart.totals.subtotal) + Number(orderBump?.offerPrice ?? 0);
   const shipping = Number(shippingAmount ?? 0);
+  // The coupon is quoted against the cart alone, and checkout claims it against
+  // the cart alone, so the bump never moves this figure in either place.
   const discount = Number(appliedCoupon?.discountAmount ?? 0);
+  const bundleSavings = bundles.reduce((total, bundle) => total + Number(bundle.discountAmount), 0);
   // Never below zero on screen, even if a stale quote briefly outruns the cart.
-  const total = Math.max(0, subtotal + shipping - discount);
+  const total = Math.max(0, subtotal + shipping - discount - bundleSavings);
 
   async function applyCoupon() {
     const code = couponCode.trim();
@@ -87,6 +97,19 @@ export function CheckoutOrderSummary({
               <b>{formatMoney(item.lineTotal, currency)}</b>
             </div>
           ))}
+          {orderBump ? (
+            <div className="sf-checkout-summary-item" key="order-bump">
+              <div className="sf-checkout-summary-image">
+                {orderBump.imageUrl ? <img alt="" src={orderBump.imageUrl} /> : <div aria-hidden="true" />}
+                <span>1</span>
+              </div>
+              <div className="sf-checkout-summary-meta">
+                <strong>{orderBump.title}</strong>
+                <small>Added offer</small>
+              </div>
+              <b>{formatMoney(orderBump.offerPrice, currency)}</b>
+            </div>
+          ) : null}
         </div>
         {appliedCoupon ? (
           <div className="sf-checkout-coupon" aria-label="Applied coupon">
@@ -128,6 +151,13 @@ export function CheckoutOrderSummary({
             label={shippingLabel ? `Shipping (${shippingLabel})` : "Shipping"}
             value={formatMoney(shipping, currency)}
           />
+          {bundles.map((bundle) => (
+            <SummaryRow
+              key={bundle.bundleId}
+              label={bundle.name}
+              value={`−${formatMoney(bundle.discountAmount, currency)}`}
+            />
+          ))}
           <SummaryRow
             label={appliedCoupon ? `Discount (${appliedCoupon.code})` : "Discount"}
             value={discount > 0 ? `−${formatMoney(discount, currency)}` : formatMoney(0, currency)}

@@ -149,3 +149,40 @@ export type AbandonedCartsReportData = {
   };
   recoveryChannels: Array<{ label: string; value: number }>;
 };
+
+/** The surfaces the merchandising report breaks revenue down by. */
+export type MerchandisingSourceKey = "CART" | "CART_CROSS_SELL" | "ORDER_BUMP";
+
+export const MERCHANDISING_SOURCE_LABELS: Record<MerchandisingSourceKey, string> = {
+  CART: "Shopper's own choice",
+  CART_CROSS_SELL: "Cart suggestion",
+  ORDER_BUMP: "Order bump"
+};
+
+export type MerchandisingReportData = {
+  /** Revenue per surface over the window, for the trend chart. */
+  daily: Array<{ crossSell: number; label: string; orderBump: number }>;
+  currency: string;
+  metrics: {
+    /** Share of non-cancelled orders that took at least one suggestion. */
+    attachRate: number;
+    /** Orders that qualified for at least one bundle. */
+    bundleOrders: number;
+    /**
+     * What the bundles took off, which is money given away rather than earned.
+     * It is here so the seller can weigh it against the baskets it bought.
+     */
+    bundleSavings: number;
+    crossSellRevenue: number;
+    crossSellUnits: number;
+    orderBumpRevenue: number;
+    orderBumpUnits: number;
+    /** Cross-sell plus order bump, which is what the merchandising earned. */
+    suggestedRevenue: number;
+  };
+  /** Which bundles fired, and what each one cost. */
+  topBundles: Array<{ name: string; savings: number; timesApplied: number }>;
+  /** What sold through the suggestion surfaces, best first. */
+  topSuggested: Array<{ quantity: number; revenue: number; source: string; title: string }>;
+  totalRevenue: number;
+};

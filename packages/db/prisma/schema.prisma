@@ -93,6 +93,66 @@ enum ProductVisibility {
   HIDDEN
 }
 
+/// How one product is meant to sell another.
+///
+/// UPSELL is the same need at a higher price - the 128GB phone shown on the
+/// 64GB one. CROSS_SELL is a different product bought on the same trip, and
+/// ACCESSORY is the narrow case of one that only makes sense alongside this
+/// product. They are kept apart because the surfaces spend them differently:
+/// an upsell asks the shopper to swap, a cross-sell asks them to add.
+enum ProductRelationType {
+  UPSELL
+  CROSS_SELL
+  ACCESSORY
+}
+
+enum OrderBumpDiscountType {
+  /// Percent off the product's own price.
+  PERCENTAGE
+  /// Flat amount off it.
+  FIXED
+}
+
+/// Which surface put a line into an order.
+///
+/// The order is one basket by the time anyone looks at it, so without this
+/// nobody can say what the merchandising actually earned — a cross-sell that
+/// worked and a product the shopper went looking for are the same row.
+///
+/// CART is the honest default for everything that was simply added, including
+/// every line written before this column existed.
+enum OrderItemSource {
+  CART
+  /// One tap from the cross-sell rail in the cart or its drawer.
+  CART_CROSS_SELL
+  /// The tick box above Place Order.
+  ORDER_BUMP
+}
+
+/// What shape of deal a bundle is.
+///
+/// The two are genuinely different questions about a cart, which is why they
+/// are one enum and not two booleans: SET asks "are all of these here", and
+/// QUANTITY asks "how many of any of these are here".
+enum BundleType {
+  /// Every listed product, at its listed quantity, present together.
+  SET
+  /// N units drawn from the listed products, of which M are discounted.
+  QUANTITY
+}
+
+enum BundleDiscountType {
+  /// Percent off the qualifying units. 100 makes them free.
+  PERCENTAGE
+  /// Flat amount off, per time the bundle applies.
+  FIXED
+}
+
+enum BundleStatus {
+  ACTIVE
+  INACTIVE
+}
+
 enum OrderStatus {
   PENDING
   CONFIRMED
@@ -512,6 +572,8 @@ model Store {
   messagingSetting           StoreMessagingSetting?
   themeSetting               ThemeSetting?
   marketingSetting           MarketingSetting?
+  orderBump                  OrderBump?
+  bundles                    Bundle[]
   paymentMethods             PaymentMethod[]
   shippingZones              ShippingZone[]
   shippingRates              ShippingRate[]
@@ -535,6 +597,7 @@ model Store {
   productAttributes          ProductAttribute[]
   productAttributeValues     ProductAttributeValue[]
   productVariants            ProductVariant[]
+  productRelations           ProductRelation[]
   abandonedCarts             AbandonedCart[]
   searchSynonyms             SearchSynonym[]
   searchBoosts               SearchBoost[]
@@ -640,6 +703,112 @@ model ThemeSetting {
 /// the Conversions API token is a secret (secrets never live in that JSON — see
 /// CourierAccount), these columns are read on every storefront render, and
 /// change logging wants a per-field before/after diff.
+/// The one-tick offer on the checkout page.
+///
+/// One row per store: a checkout with two bumps on it is a checkout nobody
+/// reads, so the model refuses to hold a second rather than leaving the choice
+/// of which to show to whatever the query happened to sort first.
+///
+/// `productId` is optional, and that is the interesting half. Pinned, the
+/// same product is offered to everyone. Left empty, the offer is whatever the
+/// cart's own pairings and this store's co-purchase history put at the top —
+/// which is why the pairing work had to come first.
+///
+/// The discount is stored, never the price. What the shopper is charged is
+/// worked out from the product's live price on both the render and the submit,
+/// so a price change cannot leave a stale offer standing.
+/// A deal priced off what is in the cart together, rather than off the cart
+/// total.
+///
+/// This is what a coupon cannot express. A coupon is one number against the
+/// subtotal; a bundle has to find the qualifying units, price only those, and
+/// do it again for every further set the cart can pay for.
+///
+/// Deliberately no code to type: a bundle is a shelf arrangement, not a reward
+/// for knowing a password, so it applies the moment the cart qualifies.
+model Bundle {
+  id            String             @id @default(cuid())
+  storeId       String
+  name          String
+  /// Shown on the cart and checkout beside the saving, so it has to read as a
+  /// sentence to a shopper: "Buy 2, get 1 free".
+  description   String             @default("")
+  type          BundleType         @default(SET)
+  discountType  BundleDiscountType @default(PERCENTAGE)
+  discountValue Decimal            @default(0) @db.Decimal(12, 2)
+  /// QUANTITY only: how many units qualify, and how many of them are cut.
+  buyQuantity   Int                @default(0)
+  getQuantity   Int                @default(0)
+  status        BundleStatus       @default(ACTIVE)
+  startsAt      DateTime?
+  expiresAt     DateTime?
+  store         Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  items         BundleItem[]
+  orderBundles  OrderBundle[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @default(now()) @updatedAt
+
+  @@index([storeId, status])
+}
+
+/// One product a bundle is built from.
+///
+/// `quantity` is what SET requires of this product. QUANTITY bundles ignore it
+/// and count units across every listed product instead.
+model BundleItem {
+  id        String  @id @default(cuid())
+  bundleId  String
+  productId String
+  quantity  Int     @default(1)
+  bundle    Bundle  @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([bundleId, productId])
+  @@index([productId])
+}
+
+/// One bundle, as it applied to one order.
+///
+/// Written in the order's own transaction and carrying its own name and amount,
+/// for the same reason `Order.couponCode` is copied rather than joined: the
+/// order has to keep explaining itself after the bundle is renamed or deleted.
+model OrderBundle {
+  id             String   @id @default(cuid())
+  orderId        String
+  storeId        String
+  /// Null once the bundle itself is gone; the name and amount stay.
+  bundleId       String?
+  name           String
+  discountAmount Decimal  @db.Decimal(12, 2)
+  /// How many times the cart paid for it.
+  timesApplied   Int      @default(1)
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  bundle         Bundle?  @relation(fields: [bundleId], references: [id], onDelete: SetNull)
+  createdAt      DateTime @default(now())
+
+  @@index([orderId])
+  @@index([storeId, createdAt])
+}
+
+model OrderBump {
+  id            String                @id @default(cuid())
+  storeId       String                @unique
+  enabled       Boolean               @default(false)
+  /// The pinned product, or null to let the cart decide.
+  productId     String?
+  headline      String                @default("Add this to your order")
+  description   String                @default("")
+  discountType  OrderBumpDiscountType @default(PERCENTAGE)
+  /// Percent (0-100) for PERCENTAGE, money for FIXED.
+  discountValue Decimal               @default(0) @db.Decimal(12, 2)
+  store         Store                 @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product       Product?              @relation(fields: [productId], references: [id], onDelete: SetNull)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @default(now()) @updatedAt
+
+  @@index([productId])
+}
+
 model MarketingSetting {
   id                     String   @id @default(cuid())
   storeId                String   @unique
@@ -808,6 +977,10 @@ model Product {
   variants            ProductVariant[]
   returnItems         OrderReturnItem[]
   returnReplacements  OrderReturnItem[]           @relation("OrderReturnReplacementProduct")
+  relations           ProductRelation[]           @relation("ProductRelationSource")
+  relatedFrom         ProductRelation[]           @relation("ProductRelationTarget")
+  orderBumps          OrderBump[]
+  bundleItems         BundleItem[]
   createdAt           DateTime                    @default(now())
   updatedAt           DateTime                    @default(now()) @updatedAt
 
@@ -837,6 +1010,35 @@ model ProductImage {
   createdAt DateTime @default(now())
 
   @@index([productId])
+}
+
+/// A seller-chosen pairing between two products, read by the storefront rails
+/// that sell one alongside the other.
+///
+/// Directional on purpose: pairing a phone with its case does not put the phone
+/// on the case's page. A seller who wants both directions writes both rows.
+///
+/// `storeId` is carried here rather than reached through `product` so every
+/// read is scoped the way the rest of the catalogue is, and so the ordering
+/// index stays usable without a join.
+model ProductRelation {
+  id               String              @id @default(cuid())
+  storeId          String
+  productId        String
+  relatedProductId String
+  type             ProductRelationType
+  /// The seller's ordering within one type; the storefront rails read in it.
+  position         Int                 @default(0)
+  store            Store               @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product          Product             @relation("ProductRelationSource", fields: [productId], references: [id], onDelete: Cascade)
+  relatedProduct   Product             @relation("ProductRelationTarget", fields: [relatedProductId], references: [id], onDelete: Cascade)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @default(now()) @updatedAt
+
+  /// One pair may be both an upsell and a cross-sell, but not either twice.
+  @@unique([productId, relatedProductId, type])
+  @@index([storeId, productId, type])
+  @@index([storeId, relatedProductId])
 }
 
 model Category {
@@ -1504,6 +1706,10 @@ model Order {
   shippingCity          String?
   shippingArea          String?
   discountAmount        Decimal                 @default(0) @db.Decimal(12, 2)
+  /// Kept apart from `discountAmount` on purpose. One is a code the shopper
+  /// entered, the other is what the shelf arrangement was worth, and an invoice
+  /// that added them together could not tell the customer which was which.
+  bundleDiscountAmount  Decimal                 @default(0) @db.Decimal(12, 2)
   /// The coupon this order's `discountAmount` came from, if any. Deliberately
   /// not a relation: the code is copied alongside it so an order still explains
   /// its own discount after the coupon row is gone.
@@ -1556,6 +1762,7 @@ model Order {
   shippingAddress       Address?                @relation("OrderShippingAddress", fields: [shippingAddressId], references: [id], onDelete: SetNull)
   billingAddress        Address?                @relation("OrderBillingAddress", fields: [billingAddressId], references: [id], onDelete: SetNull)
   items                 OrderItem[]
+  bundles               OrderBundle[]
   shipments             Shipment[]
   returns               OrderReturn[]
   createdAt             DateTime                @default(now())
@@ -1588,6 +1795,8 @@ model OrderItem {
   /// Set when this line was sold past the stock on hand, so the order can say
   /// which of its products the customer is still waiting for.
   isPreorder  Boolean           @default(false)
+  /// Where this line came from, for the merchandising report.
+  source      OrderItemSource   @default(CART)
   title       String
   sku         String?
   price       Decimal           @db.Decimal(12, 2)

@@ -1,7 +1,7 @@
 import type { Prisma } from "@dash/db";
 import { normaliseIpAddress } from "../blocked-ips/blocked-ip.schema";
 import { PLATFORM_ROOT_DOMAIN } from "../../lib/host-routing";
-import type { StoredCartItem } from "../cart/cart.types";
+import { parseCartItemSource, type StoredCartItem } from "../cart/cart.types";
 import {
   abandonedCartCheckoutDraftSchema,
   abandonedCartFailureSchema,
@@ -570,6 +570,10 @@ function toStoredCartItems(items: unknown): StoredCartItem[] {
         productId: String(item.productId),
         quantity,
         sku: item.sku ? String(item.sku) : null,
+        // A recovered cart keeps whichever surface put each line in it, so a
+        // suggestion the shopper took before drifting off is still credited
+        // when they come back and buy it.
+        source: parseCartItemSource(item.source),
         title: String(item.title),
         variantId: item.variantId ? String(item.variantId) : null,
         variantTitle: item.variantTitle ? String(item.variantTitle) : null

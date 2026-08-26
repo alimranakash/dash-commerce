@@ -1,7 +1,10 @@
 import { storefrontBasePath } from "../../storefront/base-path";
 import Link from "next/link";
 import type { StorefrontCartPageSettings } from "../../storefront/customization";
+import type { AppliedBundle } from "../../merchandising/bundle-pricing";
 import type { Cart } from "../cart.types";
+import type { CartCrossSellProduct } from "../cart-cross-sell";
+import { CartCrossSell } from "./cart-cross-sell";
 import { CartSummary } from "./cart-summary";
 import { CartTable } from "./cart-table";
 import { EmptyCart } from "./empty-cart";
@@ -16,7 +19,11 @@ type CartPageFeedback = {
 };
 
 type CartPageProps = {
+  /** What the cart's own contents already earned, before checkout. */
+  bundles: AppliedBundle[];
   cart: Cart;
+  /** Empty when the cart is empty, or when nothing sensible pairs with it. */
+  crossSell: CartCrossSellProduct[];
   currency: string;
   feedback: CartPageFeedback;
   settings: StorefrontCartPageSettings;
@@ -27,7 +34,15 @@ type CartPageProps = {
   };
 };
 
-export async function CartPage({ cart, currency, feedback, settings, store }: CartPageProps) {
+export async function CartPage({
+  bundles,
+  cart,
+  crossSell,
+  currency,
+  feedback,
+  settings,
+  store
+}: CartPageProps) {
   const basePath = await storefrontBasePath(store.slug);
   const itemLabel = cart.totals.itemCount === 1 ? "1 item" : `${cart.totals.itemCount} items`;
   const continueHref = storefrontHref(basePath, settings.continueShoppingLink);
@@ -83,10 +98,18 @@ export async function CartPage({ cart, currency, feedback, settings, store }: Ca
               storeSlug={store.slug}
             />
             <CartSummary
+              bundles={bundles}
               cart={cart}
               checkoutHref={checkoutHref}
               currency={currency}
               settings={settings}
+              storeSlug={store.slug}
+            />
+            <CartCrossSell
+              currency={currency}
+              layout="page"
+              products={crossSell}
+              storeId={store.id}
               storeSlug={store.slug}
             />
           </>

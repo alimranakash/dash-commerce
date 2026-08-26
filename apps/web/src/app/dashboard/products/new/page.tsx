@@ -2,6 +2,10 @@ import Link from "next/link";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
 import { getCategoriesForStore } from "../../../../modules/categories/category.service";
 import { getPlatformRootDomain } from "../../../../lib/host-routing";
+import {
+  emptyProductRelationSelections,
+  getProductRelationCandidates
+} from "../../../../modules/merchandising/merchandising.service";
 import { ProductForm } from "../../../../modules/products/components/product-form";
 import { createProductFormAction } from "../../../../modules/products/product.actions";
 import { getProductTaxonomyItems } from "../../../../modules/products/product-taxonomy.service";
@@ -9,10 +13,11 @@ import { requireStore } from "../../../../modules/stores/queries";
 
 export default async function NewProductPage() {
   const store = await requireStore();
-  const [categories, tags, brands] = await Promise.all([
+  const [categories, tags, brands, relationCandidates] = await Promise.all([
     getCategoriesForStore(store.id),
     getProductTaxonomyItems(store.id, "TAG"),
-    getProductTaxonomyItems(store.id, "BRAND")
+    getProductTaxonomyItems(store.id, "BRAND"),
+    getProductRelationCandidates(store.id)
   ]);
 
   return (
@@ -38,7 +43,11 @@ export default async function NewProductPage() {
             id: category.id,
             name: category.name
           }))}
+          currency={store.currency}
           platformDomain={getPlatformRootDomain()}
+          relationCandidates={relationCandidates}
+          relationSelections={emptyProductRelationSelections()}
+          relationSuggestions={[]}
           storeSlug={store.slug}
           submitLabel="Create product"
           tags={tags.map((tag) => ({

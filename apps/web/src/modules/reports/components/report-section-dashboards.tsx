@@ -1,6 +1,6 @@
 import { BadgeDollarSign, Ban, Box, CheckCircle2, CircleAlert, CircleDollarSign, ClipboardList, Clock3, PackageCheck, PackageOpen, Percent, ReceiptText, RefreshCcw, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
-import type { AbandonedCartsReportData, CustomersReportData, IncompleteOrdersReportData, OrdersReportData, ProductsReportData, RevenuesReportData } from "../report.types";
+import type { AbandonedCartsReportData, CustomersReportData, IncompleteOrdersReportData, MerchandisingReportData, OrdersReportData, ProductsReportData, RevenuesReportData } from "../report.types";
 import { ReportCard } from "./report-card";
 import { ReportLineChart } from "./report-line-chart";
 import { ReportBarList, ReportEmptyState, ReportMetricCard, ReportTable, formatMoney, formatNumber } from "./report-section-components";
@@ -115,6 +115,47 @@ export function CustomersReportDashboard({ data }: { data: CustomersReportData }
     <ReportCard title="Customer Growth Chart"><SingleSeriesChart color="#2789e8" data={data.growth} label="New Customers" /></ReportCard>
     <div className="grid gap-4 xl:grid-cols-2"><ReportCard title="New vs Returning Customers"><ReportBarList items={[{ label: "New", value: data.metrics.newCustomers }, { label: "Returning", value: data.metrics.returning }]} /></ReportCard><ReportCard title="Customer Purchase Frequency"><ReportBarList items={data.frequency} /></ReportCard></div>
     <ReportCard title="Top Customers Table"><ReportTable emptyMessage="No customer purchases are available yet." headers={["Customer", "Orders", "Purchased"]} rows={data.topCustomers.map((customer) => [customer.name, formatNumber(customer.orders), formatMoney(customer.purchased, data.currency)])} /></ReportCard>
+  </div>;
+}
+
+
+export function MerchandisingReportDashboard({ data }: { data: MerchandisingReportData }) {
+  const hasSuggestedSales = data.metrics.suggestedRevenue > 0;
+  // The figure the seller is really after: how much of what the store took came
+  // from something it suggested rather than something the shopper came for.
+  const shareOfRevenue = data.totalRevenue ? (data.metrics.suggestedRevenue / data.totalRevenue) * 100 : 0;
+
+  return <div className="grid gap-4">
+    <MetricGrid metrics={[
+      { icon: CircleDollarSign, label: "Revenue From Suggestions", value: formatMoney(data.metrics.suggestedRevenue, data.currency) },
+      { icon: Percent, label: "Share Of All Revenue", value: `${shareOfRevenue.toFixed(1)}%` },
+      { icon: Percent, label: "Orders That Took One", value: `${data.metrics.attachRate.toFixed(1)}%` },
+      { icon: BadgeDollarSign, label: "Order Bump Revenue", value: formatMoney(data.metrics.orderBumpRevenue, data.currency) },
+      { icon: ShoppingCart, label: "Cart Suggestion Revenue", value: formatMoney(data.metrics.crossSellRevenue, data.currency) },
+      { icon: Box, label: "Units Sold This Way", value: formatNumber(data.metrics.orderBumpUnits + data.metrics.crossSellUnits) },
+      { icon: PackageOpen, label: "Orders That Hit A Bundle", value: formatNumber(data.metrics.bundleOrders) },
+      { icon: TrendingDown, label: "Given Away In Bundles", value: formatMoney(data.metrics.bundleSavings, data.currency) }
+    ]} />
+    <ReportCard title="Revenue By Surface">
+      {hasSuggestedSales ? <ReportLineChart labels={data.daily.map((point) => point.label)} series={[
+        { color: "#e0a020", label: "Order Bump", values: data.daily.map((point) => point.orderBump) },
+        { color: "#7650e8", label: "Cart Suggestion", values: data.daily.map((point) => point.crossSell) }
+      ]} /> : <ReportEmptyState message="Nothing has sold through a suggestion in this period yet. Pair a few products, or turn the order bump on." />}
+    </ReportCard>
+    <ReportCard title="Bundles">
+      <ReportTable
+        emptyMessage="Bundles appear here once a cart qualifies for one."
+        headers={["Bundle", "Times Applied", "Given Away"]}
+        rows={data.topBundles.map((entry) => [entry.name, formatNumber(entry.timesApplied), formatMoney(entry.savings, data.currency)])}
+      />
+    </ReportCard>
+    <ReportCard title="What Sold Through A Suggestion">
+      <ReportTable
+        emptyMessage="Products appear here once a shopper takes one of your suggestions."
+        headers={["Product", "Surface", "Units", "Revenue"]}
+        rows={data.topSuggested.map((entry) => [entry.title, entry.source, formatNumber(entry.quantity), formatMoney(entry.revenue, data.currency)])}
+      />
+    </ReportCard>
   </div>;
 }
 

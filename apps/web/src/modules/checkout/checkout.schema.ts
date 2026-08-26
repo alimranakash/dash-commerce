@@ -76,6 +76,16 @@ export const checkoutSchema = z.object({
     .max(40)
     .optional()
     .transform((value) => value || undefined),
+  // Which product the shopper ticked the add-on box for, and nothing else
+  // about it. The headline, the discount and the price are all read again on
+  // the server from the store's own configuration — a posted price would be a
+  // price the shopper chose.
+  orderBumpProductId: z
+    .string()
+    .trim()
+    .max(60)
+    .optional()
+    .transform((value) => value || undefined),
   // Generated once per checkout page load, so the same submission arriving
   // twice can be told apart from a shopper deliberately ordering twice.
   // Optional: a form rendered before this shipped, or one submitted with the

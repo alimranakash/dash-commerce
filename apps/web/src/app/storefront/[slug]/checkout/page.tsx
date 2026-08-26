@@ -4,6 +4,8 @@ import Link from "next/link";
 import { getCart } from "../../../../modules/cart/cart.service";
 import { isCheckoutPhoneOtpRequired } from "../../../../modules/checkout/checkout-verification.service";
 import { CheckoutExperience } from "../../../../modules/checkout/components/checkout-experience";
+import { priceCartBundles } from "../../../../modules/merchandising/bundle.service";
+import { resolveOrderBumpOffer } from "../../../../modules/merchandising/order-bump.service";
 import { getEnabledPaymentMethods } from "../../../../modules/payments/payment.service";
 import { getEnabledShippingRates } from "../../../../modules/shipping/shipping.service";
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
@@ -29,6 +31,23 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
   const paymentMethods = await getEnabledPaymentMethods(store.id);
   const shippingRates = await getEnabledShippingRates(store.id);
   const phoneOtpRequired = await isCheckoutPhoneOtpRequired(store.id);
+  // Priced here and priced again when the order is placed, both times from the
+  // product's live price. Only the id ever travels with the form.
+  // Priced from the cart alone, exactly as the order will price it, so the
+  // saving on screen is the saving charged.
+  const bundles = await priceCartBundles(
+    store.id,
+    cart.items.map((item) => ({
+      lineId: item.lineId,
+      price: item.price,
+      productId: item.productId,
+      quantity: item.quantity
+    }))
+  );
+  const orderBump = await resolveOrderBumpOffer({
+    cartProductIds: cart.items.map((item) => item.productId),
+    storeId: store.id
+  });
   const checkoutShippingRates = shippingRates.map((rate) => ({
     id: rate.id,
     name: rate.name,
@@ -56,9 +75,11 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
         </section>
       ) : (
         <CheckoutExperience
+            bundles={bundles.applied}
             cart={cart}
             checkoutError={checkoutError}
             currency={store.currency}
+            orderBump={orderBump}
             paymentMethods={paymentMethods}
             phoneOtpRequired={phoneOtpRequired}
             shippingRates={checkoutShippingRates}

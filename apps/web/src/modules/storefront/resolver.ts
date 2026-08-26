@@ -1,6 +1,11 @@
 import { prisma } from "@dash/db";
 import { notFound } from "next/navigation";
 import { ensureCategoryImageSchema } from "../categories/category-image-schema";
+import {
+  getCartCrossSellProducts,
+  getCoPurchasedStorefrontProducts,
+  getPairedStorefrontProducts
+} from "../merchandising/merchandising.service";
 import { getProductIdsByTaxonomySlug } from "../products/product-taxonomy.service";
 import { getProductVariantConfiguration } from "../products/product-variants.service";
 import { getSearchResultsForStore } from "../search/search.service";
@@ -380,6 +385,18 @@ export async function getStorefrontProductBySlug(storeId: string, productSlug: s
   };
 }
 
+/**
+ * The rail under a product, filled from three sources in falling order of how
+ * much each one actually knows:
+ *
+ * 1. what the seller paired by hand — the only rows carrying a decision;
+ * 2. what this store's own shoppers bought in the same order;
+ * 3. the rest of the product's category, which is a guess and is what the rail
+ *    was made of before there was anything better.
+ *
+ * Each step only runs when the one above it left the rail short, so a store
+ * with good pairings never pays for the co-purchase query.
+ */
 export async function getRelatedStorefrontProducts(input: {
   categoryId: string | null;
   productId: string;
@@ -388,16 +405,35 @@ export async function getRelatedStorefrontProducts(input: {
 }) {
   await ensureCategoryImageSchema();
 
-  if (!input.categoryId) {
-    return [];
+  const take = Math.max(1, Math.round(input.take ?? 4));
+  const paired = await getPairedStorefrontProducts({
+    productId: input.productId,
+    storeId: input.storeId,
+    take
+  });
+
+  if (paired.length >= take) {
+    return paired;
   }
 
-  return prisma.product.findMany({
+  const coPurchased = await getCoPurchasedStorefrontProducts({
+    excludeProductIds: paired.map((product) => product.id),
+    productId: input.productId,
+    storeId: input.storeId,
+    take: take - paired.length
+  });
+  const chosen = [...paired, ...coPurchased];
+
+  if (chosen.length >= take || !input.categoryId) {
+    return chosen;
+  }
+
+  const fill = await prisma.product.findMany({
     where: {
       ...publicProductWhere(input.storeId),
       categoryId: input.categoryId,
       id: {
-        not: input.productId
+        notIn: [input.productId, ...chosen.map((product) => product.id)]
       }
     },
     include: {
@@ -411,7 +447,43 @@ export async function getRelatedStorefrontProducts(input: {
     orderBy: {
       updatedAt: "desc"
     },
-    take: Math.max(1, Math.round(input.take ?? 4))
+    take: take - chosen.length
+  });
+
+  return [...chosen, ...fill];
+}
+
+
+/**
+ * What to offer beside a cart, for the rail in the drawer and on the cart page.
+ *
+ * Same order of confidence as the product rail: the seller's pairings, then
+ * this store's co-purchase history, then — only to fill the row out — its best
+ * sellers, which is the weakest of the three but is at least something the
+ * store's shoppers have actually bought.
+ *
+ * The best sellers are read first and handed down as a fallback rather than
+ * fetched only when needed. One extra grouped read against a table the rest of
+ * this page has already touched is cheaper than the round trip it would save.
+ */
+export async function getCartCrossSellRail(input: {
+  cartProductIds: string[];
+  storeId: string;
+  take: number;
+}) {
+  if (input.cartProductIds.length === 0 || input.take <= 0) {
+    return [];
+  }
+
+  await ensureCategoryImageSchema();
+
+  const bestSellers = await getBestSellingStorefrontProducts(input.storeId, input.take * 3);
+
+  return getCartCrossSellProducts({
+    cartProductIds: input.cartProductIds,
+    fallbackProductIds: bestSellers.map((product) => product.id),
+    storeId: input.storeId,
+    take: input.take
   });
 }
 

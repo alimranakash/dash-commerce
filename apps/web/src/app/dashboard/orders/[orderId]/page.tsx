@@ -130,6 +130,7 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
           items={order.items.map((item) => ({
             id: item.id,
             imageUrl: item.imageUrl,
+            source: item.source,
             price: Number(item.price),
             quantity: item.quantity,
             sku: item.sku,

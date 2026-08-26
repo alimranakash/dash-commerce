@@ -9,7 +9,9 @@ import { StorefrontImage } from "../../storefront/components/storefront-image";
 import type { StorefrontMiniCartSettings } from "../../storefront/customization";
 import { formatStorefrontMoney } from "../../storefront/format";
 import type { Cart, CartItem } from "../cart.types";
+import type { CartCrossSellProduct } from "../cart-cross-sell";
 import { submitCartAction } from "./cart-client-actions";
+import { CartCrossSell } from "./cart-cross-sell";
 import { CartNoteField } from "./cart-note-field";
 import { QuantitySelector } from "./quantity-selector";
 import { ShippingProgress } from "./shipping-progress";
@@ -35,6 +37,7 @@ export function MiniCartDrawer({
 }: MiniCartDrawerProps) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [crossSell, setCrossSell] = useState<CartCrossSellProduct[]>([]);
   const router = useRouter();
   const itemCountLabel = cart.totals.itemCount === 1 ? "1 item" : `${cart.totals.itemCount} items`;
   const checkoutHref = `${homeHref}/checkout`;
@@ -86,6 +89,30 @@ export function MiniCartDrawer({
       window.removeEventListener("dash-cart-open", handleCartUpdated);
     };
   }, [router, settings.autoOpenAfterAdd]);
+
+  // Asked for when the drawer opens, and again whenever the cart changes under
+  // it, so a suggestion the shopper has just taken leaves the rail.
+  const cartSize = cart.totals.itemCount;
+
+  useEffect(() => {
+    if (!open || cart.items.length === 0) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    void fetch(`/api/cart/cross-sell?storeSlug=${encodeURIComponent(store.slug)}`, {
+      headers: { Accept: "application/json" },
+      signal: controller.signal
+    })
+      .then((response) => response.json() as Promise<{ products?: CartCrossSellProduct[] }>)
+      // A rail is a nicety; a cart that errors because one could not be built
+      // is not. Failure leaves the last suggestions on screen and says nothing.
+      .then((data) => setCrossSell(data.products ?? []))
+      .catch(() => undefined);
+
+    return () => controller.abort();
+  }, [cart.items.length, cartSize, open, store.slug]);
 
   if (!settings.enabled) {
     return (
@@ -144,6 +171,14 @@ export function MiniCartDrawer({
                 />
               ))}
             </div>
+            <CartCrossSell
+              currency={currency}
+              layout="drawer"
+              products={crossSell}
+              storeId={store.id}
+              storeSlug={store.slug}
+              title="Add before you check out"
+            />
             <MiniCartSummary
               cart={cart}
               checkoutHref={checkoutHref}

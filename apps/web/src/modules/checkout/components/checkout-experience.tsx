@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Cart } from "../../cart/cart.types";
+import type { AppliedBundle } from "../../merchandising/bundle-pricing";
+import type { OrderBumpOffer } from "../../merchandising/order-bump.schema";
 import type { PaymentMethodTypeValue } from "../../payments/payment.schema";
 import { CheckoutForm } from "./checkout-form";
 import { CheckoutOrderSummary, type AppliedCoupon } from "./checkout-order-summary";
@@ -28,9 +30,13 @@ type CheckoutShippingRate = {
 };
 
 type CheckoutExperienceProps = {
+  /** Priced by the server from the cart, never from anything the browser posts. */
+  bundles: AppliedBundle[];
   cart: Cart;
   checkoutError: string | undefined;
   currency: string;
+  /** Priced by the server, or null when the store has no offer standing. */
+  orderBump: OrderBumpOffer | null;
   paymentMethods: CheckoutPaymentMethod[];
   phoneOtpRequired: boolean;
   shippingRates: CheckoutShippingRate[];
@@ -40,9 +46,11 @@ type CheckoutExperienceProps = {
 };
 
 export function CheckoutExperience({
+  bundles,
   cart,
   checkoutError,
   currency,
+  orderBump,
   paymentMethods,
   phoneOtpRequired,
   shippingRates,
@@ -50,6 +58,10 @@ export function CheckoutExperience({
   submissionId
 }: CheckoutExperienceProps) {
   const [selectedShippingId, setSelectedShippingId] = useState(shippingRates[0]?.id ?? "");
+  // Lifted for the same reason the coupon is: the form has to post the tick and
+  // the summary has to price it, and neither of them owns it.
+  const [orderBumpAccepted, setOrderBumpAccepted] = useState(false);
+  const acceptedBump = orderBump && orderBumpAccepted ? orderBump : null;
   const selectedShippingRate = useMemo(
     () => shippingRates.find((rate) => rate.id === selectedShippingId) ?? shippingRates[0],
     [selectedShippingId, shippingRates]
@@ -146,20 +158,25 @@ export function CheckoutExperience({
         couponCode={appliedCoupon?.code ?? ""}
         currency={currency}
         notes={cart.note}
+        orderBump={orderBump}
+        orderBumpAccepted={orderBumpAccepted}
         paymentMethods={paymentMethods}
         phoneOtpRequired={phoneOtpRequired}
         selectedShippingId={selectedShippingRate?.id ?? ""}
         shippingRates={shippingRates}
         storeSlug={storeSlug}
         submissionId={submissionId}
+        onOrderBumpChange={setOrderBumpAccepted}
         onShippingChange={setSelectedShippingId}
       />
       <CheckoutOrderSummary
         appliedCoupon={appliedCoupon}
+        bundles={bundles}
         cart={cart}
         currency={currency}
         onApplyCoupon={applyCoupon}
         onRemoveCoupon={() => setAppliedCoupon(null)}
+        orderBump={acceptedBump}
         shippingAmount={selectedShippingRate?.amount}
         {...(selectedShippingRate?.name ? { shippingLabel: selectedShippingRate.name } : {})}
       />

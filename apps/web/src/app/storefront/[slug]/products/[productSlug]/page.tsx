@@ -88,8 +88,10 @@ export default async function StorefrontProductPage({
   );
 }
 
-// The related rail defaults to "same category", but its Product source can
-// point it at any of the catalogue-wide pools instead.
+// The related rail defaults to the seller's own pairings, then what this
+// store's shoppers bought alongside this product, then the rest of its
+// category - see getRelatedStorefrontProducts. Its Product source can point it
+// at any of the catalogue-wide pools instead, and then none of that applies.
 async function getProductSectionProducts(input: {
   categoryId: string | null;
   productId: string;

@@ -5,8 +5,8 @@ import {
 import { getAbandonedCartCutoff } from "../abandoned-carts/abandoned-cart.service";
 import { incompleteOrderFailureLabels } from "../abandoned-carts/incomplete-order-labels";
 import type { IncompleteOrderFailureCode } from "../abandoned-carts/abandoned-cart.types";
-import { getCustomersReportRecords, getOrdersReportRecords, getProductsReportRecords, getReportOverviewRecords, getRevenueReportRecords } from "./report.repository";
-import type { AbandonedCartsReportData, CustomersReportData, IncompleteOrdersReportData, OrdersReportData, ProductsReportData, ReportOverviewData, ReportRangeKey, ReportSeriesPoint, ReportTopCustomer, ReportTopProduct, RevenuesReportData } from "./report.types";
+import { getBundleReportRecords, getCustomersReportRecords, getMerchandisingReportRecords, getOrdersReportRecords, getProductsReportRecords, getReportOverviewRecords, getRevenueReportRecords } from "./report.repository";
+import { MERCHANDISING_SOURCE_LABELS, type AbandonedCartsReportData, type CustomersReportData, type IncompleteOrdersReportData, type MerchandisingReportData, type MerchandisingSourceKey, type OrdersReportData, type ProductsReportData, type ReportOverviewData, type ReportRangeKey, type ReportSeriesPoint, type ReportTopCustomer, type ReportTopProduct, type RevenuesReportData } from "./report.types";
 
 type ReportWindow = {
   length: number;
@@ -325,6 +325,93 @@ function timeSeries<T extends { createdAt: Date }>(
 function startOfMonthOffset(offset: number) {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth() + offset, 1);
+}
+
+
+/**
+ * What the merchandising surfaces earned, as against what the shopper came for.
+ *
+ * Every figure here is revenue that would plausibly not exist without the
+ * suggestion — so it is deliberately conservative: a line only counts once, it
+ * counts at what it actually sold for, and a cancelled order counts for
+ * nothing.
+ */
+export async function getMerchandisingReport(storeId: string, fallbackCurrency: string, range: ReportRangeKey = "30d"): Promise<MerchandisingReportData> {
+  const window = reportWindow(range);
+  const [items, bundleRows] = await Promise.all([
+    getMerchandisingReportRecords(storeId, window.start),
+    getBundleReportRecords(storeId, window.start)
+  ]);
+  const daily = Array.from({ length: window.length }, (_, index) => {
+    const date = new Date(window.start);
+    if (window.unit === "day") date.setDate(date.getDate() + index);
+    else date.setMonth(date.getMonth() + index);
+    const label = window.unit === "day" ? dayLabel(date) : monthLabel(date);
+    const bucket = items.filter((item) => (window.unit === "day" ? dayLabel(item.order.createdAt) : monthLabel(item.order.createdAt)) === label);
+
+    return {
+      crossSell: sumLineTotals(bucket, "CART_CROSS_SELL"),
+      label,
+      orderBump: sumLineTotals(bucket, "ORDER_BUMP")
+    };
+  });
+  const suggested = items.filter((item) => item.source !== "CART");
+  // Orders rather than lines: two suggestions taken in one order is still one
+  // shopper who said yes, and an attach rate counted per line would climb past
+  // 100% the moment anyone took two.
+  const ordersWithSuggestion = new Set(suggested.map((item) => item.order.id));
+  const allOrders = new Set(items.map((item) => item.order.id));
+  const topSuggested = new Map<string, { quantity: number; revenue: number; source: string; title: string }>();
+
+  for (const item of suggested) {
+    const key = `${item.source}::${item.title}`;
+    const entry = topSuggested.get(key) ?? {
+      quantity: 0,
+      revenue: 0,
+      source: MERCHANDISING_SOURCE_LABELS[item.source as MerchandisingSourceKey] ?? item.source,
+      title: item.title
+    };
+
+    entry.quantity += item.quantity;
+    entry.revenue += Number(item.total);
+    topSuggested.set(key, entry);
+  }
+
+  const bundleTotals = new Map<string, { name: string; savings: number; timesApplied: number }>();
+
+  for (const row of bundleRows) {
+    const entry = bundleTotals.get(row.name) ?? { name: row.name, savings: 0, timesApplied: 0 };
+
+    entry.savings += Number(row.discountAmount);
+    entry.timesApplied += row.timesApplied;
+    bundleTotals.set(row.name, entry);
+  }
+
+  return {
+    currency: fallbackCurrency,
+    daily,
+    metrics: {
+      attachRate: allOrders.size ? (ordersWithSuggestion.size / allOrders.size) * 100 : 0,
+      bundleOrders: new Set(bundleRows.map((row) => row.orderId)).size,
+      bundleSavings: bundleRows.reduce((total, row) => total + Number(row.discountAmount), 0),
+      crossSellRevenue: sumLineTotals(items, "CART_CROSS_SELL"),
+      crossSellUnits: sumUnits(items, "CART_CROSS_SELL"),
+      orderBumpRevenue: sumLineTotals(items, "ORDER_BUMP"),
+      orderBumpUnits: sumUnits(items, "ORDER_BUMP"),
+      suggestedRevenue: suggested.reduce((total, item) => total + Number(item.total), 0)
+    },
+    topBundles: [...bundleTotals.values()].sort((first, second) => second.savings - first.savings).slice(0, 10),
+    topSuggested: [...topSuggested.values()].sort((first, second) => second.revenue - first.revenue).slice(0, 10),
+    totalRevenue: items.reduce((total, item) => total + Number(item.total), 0)
+  };
+}
+
+function sumLineTotals(items: Array<{ source: string; total: { toString(): string } }>, source: MerchandisingSourceKey) {
+  return items.filter((item) => item.source === source).reduce((total, item) => total + Number(item.total), 0);
+}
+
+function sumUnits(items: Array<{ quantity: number; source: string }>, source: MerchandisingSourceKey) {
+  return items.filter((item) => item.source === source).reduce((total, item) => total + item.quantity, 0);
 }
 
 function dayLabel(date: Date) {

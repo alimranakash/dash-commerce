@@ -151,3 +151,64 @@ function getDatabaseSchemaName() {
     return fallbackSchema;
   }
 }
+
+/** Bundles that fired on orders in the window. */
+export async function getBundleReportRecords(storeId: string, start: Date) {
+  return prisma.orderBundle.findMany({
+    where: {
+      createdAt: {
+        gte: start
+      },
+      order: {
+        status: {
+          not: "CANCELLED"
+        }
+      },
+      storeId
+    },
+    select: {
+      discountAmount: true,
+      name: true,
+      orderId: true,
+      timesApplied: true
+    }
+  });
+}
+
+/**
+ * Order lines in the window, with where each one came from.
+ *
+ * Cancelled orders are excluded the same way the best-seller pool excludes
+ * them: an offer that was taken and then cancelled did not earn anything, and
+ * counting it would flatter every merchandising surface at once.
+ */
+export async function getMerchandisingReportRecords(storeId: string, start: Date) {
+  return prisma.orderItem.findMany({
+    where: {
+      order: {
+        createdAt: {
+          gte: start
+        },
+        status: {
+          not: "CANCELLED"
+        },
+        storeId
+      }
+    },
+    orderBy: {
+      createdAt: "asc"
+    },
+    select: {
+      order: {
+        select: {
+          createdAt: true,
+          id: true
+        }
+      },
+      quantity: true,
+      source: true,
+      title: true,
+      total: true
+    }
+  });
+}

@@ -4,6 +4,12 @@ import { Button } from "@dash/ui";
 import { useActionState, useMemo, useState, type ReactNode } from "react";
 import { normalizeSlug } from "../../../lib/slug";
 import { mediaUploadHintForUsage } from "../../media/media.schema";
+import { ProductRelationsEditor } from "../../merchandising/components/product-relations-editor";
+import type {
+  ProductRelationOption,
+  ProductRelationSelections,
+  ProductRelationSuggestion
+} from "../../merchandising/merchandising.service";
 import {
   quickCreateProductBrandAction,
   quickCreateProductCategoryAction,
@@ -48,8 +54,13 @@ type ProductFormProps = {
   action: (state: ProductActionState, formData: FormData) => Promise<ProductActionState>;
   brands: ProductFormCategory[];
   categories: ProductFormCategory[];
+  /** Only used to price the products offered in the upsell picker. */
+  currency: string;
   product?: ProductFormValue;
   platformDomain: string;
+  relationCandidates: ProductRelationOption[];
+  relationSelections: ProductRelationSelections;
+  relationSuggestions: ProductRelationSuggestion[];
   storeSlug: string;
   submitLabel: string;
   tags: ProductFormCategory[];
@@ -63,8 +74,12 @@ export function ProductForm({
   action,
   brands,
   categories,
+  currency,
   product,
   platformDomain,
+  relationCandidates,
+  relationSelections,
+  relationSuggestions,
   storeSlug,
   submitLabel,
   tags
@@ -287,6 +302,14 @@ export function ProductForm({
             basePrice={productPrice}
             baseSku={productSku}
             variants={product?.variantConfiguration?.variants ?? []}
+          />
+
+          <ProductRelationsEditor
+            candidates={relationCandidates}
+            currency={currency}
+            productId={product?.id}
+            selections={relationSelections}
+            suggestions={relationSuggestions}
           />
         </div>
 

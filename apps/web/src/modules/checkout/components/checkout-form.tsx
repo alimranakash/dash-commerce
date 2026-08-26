@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
+import type { OrderBumpOffer } from "../../merchandising/order-bump.schema";
 import type { PaymentMethodTypeValue } from "../../payments/payment.schema";
 import { defaultCheckoutSettings } from "../checkout-settings";
 
@@ -49,6 +50,9 @@ type CheckoutFormProps = {
   couponCode: string;
   currency: string;
   notes: string;
+  /** The store's standing offer, or null when there is none for this cart. */
+  orderBump: OrderBumpOffer | null;
+  orderBumpAccepted: boolean;
   paymentMethods: CheckoutPaymentMethod[];
   phoneOtpRequired: boolean;
   selectedShippingId: string;
@@ -56,6 +60,7 @@ type CheckoutFormProps = {
   storeSlug: string;
   /** Identifies this page load, so one submission cannot become two orders. */
   submissionId: string;
+  onOrderBumpChange: (accepted: boolean) => void;
   onShippingChange: (shippingRateId: string) => void;
 };
 
@@ -64,12 +69,15 @@ export function CheckoutForm({
   couponCode,
   currency,
   notes,
+  orderBump,
+  orderBumpAccepted,
   paymentMethods,
   phoneOtpRequired,
   selectedShippingId,
   shippingRates,
   storeSlug,
   submissionId,
+  onOrderBumpChange,
   onShippingChange
 }: CheckoutFormProps) {
   const selectedShippingRate = shippingRates.find((rate) => rate.id === selectedShippingId) ?? shippingRates[0];
@@ -219,11 +227,78 @@ export function CheckoutForm({
       ) : (
         <input name="verificationCode" type="hidden" value="" />
       )}
+      {/* Only the id is posted. The discount and the price behind it are read
+          again on the server when the order is placed. */}
+      <input
+        name="orderBumpProductId"
+        type="hidden"
+        value={orderBump && orderBumpAccepted ? orderBump.productId : ""}
+      />
+      {orderBump ? (
+        <CheckoutOrderBump
+          accepted={orderBumpAccepted}
+          currency={currency}
+          offer={orderBump}
+          onChange={onOrderBumpChange}
+        />
+      ) : null}
       <button disabled={!canSubmit || isPlacing} type="submit">
         {isPlacing ? "Placing order..." : settings.confirmButtonText}
       </button>
     </form>
   );
+}
+
+/**
+ * The one-tick offer, sitting immediately above Place Order.
+ *
+ * That position is the whole point: it is the last thing read before the
+ * decision is made, and it asks for a yes or a no rather than a trip back to
+ * the catalogue. It is a label rather than a button so the tick target covers
+ * the whole panel.
+ */
+function CheckoutOrderBump({
+  accepted,
+  currency,
+  offer,
+  onChange
+}: {
+  accepted: boolean;
+  currency: string;
+  offer: OrderBumpOffer;
+  onChange: (accepted: boolean) => void;
+}) {
+  return (
+    <label className={`sf-checkout-bump ${accepted ? "is-accepted" : ""}`}>
+      <input
+        checked={accepted}
+        onChange={(event) => onChange(event.target.checked)}
+        type="checkbox"
+      />
+      <span className="sf-checkout-bump-body">
+        <strong>{offer.headline}</strong>
+        <span className="sf-checkout-bump-product">
+          {offer.imageUrl ? <img alt="" loading="lazy" src={offer.imageUrl} /> : null}
+          <span>
+            <b>{offer.title}</b>
+            {offer.description ? <small>{offer.description}</small> : null}
+            <span className="sf-checkout-bump-price">
+              <b>{formatCheckoutMoney(offer.offerPrice, currency)}</b>
+              <s>{formatCheckoutMoney(offer.listPrice, currency)}</s>
+              <em>Save {formatCheckoutMoney(offer.savingAmount, currency)}</em>
+            </span>
+          </span>
+        </span>
+      </span>
+    </label>
+  );
+}
+
+function formatCheckoutMoney(value: string, currency: string) {
+  return new Intl.NumberFormat("en", {
+    currency,
+    style: "currency"
+  }).format(Number(value) || 0);
 }
 
 /**

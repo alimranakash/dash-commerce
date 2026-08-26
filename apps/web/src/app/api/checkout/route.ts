@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
       paymentNote: getValue(formData, "paymentNote"),
       verificationCode: getValue(formData, "verificationCode"),
       couponCode: getValue(formData, "couponCode"),
+      orderBumpProductId: getValue(formData, "orderBumpProductId"),
       submissionId: getValue(formData, "submissionId")
     }, {
       ipAddress: readClientIp(request.headers)

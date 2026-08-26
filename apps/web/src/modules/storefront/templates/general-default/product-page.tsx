@@ -237,8 +237,8 @@ async function GeneralProductBreadcrumb({
 }
 
 /**
- * Three navigation cards under the product: its category, then the two nearest
- * products from that category. Every title, image and link comes from a real
+ * Three navigation cards under the product: its category, then the first two
+ * products off the rail above. Every title, image and link comes from a real
  * catalogue record - there are no invented collection names here, so a card
  * always leads somewhere that exists.
  */
@@ -289,7 +289,10 @@ async function GeneralProductPromoBlocks({
             href={`${basePath}/products/${neighbour.slug}`}
             imageUrl={neighbour.images[0]?.url}
             key={neighbour.id}
-            subtitle={neighbour.shortDescription || `Also in ${category?.name ?? store.name}`}
+            // The rail can carry a product the seller paired from another
+            // category, so the card names the neighbour's own category rather
+            // than assuming it shares this product's.
+            subtitle={neighbour.shortDescription || `Also in ${neighbour.category?.name ?? store.name}`}
             title={neighbour.title}
           />
         ))}
