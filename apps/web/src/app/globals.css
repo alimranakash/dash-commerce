@@ -3568,7 +3568,7 @@ textarea {
 .general-hero,
 .general-home-section,
 .general-promo-banner,
-.general-newsletter {
+.general-recommended {
   margin-inline: auto;
   max-width: none;
   width: 100%;
@@ -3638,8 +3638,7 @@ textarea {
   text-shadow: 0 18px 50px rgb(0 0 0 / 0.24);
 }
 
-.general-hero-copy span,
-.general-newsletter p {
+.general-hero-copy span {
   color: inherit;
   font-size: 0.96rem;
   line-height: 1.7;
@@ -3785,8 +3784,7 @@ textarea {
   text-transform: uppercase;
 }
 
-.general-section-heading h2,
-.general-newsletter h2 {
+.general-section-heading h2 {
   color: #171717;
   font-size: clamp(1.25rem, 2.2vw, 1.8rem);
   line-height: 1.15;
@@ -4348,8 +4346,7 @@ textarea {
   font-weight: 800;
 }
 
-.general-promo-banner,
-.general-newsletter {
+.general-promo-banner {
   align-items: center;
   background:
     linear-gradient(90deg, rgba(236, 229, 214, 0.98), rgba(229, 218, 202, 0.74)),
@@ -4361,12 +4358,6 @@ textarea {
   grid-template-columns: minmax(0, 1fr) minmax(260px, 0.82fr);
   overflow: hidden;
   padding: clamp(28px, 4vw, 48px);
-}
-
-.general-newsletter > div:first-child {
-  display: grid;
-  gap: 12px;
-  max-width: 480px;
 }
 
 /* Promo banner: the copy column stays flush with the surrounding full-bleed
@@ -4458,15 +4449,6 @@ textarea {
   outline-offset: 3px;
 }
 
-.general-newsletter-visual {
-  align-self: stretch;
-  background:
-    radial-gradient(ellipse at 50% 32%, #788a55 0 34%, transparent 36%),
-    radial-gradient(ellipse at 30% 48%, #546f42 0 28%, transparent 30%);
-  min-height: 190px;
-  position: relative;
-}
-
 /* The illustration sits inside a translucent panel that fills its column, so
    it reads as part of the banner rather than a shape floating in the corner. */
 .general-promo-visual {
@@ -4545,44 +4527,249 @@ textarea {
   width: clamp(60px, 7vw, 88px);
 }
 
-.general-newsletter {
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.7fr);
-}
+/* Recommended for you — the closing band of the general homepage.
 
-.general-newsletter form {
-  align-items: center;
+   The heading is .general-section-heading markup, so its type scale comes
+   free and only the tab row and the compact row-cards are styled here. The
+   band is tinted one shade off the page white, in the same warm neutral
+   family as the category bubbles, so it reads as a distinct section without
+   introducing a colour the template does not already use. */
+.general-recommended {
+  background: #faf8f4;
+  border-top: 1px solid #efe9e0;
   display: grid;
-  gap: 10px;
-  grid-template-columns: minmax(0, 1fr) auto;
-  margin-top: 8px;
-  max-width: 440px;
+  gap: 18px;
 }
 
-.general-newsletter input {
+/* Scrolls rather than wraps: six categories plus All would otherwise push the
+   grid down a row on a narrow desktop window. */
+.general-recommended-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.general-recommended-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.general-recommended-tabs button {
   background: #ffffff;
   border: 1px solid #e6e0d6;
-  border-radius: 10px;
-  font: inherit;
-  min-height: 46px;
-  padding: 0 14px;
-}
-
-.general-newsletter button {
-  background: #111111;
-  border: 0;
-  border-radius: 10px;
-  color: #ffffff;
+  border-radius: 999px;
+  color: #5c5c5c;
   cursor: pointer;
-  font-weight: 900;
-  min-height: 46px;
-  padding: 0 18px;
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  min-height: 42px;
+  padding: 0 20px;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
 }
 
-.general-newsletter-visual {
-  background:
-    linear-gradient(100deg, transparent 38%, rgba(188, 154, 101, 0.5) 39% 41%, transparent 42%),
-    radial-gradient(circle at 64% 68%, #d7c1a2 0 14%, transparent 15%),
-    radial-gradient(circle at 78% 72%, #c9b392 0 12%, transparent 13%);
+.general-recommended-tabs button:hover {
+  border-color: #171717;
+  color: #171717;
+}
+
+.general-recommended-tabs button.is-active {
+  background: #171717;
+  border-color: #171717;
+  color: #ffffff;
+}
+
+.general-recommended-tabs button:focus-visible {
+  outline: 2px solid #171717;
+  outline-offset: 3px;
+}
+
+.general-recommended-panel {
+  animation: general-recommended-fade 180ms ease both;
+}
+
+@keyframes general-recommended-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .general-recommended-panel {
+    animation: none;
+  }
+}
+
+.general-recommended-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.general-recommended-card {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #ece6dc;
+  border-radius: 12px;
+  color: #171717;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  min-height: 96px;
+  padding: 14px 18px;
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.general-recommended-card:hover {
+  border-color: #d8cebe;
+  transform: translateY(-1px);
+}
+
+.general-recommended-media {
+  aspect-ratio: 1;
+  background: #f4f1ec;
+  border-radius: 10px;
+  color: #171717;
+  display: grid;
+  font-size: 0.72rem;
+  font-weight: 900;
+  min-width: 0;
+  overflow: hidden;
+  place-items: center;
+  position: relative;
+  text-align: center;
+}
+
+.general-recommended-media img {
+  height: 100%;
+  object-fit: cover;
+  transition: transform 220ms ease;
+  width: 100%;
+}
+
+.general-recommended-card:hover .general-recommended-media img {
+  transform: scale(1.04);
+}
+
+.general-recommended-card:hover .general-product-listing-hover-image {
+  opacity: 1;
+}
+
+.general-recommended-info {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.general-recommended-info small {
+  color: #8a8a8a;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.general-recommended-info strong {
+  color: #181818;
+  font-size: 0.95rem;
+  font-weight: 690;
+  line-height: 1.3;
+}
+
+/* The price column matches .general-product-listing-price rather than the
+   emphatic treatment the other templates give it: this template states a
+   price, it does not shout one. */
+.general-recommended-card .sf-price {
+  display: grid;
+  gap: 3px;
+  justify-items: end;
+  min-width: max-content;
+}
+
+.general-recommended-card .sf-price strong {
+  color: #1c1c1c;
+  font-size: 0.95rem;
+  font-weight: 760;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.general-recommended-card .sf-price span {
+  color: #8a8a8a;
+  font-size: 0.82rem;
+  text-decoration: line-through;
+  white-space: nowrap;
+}
+
+.general-recommended-empty {
+  align-content: center;
+  background: #ffffff;
+  border: 1px solid #ece6dc;
+  border-radius: 12px;
+  color: #6b7280;
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  min-height: 180px;
+  padding: 28px;
+  text-align: center;
+}
+
+.general-recommended-empty strong {
+  color: #171717;
+  font-size: 1rem;
+  font-weight: 760;
+}
+
+@media (max-width: 1100px) {
+  .general-recommended-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  /* Two columns inside a 375px viewport leave no room for the
+     thumb | copy | price row, so the card stacks instead. */
+  .general-recommended-card {
+    align-items: stretch;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    padding: 12px;
+  }
+
+  .general-recommended-media {
+    width: 100%;
+  }
+
+  .general-recommended-info strong {
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+    font-size: 0.9rem;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .general-recommended-card .sf-price {
+    justify-items: start;
+  }
 }
 
 .sf-pagination {
@@ -11883,13 +12070,12 @@ textarea {
   .general-hero,
   .general-home-section,
   .general-promo-banner,
-  .general-newsletter {
+  .general-recommended {
     width: 100%;
   }
 
   .general-hero,
-  .general-promo-banner,
-  .general-newsletter {
+  .general-promo-banner {
     grid-template-columns: 1fr;
   }
 
@@ -11981,10 +12167,6 @@ textarea {
   .general-category-bubble span {
     height: 82px;
     width: 82px;
-  }
-
-  .general-newsletter form {
-    grid-template-columns: 1fr;
   }
 
   .sf-account-grid {
@@ -13092,9 +13274,14 @@ textarea {
 
 /* General Default homepage section rhythm */
 .sf-page[data-storefront-template="general-default"] .general-homepage {
-  --general-section-padding-block: clamp(48px, 6vw, 88px);
+  --general-section-padding-block: clamp(36px, 4.5vw, 64px);
   --general-section-padding-inline: clamp(20px, 4vw, 72px);
-  --general-section-gap: clamp(34px, 4.8vw, 72px);
+  /* The seam between two bands, not their breathing room: every band already
+     carries --general-section-padding-block top and bottom, so a gap the size
+     of that padding stacked three paddings worth of space between each pair of
+     sections. */
+  --general-section-gap: clamp(8px, 1vw, 16px);
+  --general-section-title-size: 37px;
   display: grid;
   gap: var(--general-section-gap);
   padding-bottom: var(--general-section-gap);
@@ -13113,12 +13300,29 @@ textarea {
 }
 
 .sf-page[data-storefront-template="general-default"] .general-homepage > .general-promo-banner,
-.sf-page[data-storefront-template="general-default"] .general-homepage > .general-newsletter {
+.sf-page[data-storefront-template="general-default"] .general-homepage > .general-recommended {
   padding: var(--general-section-padding-block) var(--general-section-padding-inline);
 }
 
 .sf-page[data-storefront-template="general-default"] .general-homepage :is(.general-section-heading, .general-product-section-header) {
   margin-bottom: clamp(18px, 2.5vw, 34px);
+}
+
+/* Every band title at one size. The four heading blocks are styled separately
+   elsewhere, and two of them are shared with other templates, so the size is
+   pinned here and scoped to this template rather than edited into each rule.
+   line-height travels with it: the display headers set 0.95, which reads as a
+   collision once the smaller titles are raised to the same size. */
+.sf-page[data-storefront-template="general-default"] .general-homepage
+  :is(
+    .general-section-heading,
+    .general-product-section-header,
+    .tabbed-product-showcase-header,
+    .general-promo-banner
+  )
+  h2 {
+  font-size: var(--general-section-title-size);
+  line-height: 1.15;
 }
 
 .sf-page[data-storefront-template="general-default"] .general-homepage .general-category-strip {
@@ -13129,8 +13333,7 @@ textarea {
   align-items: stretch;
 }
 
-.sf-page[data-storefront-template="general-default"] .general-homepage .general-promo-banner,
-.sf-page[data-storefront-template="general-default"] .general-homepage .general-newsletter {
+.sf-page[data-storefront-template="general-default"] .general-homepage .general-promo-banner {
   min-height: clamp(280px, 28vw, 420px);
 }
 
@@ -13176,13 +13379,14 @@ textarea {
 
 @media (max-width: 760px) {
   .sf-page[data-storefront-template="general-default"] .general-homepage {
-    --general-section-padding-block: clamp(36px, 11vw, 58px);
+    --general-section-padding-block: clamp(28px, 8vw, 44px);
     --general-section-padding-inline: clamp(16px, 5vw, 24px);
-    --general-section-gap: clamp(24px, 8vw, 42px);
+    --general-section-gap: clamp(8px, 2vw, 14px);
+    /* 37px is the desktop figure; at 375px it spends three lines on a title. */
+    --general-section-title-size: clamp(22px, 5.6vw, 30px);
   }
 
-  .sf-page[data-storefront-template="general-default"] .general-homepage .general-promo-banner,
-  .sf-page[data-storefront-template="general-default"] .general-homepage .general-newsletter {
+  .sf-page[data-storefront-template="general-default"] .general-homepage .general-promo-banner {
     min-height: auto;
   }
 }
@@ -13958,12 +14162,14 @@ textarea {
   width: 100%;
 }
 
+/* Section padding is the band padding only. Driving the inter-band gap from
+   the same number spent the setting three times over between any two
+   sections, which is what made the homepage read as mostly white space. */
 @media (min-width: 761px) {
   .sf-page[data-storefront-template] .general-homepage,
   .sf-page[data-storefront-template] .beauty-homepage,
   .sf-page[data-storefront-template] .fashion-homepage {
-    --general-section-padding-block: var(--sf-section-padding, clamp(48px, 6vw, 88px));
-    --general-section-gap: var(--sf-section-padding, clamp(34px, 4.8vw, 72px));
+    --general-section-padding-block: var(--sf-section-padding, clamp(36px, 4.5vw, 64px));
   }
 }
 
@@ -15196,13 +15402,12 @@ textarea {
   }
 }
 
-/* --- Promo banner and newsletter ------------------------------------------- */
+/* --- Promo banner --------------------------------------------------------- */
 
-/* Both bands already stack at 900px. What was left is the art: the promo image
+/* The band already stacks at 900px. What was left is the art: the promo image
    is `height: 100%` inside a stretching grid row, which on a phone resolved to a
-   449px slab of a single product photograph, and the newsletter's CSS-shape
-   panel added 190px of ornament under the form. Capping one and trimming the
-   other keeps both sections roughly a screen tall. */
+   449px slab of a single product photograph. Capping it keeps the section
+   roughly a screen tall. */
 @media (max-width: 640px) {
   /* The ratio goes on the image rather than its box: the image is `height: 100%`
      of a stretched grid area, so capping the box alone left the picture drawn at
@@ -15223,16 +15428,8 @@ textarea {
     min-height: 200px;
   }
 
-  .sf-theme-scope[data-storefront-template="general-default"] .general-newsletter-visual {
-    min-height: 120px;
-  }
-
-  .sf-theme-scope[data-storefront-template="general-default"] .general-newsletter form {
-    max-width: none;
-  }
-
-  .sf-theme-scope[data-storefront-template="general-default"] .general-newsletter :is(input, button) {
-    min-height: 48px;
+  .sf-theme-scope[data-storefront-template="general-default"] .general-recommended-tabs button {
+    min-height: 44px;
   }
 }
 

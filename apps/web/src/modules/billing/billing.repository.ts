@@ -5,7 +5,11 @@ import {
 } from "../admin/admin-subscriptions.repository";
 import { ensureDefaultPlans } from "../admin/admin-plans.repository";
 import type { BillingSettingsInput } from "./billing.schema";
-import { countOrdersThisMonth, getStaffSeatUsage } from "./subscription-limits";
+import {
+  countOrdersThisMonth,
+  countSellerProducts,
+  getStaffSeatUsage
+} from "./subscription-limits";
 
 export async function getActiveBillingPlans() {
   await ensureDefaultPlans();
@@ -109,14 +113,14 @@ export async function updateBillingSettingsRecord(input: BillingSettingsInput) {
  * two screens cannot disagree — which means it counts pending invites as well as
  * members, because that is what the plan actually caps. It needs the
  * organization rather than the store: staff belong to the organization.
+ *
+ * `products` excludes demo-pack rows for the same reason `canCreateProduct` does
+ * — they are not charged to the plan — so the bar cannot read 24/20 on a store
+ * whose seller has not created anything yet.
  */
 export async function getBillingStoreUsage(params: { organizationId: string; storeId: string }) {
   const [products, orders, seats] = await Promise.all([
-    prisma.product.count({
-      where: {
-        storeId: params.storeId
-      }
-    }),
+    countSellerProducts(params.storeId),
     countOrdersThisMonth(params.storeId),
     getStaffSeatUsage(params.organizationId)
   ]);

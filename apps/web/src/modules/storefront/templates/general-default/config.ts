@@ -28,7 +28,7 @@ export const generalDefaultTemplate: StorefrontTemplateConfig = {
     "promotional-banner",
     "best-sellers",
     "recently-added",
-    "newsletter"
+    "recommended-for-you"
   ],
   id: "general-default",
   name: "General Default",

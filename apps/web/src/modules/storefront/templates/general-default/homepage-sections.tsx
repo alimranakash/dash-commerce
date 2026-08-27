@@ -10,9 +10,9 @@ import type { StorefrontProduct } from "../../storefront.types";
 import {
   GeneralCategoryStrip,
   GeneralHero,
-  GeneralNewsletter,
   GeneralProductSection,
   GeneralPromoBanner,
+  GeneralRecommendedForYou,
   GeneralSectionWrapper
 } from "./components";
 
@@ -109,7 +109,12 @@ export async function GeneralHomepageSections({
         section={trendingSection}
         storeSlug={store.slug}
       />
-      <GeneralNewsletter />
+      <GeneralRecommendedForYou
+        categories={homeData.categories}
+        currency={store.currency}
+        enableHoverImage={featuredSection.enableHoverImage}
+        products={allProducts}
+      />
     </div>
   );
 }

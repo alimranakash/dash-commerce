@@ -142,6 +142,7 @@ const settingsLinks = [
   { href: "/dashboard/settings/sms", label: "SMS" },
   { href: "/dashboard/settings/invoice", label: "Invoice" },
   { href: "/dashboard/settings/social", label: "Social" },
+  { href: "/dashboard/settings/integrations", label: "Integrations" },
   { href: "/dashboard/payments", label: "Payments" },
   { href: "/dashboard/shipping", label: "Shipping" },
   { href: "/dashboard/ai", label: "StoreIM AI" }

@@ -20,6 +20,7 @@ export type StorefrontTemplateSection =
   | "best-sellers"
   | "flash-deals"
   | "promotional-banner"
+  | "recommended-for-you"
   | "shop-by-concern"
   | "trust-badges"
   | "newsletter"

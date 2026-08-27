@@ -57,9 +57,12 @@ export async function getPlanLimits(storeId: string) {
  * it — an unlimited plan, or a store with no subscription row, which stays
  * fail-open exactly as `canCreateProduct` always has.
  *
- * Callers that write several products at once (the demo-pack seeder) take the
- * number and spend it down; callers adding one product just ask whether it is
- * zero.
+ * **Demo-pack products do not count against it.** A pack seeds a fuller catalog
+ * than the smaller plans allow — 24 products against the free plan's 20 — so a
+ * new store looks like a real shop on day one. Charging that borrowed catalog to
+ * the allowance would leave the seller unable to add a single product of their
+ * own, so the limit caps what the *seller* creates and the demo rows ride
+ * alongside it until `removeDemoContentForStore` clears them.
  */
 export async function getRemainingProductAllowance(storeId: string, client: LimitClient = prisma) {
   const subscription = await client.subscription.findUnique({
@@ -79,13 +82,23 @@ export async function getRemainingProductAllowance(storeId: string, client: Limi
     return null;
   }
 
-  const productCount = await client.product.count({
+  const productCount = await countSellerProducts(storeId, client);
+
+  return Math.max(0, subscription.plan.productLimit - productCount);
+}
+
+/**
+ * The store's own catalog: every product except the ones the demo-pack seeder
+ * wrote. Shared by the plan gate above and the billing usage bar, so the number
+ * the seller reads is the number being enforced.
+ */
+export async function countSellerProducts(storeId: string, client: LimitClient = prisma) {
+  return client.product.count({
     where: {
+      isDemoContent: false,
       storeId
     }
   });
-
-  return Math.max(0, subscription.plan.productLimit - productCount);
 }
 
 export async function canCreateProduct(storeId: string) {

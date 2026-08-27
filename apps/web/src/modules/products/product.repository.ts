@@ -41,6 +41,59 @@ export async function getProductsForStore(storeId: string) {
   });
 }
 
+export type ProductPageQuery = {
+  /** The id of the last product on the previous page. */
+  cursor?: string | undefined;
+  /** Matched against title and SKU, case-insensitively. */
+  search?: string | undefined;
+  status?: ProductStatus | undefined;
+  storeId: string;
+  take: number;
+};
+
+/**
+ * A page of products, for callers that cannot hold the whole catalogue.
+ *
+ * The sibling of `getProductsForStore` rather than a replacement: the dashboard
+ * reads a store's catalogue whole and is fine doing so, while the external AI
+ * API has to walk it. Same store scoping, same includes, so both produce the
+ * same shape and there is only ever one place products are read from.
+ *
+ * Cursor rather than offset, following `listMediaAssetsRecord`: a catalogue
+ * being edited while it is walked would silently skip or repeat rows under
+ * `skip`/`take`. `id` takes part in the ordering so the cursor stays stable when
+ * several products share a `createdAt`.
+ */
+export async function getProductPageForStore(query: ProductPageQuery) {
+  const search = query.search?.trim();
+
+  return prisma.product.findMany({
+    where: {
+      storeId: query.storeId,
+      ...(query.status ? { status: query.status } : {}),
+      ...(search
+        ? {
+            OR: [
+              { title: { contains: search, mode: "insensitive" as const } },
+              { sku: { contains: search, mode: "insensitive" as const } }
+            ]
+          }
+        : {})
+    },
+    include: {
+      category: true,
+      images: {
+        orderBy: {
+          position: "asc"
+        }
+      }
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: query.take,
+    ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {})
+  });
+}
+
 export async function getProductByIdForStore(storeId: string, productId: string) {
   return prisma.product.findFirst({
     where: {

@@ -578,6 +578,7 @@ model Store {
   shippingZones              ShippingZone[]
   shippingRates              ShippingRate[]
   storeosConnection          StoreOSConnection?
+  apiKeys                    StoreApiKey[]
   mediaAssets                MediaAsset[]
   purchases                  Purchase[]
   expenses                   Expense[]
@@ -909,6 +910,46 @@ model StoreOSConnection {
   updatedAt           DateTime  @default(now()) @updatedAt
 
   @@index([status])
+}
+
+/// A machine-to-machine credential for the external AI API (`/api/ai/v1/**`).
+///
+/// The raw key is shown to the seller exactly once, when it is issued, and is
+/// never written anywhere: only `tokenHash` reaches the database. A dump, a
+/// backup, or a screenshot of this table therefore yields nothing that can be
+/// replayed — the same reasoning as `StaffInvite.tokenHash`.
+///
+/// One key resolves to exactly one store. The key *is* the tenant identity:
+/// nothing a caller sends in a query string, a body, or a header may override
+/// the `storeId` on this row.
+model StoreApiKey {
+  id         String    @id @default(cuid())
+  storeId    String
+  /// Seller-facing label, so two keys can be told apart in settings.
+  name       String
+  /// SHA-256 of the raw key, hex. Unique because authentication is a single
+  /// indexed equality lookup — plain SHA-256 rather than a password hash on
+  /// purpose: the input is 256 random bits, so there is no dictionary to slow
+  /// down.
+  tokenHash  String    @unique
+  /// Last four characters of the raw key. Enough to prove which key is stored,
+  /// useless on its own.
+  hint       String
+  /// Granted scopes, from the vocabulary in modules/ai/ai.schema.ts. Stored as
+  /// plain strings rather than an enum so adding a scope is a code change, not a
+  /// database migration.
+  scopes     String[]
+  /// Best-effort last-seen marker, written on successful authentication. Never
+  /// read by an authorisation decision — it is there so a seller can tell a live
+  /// key from a forgotten one.
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  expiresAt  DateTime?
+  store      Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now()) @updatedAt
+
+  @@index([storeId])
 }
 
 model MediaAsset {

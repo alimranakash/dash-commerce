@@ -8,6 +8,11 @@ import type {
   StorefrontProductSectionSettings
 } from "../../customization";
 import { storefrontSectionHref } from "../../product-sections";
+import {
+  GeneralRecommendedForYouClient,
+  type GeneralRecommendedCategory,
+  type GeneralRecommendedProduct
+} from "./general-recommended-for-you";
 import type { StorefrontProduct } from "../../storefront.types";
 
 type GeneralSectionWrapperProps = {
@@ -210,18 +215,74 @@ export async function GeneralPromoBanner({
   );
 }
 
-export function GeneralNewsletter() {
+/**
+ * The homepage's closing band: the catalogue the shopper has just scrolled
+ * past, re-offered as one grid they can filter by category without leaving the
+ * page.
+ *
+ * Rendering is skipped outright for a store with nothing to show rather than
+ * closing the page on an empty band.
+ */
+export function GeneralRecommendedForYou({
+  categories = [],
+  currency,
+  enableHoverImage = true,
+  products = [],
+  title
+}: {
+  categories?: GeneralCategory[];
+  currency: string;
+  enableHoverImage?: boolean | undefined;
+  products?: StorefrontProduct[];
+  title?: string | undefined;
+}) {
+  const uniqueProducts = Array.from(
+    new Map(products.map((product) => [product.id, product])).values()
+  );
+
+  if (uniqueProducts.length === 0) {
+    return null;
+  }
+
+  const clientCategories: GeneralRecommendedCategory[] = categories.map((category) => ({
+    id: category.id,
+    name: category.name,
+    slug: category.slug
+  }));
+  const clientProducts: GeneralRecommendedProduct[] = uniqueProducts.map((product) => ({
+    category: product.category
+      ? {
+          id: product.category.id,
+          name: product.category.name,
+          slug: product.category.slug
+        }
+      : null,
+    compareAtPrice: product.compareAtPrice?.toString() ?? null,
+    hoverImage:
+      enableHoverImage && product.images[1]
+        ? {
+            alt: product.images[1].alt,
+            url: product.images[1].url
+          }
+        : null,
+    id: product.id,
+    image: product.images[0]
+      ? {
+          alt: product.images[0].alt,
+          url: product.images[0].url
+        }
+      : null,
+    price: product.price.toString(),
+    slug: product.slug,
+    title: product.title
+  }));
+
   return (
-    <section className="general-newsletter" aria-labelledby="general-newsletter-title">
-      <div>
-        <h2 id="general-newsletter-title">Join Our Newsletter</h2>
-        <p>Get updates on new arrivals, offers and more.</p>
-        <form>
-          <input aria-label="Email address" placeholder="Enter your email" type="email" />
-          <button type="button">Subscribe</button>
-        </form>
-      </div>
-      <div className="general-newsletter-visual" aria-hidden="true" />
-    </section>
+    <GeneralRecommendedForYouClient
+      categories={clientCategories}
+      currency={currency}
+      products={clientProducts}
+      title={title}
+    />
   );
 }

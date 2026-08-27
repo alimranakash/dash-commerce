@@ -6,6 +6,7 @@ import {
   createProductRecord,
   deleteProductPermanentlyRecord,
   getProductByIdForStore,
+  getProductPageForStore,
   getProductsForStore,
   isProductSkuAvailable,
   isProductSlugAvailable,
@@ -20,7 +21,8 @@ import {
   type UpdateProductInput
 } from "./product.schema";
 
-export { getProductByIdForStore, getProductsForStore };
+export { getProductByIdForStore, getProductPageForStore, getProductsForStore };
+export type { ProductPageQuery } from "./product.repository";
 
 export async function createProduct(storeId: string, input: CreateProductInput) {
   const data = createProductSchema.parse(input);

@@ -2,7 +2,7 @@ import { prisma, type Prisma } from "@dash/db";
 import type { PaymentMethodTypeValue } from "../payments/payment.schema";
 import type { UpdateOrderDetailsInput } from "./order.schema";
 
-type OrderStatus = "PENDING" | "CONFIRMED" | "PROCESSING" | "COMPLETED" | "CANCELLED";
+export type OrderStatus = "PENDING" | "CONFIRMED" | "PROCESSING" | "COMPLETED" | "CANCELLED";
 export type FulfillmentStatus =
   | "UNFULFILLED"
   | "SHIPPED"
@@ -22,6 +22,48 @@ export async function getOrdersForStore(storeId: string) {
     orderBy: {
       createdAt: "desc"
     }
+  });
+}
+
+export type OrderPageQuery = {
+  /** The id of the last order on the previous page. */
+  cursor?: string | undefined;
+  status?: OrderStatus | undefined;
+  storeId: string;
+  take: number;
+};
+
+/**
+ * A page of orders, for callers that cannot hold the whole book.
+ *
+ * The sibling of `getOrdersForStore`, with the same store scoping and the same
+ * `items` include, so there is still only one place orders are read from.
+ * Cursor rather than offset for the reason `listMediaAssetsRecord` gives: orders
+ * arrive while a caller is walking the list, and `skip`/`take` would repeat rows
+ * every time one did.
+ *
+ * Note what is *not* included. `customer`, `shippingAddress` and
+ * `billingAddress` are joined by `getOrderByIdForStore` because the dashboard
+ * renders them; a page read does not need them, and the denormalised
+ * `customerName` / `shippingCity` columns on the order carry everything a list
+ * can safely show.
+ */
+export async function getOrderPageForStore(query: OrderPageQuery) {
+  return prisma.order.findMany({
+    where: {
+      storeId: query.storeId,
+      ...(query.status ? { status: query.status } : {})
+    },
+    include: {
+      items: {
+        orderBy: {
+          createdAt: "asc"
+        }
+      }
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: query.take,
+    ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {})
   });
 }
 

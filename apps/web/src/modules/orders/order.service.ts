@@ -6,6 +6,7 @@ import { assertOrderItemsEditable, replaceOrderItems } from "./order-edit.servic
 import {
   getOrderByIdForStore,
   getOrderEditableDetailsForStore,
+  getOrderPageForStore,
   getOrderRiskKeyForStore,
   getOrderSubtotalForStore,
   getOrdersForStore,
@@ -25,9 +26,11 @@ import {
 export {
   getOrderByIdForStore,
   getOrderEditableDetailsForStore,
+  getOrderPageForStore,
   getOrdersForStore,
   getPublicOrderByNumber
 };
+export type { OrderPageQuery, OrderStatus } from "./order.repository";
 
 type OrderStatusUpdate = "CANCELLED" | "COMPLETED" | "PROCESSING";
 type PaymentStatusUpdate = "PAID";
