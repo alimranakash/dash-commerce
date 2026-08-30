@@ -935,6 +935,12 @@ model StoreApiKey {
   /// Last four characters of the raw key. Enough to prove which key is stored,
   /// useless on its own.
   hint       String
+  /// AES-256-GCM ciphertext of the raw key (lib/secret-box.ts), so a seller can
+  /// read their own key back instead of re-issuing it. Null on two paths, both
+  /// harmless: a deployment with no encryption key set, and keys minted before
+  /// this column existed. Such a key still authenticates — tokenHash is what
+  /// authentication reads — it simply cannot be shown again.
+  secretCipher String?
   /// Granted scopes, from the vocabulary in modules/ai/ai.schema.ts. Stored as
   /// plain strings rather than an enum so adding a scope is a code change, not a
   /// database migration.

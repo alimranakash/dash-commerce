@@ -13,6 +13,8 @@ export default async function TikTokPixelPage() {
   return (
     <TrackingPageShell
       description="Connect the TikTok Ads pixel by ID so TikTok can attribute the orders your campaigns bring in."
+      section="tiktok-pixel"
+      storeId={access.store.id}
       storeSlug={access.store.slug}
       title="TikTok Pixel"
     >

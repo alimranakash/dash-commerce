@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
+import { requirePlanFeature } from "../billing/subscription-limits";
 import { requireStore } from "../stores/queries";
 import { deleteBundle, saveBundle, setBundleStatus } from "./bundle.service";
 import type { BundleDiscountType, BundleStatus, BundleType } from "./bundle.schema";
@@ -13,6 +14,16 @@ export type BundleActionState = {
   status: "error" | "idle";
 };
 
+/**
+ * Bundles are a Starter feature. Authoring one is gated; deleting one and
+ * switching one off are not, because a live bundle is a discounted price the
+ * storefront is still honouring and a lapsed store has to be able to withdraw
+ * it. Same line the coupon and blocklist gates draw.
+ */
+async function requireBundleFeature(storeId: string) {
+  await requirePlanFeature(storeId, "bundles");
+}
+
 export async function createBundleFormAction(
   _state: BundleActionState,
   formData: FormData
@@ -20,6 +31,7 @@ export async function createBundleFormAction(
   const store = await requireStore();
 
   try {
+    await requireBundleFeature(store.id);
     await saveBundle(store.id, bundleInputFromFormData(formData));
   } catch (error) {
     return bundleErrorState(error);
@@ -37,6 +49,7 @@ export async function updateBundleFormAction(
   const store = await requireStore();
 
   try {
+    await requireBundleFeature(store.id);
     await saveBundle(store.id, bundleInputFromFormData(formData), bundleId);
   } catch (error) {
     return bundleErrorState(error);
@@ -63,6 +76,11 @@ export async function setBundleStatusAction(bundleId: string, status: string) {
   const store = await requireStore();
 
   try {
+    // Withdrawing a bundle is always allowed; publishing one is authoring.
+    if (status === "ACTIVE") {
+      await requireBundleFeature(store.id);
+    }
+
     await setBundleStatus(store.id, bundleId, status);
   } catch (error) {
     return {

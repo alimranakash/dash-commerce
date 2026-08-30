@@ -19,7 +19,14 @@ export function CouponRowActions({ code, couponId, status }: CouponRowActionsPro
   function toggleStatus() {
     setError(null);
     startTransition(async () => {
-      await setCouponStatusAction(couponId, status === "ACTIVE" ? "INACTIVE" : "ACTIVE");
+      const result = await setCouponStatusAction(
+        couponId,
+        status === "ACTIVE" ? "INACTIVE" : "ACTIVE"
+      );
+
+      if (result.status === "error") {
+        setError(result.message ?? "Coupon status could not be changed.");
+      }
     });
   }
 

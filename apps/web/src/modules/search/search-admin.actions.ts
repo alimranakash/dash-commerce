@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
+import { requirePlanFeature } from "../billing/subscription-limits";
 import { requireStore } from "../stores/queries";
 import {
   addSearchBoost,
@@ -15,10 +16,27 @@ import {
 
 const SEARCH_SETTINGS_PATH = "/dashboard/storefront/search";
 
+/**
+ * Search & Discovery is a Growth feature, and what it sells is *adding* rules.
+ *
+ * The three delete actions below stay open on every plan. A synonym group, a
+ * pin, or a redirect is live on the storefront the moment it is saved — a
+ * redirect in particular can send every shopper searching one term somewhere
+ * else — so a store that lapses has to be able to take one back off. Same line
+ * the coupon, bundle and blocklist gates draw.
+ */
+async function requireSearchFeature(storeId: string) {
+  await requirePlanFeature(storeId, "search_discovery");
+}
+
 export async function createSynonymGroupFormAction(formData: FormData) {
   const store = await requireStore();
 
-  await runAndReport(() => addSynonymGroup(store.id, { terms: formData.get("terms") }), "synonym");
+  await runAndReport(async () => {
+    await requireSearchFeature(store.id);
+
+    return addSynonymGroup(store.id, { terms: formData.get("terms") });
+  }, "synonym");
 
   finish(store.slug, "synonym-saved");
 }
@@ -34,14 +52,14 @@ export async function deleteSynonymGroupFormAction(id: string) {
 export async function createSearchBoostFormAction(formData: FormData) {
   const store = await requireStore();
 
-  await runAndReport(
-    () =>
-      addSearchBoost(store.id, {
-        productId: formData.get("productId"),
-        query: formData.get("query")
-      }),
-    "boost"
-  );
+  await runAndReport(async () => {
+    await requireSearchFeature(store.id);
+
+    return addSearchBoost(store.id, {
+      productId: formData.get("productId"),
+      query: formData.get("query")
+    });
+  }, "boost");
 
   finish(store.slug, "boost-saved");
 }
@@ -57,14 +75,14 @@ export async function deleteSearchBoostFormAction(id: string) {
 export async function createSearchRedirectFormAction(formData: FormData) {
   const store = await requireStore();
 
-  await runAndReport(
-    () =>
-      addSearchRedirect(store.id, {
-        query: formData.get("query"),
-        targetUrl: formData.get("targetUrl")
-      }),
-    "redirect"
-  );
+  await runAndReport(async () => {
+    await requireSearchFeature(store.id);
+
+    return addSearchRedirect(store.id, {
+      query: formData.get("query"),
+      targetUrl: formData.get("targetUrl")
+    });
+  }, "redirect");
 
   finish(store.slug, "redirect-saved");
 }

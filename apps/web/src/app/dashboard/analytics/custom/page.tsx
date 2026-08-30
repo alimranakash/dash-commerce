@@ -12,6 +12,8 @@ export default async function CustomTrackingPage() {
   return (
     <TrackingPageShell
       description="For a tag we do not have a page for yet. Accepts raw tracking markup, checked against an allowlist before it is saved."
+      section="custom"
+      storeId={access.store.id}
       storeSlug={access.store.slug}
       title="Custom Tracking"
     >

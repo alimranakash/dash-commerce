@@ -3,7 +3,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import type { StorefrontStore } from "../../storefront.types";
 import { normalizeAdvancedSettings, type StorefrontAdvancedSettings } from "../../customization";
-import { resolveStorefrontCopyright, resolveStorefrontHref } from "../../footer-content";
+import { resolveStorefrontHref } from "../../footer-content";
+import { StorefrontCopyright } from "../../components/storefront-copyright";
 import type { StorefrontSocialLink } from "../../social-links";
 import styles from "./electronics-footer.module.css";
 
@@ -87,7 +88,7 @@ export async function ElectronicsStorefrontFooter({
             </div>
           ) : null}
           <p className={styles.copyright}>
-            {resolveStorefrontCopyright(footer.copyrightText, brandName)}
+            <StorefrontCopyright storeName={brandName} template={footer.copyrightText} />
             {primaryDomain ? ` | ${primaryDomain}` : ""}
           </p>
         </div>

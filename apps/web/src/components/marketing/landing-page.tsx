@@ -35,7 +35,7 @@ const features = [
   { icon: CreditCard, title: "Payments", text: "Offer COD and Bangladesh-first manual payment methods with confidence." },
   { icon: Truck, title: "Courier", text: "Configure delivery zones today and connect courier automation tomorrow." },
   { icon: BarChart3, title: "Reports", text: "Understand revenue, orders, inventory, customers, and growth without spreadsheets." },
-  { icon: Bot, title: "StoreIM AI", text: "Ask your store questions in natural language and get useful answers instantly." }
+  { icon: Bot, title: "Dash AI", text: "Ask your store questions in natural language and get useful answers instantly." }
 ];
 
 export function LandingPage() {
@@ -74,7 +74,7 @@ export function LandingPage() {
           <div className={`${styles.floatingMetric} ${styles.floatingMetricLeft}`}><span>Gross revenue</span><b>৳67,743</b><small><TrendingArrow /> 18.4%</small></div>
           <div className={`${styles.floatingMetric} ${styles.floatingMetricRight}`}><span>Conversion</span><b>4.8%</b><small>Best this month</small></div>
           <div className={styles.aiFloat}>
-            <div><span><Bot /></span><p>StoreIM AI</p><small>Online</small></div>
+            <div><span><Bot /></span><p>Dash AI</p><small>Online</small></div>
             <p>Revenue is up 18% this week. Your top product is nearly out of stock.</p>
           </div>
         </ParallaxStage>
@@ -137,13 +137,13 @@ export function LandingPage() {
         <div className={styles.aiCopy}>
           <div className={styles.eyebrow}><Bot /> StoreIM intelligence</div>
           <h2>Your store can finally answer back.</h2>
-          <p>Ask in the language you naturally use. StoreIM AI turns live commerce data into focused answers, useful context, and a clearer next step.</p>
+          <p>Ask in the language you naturally use. Dash AI turns live commerce data into focused answers, useful context, and a clearer next step.</p>
           <ul><li><Check /> Understand sales without building reports</li><li><Check /> Surface low stock before it costs a sale</li><li><Check /> Keep every answer scoped to your store</li></ul>
         </div>
         <div className={styles.aiStage}>
           <div className={styles.aiMetricTop}><span>Live context</span><b>384 signals</b></div>
           <div className={styles.chatWindow}>
-            <header><span><Bot /></span><div><b>StoreIM AI</b><small>Connected to StoreIM</small></div><i /></header>
+            <header><span><Bot /></span><div><b>Dash AI</b><small>Connected to StoreIM</small></div><i /></header>
             <div className={styles.chatBody}>
               <p className={styles.userBubble}>আজ কত অর্ডার এসেছে?</p>
               <div className={styles.aiBubble}><span><Sparkles /></span><p><TypingText text="আজ ১৮টি অর্ডার এসেছে, মোট বিক্রি ৳২২,৫০০।" /></p></div>
@@ -293,7 +293,7 @@ function PricingCard({ badge, cta, featured, features, name, price, text }: { ba
  */
 const pricingHighlights: Record<string, string[]> = {
   free: ["Storefront, products and orders", "COD and manual payments"],
-  growth: ["StoreIM AI assistant and POS", "Advanced analytics and reports", "Server-side tracking (GA4 + Meta Conversions API)", "Google Ads and TikTok tracking", "API access"],
+  growth: ["Dash AI assistant and POS", "Advanced analytics and reports", "Server-side tracking (GA4 + Meta Conversions API)", "Google Ads and TikTok tracking", "API access"],
   pro: ["Marketing, WhatsApp, email and SMS automation (coming soon)", "Affiliate tracking and advanced attribution (coming soon)"],
   starter: ["Custom domain", "Courier API and fraud check", "Abandoned cart recovery", "Marketing analytics and pixel tracking"]
 };

@@ -1,4 +1,5 @@
 import { prisma } from "@dash/db";
+import { ensureApiKeySecretSchema } from "./ai-key-secret-schema";
 
 /**
  * The only file in `modules/ai/` that is allowed to touch Prisma.
@@ -9,9 +10,12 @@ import { prisma } from "@dash/db";
  * one external consumer. What is left here is credential storage, which no other
  * module owns.
  *
- * `tokenHash` is never selected by anything that lists or displays keys. It
- * leaves the database on exactly one path: the authentication lookup below,
- * which already knows it.
+ * Two columns never leave this file in raw form. `tokenHash` leaves the database
+ * on exactly one path: the authentication lookup below, which already knows it.
+ * `secretCipher` leaves on exactly one path too — `getApiKeySecretForStore`,
+ * which the settings reveal action calls after re-checking that the caller
+ * manages the store. Everywhere else it is collapsed to the boolean `canReveal`
+ * before the row is handed out, so a listing cannot leak it by being widened.
  */
 
 type CreateApiKeyRecordInput = {
@@ -19,6 +23,8 @@ type CreateApiKeyRecordInput = {
   hint: string;
   name: string;
   scopes: string[];
+  /** Null when the deployment has no encryption key — the key is then unreadable. */
+  secretCipher: string | null;
   storeId: string;
   tokenHash: string;
 };
@@ -32,8 +38,32 @@ const apiKeySummarySelect = {
   lastUsedAt: true,
   name: true,
   revokedAt: true,
-  scopes: true
+  scopes: true,
+  secretCipher: true
 } as const;
+
+type ApiKeySummaryRow = {
+  createdAt: Date;
+  expiresAt: Date | null;
+  hint: string;
+  id: string;
+  lastUsedAt: Date | null;
+  name: string;
+  revokedAt: Date | null;
+  scopes: string[];
+  secretCipher: string | null;
+};
+
+/**
+ * Swaps the ciphertext for the one bit of it callers are allowed to know: is
+ * there something here that could be shown. The string itself stops at this
+ * line.
+ */
+function toSummaryRecord({ secretCipher, ...rest }: ApiKeySummaryRow) {
+  return { ...rest, canReveal: secretCipher !== null };
+}
+
+export type ApiKeySummaryRecord = ReturnType<typeof toSummaryRecord>;
 
 /**
  * The authentication lookup — one indexed equality query on a unique column.
@@ -45,6 +75,10 @@ const apiKeySummarySelect = {
  * that decision needs: no name, no settings, no commerce data. Anything the
  * caller is later allowed to *read* about the store goes through
  * `ai-context.service.ts` and the stores repository, not through here.
+ *
+ * `secretCipher` is deliberately absent, which is also why this path needs no
+ * `ensureApiKeySecretSchema()`: the API authenticates on a database that has
+ * never been pushed to.
  */
 export async function findApiKeyByTokenHash(tokenHash: string) {
   return prisma.storeApiKey.findUnique({
@@ -93,27 +127,59 @@ export async function touchApiKeyLastUsed(apiKeyId: string, at = new Date()) {
 }
 
 export async function createApiKeyRecord(input: CreateApiKeyRecordInput) {
-  return prisma.storeApiKey.create({
+  await ensureApiKeySecretSchema();
+
+  const record = await prisma.storeApiKey.create({
     data: {
       hint: input.hint,
       name: input.name,
       scopes: input.scopes,
+      secretCipher: input.secretCipher,
       storeId: input.storeId,
       tokenHash: input.tokenHash,
       ...(input.expiresAt ? { expiresAt: input.expiresAt } : {})
     },
     select: apiKeySummarySelect
   });
+
+  return toSummaryRecord(record);
 }
 
 export async function getApiKeysForStore(storeId: string) {
-  return prisma.storeApiKey.findMany({
+  await ensureApiKeySecretSchema();
+
+  const records = await prisma.storeApiKey.findMany({
     where: {
       storeId
     },
     select: apiKeySummarySelect,
     orderBy: {
       createdAt: "desc"
+    }
+  });
+
+  return records.map(toSummaryRecord);
+}
+
+/**
+ * The one path the stored ciphertext takes out of this file.
+ *
+ * Store-scoped in the `where`, like every read here, so an id belonging to
+ * another store returns null rather than that store's credential. The caller
+ * decrypts; nothing is cached.
+ */
+export async function getApiKeySecretForStore(storeId: string, apiKeyId: string) {
+  await ensureApiKeySecretSchema();
+
+  return prisma.storeApiKey.findFirst({
+    where: {
+      id: apiKeyId,
+      storeId
+    },
+    select: {
+      id: true,
+      name: true,
+      secretCipher: true
     }
   });
 }
@@ -124,6 +190,8 @@ export async function getApiKeysForStore(storeId: string) {
  * key by guessing an id.
  */
 export async function revokeApiKeyForStore(storeId: string, apiKeyId: string, at = new Date()) {
+  await ensureApiKeySecretSchema();
+
   const result = await prisma.storeApiKey.updateMany({
     where: {
       id: apiKeyId,
@@ -139,11 +207,47 @@ export async function revokeApiKeyForStore(storeId: string, apiKeyId: string, at
     return null;
   }
 
-  return prisma.storeApiKey.findFirst({
+  const record = await prisma.storeApiKey.findFirst({
     where: {
       id: apiKeyId,
       storeId
     },
     select: apiKeySummarySelect
   });
+
+  return record ? toSummaryRecord(record) : null;
+}
+
+/**
+ * Removes the row outright, ciphertext and hash with it.
+ *
+ * Read first, then delete, because the caller needs the name for the message it
+ * shows and there is nothing left to read afterwards. Both statements are scoped
+ * to the store, so the read cannot confirm another tenant's id and the delete
+ * cannot act on one — a lost race between the two ends as `count === 0`, which
+ * is reported the same way as "never existed".
+ */
+export async function deleteApiKeyForStore(storeId: string, apiKeyId: string) {
+  await ensureApiKeySecretSchema();
+
+  const record = await prisma.storeApiKey.findFirst({
+    where: {
+      id: apiKeyId,
+      storeId
+    },
+    select: apiKeySummarySelect
+  });
+
+  if (!record) {
+    return null;
+  }
+
+  const result = await prisma.storeApiKey.deleteMany({
+    where: {
+      id: apiKeyId,
+      storeId
+    }
+  });
+
+  return result.count === 0 ? null : toSummaryRecord(record);
 }

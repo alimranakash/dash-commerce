@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DashboardQueryForm } from "../../../../components/dashboard/dashboard-query-form";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
+import { FeatureGate } from "../../../../modules/billing/components/feature-gate";
 import { FakeOrderActionButtons } from "../../../../modules/fake-orders/components/fake-order-action-buttons";
 import { FakeOrderEmpty } from "../../../../modules/fake-orders/components/fake-order-empty";
 import { RiskLevelBadge, VerificationStatusBadge } from "../../../../modules/fake-orders/components/fake-order-badges";
@@ -35,6 +36,7 @@ export default async function VerificationQueuePage({ searchParams }: Verificati
             <p className="auth-copy">Manually verify suspicious orders before fulfillment.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <FeatureGate feature="order_verification" storeId={store.id} />
             <VerificationPolicyToggle required={verificationRequired} />
             <Link className="secondary link-button" href="/dashboard/orders/fake">
               Fake Orders

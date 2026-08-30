@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { ZodError } from "zod";
+import { requirePlanFeature } from "../billing/subscription-limits";
 import { requireStore } from "../stores/queries";
 import { saveOrderBump } from "./order-bump.service";
 import type { OrderBumpDiscountType } from "./order-bump.schema";
@@ -17,14 +18,22 @@ export async function saveOrderBumpFormAction(
   formData: FormData
 ): Promise<OrderBumpActionState> {
   const store = await requireStore();
+  // The box is always rendered, so nothing posted can only mean off.
+  const enabled = formData.get("enabled") === "on";
 
   try {
+    // Order Bump is a Starter feature. Saving the offer switched *off* stays
+    // open on any plan: the offer is live on the checkout the customer is
+    // looking at right now, and a lapsed store must be able to pull it.
+    if (enabled) {
+      await requirePlanFeature(store.id, "order_bump");
+    }
+
     await saveOrderBump(store.id, {
       description: getValue(formData, "description"),
       discountType: getValue(formData, "discountType") as OrderBumpDiscountType,
       discountValue: getValue(formData, "discountValue"),
-      // The box is always rendered, so nothing posted can only mean off.
-      enabled: formData.get("enabled") === "on",
+      enabled,
       headline: getValue(formData, "headline"),
       productId: getValue(formData, "productId")
     });

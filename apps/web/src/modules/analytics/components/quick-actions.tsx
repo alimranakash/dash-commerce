@@ -19,7 +19,7 @@ const actionItems = [
   },
   {
     href: "/dashboard/ai",
-    label: "AI Assistant"
+    label: "Dash AI"
   }
 ];
 

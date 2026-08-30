@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
+import { FeatureGate } from "../../../../modules/billing/components/feature-gate";
 import { CampaignList } from "../../../../modules/campaigns/components/campaign-list";
 import { getCampaignsForStore } from "../../../../modules/campaigns/campaign.service";
 import type { CampaignFilters } from "../../../../modules/campaigns/campaign.service";
@@ -27,6 +28,11 @@ export default async function CampaignsPage({ searchParams }: CampaignsPageProps
         <div className="flex flex-wrap items-center gap-4">
           <div className="catalog-page-heading">
             <h1>Campaigns</h1>
+            {/*
+              The list reads on any plan; creating and editing is what the
+              entitlement buys, and every write action re-checks it.
+            */}
+            <FeatureGate feature="campaigns" storeId={store.id} />
           </div>
           <Link
             className="inline-flex items-center gap-1 rounded-lg border border-[#7c3aed] bg-white px-3.5 py-2.5 text-sm font-medium text-[#6d3cf5] hover:bg-[#f7f3ff]"

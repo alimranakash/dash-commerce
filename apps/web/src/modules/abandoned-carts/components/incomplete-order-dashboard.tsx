@@ -116,8 +116,8 @@ export function IncompleteOrderDashboard({
       try {
         const result =
           status === "RECOVERED"
-            ? await markAbandonedCartRecoveredAction(id)
-            : await markAbandonedCartContactedAction(id, channel);
+            ? await markAbandonedCartRecoveredAction(id, "incomplete_orders")
+            : await markAbandonedCartContactedAction(id, channel, "incomplete_orders");
 
         // The plan does not include recovery: roll the optimistic change back
         // and explain it, rather than showing a generic "could not save".

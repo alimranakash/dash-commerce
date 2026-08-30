@@ -105,6 +105,6 @@ The Prisma client is generated to `packages/db/src/generated/prisma` (gitignored
 - Lint runs with `--max-warnings=0`, and `@typescript-eslint/consistent-type-imports` is a warning — so a missing `import type` fails CI-equivalent checks.
 - Object literal keys are largely alphabetized; match surrounding style.
 - Currency is BDT and new stores are auto-seeded with Inside/Outside Dhaka shipping zones (70/130 BDT) — the product is Bangladesh-oriented.
-- Courier and payment-gateway integrations are intentionally stubs; StoreOS calls no-op gracefully when `STOREOS_API_URL`/`STOREOS_API_KEY` are unset.
+- Courier and payment-gateway integrations are intentionally stubs; StoreOS calls no-op gracefully when `STOREOS_API_URL`/`STOREOS_API_KEY` are unset. Those two are **operator** config for the whole deployment, never merchant config: a seller connects StoreIM AI by clicking one button, and nothing about the credential — not its value, not whether it is set — may reach the browser. `modules/storeos/` keeps that boundary: `storeos-identity.ts` re-derives the store envelope server-side from the store row, `storeos-connection-state.ts` collapses the row plus link state into the phase and sentence the UI renders, and `storeos-capabilities.ts` declares the future AI surfaces (Product, Marketing, Customer, Order, Analytics, Automation) that will share the same connection. AI orchestration itself belongs in StoreOS, not here.
 
 See [README.md](README.md) for environment-variable setup, Google OAuth redirect URIs, and media-storage drivers.

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
+import { FeatureGate } from "../../../../modules/billing/components/feature-gate";
 import {
   changeStaffRoleAction,
   inviteStaffAction,
@@ -31,7 +32,10 @@ export default async function TeamSettingsPage() {
     <DashboardShell storeSlug={access.store.slug}>
       <section className="resource-page max-w-none">
         <div>
-          <h1 className="m-0 text-[1.65rem] font-semibold leading-tight">Team</h1>
+          <span className="flex flex-wrap items-center gap-2">
+            <h1 className="m-0 text-[1.65rem] font-semibold leading-tight">Team</h1>
+            <FeatureGate feature="team" storeId={access.store.id} />
+          </span>
           <p className="mt-2 text-sm text-[#737582]">
             Give the people who work on this store their own login instead of sharing yours. You
             create an invite link, send it to them, and they join with the role you picked. How many

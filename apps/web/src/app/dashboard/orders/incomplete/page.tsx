@@ -52,7 +52,7 @@ export default async function IncompleteOrdersPage({ searchParams }: IncompleteO
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <FeatureGate feature="abandoned_cart" storeId={store.id} />
+            <FeatureGate feature="incomplete_orders" storeId={store.id} />
             <Link className="secondary link-button" href="/dashboard/reports/incomplete-orders">
               View Report
             </Link>

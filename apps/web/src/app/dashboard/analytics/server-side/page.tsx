@@ -20,6 +20,8 @@ export default async function ServerSideTrackingPage() {
   return (
     <TrackingPageShell
       description="Send purchases to Google and Meta from our server as well as the browser, so ad blockers and privacy settings stop costing you conversions in your reports."
+      section="server-side"
+      storeId={access.store.id}
       storeSlug={access.store.slug}
       title="Server-Side Tracking"
     >

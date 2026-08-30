@@ -6,6 +6,7 @@ import {
   updateBrandSettingsFormAction,
   updateThemeSettingsFormAction
 } from "../../settings/settings.actions";
+import { hasPlanFeature } from "../../billing/subscription-limits";
 import { getStoreSettings, getThemeSettings } from "../../settings/settings.service";
 import { StorefrontTemplateLibrary } from "../templates/components/storefront-template-library";
 import { StorefrontTemplatePreviewCard } from "../templates/components/storefront-template-preview-card";
@@ -130,7 +131,11 @@ export async function StorefrontThemeSettingsPage({
           </div>
 
           <div id="theme-settings" className="storefront-settings-section">
-            <ThemeSettingsForm action={updateThemeSettingsFormAction} settings={settings} />
+            <ThemeSettingsForm
+              action={updateThemeSettingsFormAction}
+              canBrandFooter={await hasPlanFeature(store.id, "footer_branding")}
+              settings={settings}
+            />
           </div>
 
           <section id="footer-social-preview" className="storefront-settings-info-card storefront-settings-section">

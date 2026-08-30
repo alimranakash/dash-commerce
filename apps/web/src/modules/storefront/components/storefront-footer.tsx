@@ -1,13 +1,16 @@
 import { storefrontBasePath } from "../base-path";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { hasPlanFeature } from "../../billing/subscription-limits";
+import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../customization";
 import { getModuleSettings } from "../../settings/settings.service";
 import { DEFAULT_STOREFRONT_TEMPLATE_ID } from "../templates/template-mapping";
 import { ElectronicsStorefrontFooter } from "../templates/electronics-default/electronics-footer";
 import { FashionStorefrontFooter } from "../templates/fashion-default/fashion-footer";
 import { getStorefrontThemeSettings } from "../themes/theme.service";
 import { resolveStorefrontSocialLinks } from "../social-links";
-import { resolveStorefrontHref, resolveStorefrontCopyright } from "../footer-content";
+import { resolveStorefrontHref } from "../footer-content";
+import { StorefrontCopyright } from "./storefront-copyright";
 import type { StorefrontStore } from "../storefront.types";
 import { storeSubdomain } from "../../../lib/host-routing";
 
@@ -20,11 +23,27 @@ export async function StorefrontFooter({ primaryDomain, store }: StorefrontFoote
   const settings = store.setting;
   const homeHref = await storefrontBasePath(store.slug);
   const templateId = store.activeTemplate || DEFAULT_STOREFRONT_TEMPLATE_ID;
-  const [themeSettings, moduleSettings] = await Promise.all([
+  const [themeSettings, moduleSettings, canBrandFooter] = await Promise.all([
     getStorefrontThemeSettings(store.id),
-    getModuleSettings(store.id)
+    getModuleSettings(store.id),
+    hasPlanFeature(store.id, "footer_branding")
   ]);
-  const footer = themeSettings.advancedSettings.footer;
+  // Every template footer reads its copyright out of this object — the default
+  // one below, and the two that get it as a prop — so correcting it here is
+  // what makes the Free tier's credit line unconditional. It is enforced on the
+  // way *out* rather than only on the way in because a store that lapses or
+  // downgrades still has whatever it saved while it was paying, and that must
+  // stop being served the moment the entitlement goes.
+  const advancedSettings = canBrandFooter
+    ? themeSettings.advancedSettings
+    : {
+        ...themeSettings.advancedSettings,
+        footer: {
+          ...themeSettings.advancedSettings.footer,
+          copyrightText: DEFAULT_STOREFRONT_ADVANCED_SETTINGS.footer.copyrightText
+        }
+      };
+  const footer = advancedSettings.footer;
   const socialLinks = footer.showSocialIcons
     ? resolveStorefrontSocialLinks(settings, moduleSettings.socialProfiles)
     : [];
@@ -36,7 +55,7 @@ export async function StorefrontFooter({ primaryDomain, store }: StorefrontFoote
   if (templateId === "fashion-default") {
     return (
       <FashionStorefrontFooter
-        advancedSettings={themeSettings.advancedSettings}
+        advancedSettings={advancedSettings}
         primaryDomain={primaryDomain}
         socialLinks={socialLinks}
         store={store}
@@ -48,7 +67,7 @@ export async function StorefrontFooter({ primaryDomain, store }: StorefrontFoote
   if (templateId === "electronics-default") {
     return (
       <ElectronicsStorefrontFooter
-        advancedSettings={themeSettings.advancedSettings}
+        advancedSettings={advancedSettings}
         primaryDomain={primaryDomain}
         socialLinks={socialLinks}
         store={store}
@@ -105,7 +124,9 @@ export async function StorefrontFooter({ primaryDomain, store }: StorefrontFoote
       </div>
 
       <div className="sf-footer-bottom">
-        <p>{resolveStorefrontCopyright(footer.copyrightText, store.name)}</p>
+        <p>
+          <StorefrontCopyright storeName={store.name} template={footer.copyrightText} />
+        </p>
         {footer.paymentIconsEnabled && footer.paymentIcons.length > 0 ? (
           <div className="sf-footer-payments" aria-label="Payment methods">
             {footer.paymentIcons.map((icon) => (

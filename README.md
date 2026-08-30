@@ -133,14 +133,18 @@ Checkout only shows enabled rates whose zone is also enabled. The selected rate 
 
 ## StoreOS Setup
 
-StoreIM can create a native StoreOS connection per store and route AI Assistant messages through the StoreIM backend. Set these server-only values in `.env`:
+StoreOS is the central AI engine behind StoreIM AI. The link to it is **operator configuration, not merchant configuration**: one deployment talks to one StoreOS installation with one credential, and a seller never sees, sets, or needs to know it. Set these server-only values in `.env`:
 
 ```bash
 STOREOS_API_URL="https://api.storeos.example"
 STOREOS_API_KEY="replace-with-storeos-api-key"
 ```
 
-If these values are missing, onboarding still succeeds and the StoreOS connection stays pending. Sellers can retry from `/dashboard/settings`, and they can open the AI Assistant at `/dashboard/ai`.
+With them set, a seller connects their own store by clicking **Connect / reconnect StoreIM AI** on `/dashboard/ai`. That runs a server action which resolves the store from the session, derives the store's identity (id, name, slug, subdomain, verified custom domain, currency, country, timezone) from its own row, and opens a server-to-server connection. Nothing about the credential — including whether it is set — reaches the browser.
+
+Without them, onboarding still succeeds, the connection stays pending, and the AI Assistant shows "Not connected" with a fallback chat response. The seller is told the platform has not switched StoreIM AI on yet, because that is the operator's job and there is nothing for them to configure.
+
+`npm run verify:storeim-ai` is the executable check for this layer.
 
 ## Media Storage
 

@@ -33,6 +33,7 @@ export default async function SearchDiscoveryPage({ searchParams }: SearchDiscov
       error={error ?? null}
       message={status ? (statusMessages[status] ?? null) : null}
       overview={overview}
+      storeId={store.id}
       storeSlug={store.slug}
     />
   );

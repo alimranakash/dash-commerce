@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
+import { hasPlanFeature } from "../billing/subscription-limits";
 import { requireStoreManager } from "../stores/queries";
 import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
@@ -258,7 +259,22 @@ export async function updateThemeSettingsFormAction(
     const { store } = await requireStoreManager();
 
     storeSlug = store.slug;
-    await updateThemeSettings(store.id, themeSettingsFromFormData(formData));
+
+    const input = themeSettingsFromFormData(formData);
+
+    // The footer credit is not editable without `footer_branding`. The form
+    // renders that field disabled, and a disabled input posts nothing — but a
+    // hand-made request can still carry one, so the value is replaced here
+    // rather than trusted. Refusing the whole save would lose the seller's
+    // other theme edits over a field they were never offered.
+    if (input.advancedSettings && !(await hasPlanFeature(store.id, "footer_branding"))) {
+      input.advancedSettings.footer = {
+        ...input.advancedSettings.footer,
+        copyrightText: DEFAULT_STOREFRONT_ADVANCED_SETTINGS.footer.copyrightText
+      };
+    }
+
+    await updateThemeSettings(store.id, input);
   } catch (error) {
     return settingsErrorState(error, "Please fix the highlighted theme settings.");
   }

@@ -21,6 +21,11 @@
  * - a missing header and seven shapes of malformed header all failing closed;
  * - scope enforcement, including that write scopes cannot yet be granted at all;
  * - the raw key never reaching the database, the key summaries, or any log.
+ * - a stored key decrypting back to exactly what was issued, only for its own
+ *   store, and a key with nothing stored to decrypt saying so rather than
+ *   failing;
+ * - deleting removing the row outright, scoped to the store, and the deleted
+ *   key no longer authenticating.
  *
  * Endpoints:
  * - products, orders, metrics and all eight reports answering 200;
@@ -47,8 +52,10 @@ import {
   hashAiApiKey
 } from "../apps/web/src/modules/ai/ai-key-token";
 import {
+  deleteStoreApiKey,
   issueStoreApiKey,
   listStoreApiKeys,
+  revealStoreApiKey,
   revokeStoreApiKey
 } from "../apps/web/src/modules/ai/ai-key.service";
 import { consumeAiApiToken, resetAiApiRateLimits } from "../apps/web/src/modules/ai/ai-rate-limit";
@@ -58,7 +65,7 @@ import { GET as getMetricsRoute } from "../apps/web/src/app/api/ai/v1/metrics/ro
 import { GET as getOrdersRoute } from "../apps/web/src/app/api/ai/v1/orders/route";
 import { GET as getProductsRoute } from "../apps/web/src/app/api/ai/v1/products/route";
 import { GET as getReportRoute } from "../apps/web/src/app/api/ai/v1/reports/[reportKey]/route";
-import { AI_REPORT_KEYS } from "../apps/web/src/modules/ai/ai.schema";
+import { AI_REPORT_KEYS, aiStoreContextSchema } from "../apps/web/src/modules/ai/ai.schema";
 
 let failures = 0;
 
@@ -288,6 +295,93 @@ async function main() {
       !JSON.stringify(summaries).includes(issued.key) &&
         !JSON.stringify(summaries).includes(hashAiApiKey(issued.key))
     );
+
+    // --------------------------------------------- reading a stored key back
+
+    check(
+      "a listing says a key can be shown without carrying what would be shown",
+      summaries.every((summary) => summary.canReveal) &&
+        !JSON.stringify(summaries).includes(storedRow?.secretCipher ?? " ")
+    );
+
+    const revealed = await revealStoreApiKey(primary.storeId, issued.record.id);
+
+    check(
+      "a stored key decrypts back to exactly the key that was issued",
+      revealed?.key === issued.key
+    );
+    check(
+      "the reveal names the key it opened",
+      revealed?.id === issued.record.id && revealed?.name === issued.record.name
+    );
+    check(
+      "one store cannot read another store key by its id",
+      (await revealStoreApiKey(other.storeId, issued.record.id)) === null
+    );
+    check(
+      "an id that belongs to nothing reveals nothing",
+      (await revealStoreApiKey(primary.storeId, `missing-${randomUUID()}`)) === null
+    );
+
+    const unreadable = await issueStoreApiKey(primary.storeId, {
+      name: "Issued before keys were kept",
+      scopes: ["read:store"]
+    });
+
+    // The shape of every key minted before this column existed.
+    await prisma.storeApiKey.update({
+      where: { id: unreadable.record.id },
+      data: { secretCipher: null }
+    });
+
+    check(
+      "a key with nothing stored to decrypt reveals nothing",
+      (await revealStoreApiKey(primary.storeId, unreadable.record.id)) === null
+    );
+    check(
+      "and the listing marks it as one that cannot be shown",
+      (await listStoreApiKeys(primary.storeId)).find(
+        (summary) => summary.id === unreadable.record.id
+      )?.canReveal === false
+    );
+
+    resetAiAuditCoalescing();
+    captureConsole();
+    const stillWorks = await resolveApiKeyStore(apiRequest(`Bearer ${unreadable.key}`), {
+      requiredScope: "read:store"
+    });
+
+    releaseConsole();
+    check("a key that cannot be shown still authenticates", stillWorks.ok);
+
+    // -------------------------------------------------------- deleting a key
+
+    check(
+      "one store cannot delete another store key by its id",
+      (await deleteStoreApiKey(other.storeId, unreadable.record.id)) === null &&
+        (await prisma.storeApiKey.count({ where: { id: unreadable.record.id } })) === 1
+    );
+
+    const deleted = await deleteStoreApiKey(primary.storeId, unreadable.record.id);
+
+    check("deleting returns the key it removed", deleted?.id === unreadable.record.id);
+    check(
+      "the row is gone rather than marked",
+      (await prisma.storeApiKey.count({ where: { id: unreadable.record.id } })) === 0
+    );
+    check(
+      "deleting the same key twice is not an error",
+      (await deleteStoreApiKey(primary.storeId, unreadable.record.id)) === null
+    );
+
+    resetAiAuditCoalescing();
+    captureConsole();
+    const afterDelete = await resolveApiKeyStore(apiRequest(`Bearer ${unreadable.key}`), {
+      requiredScope: "read:store"
+    });
+
+    releaseConsole();
+    check("a deleted key no longer authenticates", !afterDelete.ok);
 
     // ------------------------------------------------------------ a valid key
 
@@ -605,11 +699,12 @@ async function main() {
 
     // ------------------------------------------------------ context payload
 
-    const context = await getAiStoreContext(primary.storeId);
+    const context = await getAiStoreContext(primary.storeId, ["read:store"]);
     const expectedKeys = [
       "businessType",
       "country",
       "currency",
+      "scopes",
       "slug",
       "storeId",
       "storeName",
@@ -617,7 +712,7 @@ async function main() {
     ];
 
     check(
-      "the context payload carries exactly the seven allow-listed fields",
+      "the context payload carries exactly the eight allow-listed fields",
       context !== null &&
         JSON.stringify(Object.keys(context).sort()) === JSON.stringify(expectedKeys),
       context ? Object.keys(context).sort().join(", ") : "null"
@@ -632,7 +727,31 @@ async function main() {
     );
     check(
       "a context read for a store that is gone returns null",
-      (await getAiStoreContext("missing")) === null
+      (await getAiStoreContext("missing", ["read:store"])) === null
+    );
+    check(
+      "the context payload will not carry a scope outside the vocabulary",
+      (() => {
+        try {
+          // Cast past the compiler on purpose: the runtime guarantee is what is
+          // being asserted, because the value on the real path comes from a
+          // database column rather than from TypeScript.
+          aiStoreContextSchema.parse({
+            businessType: "General Store",
+            country: "BD",
+            currency: "BDT",
+            scopes: ["read:store", "read:everything"],
+            slug: "x",
+            storeId: "x",
+            storeName: "x",
+            timezone: "Asia/Dhaka"
+          });
+
+          return false;
+        } catch {
+          return true;
+        }
+      })()
     );
 
     // -------------------------------------------------------- rate limiting
@@ -1232,6 +1351,153 @@ async function main() {
       "a missing header is refused by /products",
       noHeaderOnProducts.status === 401,
       String(noHeaderOnProducts.status)
+    );
+
+    /* ==================================================================== */
+    /*        Phase 5.2 — /context reports the key's granted scopes          */
+    /* ==================================================================== */
+
+    const storeOnlyKey = await issueStoreApiKey(primary.storeId, {
+      name: "Store profile only",
+      scopes: ["read:store"]
+    });
+    const otherStoreContextKey = await issueStoreApiKey(other.storeId, {
+      name: "Other store context",
+      scopes: ["read:products", "read:store"]
+    });
+
+    captureConsole();
+    const contextA = await readRoute(
+      await getContextRoute(routeRequest(readKey.key, "/api/ai/v1/context"))
+    );
+    const contextStoreOnly = await readRoute(
+      await getContextRoute(routeRequest(storeOnlyKey.key, "/api/ai/v1/context"))
+    );
+    const contextB = await readRoute(
+      await getContextRoute(routeRequest(otherStoreContextKey.key, "/api/ai/v1/context"))
+    );
+    const contextWithForeignSelectors = await readRoute(
+      await getContextRoute(
+        new NextRequest(
+          `https://app.storeim.com/api/ai/v1/context?storeId=${other.storeId}&tenantId=${other.storeId}&siteId=${other.storeId}&scopes=write:products`,
+          {
+            headers: new Headers({
+              authorization: `Bearer ${storeOnlyKey.key}`,
+              "x-store-id": other.storeId
+            })
+          }
+        )
+      )
+    );
+    releaseConsole();
+
+    type ContextBody = {
+      businessType: string;
+      country: string;
+      currency: string;
+      scopes: string[];
+      slug: string;
+      storeId: string;
+      storeName: string;
+      timezone: string;
+    };
+
+    const bodyA = contextA.body as ContextBody;
+    const bodyStoreOnly = contextStoreOnly.body as ContextBody;
+    const bodyB = contextB.body as ContextBody;
+    const bodyForeign = contextWithForeignSelectors.body as ContextBody;
+
+    check("GET /context still answers 200 and JSON", contextA.status === 200 && bodyA !== null);
+    check("the context response now carries scopes", Array.isArray(bodyA.scopes));
+    check(
+      "the scopes are the ones granted to that key",
+      JSON.stringify(bodyA.scopes) ===
+        JSON.stringify([
+          "read:analytics",
+          "read:customers",
+          "read:orders",
+          "read:products",
+          "read:store"
+        ]),
+      JSON.stringify(bodyA.scopes)
+    );
+    check(
+      "a key granted only read:store reports only read:store",
+      JSON.stringify(bodyStoreOnly.scopes) === JSON.stringify(["read:store"]),
+      JSON.stringify(bodyStoreOnly.scopes)
+    );
+    check(
+      "two keys on the same store report their own scopes, not each other's",
+      bodyA.scopes.length === 5 &&
+        bodyStoreOnly.scopes.length === 1 &&
+        !bodyStoreOnly.scopes.includes("read:orders")
+    );
+    check(
+      "key B reports key B's scopes",
+      JSON.stringify(bodyB.scopes) === JSON.stringify(["read:products", "read:store"]),
+      JSON.stringify(bodyB.scopes)
+    );
+    check(
+      "key A's scopes never appear when authenticated as key B",
+      !bodyB.scopes.includes("read:analytics") &&
+        !bodyB.scopes.includes("read:customers") &&
+        !bodyB.scopes.includes("read:orders")
+    );
+    check(
+      "the store on the response is still key B's own store",
+      bodyB.storeId === other.storeId && bodyA.storeId === primary.storeId
+    );
+    check(
+      "the seven existing context fields are unchanged",
+      bodyA.businessType === "Beauty Store" &&
+        bodyA.country === "BD" &&
+        bodyA.currency === "BDT" &&
+        bodyA.storeId === primary.storeId &&
+        bodyA.timezone === "Asia/Dhaka" &&
+        typeof bodyA.slug === "string" &&
+        typeof bodyA.storeName === "string"
+    );
+    check(
+      "no tenant selector in the query, and no X-Store-Id, moves the store",
+      contextWithForeignSelectors.status === 200 && bodyForeign.storeId === primary.storeId,
+      bodyForeign.storeId === primary.storeId ? "" : bodyForeign.storeId
+    );
+    check(
+      "a ?scopes= parameter cannot widen what the key was granted",
+      JSON.stringify(bodyForeign.scopes) === JSON.stringify(["read:store"]),
+      JSON.stringify(bodyForeign.scopes)
+    );
+    check(
+      "no forbidden field appears in the context response",
+      forbiddenFieldsIn(contextA.raw).length === 0,
+      forbiddenFieldsIn(contextA.raw).join(", ")
+    );
+
+    // A scope that is not in the vocabulary, written straight into the column so
+    // it bypasses issuance validation — the shape a stale row would have after a
+    // scope was removed from the code. It must not reach the response.
+    await prisma.storeApiKey.update({
+      data: { scopes: ["read:store", "read:everything", "admin:*"] },
+      where: { id: storeOnlyKey.record.id }
+    });
+
+    captureConsole();
+    const contextWithJunkScope = await readRoute(
+      await getContextRoute(routeRequest(storeOnlyKey.key, "/api/ai/v1/context"))
+    );
+    releaseConsole();
+
+    check(
+      "an unrecognised stored scope is filtered out rather than echoed",
+      contextWithJunkScope.status === 200 &&
+        JSON.stringify((contextWithJunkScope.body as ContextBody).scopes) ===
+          JSON.stringify(["read:store"]),
+      JSON.stringify((contextWithJunkScope.body as ContextBody).scopes)
+    );
+    check(
+      "the unrecognised scope never appears in the body",
+      !contextWithJunkScope.raw.includes("read:everything") &&
+        !contextWithJunkScope.raw.includes("admin:*")
     );
 
     // ------------------------------------------- rate limiting, through a route

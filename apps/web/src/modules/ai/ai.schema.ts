@@ -114,10 +114,18 @@ export type IssueApiKeyInput = z.input<typeof issueApiKeyInputSchema>;
 
 /**
  * What settings may show about a key. Note what is absent: `tokenHash` is never
- * selected, let alone returned, and the raw key exists only in the response to
- * the call that created it.
+ * selected, let alone returned, and the stored ciphertext of the key is
+ * collapsed to `canReveal` inside the repository rather than travelling with
+ * the summary. The key itself is fetched on its own, by its own action, only
+ * when a manager asks to see it.
  */
 export const apiKeySummarySchema = z.object({
+  /**
+   * Whether this key can still be shown. False for keys minted before the
+   * store kept a readable copy, and for every key on a deployment with no
+   * encryption key configured — both authenticate normally.
+   */
+  canReveal: z.boolean(),
   createdAt: z.date(),
   expiresAt: z.date().nullable(),
   hint: z.string(),
@@ -131,18 +139,26 @@ export const apiKeySummarySchema = z.object({
 export type ApiKeySummary = z.infer<typeof apiKeySummarySchema>;
 
 /**
- * `GET /api/ai/v1/context` — the identity of the one store this key resolves to.
+ * `GET /api/ai/v1/context` — the identity of the one store this key resolves to,
+ * and what that key is allowed to ask for.
  *
  * Deliberately the smallest useful payload: who am I talking to, in what
- * currency, in what timezone. No counts, no customers, no money. It is the
- * endpoint StoreOS AI calls to prove a key works and to learn how to format
- * everything it will later be told.
+ * currency, in what timezone, and which doors are open. No counts, no customers,
+ * no money. It is the endpoint StoreOS AI calls to prove a key works and to
+ * learn how to format everything it will later be told.
+ *
+ * `scopes` is what the authenticated key was actually granted, echoed back from
+ * `identity.scopes` — the same array the scope checks on every other endpoint
+ * read. It is here so a client can decide which features to light up before it
+ * starts collecting 403s, and it is typed as the scope vocabulary rather than
+ * plain strings so a value outside it cannot be introduced by this response.
  */
 export const aiStoreContextSchema = z
   .object({
     businessType: z.string(),
     country: z.string(),
     currency: z.string(),
+    scopes: z.array(aiScopeSchema),
     slug: z.string(),
     storeId: z.string(),
     storeName: z.string(),

@@ -52,7 +52,11 @@ export async function updateTrackingSectionAction(
 
     storeSlug = access.store.slug;
 
-    await requirePlanFeature(access.store.id, "marketing_analytics");
+    // Per section, not per module: these seven pages are seven line items on
+    // the pricing page, so a Starter store setting up its Meta pixel must not be
+    // asked to pay for Google Tag Manager, and must not get it either. The
+    // section's key is declared beside its fields in TRACKING_SECTIONS.
+    await requirePlanFeature(access.store.id, TRACKING_SECTIONS[section].feature);
 
     const stored = await getMarketingSettingsView(access.store.id);
     const input = trackingInputFromView(stored);

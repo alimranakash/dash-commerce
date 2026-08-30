@@ -1,6 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { DeleteConfirmationButton } from "../../../components/dashboard/delete-confirmation-button";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
+import { FeatureGate } from "../../billing/components/feature-gate";
 import {
   createSearchBoostFormAction,
   createSearchRedirectFormAction,
@@ -16,6 +17,7 @@ type SearchDiscoveryManagementProps = {
   error?: string | null;
   message?: string | null;
   overview: Awaited<ReturnType<typeof getSearchDiscoveryOverview>>;
+  storeId: string;
   storeSlug: string;
 };
 
@@ -24,6 +26,7 @@ export function SearchDiscoveryManagement({
   error,
   message,
   overview,
+  storeId,
   storeSlug
 }: SearchDiscoveryManagementProps) {
   const { analytics, boosts, redirects, synonymGroups } = overview;
@@ -33,6 +36,12 @@ export function SearchDiscoveryManagement({
       <section className="resource-page catalog-management-page">
         <div className="catalog-page-heading">
           <h1>Search &amp; Discovery</h1>
+          {/*
+            The existing rules and the search analytics read on any plan; adding
+            a synonym, pin or redirect is what the entitlement buys. Removing one
+            stays open, so a lapsed store can undo a live redirect.
+          */}
+          <FeatureGate feature="search_discovery" storeId={storeId} />
         </div>
         {message ? <p className="success-message">{message}</p> : null}
         {error ? <p className="form-error">{error}</p> : null}

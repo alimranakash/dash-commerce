@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { ZodError } from "zod";
 import { StoreAccessError, requireStoreManager } from "../stores/queries";
-import { AiApiKeyError, issueStoreApiKey, revokeStoreApiKey } from "./ai-key.service";
+import {
+  AiApiKeyError,
+  deleteStoreApiKey,
+  issueStoreApiKey,
+  revealStoreApiKey,
+  revokeStoreApiKey
+} from "./ai-key.service";
 import { aiScopeSchema, type AiScope } from "./ai.schema";
 
 /**
@@ -12,11 +18,11 @@ import { aiScopeSchema, type AiScope } from "./ai.schema";
  * `requireStoreManager()` rather than `requireStore()`: issuing a credential
  * that can read the whole catalogue and order book is an integration change, the
  * same class of act as reconnecting StoreOS itself. A MEMBER may see that keys
- * exist; only the owner or an admin may mint one.
+ * exist; only the owner or an admin may mint one, read one back, or remove one.
  *
- * The guard is re-checked here rather than trusted from the page. The page does
- * render the form disabled for a member, and a disabled input is not a
- * permission check.
+ * The guard is re-checked in every action rather than trusted from the page. The
+ * page does render the controls hidden for a member, and a control that is not
+ * rendered is not a permission check.
  */
 
 const INTEGRATIONS_PATH = "/dashboard/settings/integrations";
@@ -24,8 +30,7 @@ const INTEGRATIONS_PATH = "/dashboard/settings/integrations";
 export type AiKeyActionState = {
   /**
    * Set only by a successful create, and only for the render that follows it.
-   * The raw key is not stored anywhere — this is its one and only appearance,
-   * and the next revalidation of the page drops it.
+   * Revealing an existing key later fills `revealedKey` instead.
    */
   createdKey?: {
     hint: string;
@@ -36,6 +41,12 @@ export type AiKeyActionState = {
   };
   fieldErrors?: Record<string, string>;
   message?: string;
+  /** Set by a successful reveal — the stored key, decrypted for this render. */
+  revealedKey?: {
+    id: string;
+    key: string;
+    name: string;
+  };
   status: "error" | "idle" | "success";
 };
 
@@ -64,11 +75,41 @@ export async function createAiApiKeyAction(
         name: issued.record.name,
         scopes: issued.record.scopes
       },
-      message: `"${issued.record.name}" is ready. Copy it now — it is shown once.`,
+      message: issued.record.canReveal
+        ? `"${issued.record.name}" is ready. Copy it now, or read it back from the list below.`
+        : `"${issued.record.name}" is ready. Copy it now — this deployment cannot show it again.`,
       status: "success"
     };
   } catch (error) {
     return toErrorState(error, "Could not create that API key.");
+  }
+}
+
+/**
+ * Reads one stored key back for the manager who owns it.
+ *
+ * No `revalidatePath`: nothing changed, and re-rendering the page here would
+ * throw away the very value this call exists to put on screen.
+ */
+export async function revealAiApiKeyAction(
+  _state: AiKeyActionState,
+  formData: FormData
+): Promise<AiKeyActionState> {
+  try {
+    const { store } = await requireStoreManager();
+    const revealed = await revealStoreApiKey(store.id, text(formData, "apiKeyId"));
+
+    if (!revealed) {
+      return {
+        message:
+          "This key cannot be shown. It was created before keys were kept readable, or the server's encryption key has changed. Create a new key to get one you can read.",
+        status: "error"
+      };
+    }
+
+    return { revealedKey: revealed, status: "success" };
+  } catch (error) {
+    return toErrorState(error, "Could not show that API key.");
   }
 }
 
@@ -95,6 +136,29 @@ export async function revokeAiApiKeyAction(
     };
   } catch (error) {
     return toErrorState(error, "Could not revoke that API key.");
+  }
+}
+
+export async function deleteAiApiKeyAction(
+  _state: AiKeyActionState,
+  formData: FormData
+): Promise<AiKeyActionState> {
+  try {
+    const { store } = await requireStoreManager();
+    const deleted = await deleteStoreApiKey(store.id, text(formData, "apiKeyId"));
+
+    revalidatePath(INTEGRATIONS_PATH);
+
+    if (!deleted) {
+      return { message: "That key is already gone.", status: "success" };
+    }
+
+    return {
+      message: `"${deleted.name}" is deleted. Any request using it now fails.`,
+      status: "success"
+    };
+  } catch (error) {
+    return toErrorState(error, "Could not delete that API key.");
   }
 }
 

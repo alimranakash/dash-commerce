@@ -34,6 +34,19 @@ export type CampaignActionState = {
   status: "error" | "idle";
 };
 
+/**
+ * The campaign workspace is sold at one tier and delivery on a channel at
+ * another, so there are two gates in this file and they are not interchangeable.
+ *
+ * `campaigns` (Growth) buys the workspace: drafting, editing, and materialising
+ * the recipient list. `featureForChannel` (Pro) buys automated sending on a
+ * given channel, and guards only the actions that actually dispatch messages.
+ *
+ * Because Pro contains Growth, anything that passes the channel gate has already
+ * passed the workspace gate — the send paths do not need to ask twice.
+ */
+const CAMPAIGN_WORKSPACE_FEATURE = "campaigns" as const;
+
 /** The gate for a channel. Sending costs the store money; drafting does not. */
 function featureForChannel(channel: string): PlanFeatureKey {
   return channel === "EMAIL" ? "email_automation" : "sms_automation";
@@ -49,7 +62,8 @@ export async function createCampaignFormAction(
   try {
     const input = campaignInputFromFormData(formData);
 
-    await requirePlanFeature(store.id, featureForChannel(input.channel ?? "SMS"));
+    await requirePlanFeature(store.id, CAMPAIGN_WORKSPACE_FEATURE);
+
     const campaign = await createCampaign(store.id, input);
 
     campaignId = campaign.id;
@@ -71,7 +85,8 @@ export async function updateCampaignFormAction(
   try {
     const input = campaignInputFromFormData(formData);
 
-    await requirePlanFeature(store.id, featureForChannel(input.channel ?? "SMS"));
+    await requirePlanFeature(store.id, CAMPAIGN_WORKSPACE_FEATURE);
+
     const campaign = await updateCampaign(store.id, campaignId, input);
 
     if (!campaign) {
@@ -129,6 +144,8 @@ export async function buildCampaignRecipientsAction(
         status: "error"
       };
     }
+
+    await requirePlanFeature(store.id, CAMPAIGN_WORKSPACE_FEATURE);
 
     const { inserted } = await materialiseCampaignRecipients(
       store.id,

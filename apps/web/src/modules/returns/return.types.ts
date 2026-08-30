@@ -1,4 +1,5 @@
 import type { Prisma } from "@dash/db";
+import type { PlanFeatureKey } from "../billing/plan-features";
 import type {
   OrderRefundMethod,
   OrderReturnReason,
@@ -46,6 +47,21 @@ export const orderReturnTypeLabels: Record<OrderReturnType, string> = {
   EXCHANGE: "Exchange",
   REFUND: "Refund",
   RETURN: "Return"
+};
+
+/**
+ * Which plan feature each request type is sold under.
+ *
+ * The three pages are one component over one table, but they are three
+ * separate line items on the pricing page: Returns and Refunds come with
+ * Starter, Exchanges with Growth. Every gate — the page badge, the create
+ * button, and the write actions — resolves the key through here, so the tier a
+ * request type belongs to is stated once.
+ */
+export const orderReturnTypeFeatures: Record<OrderReturnType, PlanFeatureKey> = {
+  EXCHANGE: "exchanges",
+  REFUND: "refunds",
+  RETURN: "returns"
 };
 
 export const orderReturnStatusLabels: Record<OrderReturnStatus, string> = {

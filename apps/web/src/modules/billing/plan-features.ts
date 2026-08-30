@@ -24,26 +24,46 @@ export const PLAN_FEATURE_KEYS = [
   "advanced_attribution",
   "affiliate_tracking",
   "api_access",
+  "audiences",
+  "blocked_ips",
+  "bundles",
+  "campaigns",
   "courier_api",
+  "coupons",
   "custom_domain",
+  "custom_tracking",
   "email_automation",
+  "exchanges",
   "expenses",
   "facebook_automation",
   "fake_orders",
+  "footer_branding",
   "fraud_check",
   "google_ads_tracking",
+  "google_analytics",
+  "gtm_tracking",
+  "incomplete_orders",
   "inventory",
   "marketing_analytics",
   "marketing_automation",
+  "marketing_templates",
+  "meta_pixel",
+  "order_bump",
   "order_tracking",
   "order_verification",
-  "pixel_tracking",
+  "preorders",
   "purchases",
+  "refunds",
+  "returns",
   "sales",
+  "search_discovery",
   "server_side_tracking",
   "sms_automation",
+  "sms_notifications",
   "suppliers",
+  "team",
   "tiktok_tracking",
+  "upsell_cross_sell",
   "whatsapp_automation"
 ] as const;
 
@@ -84,6 +104,37 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
     label: "API Access",
     status: "planned"
   },
+  /**
+   * Blocking an address is the destructive half of fake-order triage — a shared
+   * mobile-network IP can be thousands of real buyers — so it sits a tier above
+   * the read-only risk signals rather than beside them.
+   */
+  audiences: {
+    description: "Saved customer segments, built from rules and reused across campaigns.",
+    label: "Audiences",
+    status: "available"
+  },
+  blocked_ips: {
+    description: "Block an IP address from placing orders, permanently or for a set window.",
+    label: "Blocked IPs",
+    status: "available"
+  },
+  bundles: {
+    description: "Multi-product bundles priced as one offer, on the storefront and in the cart.",
+    label: "Bundles",
+    status: "available"
+  },
+  /**
+   * The campaign workspace — drafting, audiences, recipients, scheduling. Sending
+   * on a given channel is a separate, dearer entitlement (`sms_automation`,
+   * `email_automation`, `whatsapp_automation`), so a Growth store can build and
+   * plan a campaign while automated delivery stays a Pro capability.
+   */
+  campaigns: {
+    description: "Build, schedule, and track marketing campaigns against a saved audience.",
+    label: "Campaigns",
+    status: "available"
+  },
   courier_api: {
     description: "Courier provider integrations and automated consignments.",
     label: "Courier API",
@@ -94,15 +145,37 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
    * this registry and still lives on the `Plan.customDomainEnabled` column via
    * `canUseCustomDomain` — keep the two in step when changing which tier gets it.
    */
+  coupons: {
+    description: "Discount codes with usage limits, date windows, and per-customer caps.",
+    label: "Coupons",
+    status: "available"
+  },
   custom_domain: {
     description: "Connect your own domain to the storefront.",
     label: "Custom Domain",
+    status: "available"
+  },
+  /**
+   * Raw markup the seller pastes in themselves — the escape hatch for any
+   * platform without a page of its own. A tier above the by-ID integrations
+   * because arbitrary script injection is the one tracking setting that can
+   * break the storefront, and because it is what people reach for to add the
+   * platforms Growth is otherwise buying.
+   */
+  custom_tracking: {
+    description: "Your own header, body, and footer markup injected into the storefront.",
+    label: "Custom Tracking",
     status: "available"
   },
   email_automation: {
     description: "Automated email campaigns and lifecycle flows.",
     label: "Email Automation",
     status: "planned"
+  },
+  exchanges: {
+    description: "Swap requests where goods come back and a replacement goes out, settled against stock.",
+    label: "Exchanges",
+    status: "available"
   },
   expenses: {
     description: "Business expense tracking and expense categories.",
@@ -119,6 +192,20 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
     label: "Fake Order Detection",
     status: "available"
   },
+  /**
+   * Editing the storefront footer's copyright line.
+   *
+   * Granted from Starter up, which is to say every paid plan. The Free tier is
+   * the platform's shop window — a free year on a `*.storeim.com` subdomain —
+   * and the credit in the footer is what it is traded for, so it is not a
+   * setting there rather than a setting that resets. `StorefrontFooter` serves
+   * the default to an unentitled store however the column was filled in.
+   */
+  footer_branding: {
+    description: "Customize the storefront footer copyright line, including the StoreIM credit.",
+    label: "Footer Branding",
+    status: "available"
+  },
   fraud_check: {
     description: "Courier-backed delivery risk and fraud signals.",
     label: "Fraud Check",
@@ -129,13 +216,29 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
     label: "Google Ads Tracking",
     status: "available"
   },
+  google_analytics: {
+    description: "GA4 measurement ID and Google site verification on the storefront.",
+    label: "Google Analytics",
+    status: "available"
+  },
+  gtm_tracking: {
+    description: "Google Tag Manager container, for managing tags without a deploy.",
+    label: "Google Tag Manager",
+    status: "available"
+  },
+  incomplete_orders: {
+    description:
+      "Checkouts that were filled in but never became orders, with the outreach actions to win them back.",
+    label: "Incomplete Orders",
+    status: "available"
+  },
   inventory: {
     description: "Stock adjustments and inventory movement history.",
     label: "Inventory",
     status: "available"
   },
   marketing_analytics: {
-    description: "Marketing performance reporting and GA4 measurement.",
+    description: "Marketing performance reporting across campaigns and channels.",
     label: "Marketing Analytics",
     status: "available"
   },
@@ -143,6 +246,21 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
     description: "Cross-channel campaign automation and journeys.",
     label: "Marketing Automation",
     status: "planned"
+  },
+  marketing_templates: {
+    description: "Reusable SMS and email message templates for campaigns.",
+    label: "Templates",
+    status: "available"
+  },
+  meta_pixel: {
+    description: "Meta (Facebook and Instagram) pixel and domain verification.",
+    label: "Meta Pixel",
+    status: "available"
+  },
+  order_bump: {
+    description: "A one-click add-on offer shown to the customer during checkout.",
+    label: "Order Bump",
+    status: "available"
   },
   order_tracking: {
     description:
@@ -155,9 +273,10 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
     label: "Verification Queue",
     status: "available"
   },
-  pixel_tracking: {
-    description: "Meta, TikTok, and GA4 pixel tracking on the storefront.",
-    label: "Pixel Tracking",
+  preorders: {
+    description:
+      "Sell stock that has not arrived yet, and work the backlog from a dashboard until it lands.",
+    label: "Pre-orders",
     status: "available"
   },
   purchases: {
@@ -165,9 +284,25 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
     label: "Purchases",
     status: "available"
   },
+  refunds: {
+    description: "Money-back requests with nothing to collect, recorded against the original order.",
+    label: "Refunds",
+    status: "available"
+  },
+  returns: {
+    description: "Return requests from approval through to received goods, refund, and restock.",
+    label: "Returns",
+    status: "available"
+  },
   sales: {
     description: "Manual sales entry and counter-sale records.",
     label: "Sales",
+    status: "available"
+  },
+  search_discovery: {
+    description:
+      "Tune storefront search: synonym groups, pinned results, and query redirects.",
+    label: "Search & Discovery",
     status: "available"
   },
   server_side_tracking: {
@@ -181,14 +316,41 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
     label: "SMS Automation",
     status: "planned"
   },
+  /**
+   * The store's own transactional SMS — which events text a customer, and the
+   * sender it goes out as. Distinct from `sms_automation`, which is campaign
+   * sending and sits on Pro; how many messages either may send is the plan's
+   * `smsLimit` column, not this key.
+   */
+  sms_notifications: {
+    description: "Choose which order events text your customers, and the sender they come from.",
+    label: "SMS",
+    status: "available"
+  },
   suppliers: {
     description: "Supplier records and purchasing contacts.",
     label: "Suppliers",
     status: "available"
   },
+  /**
+   * Inviting teammates and managing their roles. How many seats the store gets
+   * is the plan's `staffLimit` column — a separate question this key does not
+   * answer, and does not replace.
+   */
+  team: {
+    description: "Invite teammates, set their roles, and manage access to the store.",
+    label: "Team",
+    status: "available"
+  },
   tiktok_tracking: {
-    description: "TikTok pixel and conversion tracking.",
-    label: "TikTok Tracking",
+    description: "TikTok pixel and conversion tracking on the storefront.",
+    label: "TikTok Pixel",
+    status: "available"
+  },
+  upsell_cross_sell: {
+    description:
+      "Reporting on how paired products perform — what gets added alongside what, and what it earns.",
+    label: "Upsell & Cross-sell",
     status: "available"
   },
   whatsapp_automation: {

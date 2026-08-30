@@ -3,7 +3,9 @@ import { DashboardShell } from "../../../../components/dashboard/dashboard-shell
 import { AbandonedCartsReportDashboard, CustomersReportDashboard, IncompleteOrdersReportDashboard, MerchandisingReportDashboard, OrdersReportDashboard, ProductsReportDashboard, RevenuesReportDashboard } from "../../../../modules/reports/components/report-section-dashboards";
 import { DateRangeFilter } from "../../../../modules/reports/components/report-section-components";
 import { getAbandonedCartsReport, getCustomersReport, getIncompleteOrdersReport, getMerchandisingReport, getOrdersReport, getProductsReport, getRevenuesReport } from "../../../../modules/reports/report.service";
-import { parseReportRange, type ReportRangeKey } from "../../../../modules/reports/report.types";
+import { FeatureGate } from "../../../../modules/billing/components/feature-gate";
+import { hasPlanFeature } from "../../../../modules/billing/subscription-limits";
+import { REPORT_FEATURES, parseReportRange, type ReportRangeKey } from "../../../../modules/reports/report.types";
 import { requireStore } from "../../../../modules/stores/queries";
 
 const reportTitles: Record<string, string> = {
@@ -27,14 +29,30 @@ export default async function ReportSectionPage({ params, searchParams }: Report
   const title = reportTitles[report];
 
   if (!title) notFound();
+
+  // Three of the seven reports are entitled. The numbers are withheld rather
+  // than blurred: a report is only its figures, so showing them behind a badge
+  // would be giving the feature away and calling it a preview.
+  const feature = REPORT_FEATURES[report];
+  const locked = feature ? !(await hasPlanFeature(store.id, feature)) : false;
   const range = parseReportRange((await searchParams).range);
-  const dashboard = await loadReportDashboard(report, store.id, store.currency, range);
+  const dashboard = locked
+    ? null
+    : await loadReportDashboard(report, store.id, store.currency, range);
 
   return (
     <DashboardShell storeSlug={store.slug}>
       <section className="mx-auto grid max-w-[1480px] gap-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h1 className="m-0 text-[1.65rem] font-semibold leading-tight">{title} Report</h1><p className="mt-1.5 text-xs text-[#777985]">Store-scoped {title.toLowerCase()} performance and activity.</p></div><DateRangeFilter basePath={`/dashboard/reports/${report}`} range={range} /></div>
-        {dashboard}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h1 className="m-0 text-[1.65rem] font-semibold leading-tight">{title} Report</h1><p className="mt-1.5 text-xs text-[#777985]">Store-scoped {title.toLowerCase()} performance and activity.</p></div>{locked ? null : <DateRangeFilter basePath={`/dashboard/reports/${report}`} range={range} />}</div>
+        {locked && feature ? (
+          <div className="empty-state">
+            <FeatureGate feature={feature} storeId={store.id} />
+            <h2 className="mt-3">{title} is not included in your plan</h2>
+            <p>Upgrade to see this report. Your data keeps being collected in the meantime.</p>
+          </div>
+        ) : (
+          dashboard
+        )}
       </section>
     </DashboardShell>
   );

@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { MediaPickerField, MediaPickerListField } from "../../media/components/media-picker";
 import { StorefrontSettingsToast } from "../../storefront/dashboard/storefront-settings-toast";
 import {
+  DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
   FOOTER_COLUMN_SLOTS,
   normalizeAdvancedSettings,
   type StorefrontAdvancedSettings,
@@ -30,6 +31,12 @@ export type ThemeSettingsFormValue = {
 
 type ThemeSettingsFormProps = {
   action: (state: SettingsActionState, formData: FormData) => Promise<SettingsActionState>;
+  /**
+   * Whether the plan includes `footer_branding`. Only the footer copyright
+   * field reads it; everything else on this form is unconditional. Defaults to
+   * true so the paid rendering is the one you get unless told otherwise.
+   */
+  canBrandFooter?: boolean | undefined;
   settings: ThemeSettingsFormValue;
 };
 
@@ -37,7 +44,11 @@ const initialState: SettingsActionState = {
   status: "idle"
 };
 
-export function ThemeSettingsForm({ action, settings }: ThemeSettingsFormProps) {
+export function ThemeSettingsForm({
+  action,
+  canBrandFooter = true,
+  settings
+}: ThemeSettingsFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
   const advanced = normalizeAdvancedSettings(settings.advancedSettings);
   const slides = normalizeSlides(advanced.hero.slides);
@@ -432,8 +443,29 @@ export function ThemeSettingsForm({ action, settings }: ThemeSettingsFormProps) 
           <ToggleField label="Show payment icons" name="footerPaymentIconsEnabled" value={advanced.footer.paymentIconsEnabled} />
           <label>
             Copyright text
-            <input defaultValue={advanced.footer.copyrightText} name="footerCopyrightText" type="text" />
-            <span className="theme-field-helper">Supports {"{year}"} and {"{store}"}.</span>
+            {/*
+              Disabled rather than hidden on the free tier: the seller should be
+              able to see the line their storefront carries, and what upgrading
+              would let them change. A disabled input posts nothing, and
+              `updateThemeSettingsFormAction` replaces the value regardless.
+            */}
+            <input
+              defaultValue={
+                canBrandFooter
+                  ? advanced.footer.copyrightText
+                  : DEFAULT_STOREFRONT_ADVANCED_SETTINGS.footer.copyrightText
+              }
+              disabled={!canBrandFooter}
+              name="footerCopyrightText"
+              type="text"
+            />
+            <span className="theme-field-helper">
+              {canBrandFooter ? (
+                <>Supports {"{year}"} and {"{store}"}.</>
+              ) : (
+                <>Editing the footer credit is included from the Starter plan.</>
+              )}
+            </span>
           </label>
         </div>
         <label className="theme-repeater-field">

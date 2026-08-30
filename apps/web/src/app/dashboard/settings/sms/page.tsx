@@ -1,4 +1,5 @@
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
+import { FeatureGate } from "../../../../modules/billing/components/feature-gate";
 import { getSmsAllowance } from "../../../../modules/billing/subscription-limits";
 import { StoreSmsSettings } from "../../../../modules/notifications/components/store-sms-settings";
 import {
@@ -21,7 +22,10 @@ export default async function StoreSmsSettingsPage() {
         <div className="resource-header">
           <div>
             <p className="eyebrow">Settings</p>
-            <h1>SMS</h1>
+            <span className="flex flex-wrap items-center gap-2">
+              <h1>SMS</h1>
+              <FeatureGate feature="sms_notifications" storeId={store.id} />
+            </span>
             <p className="auth-copy">
               Choose when your store texts its customers. Your plan sets how many messages you
               get each month.

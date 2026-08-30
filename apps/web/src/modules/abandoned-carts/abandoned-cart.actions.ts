@@ -19,16 +19,43 @@ export type AbandonedCartActionResult =
   | { feature: PlanFeatureKey; status: "locked" }
   | { status: "ok" };
 
+/**
+ * The two surfaces these actions serve. A cart that was never carried into
+ * checkout is Abandoned Carts; a checkout that was filled in and never placed is
+ * Incomplete Orders. Same rows, same recovery actions, two line items on the
+ * pricing page — so the caller says which one it is speaking for and the gate
+ * asks about that feature.
+ */
+export type CartRecoverySurface = "abandoned_cart" | "incomplete_orders";
+
+const CART_RECOVERY_SURFACES: ReadonlySet<string> = new Set([
+  "abandoned_cart",
+  "incomplete_orders"
+]);
+
+/**
+ * The surface argument crosses the server-action boundary, so it is a string
+ * from the network however it is typed here. Anything unrecognised falls back to
+ * `abandoned_cart` rather than being trusted, which keeps a crafted request from
+ * naming some unrelated feature the store happens to be entitled to and getting
+ * a recovery write out of it.
+ */
+function gateFeature(surface: CartRecoverySurface): CartRecoverySurface {
+  return CART_RECOVERY_SURFACES.has(surface) ? surface : "abandoned_cart";
+}
+
 export async function markAbandonedCartContactedAction(
   cartId: string,
-  channel: AbandonedCartOutreachChannel = "manual"
+  channel: AbandonedCartOutreachChannel = "manual",
+  surface: CartRecoverySurface = "abandoned_cart"
 ): Promise<AbandonedCartActionResult> {
   const store = await requireStore();
+  const feature = gateFeature(surface);
 
-  // Free plans can browse abandoned carts but cannot work them — the recovery
+  // Free plans can browse these lists but cannot work them — the recovery
   // actions are the paid part of the feature.
-  if (!(await hasPlanFeature(store.id, "abandoned_cart"))) {
-    return { feature: "abandoned_cart", status: "locked" };
+  if (!(await hasPlanFeature(store.id, feature))) {
+    return { feature, status: "locked" };
   }
 
   await markAbandonedCartContacted(store.id, { cartId, channel });
@@ -39,12 +66,14 @@ export async function markAbandonedCartContactedAction(
 }
 
 export async function markAbandonedCartRecoveredAction(
-  cartId: string
+  cartId: string,
+  surface: CartRecoverySurface = "abandoned_cart"
 ): Promise<AbandonedCartActionResult> {
   const store = await requireStore();
+  const feature = gateFeature(surface);
 
-  if (!(await hasPlanFeature(store.id, "abandoned_cart"))) {
-    return { feature: "abandoned_cart", status: "locked" };
+  if (!(await hasPlanFeature(store.id, feature))) {
+    return { feature, status: "locked" };
   }
 
   await markAbandonedCartRecoveredManually(store.id, { cartId });

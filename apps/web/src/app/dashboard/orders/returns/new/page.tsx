@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DashboardShell } from "../../../../../components/dashboard/dashboard-shell";
 import { DashboardQueryForm } from "../../../../../components/dashboard/dashboard-query-form";
+import { PaidBadge } from "../../../../../modules/billing/components/paid-badge";
+import { hasPlanFeature } from "../../../../../modules/billing/subscription-limits";
 import { getProductsForStore } from "../../../../../modules/products/product.service";
 import { createOrderReturnFormAction } from "../../../../../modules/returns/return.actions";
 import {
@@ -19,7 +21,10 @@ import {
   getReturnableOrdersForStore,
   getReturnedQuantitiesByOrderItem
 } from "../../../../../modules/returns/return.service";
-import { orderReturnTypeLabels } from "../../../../../modules/returns/return.types";
+import {
+  orderReturnTypeFeatures,
+  orderReturnTypeLabels
+} from "../../../../../modules/returns/return.types";
 import { requireStore } from "../../../../../modules/stores/queries";
 
 type NewReturnPageProps = {
@@ -43,6 +48,40 @@ export default async function NewReturnPage({ searchParams }: NewReturnPageProps
   const orderId = singleValue(params.orderId).trim();
   const search = singleValue(params.search).trim();
   const backHref = listPathForType(type);
+  const feature = orderReturnTypeFeatures[type];
+
+  // Opening a request is the entitled half of the feature, so an unentitled
+  // seller is stopped here rather than after filling the whole form in.
+  // `createOrderReturnFormAction` is what actually enforces it.
+  if (!(await hasPlanFeature(store.id, feature))) {
+    return (
+      <DashboardShell storeSlug={store.slug}>
+        <section className="resource-page">
+          <div className="resource-header">
+            <div>
+              <p className="eyebrow">Orders</p>
+              <h1>New {orderReturnTypeLabels[type].toLowerCase()}</h1>
+              <p className="auth-copy">
+                Opening a {orderReturnTypeLabels[type].toLowerCase()} is not included in your
+                current plan.
+              </p>
+            </div>
+            <Link className="secondary link-button" href={backHref}>
+              Back
+            </Link>
+          </div>
+          <div className="empty-state">
+            <PaidBadge feature={feature} showPlan />
+            <h2 className="mt-3">Upgrade to open a {orderReturnTypeLabels[type].toLowerCase()}</h2>
+            <p>
+              Existing requests stay readable on your current plan. Upgrade to open new ones and to
+              settle the ones you already have.
+            </p>
+          </div>
+        </section>
+      </DashboardShell>
+    );
+  }
 
   if (!orderId) {
     return (

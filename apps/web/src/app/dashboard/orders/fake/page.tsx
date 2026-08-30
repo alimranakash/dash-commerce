@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Ban, CheckCircle2, ShieldAlert, ShieldQuestion } from "lucide-react";
 import { DashboardQueryForm } from "../../../../components/dashboard/dashboard-query-form";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
+import { FeatureGate } from "../../../../modules/billing/components/feature-gate";
 import { FakeOrderEmpty } from "../../../../modules/fake-orders/components/fake-order-empty";
 import { FakeOrderSummaryCard } from "../../../../modules/fake-orders/components/fake-order-summary-card";
 import { RiskLevelBadge, VerificationStatusBadge } from "../../../../modules/fake-orders/components/fake-order-badges";
@@ -44,9 +45,17 @@ export default async function FakeOrdersPage({ searchParams }: FakeOrdersPagePro
             <h1>Fake Orders</h1>
             <p className="auth-copy">Review suspicious orders using rule-based risk signals from your store data.</p>
           </div>
-          <Link className="secondary link-button" href="/dashboard/orders/verification">
-            Verification Queue
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            {/*
+              The risk scores are readable on any plan; triaging an order — mark
+              verified, mark fake, block the customer — is what the fake_orders
+              entitlement buys, and every one of those actions re-checks it.
+            */}
+            <FeatureGate feature="fake_orders" storeId={store.id} />
+            <Link className="secondary link-button" href="/dashboard/orders/verification">
+              Verification Queue
+            </Link>
+          </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

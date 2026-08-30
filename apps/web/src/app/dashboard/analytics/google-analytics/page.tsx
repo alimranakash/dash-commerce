@@ -13,6 +13,8 @@ export default async function GoogleAnalyticsPage() {
   return (
     <TrackingPageShell
       description="Connect Google Analytics 4 by measurement ID. We generate the official gtag snippet, so you never paste a script tag."
+      section="google-analytics"
+      storeId={access.store.id}
       storeSlug={access.store.slug}
       title="Google Analytics"
     >

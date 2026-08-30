@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
+import { FeatureGate } from "../../../../modules/billing/components/feature-gate";
 import { listBundles } from "../../../../modules/merchandising/bundle.service";
 import { describeBundle } from "../../../../modules/merchandising/bundle.schema";
 import { requireStore } from "../../../../modules/stores/queries";
@@ -21,12 +22,14 @@ export default async function BundlesPage() {
               to type: a bundle applies the moment the cart qualifies.
             </p>
           </div>
-          <Link
-            className="inline-flex items-center gap-1 rounded-lg border border-[#7c3aed] bg-white px-3.5 py-2.5 text-sm font-medium text-[#6d3cf5] hover:bg-[#f7f3ff]"
-            href="/dashboard/marketing/bundles/new"
-          >
-            <Plus aria-hidden="true" className="h-4 w-4" /> Create Bundle
-          </Link>
+          <FeatureGate feature="bundles" storeId={store.id}>
+            <Link
+              className="inline-flex items-center gap-1 rounded-lg border border-[#7c3aed] bg-white px-3.5 py-2.5 text-sm font-medium text-[#6d3cf5] hover:bg-[#f7f3ff]"
+              href="/dashboard/marketing/bundles/new"
+            >
+              <Plus aria-hidden="true" className="h-4 w-4" /> Create Bundle
+            </Link>
+          </FeatureGate>
         </div>
 
         {bundles.length === 0 ? (

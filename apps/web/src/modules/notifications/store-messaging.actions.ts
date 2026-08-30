@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { normalizeBangladeshPhone } from "../courier/courier-phone";
+import { requirePlanFeature } from "../billing/subscription-limits";
 import { requireStore } from "../stores/queries";
 import { isNotificationError } from "./notifications-errors";
 import { sendSms } from "./notifications.service";
@@ -18,7 +19,20 @@ export async function saveStoreMessagingAction(
   formData: FormData
 ): Promise<StoreMessagingState> {
   const store = await requireStore();
+  const smsEnabled = checked(formData, "smsEnabled");
   const orderCustomEnabled = checked(formData, "orderCustomEnabled");
+
+  // SMS is a Starter feature. Saving with the master switch *off* is allowed on
+  // any plan: every send is gated on `smsEnabled`, so this is the one control
+  // that stops the store texting its customers, and a lapsed store must never
+  // be locked out of reaching it.
+  if (smsEnabled) {
+    const refusal = await smsPlanRefusal(store.id);
+
+    if (refusal) {
+      return refusal;
+    }
+  }
   const orderCustomMessage = value(formData, "orderCustomMessage");
 
   // Only a blocking error while the switch is on. A seller clearing the box to
@@ -72,6 +86,13 @@ export async function sendStoreTestSmsAction(
   formData: FormData
 ): Promise<StoreMessagingState> {
   const store = await requireStore();
+  // Unlike saving, a test send spends a message straight away.
+  const refusal = await smsPlanRefusal(store.id);
+
+  if (refusal) {
+    return refusal;
+  }
+
   const phone = normalizeBangladeshPhone(value(formData, "recipient"));
 
   if (!phone) {
@@ -126,6 +147,20 @@ function readMessage(error: unknown, fallback: string) {
 
 function value(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
+}
+
+/** `null` when the plan allows SMS, otherwise the sentence to show. */
+async function smsPlanRefusal(storeId: string): Promise<StoreMessagingState | null> {
+  try {
+    await requirePlanFeature(storeId, "sms_notifications");
+
+    return null;
+  } catch (error) {
+    return {
+      message: error instanceof Error ? error.message : "SMS is not included in your plan.",
+      status: "error"
+    };
+  }
 }
 
 function checked(formData: FormData, key: string) {

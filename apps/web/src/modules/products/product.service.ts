@@ -1,4 +1,5 @@
 import { createUniqueSlug } from "../../lib/slug";
+import { hasPlanFeature } from "../billing/subscription-limits";
 import { getCategoryByIdForStore } from "../categories/category.repository";
 import {
   archiveProductRecord,
@@ -39,6 +40,7 @@ export async function createProduct(storeId: string, input: CreateProductInput) 
   }
 
   const { images, ...productData } = data;
+  const allowPreorder = await resolveAllowPreorder(storeId, productData.allowPreorder);
 
   return createProductRecord(
     storeId,
@@ -47,7 +49,7 @@ export async function createProduct(storeId: string, input: CreateProductInput) 
       slug,
       price: productData.price,
       stockQuantity: productData.stockQuantity,
-      allowPreorder: productData.allowPreorder,
+      allowPreorder,
       lowStockThreshold: productData.lowStockThreshold,
       preorderReleaseAt: productData.preorderReleaseAt,
       status: productData.status,
@@ -56,6 +58,27 @@ export async function createProduct(storeId: string, input: CreateProductInput) 
     },
     images
   );
+}
+
+/**
+ * Pre-orders are a Starter feature, so a store without it cannot mark a product
+ * sellable past its stock.
+ *
+ * This silently forces the flag off rather than throwing, which is deliberate:
+ * the toggle is one field on a long product form, and refusing the whole save —
+ * losing the seller's other edits — over a box they may not have noticed would
+ * be a worse outcome than the box not sticking. The product editor shows the
+ * tier badge beside it, and `/dashboard/products/preorders` explains it.
+ *
+ * Turning the flag *off* always goes through, so a lapsed store can still stop
+ * taking pre-orders it can no longer manage.
+ */
+async function resolveAllowPreorder(storeId: string, requested: boolean) {
+  if (!requested) {
+    return requested;
+  }
+
+  return (await hasPlanFeature(storeId, "preorders")) ? requested : false;
 }
 
 export async function updateProduct(
@@ -84,8 +107,13 @@ export async function updateProduct(
   }
 
   const { images, ...productData } = data;
+  const fields = optionalProductFields(productData);
 
-  return updateProductRecord(storeId, productId, optionalProductFields(productData), images);
+  if (fields.allowPreorder !== undefined) {
+    fields.allowPreorder = await resolveAllowPreorder(storeId, fields.allowPreorder);
+  }
+
+  return updateProductRecord(storeId, productId, fields, images);
 }
 
 export async function archiveProduct(storeId: string, productId: string) {

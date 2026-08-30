@@ -1,6 +1,8 @@
 import { Ban, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
+import { FeatureGate } from "../../../../modules/billing/components/feature-gate";
+import { hasPlanFeature } from "../../../../modules/billing/subscription-limits";
 import { BlockedIpForm } from "../../../../modules/blocked-ips/components/blocked-ip-form";
 import { BlockedIpList } from "../../../../modules/blocked-ips/components/blocked-ip-list";
 import { BlockedIpSuggestions } from "../../../../modules/blocked-ips/components/blocked-ip-suggestions";
@@ -9,7 +11,10 @@ import { requireStore } from "../../../../modules/stores/queries";
 
 export default async function BlockedIpsPage() {
   const store = await requireStore();
-  const { blocked, suggestions } = await getBlockedIpDashboard(store.id);
+  const [{ blocked, suggestions }, locked] = await Promise.all([
+    getBlockedIpDashboard(store.id),
+    hasPlanFeature(store.id, "blocked_ips").then((entitled) => !entitled)
+  ]);
   const activeCount = blocked.filter((row) => row.state === "ACTIVE").length;
 
   return (
@@ -24,9 +29,17 @@ export default async function BlockedIpsPage() {
               {activeCount === 1 ? " active block" : " active blocks"}.
             </p>
           </div>
-          <Link className="secondary link-button" href="/dashboard/orders/fake">
-            Fake Orders
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            {/*
+              Existing blocks stay listed and unblockable on any plan — a
+              downgrade must never trap a seller with customers they cannot let
+              back in. Only adding a block is entitled.
+            */}
+            <FeatureGate feature="blocked_ips" storeId={store.id} />
+            <Link className="secondary link-button" href="/dashboard/orders/fake">
+              Fake Orders
+            </Link>
+          </div>
         </div>
 
         {/*
@@ -51,7 +64,7 @@ export default async function BlockedIpsPage() {
             Block an address
           </h2>
           <div className="mt-5">
-            <BlockedIpForm />
+            <BlockedIpForm locked={locked} />
           </div>
         </div>
 

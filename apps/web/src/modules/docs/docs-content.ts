@@ -26,7 +26,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         slug: "getting-started",
         title: "StoreIM কী?",
         intro:
-          "StoreIM হলো বাংলাদেশের অনলাইন ব্যবসার জন্য একটি পূর্ণাঙ্গ কমার্স অপারেটিং সিস্টেম। এখানে একই জায়গা থেকে স্টোরফ্রন্ট, পণ্য, অর্ডার, কাস্টমার, পেমেন্ট, শিপিং, রিপোর্ট, স্টক, বিলিং এবং StoreIM AI পরিচালনা করা যায়।",
+          "StoreIM হলো বাংলাদেশের অনলাইন ব্যবসার জন্য একটি পূর্ণাঙ্গ কমার্স অপারেটিং সিস্টেম। এখানে একই জায়গা থেকে স্টোরফ্রন্ট, পণ্য, অর্ডার, কাস্টমার, পেমেন্ট, শিপিং, রিপোর্ট, স্টক, বিলিং এবং Dash AI পরিচালনা করা যায়।",
         useCase: [
           "Facebook/Instagram inbox নির্ভর অর্ডারকে একটি পেশাদার অনলাইন স্টোরে আনতে।",
           "পণ্য, অর্ডার, কাস্টমার, স্টক, খরচ এবং রিপোর্ট এক জায়গায় রাখতে।",
@@ -42,7 +42,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         important: [
           "Dashboard, Admin Console এবং Storefront আলাদা অংশ। বিক্রেতারা মূলত Dashboard ব্যবহার করবেন।",
           "স্টোর তৈরি হলে প্রয়োজনীয় default settings, theme, COD payment এবং shipping rate তৈরি হওয়ার কথা।",
-          "StoreIM AI কাজ করতে StoreIM AI connection configured থাকতে হবে।"
+          "Dash AI কাজ করতে Dash AI connection configured থাকতে হবে।"
         ],
         tips: [
           "স্টোর লাইভ করার আগে একটি টেস্ট পণ্য, একটি টেস্ট অর্ডার এবং একটি টেস্ট manual payment flow পরীক্ষা করুন।",
@@ -621,6 +621,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
           "Verification Queue থেকে Mark Verified, Mark Fake, Block Customer বা Return to Normal Queue action ব্যবহার করুন।"
         ],
         important: [
+          "Fake Order Detection ও Verification Queue paid feature — Growth plan থেকে চালু। Risk score সব plan-এ দেখা যায়, কিন্তু Mark Verified, Mark Fake ও Block Customer action নিতে Growth লাগে।",
           "এটি AI model নয়; বর্তমানে rule-based score।",
           "Checkout flow অপরিবর্তিত রাখে; risk score order তৈরির সময় হিসাব হয়ে order-এর সাথে save থাকে।",
           "Verification Queue-তে Require verification before courier চালু করলে VERIFIED না হওয়া পর্যন্ত courier booking blocked থাকবে। Default-এ এটি বন্ধ।",
@@ -687,6 +688,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
           "Analytics দেখতে Reports > Incomplete Orders খুলুন।"
         ],
         important: [
+          "Incomplete Orders একটি paid feature — Starter plan থেকে চালু। List সব plan-এ দেখা যায়, কিন্তু Contacted বা Recovered mark করতে Starter লাগে।",
           "Refuse হওয়া checkout সাথে সাথেই list-এ আসে; শুধু টাইপ করে ফেলে যাওয়া checkout ৬০ মিনিট চুপ থাকার পর আসে।",
           "Create Order শুধু form prefill করে, নিজে থেকে কোনো order তৈরি করে না; আপনি ফোনে মিলিয়ে save করবেন।",
           "Catalog থেকে delete বা archive হয়ে যাওয়া product prefill-এ আসে না, তবে নাম ধরে জানিয়ে দেওয়া হয়।",
@@ -952,7 +954,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
           "Empty state দেখলে বুঝবেন ঐ period-এ data নেই।"
         ],
         important: [
-          "Reports StoreIM database data ব্যবহার করে, StoreIM AI call করে না।",
+          "Reports StoreIM database data ব্যবহার করে, Dash AI call করে না।",
           "Revenue সাধারণত non-cancelled order থেকে হিসাব হয়।",
           "Charts data না থাকলে professional placeholder দেখায়।"
         ],
@@ -1431,23 +1433,25 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
       }),
       page({
         slug: "settings/storeos-ai",
-        title: "StoreIM AI",
+        title: "Dash AI",
         intro:
-          "StoreIM AI StoreIM dashboard-এর মধ্যে chat interface দিয়ে business প্রশ্নের উত্তর দেয়। StoreIM AI API configured না থাকলে clear fallback message দেখায়।",
+          "Dash AI StoreIM dashboard-এর মধ্যে chat interface দিয়ে business প্রশ্নের উত্তর দেয়। Connect না থাকলে clear fallback message দেখায়।",
         useCase: [
           "আজ কত order, এই মাসে sales, low stock product বা best-selling product দ্রুত জিজ্ঞেস করতে।",
-          "StoreIM AI native connection status দেখতে।",
+          "Dash AI native connection status দেখতে।",
           "Connect/reconnect action দিয়ে connection retry করতে।"
         ],
         steps: [
-          "Settings > StoreIM AI বা Dashboard > AI Assistant খুলুন।",
-          "Connection panel থেকে API configured, status, connection ID এবং last synced দেখুন।",
+          "Dash AI > Settings খুলুন।",
+          "Connect / reconnect Dash AI চাপুন — আলাদা কোনো signup বা API key লাগে না।",
+          "প্রশ্ন করতে Dash AI > Chat Agent খুলুন।",
+          "Connection panel থেকে status, connection ID এবং last synced দেখুন।",
           "Suggested prompts থেকে প্রশ্ন select করুন অথবা নিজের প্রশ্ন লিখুন।",
-          "Send চাপুন।",
-          "Not configured message এলে StoreIM AI API setup দরকার।"
+          "Send চাপুন।"
         ],
         important: [
-          "STOREOS_API_KEY browser-এ expose করা হয় না।",
+          "পুরো connection server-side; কোনো credential browser-এ যায় না।",
+          "Connection আপনার login করা store-এর সাথেই bind হয়; অন্য store select করা যায় না।",
           "AI chat backend current user/store verify করে।",
           "Autonomous AI actions এখনো চালু নয়।"
         ],
@@ -1456,10 +1460,10 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
           "Critical business decision নেয়ার আগে Reports/Orders data মিলিয়ে দেখুন।"
         ],
         commonMistakes: [
-          "StoreIM AI not configured হলে AI broken মনে করা।",
+          "Dash AI connect করা না থাকলে AI broken মনে করা।",
           "AI answer-কে accounting final report ধরে নেয়া।"
         ],
-        related: ["Reports", "Dashboard Overview", "StoreIM AI"]
+        related: ["Reports", "Dashboard Overview", "Dash AI"]
       })
     ]
   },
@@ -2002,7 +2006,7 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         important: [
           "Database schema change হয়েছে কিন্তু migration/push না হলে Prisma runtime error হতে পারে।",
           "Decimal object client component-এ পাঠালে serialization error হতে পারে; seller হিসেবে page refresh/support লাগতে পারে।",
-          "Environment variable missing হলে StoreIM AI/Google/Billing settings কাজ নাও করতে পারে।"
+          "Environment variable missing হলে Dash AI/Google/Billing settings কাজ নাও করতে পারে।"
         ],
         tips: [
           "Error screenshot, URL এবং সময় support-কে দিলে দ্রুত diagnosis হয়।",

@@ -2,7 +2,8 @@ import { storefrontBasePath } from "../../base-path";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { StorefrontAdvancedSettings } from "../../customization";
-import { resolveStorefrontCopyright, resolveStorefrontHref } from "../../footer-content";
+import { resolveStorefrontHref } from "../../footer-content";
+import { StorefrontCopyright } from "../../components/storefront-copyright";
 import type { StorefrontSocialLink } from "../../social-links";
 import type { StorefrontStore } from "../../storefront.types";
 
@@ -97,7 +98,10 @@ export async function FashionStorefrontFooter({
       <div className="fashion-footer-bottom">
         <div className="fashion-footer-copyright">
           <p>
-            {resolveStorefrontCopyright(footer?.copyrightText ?? "© {year} {store}.", brandText)}
+            <StorefrontCopyright
+              storeName={brandText}
+              template={footer?.copyrightText ?? "© {year} {store}."}
+            />
             {primaryDomain ? ` ${primaryDomain}` : ""}
           </p>
         </div>

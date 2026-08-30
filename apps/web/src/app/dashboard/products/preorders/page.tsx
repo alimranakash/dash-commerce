@@ -1,6 +1,7 @@
 import { CalendarClock, PackageX } from "lucide-react";
 import Link from "next/link";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
+import { FeatureGate } from "../../../../modules/billing/components/feature-gate";
 import {
   getPreorderDebts,
   getPreorderWaitingOrders
@@ -27,9 +28,12 @@ export default async function PreordersPage() {
               who to ring once it lands.
             </p>
           </div>
-          <Link className="secondary link-button" href="/dashboard/purchases/new">
-            Create purchase order
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <FeatureGate feature="preorders" storeId={store.id} />
+            <Link className="secondary link-button" href="/dashboard/purchases/new">
+              Create purchase order
+            </Link>
+          </div>
         </div>
 
         <div className="panel-card p-4 sm:p-5">

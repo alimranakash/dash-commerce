@@ -13,6 +13,8 @@ export default async function GoogleAdsPage() {
   return (
     <TrackingPageShell
       description="Report conversions back to Google Ads so your campaigns can optimise against real orders."
+      section="google-ads"
+      storeId={access.store.id}
       storeSlug={access.store.slug}
       title="Google Ads"
     >

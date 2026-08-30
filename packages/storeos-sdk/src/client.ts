@@ -13,6 +13,14 @@ export type StoreOSClientOptions = {
   fetcher?: typeof fetch;
 };
 
+/**
+ * The *platform* link to StoreOS, not a per-merchant setting.
+ *
+ * One deployment of DashCommerce talks to one StoreOS installation with one
+ * operator-issued credential. A seller never sees, sets, or needs to know these
+ * values — `STOREOS_API_KEY` in particular is server-only and must never be
+ * serialised into a server-action result, a page prop, or an error message.
+ */
 export type StoreOSEnv = {
   STOREOS_API_KEY?: string;
   STOREOS_API_URL?: string;
@@ -54,9 +62,12 @@ export class StoreOSClient {
   }
 
   async getConnection(connectionId: string) {
-    return this.request<StoreOSConnection>(`/native/connections/${encodeURIComponent(connectionId)}`, {
-      method: "GET"
-    });
+    return this.request<StoreOSConnection>(
+      `/native/connections/${encodeURIComponent(connectionId)}`,
+      {
+        method: "GET"
+      }
+    );
   }
 
   async sendChatMessage(input: StoreOSChatMessageInput) {
@@ -113,7 +124,16 @@ export function createStoreOSClientFromEnv(env: StoreOSEnv = readProcessEnv()) {
   });
 }
 
-export function isStoreOSConfigured(env: StoreOSEnv = readProcessEnv()) {
+/**
+ * Whether the operator has provisioned this deployment's link to StoreOS.
+ *
+ * Deliberately not called "configured": it says nothing about whether a given
+ * store is connected, and it is not a merchant-facing fact. Callers use it to
+ * decide whether clicking Connect could possibly succeed — the answer is folded
+ * into a connection state before anything reaches the browser, so the browser
+ * learns "StoreIM AI is not available yet", never which variables are unset.
+ */
+export function isStoreOSLinkProvisioned(env: StoreOSEnv = readProcessEnv()) {
   return Boolean(env.STOREOS_API_URL && env.STOREOS_API_KEY);
 }
 

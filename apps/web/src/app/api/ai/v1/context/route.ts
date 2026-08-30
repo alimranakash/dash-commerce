@@ -3,12 +3,18 @@ import { getAiStoreContext } from "../../../../../modules/ai/ai-context.service"
 import { AiApiRouteError, withAiApiRoute } from "../../../../../modules/ai/ai-route";
 
 /**
- * `GET /api/ai/v1/context` — the identity of the store this key belongs to.
+ * `GET /api/ai/v1/context` — the identity of the store this key belongs to, and
+ * what this key is allowed to ask for.
  *
  * The first endpoint of the external AI API, and deliberately the smallest one
  * that is worth anything: it is how StoreOS AI proves a key works, learns which
- * shop it is talking to, and learns the currency and timezone it must format
- * everything else in. No counts, no customers, no money.
+ * shop it is talking to, learns the currency and timezone it must format
+ * everything else in, and learns which of its features this key can support
+ * before it starts collecting 403s. No counts, no customers, no money.
+ *
+ * `scopes` is `identity.scopes` handed straight back — the array the auth layer
+ * resolved from the key row and the same one every other endpoint's scope check
+ * reads. Nothing here re-derives it, and nothing a caller sends can widen it.
  *
  * Note what this handler does *not* do. It does not authenticate, check a scope,
  * throttle, or shape an error — `withAiApiRoute` does all of that, so there is
@@ -26,7 +32,7 @@ export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   return withAiApiRoute(request, { scope: "read:store" }, async (identity) => {
-    const context = await getAiStoreContext(identity.storeId);
+    const context = await getAiStoreContext(identity.storeId, identity.scopes);
 
     if (!context) {
       // The key authenticated but its store has gone. Treated as a 404 rather

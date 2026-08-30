@@ -30,29 +30,62 @@ import type { PlanFeatureKey } from "../billing/plan-features";
  * grants it to Growth and Pro, which is the intended tier behaviour.
  */
 const STARTER_FEATURES: PlanFeatureKey[] = [
-  "abandoned_cart",
+  "audiences",
+  "bundles",
+  "coupons",
   "courier_api",
   "custom_domain",
   "expenses",
-  "fake_orders",
-  "fraud_check",
+  "footer_branding",
+  "google_analytics",
+  "incomplete_orders",
   "inventory",
   "marketing_analytics",
+  "marketing_templates",
+  "meta_pixel",
+  "order_bump",
   "order_tracking",
-  "order_verification",
-  "pixel_tracking",
+  "preorders",
   "purchases",
+  "refunds",
+  "returns",
   "sales",
-  "suppliers"
+  "sms_notifications",
+  "suppliers",
+  "team",
+  "tiktok_tracking"
 ];
 
+/**
+ * Everything Starter has, plus the order-risk suite and outbound marketing.
+ *
+ * Fraud Check, Fake Orders, the Verification Queue, Blocked IPs and Exchanges
+ * sit here rather than on Starter because each one either spends money on a
+ * courier lookup or refuses a customer outright, and a seller reaching for them
+ * is already running the volume that creates the problem they solve.
+ *
+ * Campaigns and Abandoned Cart join them because both reach *out* to customers
+ * rather than serving the ones already on the site. Starter buys the pieces a
+ * campaign is assembled from — Audiences, Templates, Coupons — and Growth buys
+ * sending to them. Note this is the campaign *workspace*: automated delivery on
+ * a channel stays a Pro entitlement below.
+ */
 const GROWTH_FEATURES: PlanFeatureKey[] = [
   ...STARTER_FEATURES,
+  "abandoned_cart",
   "advanced_analytics",
   "api_access",
+  "blocked_ips",
+  "campaigns",
+  "custom_tracking",
+  "exchanges",
+  "fake_orders",
+  "fraud_check",
   "google_ads_tracking",
-  "server_side_tracking",
-  "tiktok_tracking"
+  "gtm_tracking",
+  "order_verification",
+  "search_discovery",
+  "upsell_cross_sell"
 ];
 
 const PRO_FEATURES: PlanFeatureKey[] = [
@@ -62,6 +95,7 @@ const PRO_FEATURES: PlanFeatureKey[] = [
   "email_automation",
   "facebook_automation",
   "marketing_automation",
+  "server_side_tracking",
   "sms_automation",
   "whatsapp_automation"
 ];

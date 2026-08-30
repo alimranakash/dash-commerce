@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
+import { requirePlanFeature } from "../billing/subscription-limits";
 import { requireStore } from "../stores/queries";
 import { audienceRulesSchema, type AudienceRules } from "./audience.schema";
 import {
@@ -25,6 +26,17 @@ export type MarketingActionState = {
   status: "error" | "idle";
 };
 
+/**
+ * Two Starter features live in this file, and they are sold separately: saved
+ * segments (`audiences`) and reusable message bodies (`marketing_templates`).
+ * Sending to either is Campaigns, a tier up.
+ *
+ * As everywhere else, the entitlement buys authoring. Deleting is left ungated
+ * so a lapsed store can still tidy up what it built while it was paying.
+ */
+const AUDIENCE_FEATURE = "audiences" as const;
+const TEMPLATE_FEATURE = "marketing_templates" as const;
+
 /* ------------------------------- Audiences -------------------------------- */
 
 export async function createAudienceFormAction(
@@ -35,6 +47,8 @@ export async function createAudienceFormAction(
   let audienceId: string;
 
   try {
+    await requirePlanFeature(store.id, AUDIENCE_FEATURE);
+
     const audience = await createAudience(store.id, audienceInputFromFormData(formData));
 
     audienceId = audience.id;
@@ -54,6 +68,8 @@ export async function updateAudienceFormAction(
   const store = await requireStore();
 
   try {
+    await requirePlanFeature(store.id, AUDIENCE_FEATURE);
+
     const audience = await updateAudience(store.id, audienceId, audienceInputFromFormData(formData));
 
     if (!audience) {
@@ -138,6 +154,7 @@ export async function createTemplateFormAction(
   const store = await requireStore();
 
   try {
+    await requirePlanFeature(store.id, TEMPLATE_FEATURE);
     await createTemplate(store.id, templateInputFromFormData(formData));
   } catch (error) {
     return errorState(error);
@@ -155,6 +172,8 @@ export async function updateTemplateFormAction(
   const store = await requireStore();
 
   try {
+    await requirePlanFeature(store.id, TEMPLATE_FEATURE);
+
     const template = await updateTemplate(store.id, templateId, templateInputFromFormData(formData));
 
     if (!template) {

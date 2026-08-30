@@ -1,3 +1,5 @@
+import type { PlanFeatureKey } from "../billing/plan-features";
+
 export type ReportRangeKey = "30d" | "90d" | "12m";
 
 export const REPORT_RANGE_OPTIONS: Array<{ key: ReportRangeKey; label: string }> = [
@@ -185,4 +187,23 @@ export type MerchandisingReportData = {
   /** What sold through the suggestion surfaces, best first. */
   topSuggested: Array<{ quantity: number; revenue: number; source: string; title: string }>;
   totalRevenue: number;
+};
+
+/**
+ * Which reports are sold, and under what.
+ *
+ * Only three of the seven are entitled, and each one rides the *same* key as
+ * the workspace it reports on rather than a key of its own — reading the
+ * Abandoned Carts report is worth nothing to a seller who cannot open the carts
+ * it lists, so charging for the two separately would sell half a feature twice.
+ * That is also why Abandoned Carts is Growth here while Incomplete Orders is
+ * Starter: the pages they describe are priced that way.
+ *
+ * Orders, Revenues, Products and Customers are absent on purpose. They report
+ * on the store itself, which every plan gets.
+ */
+export const REPORT_FEATURES: Record<string, PlanFeatureKey> = {
+  "abandoned-carts": "abandoned_cart",
+  "incomplete-orders": "incomplete_orders",
+  merchandising: "upsell_cross_sell"
 };

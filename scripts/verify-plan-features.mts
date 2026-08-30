@@ -33,6 +33,8 @@ import {
   isEntitledSubscription,
   listPlanFeatures
 } from "../apps/web/src/modules/billing/subscription-limits";
+import { TRACKING_SECTIONS } from "../apps/web/src/modules/marketing/tracking-sections";
+import { REPORT_FEATURES } from "../apps/web/src/modules/reports/report.types";
 
 let failures = 0;
 
@@ -126,6 +128,204 @@ async function main() {
   check(
     "minPlanForFeature resolves for every registry key",
     PLAN_FEATURE_KEYS.every((key) => minPlanForFeature(key) !== null)
+  );
+
+  console.log("\n=== Order-desk tiering ===");
+
+  // The order desk is sold in two halves, and this is the statement of which
+  // half is which. Every key here is a page in the Orders section of the
+  // sidebar, so one drifting to the wrong tier is a page that silently changes
+  // price — these checks are what make that a build failure.
+  const ORDER_DESK_TIERS: Array<[PlanFeatureKey, string]> = [
+    // Working the orders you have.
+    ["returns", "Starter"],
+    ["refunds", "Starter"],
+    ["order_tracking", "Starter"],
+    ["incomplete_orders", "Starter"],
+    // Refusing the orders you do not want.
+    ["fraud_check", "Growth"],
+    ["blocked_ips", "Growth"],
+    ["order_verification", "Growth"],
+    ["fake_orders", "Growth"],
+    ["exchanges", "Growth"]
+  ];
+
+  for (const [key, expected] of ORDER_DESK_TIERS) {
+    const actual = minPlanForFeature(key);
+
+    check(
+      `${key.padEnd(18)} unlocks at ${expected}`,
+      actual === expected,
+      actual === expected ? "" : `got ${String(actual)}`
+    );
+  }
+
+  // Every one of them is a real page, and none of them is free.
+  check(
+    "every order-desk feature is paid",
+    ORDER_DESK_TIERS.every(([key]) => isPaidFeature(key))
+  );
+  check(
+    "every order-desk feature ships today",
+    ORDER_DESK_TIERS.every(([key]) => PLAN_FEATURE_REGISTRY[key].status === "available"),
+    ORDER_DESK_TIERS.filter(([key]) => PLAN_FEATURE_REGISTRY[key].status !== "available")
+      .map(([key]) => key)
+      .join(", ")
+  );
+
+  console.log("\n=== Marketing tiering ===");
+
+  // Starter buys the pieces a campaign is assembled from; Growth buys reaching
+  // out with them. The split only means anything if it holds, so it is asserted
+  // rather than left to the catalog to get right by hand.
+  const MARKETING_TIERS: Array<[PlanFeatureKey, string]> = [
+    // The building blocks.
+    ["coupons", "Starter"],
+    ["audiences", "Starter"],
+    ["marketing_templates", "Starter"],
+    ["order_bump", "Starter"],
+    ["bundles", "Starter"],
+    // Reaching out.
+    ["campaigns", "Growth"],
+    ["abandoned_cart", "Growth"]
+  ];
+
+  for (const [key, expected] of MARKETING_TIERS) {
+    const actual = minPlanForFeature(key);
+
+    check(
+      `${key.padEnd(19)} unlocks at ${expected}`,
+      actual === expected,
+      actual === expected ? "" : `got ${String(actual)}`
+    );
+  }
+
+  check(
+    "every marketing feature is paid",
+    MARKETING_TIERS.every(([key]) => isPaidFeature(key))
+  );
+
+  // The campaign workspace must stay cheaper than sending on any channel,
+  // otherwise "Campaigns is Growth" would be a promise the send gate breaks.
+  const workspaceTier = PLAN_CATALOG.find((entry) => entry.features.includes("campaigns"))?.sortOrder;
+  const deliveryKeys: PlanFeatureKey[] = ["sms_automation", "email_automation", "whatsapp_automation"];
+
+  for (const key of deliveryKeys) {
+    const deliveryTier = PLAN_CATALOG.find((entry) => entry.features.includes(key))?.sortOrder;
+
+    check(
+      `${key.padEnd(19)} is not cheaper than the campaign workspace`,
+      workspaceTier !== undefined &&
+        deliveryTier !== undefined &&
+        deliveryTier >= workspaceTier,
+      `workspace=${String(workspaceTier)} delivery=${String(deliveryTier)}`
+    );
+  }
+
+  console.log("\n=== Analytics & Tracking tiering ===");
+
+  // The one place all three tiers meet in a single menu. Every row here is a
+  // page under /dashboard/analytics, and the tier is the whole product story:
+  // connect the storefront pixels on Starter, reach past the storefront on
+  // Growth, send from our own servers on Pro.
+  const TRACKING_TIERS: Array<[PlanFeatureKey, string]> = [
+    ["meta_pixel", "Starter"],
+    ["google_analytics", "Starter"],
+    ["tiktok_tracking", "Starter"],
+    ["google_ads_tracking", "Growth"],
+    ["custom_tracking", "Growth"],
+    ["gtm_tracking", "Growth"],
+    ["server_side_tracking", "Pro"]
+  ];
+
+  for (const [key, expected] of TRACKING_TIERS) {
+    const actual = minPlanForFeature(key);
+
+    check(
+      `${key.padEnd(20)} unlocks at ${expected}`,
+      actual === expected,
+      actual === expected ? "" : `got ${String(actual)}`
+    );
+  }
+
+  // Every tracking page gates on the key its own record declares, so the badge
+  // the seller reads and the gate that refuses them cannot come apart. This is
+  // the check that would catch a new section added without an entitlement.
+  const trackingSections = Object.entries(TRACKING_SECTIONS);
+  const tieredKeys = new Set<string>(TRACKING_TIERS.map(([key]) => key));
+
+  check(
+    `all ${trackingSections.length} tracking sections declare a known feature`,
+    trackingSections.every(([, config]) => PLAN_FEATURE_KEYS.includes(config.feature)),
+    trackingSections
+      .filter(([, config]) => !PLAN_FEATURE_KEYS.includes(config.feature))
+      .map(([name]) => name)
+      .join(", ")
+  );
+  check(
+    "every tracking section is covered by the tier table above",
+    trackingSections.every(([, config]) => tieredKeys.has(config.feature)),
+    trackingSections
+      .filter(([, config]) => !tieredKeys.has(config.feature))
+      .map(([name]) => name)
+      .join(", ")
+  );
+  check(
+    "no tracking section is free",
+    trackingSections.every(([, config]) => isPaidFeature(config.feature))
+  );
+
+  console.log("\n=== Operations & reports tiering ===");
+
+  const OPERATIONS_TIERS: Array<[PlanFeatureKey, string]> = [
+    ["preorders", "Starter"],
+    ["team", "Starter"],
+    ["sms_notifications", "Starter"],
+    ["custom_domain", "Starter"],
+    ["courier_api", "Starter"],
+    ["search_discovery", "Growth"],
+    ["upsell_cross_sell", "Growth"]
+  ];
+
+  for (const [key, expected] of OPERATIONS_TIERS) {
+    const actual = minPlanForFeature(key);
+
+    check(
+      `${key.padEnd(18)} unlocks at ${expected}`,
+      actual === expected,
+      actual === expected ? "" : `got ${String(actual)}`
+    );
+  }
+
+  // A report must never be cheaper than the workspace it reports on: reading
+  // the Abandoned Carts figures is worth nothing to a seller who cannot open
+  // the carts, so the two ride the same key by construction.
+  check(
+    "the Abandoned Carts report rides the abandoned_cart key",
+    REPORT_FEATURES["abandoned-carts"] === "abandoned_cart"
+  );
+  check(
+    "the Incomplete Orders report rides the incomplete_orders key",
+    REPORT_FEATURES["incomplete-orders"] === "incomplete_orders"
+  );
+  check(
+    "every gated report names a known, paid feature",
+    Object.values(REPORT_FEATURES).every(
+      (key) => PLAN_FEATURE_KEYS.includes(key) && isPaidFeature(key)
+    ),
+    Object.entries(REPORT_FEATURES)
+      .filter(([, key]) => !PLAN_FEATURE_KEYS.includes(key) || !isPaidFeature(key))
+      .map(([name]) => name)
+      .join(", ")
+  );
+
+  // The free reports are free on purpose — they describe the store itself.
+  const FREE_REPORTS = ["orders", "revenues", "products", "customers"];
+
+  check(
+    "the four store-level reports stay ungated",
+    FREE_REPORTS.every((report) => !(report in REPORT_FEATURES)),
+    FREE_REPORTS.filter((report) => report in REPORT_FEATURES).join(", ")
   );
 
   console.log("\n=== Fail-closed states ===");

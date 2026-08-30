@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { ZodError } from "zod";
 import { requireStore, requireStoreManager } from "../stores/queries";
-import { connectStoreOSForStore, sendStoreOSAssistantMessage } from "./storeos.service";
+import type { StoreOSConnectionPhase } from "./storeos-connection-state";
+import {
+  connectStoreOSForStore,
+  getStoreOSConnectionView,
+  sendStoreOSAssistantMessage
+} from "./storeos.service";
 
 export type StoreOSChatActionResult = {
   connected: boolean;
@@ -12,7 +17,9 @@ export type StoreOSChatActionResult = {
 };
 
 export type StoreOSReconnectActionState = {
+  detail?: string;
   message?: string;
+  phase?: StoreOSConnectionPhase;
   status: "idle" | "success" | "error";
 };
 
@@ -39,6 +46,23 @@ export async function sendStoreOSChatMessageAction(
   }
 }
 
+/**
+ * The one entry point behind "Connect / reconnect StoreIM AI".
+ *
+ * `formData` is accepted because `useActionState` passes it and ignored because
+ * nothing in it may be trusted: the store is resolved from the session by
+ * `requireStoreManager()`, so a hidden `storeId` field, a `tenantId`, or a
+ * query string appended to the action URL changes nothing about which store gets
+ * connected. That is the whole tenancy guarantee of this action, and
+ * `verify:storeim-ai` asserts it by posting exactly those fields.
+ *
+ * Asking the assistant a question is ordinary work, but re-establishing the
+ * StoreOS connection is an integration change — hence the stricter guard here
+ * and `requireStore()` on the chat action above.
+ *
+ * What comes back is a phase and a sentence. No connection credential, no URL,
+ * and no environment state reaches the browser.
+ */
 export async function reconnectStoreOSAction(
   state: StoreOSReconnectActionState,
   formData: FormData
@@ -47,25 +71,25 @@ export async function reconnectStoreOSAction(
   void formData;
 
   try {
-    // Asking the assistant a question is ordinary work, but re-establishing the
-    // StoreOS connection is an integration change — hence the stricter guard
-    // here and `requireStore()` on the chat action above.
     const { store } = await requireStoreManager();
-    const connection = await connectStoreOSForStore(store.id);
+
+    await connectStoreOSForStore(store.id);
+
+    const view = await getStoreOSConnectionView(store.id);
 
     revalidatePath("/dashboard/settings");
     revalidatePath("/dashboard/ai");
 
     return {
-      message:
-        connection.status === "connected"
-          ? "StoreIM AI is connected."
-          : "The StoreIM AI connection is pending. Add STOREOS_API_URL and STOREOS_API_KEY, then reconnect.",
-      status: connection.status === "connected" ? "success" : "error"
+      detail: view.detail,
+      message: view.label,
+      phase: view.phase,
+      status: view.phase === "connected" ? "success" : "error"
     };
   } catch (error) {
     return {
       message: errorMessage(error),
+      phase: "failed",
       status: "error"
     };
   }
@@ -73,8 +97,8 @@ export async function reconnectStoreOSAction(
 
 function errorMessage(error: unknown) {
   if (error instanceof ZodError) {
-    return error.issues[0]?.message ?? "Please check your StoreIM AI request.";
+    return error.issues[0]?.message ?? "Please check your Dash AI request.";
   }
 
-  return error instanceof Error ? error.message : "StoreIM AI request failed.";
+  return error instanceof Error ? error.message : "Dash AI request failed.";
 }

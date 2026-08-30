@@ -16,6 +16,7 @@ import {
   ReceiptText,
   ShoppingBag,
   Settings,
+  Sparkles,
   Store,
   Truck,
   WalletCards,
@@ -51,22 +52,46 @@ type NavItem = {
  */
 const NAV_FEATURE_BY_HREF: Record<string, PlanFeatureKey> = {
   "/dashboard/abandoned-cart": "abandoned_cart",
+  "/dashboard/coupons": "coupons",
   "/dashboard/expenses": "expenses",
-  "/dashboard/marketing/campaigns": "sms_automation",
-  "/dashboard/marketing/campaigns/new": "sms_automation",
+  // The campaign workspace, not the channel it eventually sends on — the
+  // per-channel automation keys are a tier above and gate the send itself.
+  "/dashboard/marketing/audiences": "audiences",
+  "/dashboard/marketing/bundles": "bundles",
+  "/dashboard/marketing/campaigns": "campaigns",
+  "/dashboard/marketing/campaigns/new": "campaigns",
+  "/dashboard/marketing/order-bump": "order_bump",
+  "/dashboard/marketing/templates": "marketing_templates",
   "/dashboard/fraud-check": "fraud_check",
   "/dashboard/inventory": "inventory",
+  "/dashboard/orders/blocked-ips": "blocked_ips",
+  "/dashboard/orders/exchanges": "exchanges",
   "/dashboard/orders/fake": "fake_orders",
-  "/dashboard/orders/incomplete": "abandoned_cart",
+  "/dashboard/orders/incomplete": "incomplete_orders",
+  "/dashboard/orders/refunds": "refunds",
+  "/dashboard/orders/returns": "returns",
   "/dashboard/orders/tracking": "order_tracking",
   "/dashboard/orders/verification": "order_verification",
+  "/dashboard/products/preorders": "preorders",
   "/dashboard/purchases": "purchases",
   "/dashboard/reports/abandoned-carts": "abandoned_cart",
-  "/dashboard/reports/incomplete-orders": "abandoned_cart",
+  "/dashboard/reports/incomplete-orders": "incomplete_orders",
+  "/dashboard/reports/merchandising": "upsell_cross_sell",
   "/dashboard/sales": "sales",
   "/dashboard/settings/courier": "courier_api",
   "/dashboard/settings/domains": "custom_domain",
+  "/dashboard/settings/sms": "sms_notifications",
+  "/dashboard/settings/team": "team",
+  "/dashboard/storefront/search": "search_discovery",
+  // Analytics & Tracking, one row per platform. Three tiers in one menu, which
+  // is the point of badging them individually.
+  "/dashboard/analytics/custom": "custom_tracking",
+  "/dashboard/analytics/google-ads": "google_ads_tracking",
+  "/dashboard/analytics/google-analytics": "google_analytics",
+  "/dashboard/analytics/gtm": "gtm_tracking",
+  "/dashboard/analytics/meta-pixel": "meta_pixel",
   "/dashboard/analytics/server-side": "server_side_tracking",
+  "/dashboard/analytics/tiktok-pixel": "tiktok_tracking",
   "/dashboard/suppliers": "suppliers"
 };
 
@@ -142,10 +167,27 @@ const settingsLinks = [
   { href: "/dashboard/settings/sms", label: "SMS" },
   { href: "/dashboard/settings/invoice", label: "Invoice" },
   { href: "/dashboard/settings/social", label: "Social" },
-  { href: "/dashboard/settings/integrations", label: "Integrations" },
   { href: "/dashboard/payments", label: "Payments" },
-  { href: "/dashboard/shipping", label: "Shipping" },
-  { href: "/dashboard/ai", label: "StoreIM AI" }
+  { href: "/dashboard/shipping", label: "Shipping" }
+];
+
+/**
+ * Everything AI, under one heading of its own.
+ *
+ * It used to be two entries buried in Settings — the assistant at the bottom
+ * of the list, the API keys that feed it three rows above — which made the one
+ * feature look like two unrelated settings pages. Chat Agent is the parent's
+ * own route, the way All Products is under Products.
+ *
+ * Integrations keeps its /dashboard/settings/integrations path. It is listed
+ * here rather than there because the page is entirely Dash AI keys and the
+ * connection they authenticate, but moving the route would break every link
+ * and bookmark already pointing at it for no gain a seller can see.
+ */
+const aiLinks: Array<{ href: string; label: string }> = [
+  { href: "/dashboard/ai", label: "Chat Agent" },
+  { href: "/dashboard/settings/integrations", label: "Integrations" },
+  { href: "/dashboard/ai/settings", label: "Settings" }
 ];
 
 const storefrontLinks = [
@@ -223,10 +265,14 @@ const trailingLinks: NavItem[] = [{ href: "/dashboard/media", icon: Images, labe
  * listed individually because the whole group is manager-only; see
  * `isManagerOnlyHref`.
  *
- * Team and StoreIM AI are deliberately absent: a member may open the team page
- * read-only, and asking the assistant a question is ordinary work.
+ * Team, Chat Agent and Integrations are deliberately absent: a member may open
+ * the team page read-only, read which API keys exist when something has stopped
+ * working, and asking the assistant a question is ordinary work. The group's own
+ * Settings is listed, because reconnecting is an integration change and
+ * `reconnectStoreOSAction` refuses a member anyway.
  */
 const MANAGER_ONLY_HREFS: ReadonlySet<string> = new Set([
+  "/dashboard/ai/settings",
   "/dashboard/billing",
   // Sending a campaign spends the store's SMS allowance, so composing one is
   // not something a member should be invited to start.
@@ -289,9 +335,15 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
     pathname.startsWith("/dashboard/abandoned-cart");
   const analyticsRouteActive = pathname.startsWith("/dashboard/analytics");
   const storefrontRouteActive = pathname.startsWith("/dashboard/storefront") || pathname.startsWith("/dashboard/theme");
-  const settingsRouteActive = pathname.startsWith("/dashboard/settings") || ["/dashboard/payments", "/dashboard/shipping", "/dashboard/ai"].some(
-    (route) => pathname.startsWith(route)
-  );
+  // Integrations is listed under Dash AI now, so Settings must not claim it —
+  // otherwise both groups light up on the same path.
+  const settingsRouteActive =
+    (pathname.startsWith("/dashboard/settings") &&
+      !pathname.startsWith("/dashboard/settings/integrations")) ||
+    ["/dashboard/payments", "/dashboard/shipping"].some((route) => pathname.startsWith(route));
+  const aiRouteActive =
+    pathname.startsWith("/dashboard/ai") ||
+    pathname.startsWith("/dashboard/settings/integrations");
   const [productsOpen, setProductsOpen] = useState(productRouteActive);
   const [ordersOpen, setOrdersOpen] = useState(orderRouteActive);
   const [reportsOpen, setReportsOpen] = useState(reportRouteActive);
@@ -299,6 +351,7 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
   const [analyticsOpen, setAnalyticsOpen] = useState(analyticsRouteActive);
   const [storefrontOpen, setStorefrontOpen] = useState(storefrontRouteActive);
   const [settingsOpen, setSettingsOpen] = useState(settingsRouteActive);
+  const [aiOpen, setAiOpen] = useState(aiRouteActive);
   const [entitledFeatures, setEntitledFeatures] = useState<ReadonlySet<string> | null>(null);
   // Starts `true` so an owner never sees their settings menu flash away on load.
   // The server refuses members regardless of what is drawn here.
@@ -310,6 +363,7 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
   const visibleSettingsLinks = settingsLinks.filter(
     (link) => canManage || !isManagerOnlyHref(link.href)
   );
+  const visibleAiLinks = aiLinks.filter((link) => canManage || !isManagerOnlyHref(link.href));
 
   useEffect(() => {
     let cancelled = false;
@@ -354,6 +408,10 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
   useEffect(() => {
     if (settingsRouteActive) setSettingsOpen(true);
   }, [settingsRouteActive]);
+
+  useEffect(() => {
+    if (aiRouteActive) setAiOpen(true);
+  }, [aiRouteActive]);
 
   return (
     <EntitledFeaturesContext.Provider value={entitledFeatures}>
@@ -565,6 +623,32 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
           ))}
         </div>
 
+        <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${aiRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
+          <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/ai" onClick={onClose}>
+            <Sparkles className="h-4 w-4 text-violet-500" />
+            <SafeNavText text="Dash AI" />
+          </Link>
+          <button aria-label="Toggle Dash AI menu" className="p-2" onClick={() => setAiOpen((current) => !current)} type="button">
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${aiOpen ? "rotate-180" : ""}`} />
+          </button>
+        </div>
+        {aiOpen ? (
+          <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
+            {visibleAiLinks.map((link) => (
+              <Link
+                aria-current={isAiLinkActive(pathname, link.href) ? "page" : undefined}
+                className={`block rounded-md px-3 py-2 text-[12px] transition ${isAiLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                href={link.href}
+                key={link.href}
+                onClick={onClose}
+              >
+                <SafeNavText text={link.label} />
+                <NavFeatureBadge href={link.href} />
+              </Link>
+            ))}
+          </div>
+        ) : null}
+
         <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${settingsRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
           <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/settings" onClick={onClose}>
             <Settings className="h-4 w-4 text-cyan-500" />
@@ -680,6 +764,17 @@ function isStorefrontLinkActive(pathname: string, href: string, label: string) {
 
 function matchesRoute(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/**
+ * Chat Agent owns only its own path.
+ *
+ * It shares a prefix with /dashboard/ai/settings, so the usual startsWith would
+ * light both up at once on that path — the same trap All Products and
+ * Overview are written around elsewhere in this file.
+ */
+function isAiLinkActive(pathname: string, href: string) {
+  return href === "/dashboard/ai" ? pathname === href : matchesRoute(pathname, href);
 }
 
 function isSettingsLinkActive(pathname: string, href: string) {

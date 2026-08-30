@@ -27,7 +27,7 @@ export function AuthExperience({ children, description, eyebrow, title }: { chil
               <div className={styles.chart}><header><b>Revenue pulse</b><small>Last 7 days</small></header><div>{[42, 58, 48, 76, 62, 88, 72, 94, 68, 83].map((height, index) => <i key={index} style={{ height: `${height}%` }} />)}</div></div>
             </div>
           </div>
-          <div className={styles.aiCard}><header><span><Bot /></span><div><b>StoreIM AI</b><small>Live store context</small></div><i /></header><p>Revenue is up 18% this week. Three products need your attention.</p><footer><Check /> Insight ready</footer></div>
+          <div className={styles.aiCard}><header><span><Bot /></span><div><b>Dash AI</b><small>Live store context</small></div><i /></header><p>Revenue is up 18% this week. Three products need your attention.</p><footer><Check /> Insight ready</footer></div>
           <div className={styles.revenueFloat}><span><CircleDollarSign /></span><div><small>Today’s revenue</small><b>৳22,500</b></div><em>+18.4%</em></div>
         </div>
         <div className={styles.trustLine}><span><Check /> Store-scoped data</span><span><Check /> Secure credentials</span><span><Check /> Built for Bangladesh</span></div>

@@ -13,6 +13,8 @@ export default async function MetaPixelPage() {
   return (
     <TrackingPageShell
       description="Connect the Meta (Facebook and Instagram) pixel by ID, and verify your domain in Business Manager."
+      section="meta-pixel"
+      storeId={access.store.id}
       storeSlug={access.store.slug}
       title="Meta Pixel"
     >

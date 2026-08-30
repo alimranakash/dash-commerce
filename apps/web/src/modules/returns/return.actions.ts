@@ -3,24 +3,54 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
+import { requirePlanFeature } from "../billing/subscription-limits";
 import { requireStore } from "../stores/queries";
 import {
   advanceOrderReturnStatus,
   createOrderReturn,
   deleteOrderReturn,
+  getOrderReturnByIdForStore,
   recordOrderReturnRefund
 } from "./return.service";
 import type {
   CreateOrderReturnInput,
   OrderReturnStatus,
+  OrderReturnType,
   RecordOrderReturnRefundInput
 } from "./return.schema";
+import { orderReturnTypeFeatures } from "./return.types";
 
 export type OrderReturnActionState = {
   status: "idle" | "error";
   message?: string;
   fieldErrors?: Record<string, string>;
 };
+
+/**
+ * Refuses the write unless the store's plan includes the tier this request type
+ * is sold under — Returns and Refunds on Starter, Exchanges on Growth.
+ *
+ * Thrown rather than returned: every action below already funnels service
+ * failures into a sentence the seller reads, so the PlanFeatureError message
+ * lands on the form or the request page with no extra plumbing. The UI shows a
+ * crown before any of this is reached; this is the part that cannot be skipped.
+ */
+async function requireReturnTypeFeature(storeId: string, type: OrderReturnType) {
+  await requirePlanFeature(storeId, orderReturnTypeFeatures[type]);
+}
+
+/**
+ * Same gate for a request that already exists, keyed off its stored type so a
+ * seller cannot work an exchange through an action that only checked for
+ * returns. A missing request is left to the service to report.
+ */
+async function requireExistingReturnFeature(storeId: string, returnId: string) {
+  const request = await getOrderReturnByIdForStore(storeId, returnId);
+
+  if (request) {
+    await requireReturnTypeFeature(storeId, request.type as OrderReturnType);
+  }
+}
 
 /**
  * Opens a return, exchange or refund.
@@ -38,7 +68,11 @@ export async function createOrderReturnFormAction(
   let orderId: string;
 
   try {
-    const created = await createOrderReturn(store, returnFromFormData(formData));
+    const input = returnFromFormData(formData);
+
+    await requireReturnTypeFeature(store.id, input.type);
+
+    const created = await createOrderReturn(store, input);
 
     createdId = created.id;
     orderId = created.orderId;
@@ -67,6 +101,8 @@ export async function advanceOrderReturnStatusFormAction(
   let orderId: string | null = null;
 
   try {
+    await requireExistingReturnFeature(store.id, returnId);
+
     orderId = await advanceOrderReturnStatus(store, returnId, next);
   } catch (error) {
     message = error instanceof Error ? error.message : "Could not update this request.";
@@ -89,6 +125,8 @@ export async function recordOrderReturnRefundFormAction(
   let orderId: string;
 
   try {
+    await requireExistingReturnFeature(store.id, returnId);
+
     orderId = await recordOrderReturnRefund(store, returnId, refundFromFormData(formData));
   } catch (error) {
     return errorState(error, "Could not record this refund.");
@@ -103,6 +141,8 @@ export async function deleteOrderReturnFormAction(returnId: string) {
   let message: string | null = null;
 
   try {
+    await requireExistingReturnFeature(store.id, returnId);
+
     await deleteOrderReturn(store.id, returnId);
   } catch (error) {
     message = error instanceof Error ? error.message : "Could not delete this request.";

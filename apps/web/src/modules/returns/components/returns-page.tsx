@@ -1,10 +1,15 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
+import { FeatureGate } from "../../billing/components/feature-gate";
 import { requireStore } from "../../stores/queries";
 import { getOrderReturnsForStore } from "../return.service";
 import type { OrderReturnReason, OrderReturnType } from "../return.schema";
-import { orderReturnReasonLabels, type OrderReturnListItem } from "../return.types";
+import {
+  orderReturnReasonLabels,
+  orderReturnTypeFeatures,
+  type OrderReturnListItem
+} from "../return.types";
 import {
   matchesReturnFilter,
   parseReturnFilter,
@@ -86,13 +91,20 @@ export async function ReturnsPage({ searchParams, type }: ReturnsPageProps) {
         <div className="catalog-page-heading">
           <div className="flex items-center gap-3">
             <h1>{page.title}</h1>
-            <Link
-              className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-[#7c3aed] px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-[#6d28d9]"
-              href={`/dashboard/orders/returns/new?type=${type}`}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              New {page.title.toLowerCase().replace(/s$/, "")}
-            </Link>
+            {/*
+              The list stays readable on every plan — a seller should be able to
+              see what they are being offered — and only opening a request is
+              entitled. `createOrderReturnFormAction` checks again on submit.
+            */}
+            <FeatureGate feature={orderReturnTypeFeatures[type]} storeId={store.id}>
+              <Link
+                className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-[#7c3aed] px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-[#6d28d9]"
+                href={`/dashboard/orders/returns/new?type=${type}`}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                New {page.title.toLowerCase().replace(/s$/, "")}
+              </Link>
+            </FeatureGate>
           </div>
         </div>
         <p className="m-0 max-w-3xl text-xs leading-5 text-[#777985]">{page.blurb}</p>

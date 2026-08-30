@@ -13,6 +13,8 @@ export default async function GtmPage() {
   return (
     <TrackingPageShell
       description="Load Google Tag Manager on your storefront and manage your other tags from inside GTM."
+      section="gtm"
+      storeId={access.store.id}
       storeSlug={access.store.slug}
       title="Google Tag Manager"
     >

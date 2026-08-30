@@ -53,7 +53,8 @@ scopes, expiresAt? })` in
 The page is manager-only for writes and readable by a member: issuing a
 credential that can read the whole catalogue and order book is an integration
 change, the same class of act as reconnecting StoreOS itself, so
-`createAiApiKeyAction` and `revokeAiApiKeyAction` both go through
+every one of `createAiApiKeyAction`, `revealAiApiKeyAction`,
+`revokeAiApiKeyAction` and `deleteAiApiKeyAction` goes through
 `requireStoreManager()`. A member can still see which keys exist and when each
 was last used, which is what they need when something has stopped working. The
 form renders disabled for them, and the actions re-check for themselves — a
@@ -70,24 +71,47 @@ sk_live_<43 characters of base64url>
 - The prefix is there so the value is self-describing: secret scanners key on
   prefixes, and a seller who finds one in a config file can tell what it opens.
   `live` leaves room for an `sk_test_` band later without changing the parser.
-- **The raw key is returned exactly once, by the call that creates it.** It is
-  never written to the database, never logged, and cannot be recovered. Losing it
-  means revoking and issuing another.
+- The raw key is returned by the call that creates it, and is never logged.
+- It is also **sealed into `secretCipher` so the seller can read it back**, which
+  is what the Show key button on the Integrations page does. That is a
+  deliberate trade and worth naming: a copy that can be decrypted is a copy an
+  attacker holding both the database and the encryption key can decrypt too.
+  What it buys is the thing sellers actually need — a key they can look up when
+  wiring StoreOS AI up on a second machine, instead of re-issuing and re-pasting
+  a credential everywhere each time they lose the tab.
+- Authentication never reads that column. It compares `tokenHash`, so a
+  deployment with no encryption key configured issues keys that work normally
+  and simply report `canReveal: false`.
 
 What reaches the database is:
 
-| Column      | Value                                                            |
-| ----------- | ---------------------------------------------------------------- |
-| `tokenHash` | SHA-256 of the raw key, hex, `@unique`                           |
-| `hint`      | the last four characters, so settings can say which key is which |
-| `scopes`    | the granted scopes, sorted and de-duplicated                     |
-| `expiresAt` | optional; must be in the future at issuance                      |
+| Column         | Value                                                                                                                   |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `tokenHash`    | SHA-256 of the raw key, hex, `@unique`                                                                                  |
+| `hint`         | the last four characters, so settings can say which key is which                                                        |
+| `secretCipher` | AES-256-GCM of the raw key via [`secret-box.ts`](../apps/web/src/lib/secret-box.ts); null when no encryption key is set |
+| `scopes`       | the granted scopes, sorted and de-duplicated                                                                            |
+| `expiresAt`    | optional; must be in the future at issuance                                                                             |
 
 Plain SHA-256 rather than bcrypt, for the reason
 [`staff-token.ts`](../apps/web/src/modules/staff/staff-token.ts) gives for invite
 tokens: the input is 256 random bits, so there is no dictionary to slow down, and
 authentication has to be one indexed equality query rather than a scan-and-compare
 over every key in the table.
+
+### Read back
+
+The Show key button on the Integrations page, or
+`revealStoreApiKey(storeId, apiKeyId)`. Manager-only, store-scoped in the same
+query that reads, and it returns `null` for every reason a key might not be
+readable — wrong store, deleted, issued before this column existed, no
+encryption key configured, a decrypt that fails its tag because the encryption
+key changed. The caller cannot tell those apart, which is what stops the button
+being a probe for another store's key ids.
+
+The ciphertext itself leaves the repository on this one path. Everywhere else it
+is collapsed to the boolean `canReveal` before the row is handed out, so a
+listing cannot leak it by being widened.
 
 ### Use
 
@@ -106,6 +130,20 @@ revoke another's key by guessing an id. A key that does not belong to the caller
 and a key that was already revoked both return `null` — indistinguishable, which
 is what stops one store probing another's key ids.
 
+### Delete
+
+The Delete button, or `deleteStoreApiKey(storeId, apiKeyId)`. Removes the row
+outright — hash, ciphertext and all — behind the same confirmation dialog, and
+scoped to the store in both the read and the delete.
+
+It is not a weaker action than revoking: authentication looks the hash up on
+every request and now finds nothing, so a deleted key stops working for exactly
+the reason a revoked one does. The difference is only the record. Revoking
+leaves a row saying the key existed and when it was turned off, which is worth
+having when a key may have been used improperly; deleting removes a key the
+seller has decided was a mistake. Which of those is true is theirs to say, so
+both are offered.
+
 ### Expire
 
 Optional. An expired key is refused with `expired_key`; nothing sweeps the row,
@@ -113,7 +151,7 @@ because the record of a key that once existed is worth keeping.
 
 ### Rotate
 
-Issue the new key, deploy it, revoke the old one. There is no in-place rotation:
+Issue the new key, deploy it, then revoke or delete the old one. There is no in-place rotation:
 overlapping keys are what makes a rotation zero-downtime.
 
 ---
@@ -373,9 +411,18 @@ Authorization: Bearer sk_live_…
   "currency": "BDT",
   "country": "BD",
   "timezone": "Asia/Dhaka",
-  "businessType": "Beauty Store"
+  "businessType": "Beauty Store",
+  "scopes": ["read:analytics", "read:orders", "read:products", "read:store"]
 }
 ```
+
+`scopes` is what the authenticated key was actually granted — `identity.scopes`
+echoed back, the same array every other endpoint's scope check reads. A client
+uses it to decide which of its features this key can support before it starts
+collecting 403s. It is typed as the scope vocabulary rather than plain strings,
+so a value outside it cannot be introduced through this response: a stale scope
+left in the column after one was removed from the code is filtered out by
+`parseStoredScopes` rather than echoed. Nothing a caller sends can widen it.
 
 Deliberately the smallest payload that is worth anything: it is how StoreOS AI
 proves a key works, learns which shop it is talking to, and learns the currency

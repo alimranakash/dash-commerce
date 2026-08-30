@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
+import { FeatureGate } from "../../../../modules/billing/components/feature-gate";
 import { OrderBumpForm } from "../../../../modules/merchandising/components/order-bump-form";
 import {
   getOrderBumpProducts,
@@ -26,9 +27,12 @@ export default async function OrderBumpPage() {
               they commit, which is why it is worth more than the same offer anywhere else.
             </p>
           </div>
-          <Link className="secondary link-button" href="/dashboard/marketing">
-            Back
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <FeatureGate feature="order_bump" storeId={store.id} />
+            <Link className="secondary link-button" href="/dashboard/marketing">
+              Back
+            </Link>
+          </div>
         </div>
         <OrderBumpForm currency={store.currency} products={products} settings={settings} />
       </section>

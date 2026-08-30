@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { ZodError } from "zod";
+import { PLAN_FEATURE_REGISTRY } from "../billing/plan-features";
+import { hasPlanFeature } from "../billing/subscription-limits";
 import { requireStore } from "../stores/queries";
 import { BlockedIpError, blockIp, blockIpFromOrder, unblockIp } from "./blocked-ip.service";
 import type { BlockedIpFormInput } from "./blocked-ip.schema";
@@ -14,11 +16,38 @@ export type BlockedIpActionState = {
   status: "error" | "idle" | "success";
 };
 
+/**
+ * The blocklist is a Growth feature. Every write goes through here — blocking is
+ * the one action on this module that can turn a paying customer away, so a
+ * store that is not entitled must not be able to reach it from any surface: the
+ * form, the fake-order suggestion list, or the order review page.
+ *
+ * Unblocking is deliberately *not* gated. A store that downgrades with addresses
+ * already blocked has to be able to let those customers back in, and charging
+ * for the undo of a block we let them make would be indefensible.
+ */
+async function blockedIpPlanGate(storeId: string): Promise<BlockedIpActionState | null> {
+  if (await hasPlanFeature(storeId, "blocked_ips")) {
+    return null;
+  }
+
+  return {
+    message: `${PLAN_FEATURE_REGISTRY.blocked_ips.label} is a paid feature. Upgrade your plan from Billing to use it.`,
+    status: "error"
+  };
+}
+
 export async function blockIpFormAction(
   _state: BlockedIpActionState,
   formData: FormData
 ): Promise<BlockedIpActionState> {
   const store = await requireStore();
+  const gate = await blockedIpPlanGate(store.id);
+
+  if (gate) {
+    return gate;
+  }
+
   const ipAddress = stringValue(formData.get("ipAddress"));
 
   try {
@@ -45,6 +74,11 @@ export async function blockIpFormAction(
  */
 export async function blockSuggestedIpAction(ipAddress: string): Promise<BlockedIpActionState> {
   const store = await requireStore();
+  const gate = await blockedIpPlanGate(store.id);
+
+  if (gate) {
+    return gate;
+  }
 
   try {
     await blockIp(store.id, {
@@ -63,6 +97,11 @@ export async function blockSuggestedIpAction(ipAddress: string): Promise<Blocked
 
 export async function blockOrderIpAction(orderId: string): Promise<BlockedIpActionState> {
   const store = await requireStore();
+  const gate = await blockedIpPlanGate(store.id);
+
+  if (gate) {
+    return gate;
+  }
 
   try {
     await blockIpFromOrder(store.id, orderId, {

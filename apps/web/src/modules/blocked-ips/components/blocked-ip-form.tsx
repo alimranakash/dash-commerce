@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { blockIpFormAction } from "../blocked-ip.actions";
 import type { BlockedIpActionState } from "../blocked-ip.actions";
+import { PaidBadge } from "../../billing/components/paid-badge";
 
 const durations: Array<{ label: string; value: string }> = [
   { label: "Until I unblock it", value: "permanent" },
@@ -11,7 +12,11 @@ const durations: Array<{ label: string; value: string }> = [
   { label: "30 days", value: "30d" }
 ];
 
-export function BlockedIpForm() {
+/**
+ * `locked` only stops the seller wasting a submit — `blockIpFormAction` refuses
+ * an unentitled store on its own, whatever this renders.
+ */
+export function BlockedIpForm({ locked = false }: { locked?: boolean | undefined }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, isPending] = useActionState(blockIpFormAction, {
     status: "idle"
@@ -65,11 +70,12 @@ export function BlockedIpForm() {
       <div className="flex flex-wrap items-center gap-3">
         <button
           className="h-11 rounded-lg bg-[#7c3aed] px-5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={isPending}
+          disabled={isPending || locked}
           type="submit"
         >
           {isPending ? "Blocking..." : "Block address"}
         </button>
+        {locked ? <PaidBadge feature="blocked_ips" showPlan /> : null}
         {state.message ? (
           <p
             aria-live="polite"

@@ -64,7 +64,7 @@ export function DashboardTopbar({ onMenuClick }: DashboardTopbarProps) {
         <Link className="hidden text-[#30313d] hover:text-[#6d3cf5] xl:block" href="/dashboard/settings">Share Feedback</Link>
         <Link className="flex items-center gap-1.5 rounded-lg bg-[#7c3aed] px-3 py-2 font-semibold text-white shadow-sm hover:bg-[#6d28d9]" href="/dashboard/ai">
           <Bot className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">AI Assistant</span>
+          <span className="hidden sm:inline">Dash AI</span>
         </Link>
         <UserAvatarMenu />
       </div>

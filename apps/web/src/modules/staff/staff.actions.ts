@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import { requireUser } from "../../lib/auth";
+import { requirePlanFeature } from "../billing/subscription-limits";
 import { StoreAccessError, requireStoreManager } from "../stores/queries";
 import {
   StaffError,
@@ -33,6 +34,25 @@ export type StaffActionState = {
   status: "error" | "idle" | "success";
 };
 
+/**
+ * Team is a Starter feature, and it gates *growing* the team — inviting someone
+ * and changing what they can do.
+ *
+ * Revoking an invite and removing a member stay open on every plan, which is not
+ * only the usual "you can always clean up" rule: a store that downgrades to
+ * fewer seats than it has members has to be able to get back under the limit,
+ * and `staffLimit` is enforced on the way in. Charging for the way out would
+ * make that limit unsatisfiable.
+ *
+ * How many seats the plan grants is a separate question, answered by
+ * `canAddStaffSeat`. Both have to pass before a teammate is added.
+ */
+async function requireTeamFeature() {
+  const { store } = await requireStoreManager();
+
+  await requirePlanFeature(store.id, "team");
+}
+
 export async function inviteStaffAction(
   _state: StaffActionState,
   formData: FormData
@@ -41,6 +61,9 @@ export async function inviteStaffAction(
     // Re-checked here rather than trusted from the page: the member view renders
     // the form disabled, and a disabled input is not a permission check.
     const scope = await staffScope();
+
+    await requireTeamFeature();
+
     const { invite, token } = await inviteStaff(scope, {
       email: text(formData, "email"),
       role: text(formData, "role")
@@ -85,6 +108,7 @@ export async function changeStaffRoleAction(
   try {
     const scope = await staffScope();
 
+    await requireTeamFeature();
     await changeStaffRole(scope, {
       memberId: text(formData, "memberId"),
       role: text(formData, "role")
