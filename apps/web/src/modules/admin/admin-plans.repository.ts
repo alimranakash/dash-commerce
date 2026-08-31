@@ -3,16 +3,20 @@ import { DEFAULT_PLAN_SLUG, FREE_PLAN_TRIAL_DAYS, PLAN_CATALOG } from "./plan-ca
 import type { PlanInput } from "./admin-plans.schema";
 
 /**
- * Seeds the plan catalog into an empty table only. This deliberately stays a
- * no-op once any plan exists, so it can never revert an admin's edits — a
- * populated database is brought up to date by `scripts/backfill-plans.ts`. The
- * one exception is `repairFreePlanTrialDays()` below.
+ * Seeds the plan catalog into an empty table only. Pricing, limits and flags on
+ * an existing plan deliberately stay untouched, so this can never revert an
+ * admin's edits — those are brought up to date by `scripts/backfill-plans.ts`.
+ *
+ * Two things are repaired on a populated database, because both are cases where
+ * the code and the data disagreeing is always a bug rather than an edit:
+ * `repairFreePlanTrialDays()`, and the feature entitlements below.
  */
 export async function ensureDefaultPlans() {
   const count = await prisma.plan.count();
 
   if (count > 0) {
     await repairFreePlanTrialDays();
+    await syncPlanFeatureEntitlements();
     return;
   }
 
@@ -55,6 +59,71 @@ async function repairFreePlanTrialDays() {
       }
     }
   });
+}
+
+/**
+ * Brings every plan's `plan_features` rows in line with `PLAN_CATALOG`.
+ *
+ * Entitlements have no admin UI — the catalog in code is their only source of
+ * truth — so unlike prices there is nothing here for an admin to have edited,
+ * and drift can only mean the database predates the running deploy. Without
+ * this, moving a feature between tiers ships as code that silently does nothing
+ * until someone remembers to run the backfill against each environment: the
+ * seller upgrades, and the pages they just paid for stay marked Paid.
+ *
+ * Cheap on the common path — one read of a small table, and no writes at all
+ * once the two agree. It runs wherever `ensureDefaultPlans()` does, which
+ * includes the billing page a seller upgrades from, so a deploy heals itself the
+ * first time anyone looks at their plan.
+ */
+async function syncPlanFeatureEntitlements() {
+  const plans = await prisma.plan.findMany({
+    select: {
+      features: {
+        select: {
+          featureKey: true
+        }
+      },
+      id: true,
+      slug: true
+    }
+  });
+  const bySlug = new Map(plans.map((plan) => [plan.slug, plan]));
+
+  for (const entry of PLAN_CATALOG) {
+    const plan = bySlug.get(entry.slug);
+
+    // A plan the catalog names but the database does not have is left alone:
+    // creating it here would mean inventing a price.
+    if (!plan) {
+      continue;
+    }
+
+    const current = new Set(plan.features.map((feature) => feature.featureKey));
+    const desired = new Set<string>(entry.features);
+    const missing = entry.features.filter((key) => !current.has(key));
+    const extra = [...current].filter((key) => !desired.has(key));
+
+    if (missing.length > 0) {
+      await prisma.planFeature.createMany({
+        data: missing.map((featureKey) => ({ featureKey, planId: plan.id })),
+        skipDuplicates: true
+      });
+    }
+
+    // Revoking matters as much as granting: a key that moved up a tier has to
+    // stop being granted by the cheaper one.
+    if (extra.length > 0) {
+      await prisma.planFeature.deleteMany({
+        where: {
+          featureKey: {
+            in: extra
+          },
+          planId: plan.id
+        }
+      });
+    }
+  }
 }
 
 export async function getAdminPlans() {
