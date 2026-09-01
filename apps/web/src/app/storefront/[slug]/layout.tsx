@@ -1,4 +1,3 @@
-import { storeSubdomain } from "../../../lib/host-routing";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { MarketingTags } from "../../../modules/marketing/components/marketing-tags";
@@ -6,6 +5,7 @@ import {
   getMarketingMetaTags,
   getMarketingTagPlan
 } from "../../../modules/marketing/marketing.service";
+import { storefrontCanonicalUrl } from "../../../modules/seo/page-metadata";
 import { ShoppingAgentDock } from "../../../modules/shopping-agent/components/shopping-agent-dock";
 import { storefrontBasePath } from "../../../modules/storefront/base-path";
 import { StorefrontBasePathProvider } from "../../../modules/storefront/base-path-provider";
@@ -15,10 +15,7 @@ import {
   createStorefrontThemeContext,
   getStorefrontThemeSettings
 } from "../../../modules/storefront/themes/theme.service";
-import {
-  getPrimaryStorefrontDomain,
-  getStorefrontBySlug
-} from "../../../modules/storefront/resolver";
+import { getStorefrontBySlug } from "../../../modules/storefront/resolver";
 
 type StorefrontLayoutProps = {
   children: ReactNode;
@@ -37,15 +34,15 @@ export async function generateMetadata({ params }: StorefrontLayoutProps): Promi
     };
   }
 
-  const primaryDomain = getPrimaryStorefrontDomain(store);
   const title = `${store.name} | StoreIM`;
   const description =
     store.themeSetting?.heroSubtitle ?? store.setting?.tagline ?? `Shop ${store.name} online.`;
   // A canonical URL has to be absolute; the internal `/s/<slug>` path is not an
-  // address any shopper or crawler should be pointed at.
-  const canonical = primaryDomain
-    ? `https://${primaryDomain.domain}`
-    : `https://${storeSubdomain(store.slug)}`;
+  // address any shopper or crawler should be pointed at. Every page below this
+  // layout now builds its own from the same helper: a page that inherited this
+  // one told crawlers the product *was* the homepage, which would have made a
+  // sitemap of those products worthless.
+  const canonical = storefrontCanonicalUrl(store);
   const verification = await getMarketingMetaTags(store.id);
 
   return {

@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { CategorySection } from "../../../../modules/storefront/components/category-section";
 import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../../../modules/storefront/customization";
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../modules/storefront/components/storefront-header";
+import { storefrontCanonicalUrl, toMetaDescription } from "../../../../modules/seo/page-metadata";
 import {
+  getStorefrontBySlug,
   getStorefrontCategories,
   requireStorefrontBySlug
 } from "../../../../modules/storefront/resolver";
@@ -15,6 +18,36 @@ type StorefrontCategoriesPageProps = {
     slug: string;
   }>;
 };
+
+export async function generateMetadata({
+  params
+}: StorefrontCategoriesPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const store = await getStorefrontBySlug(slug);
+
+  if (!store) {
+    return {};
+  }
+
+  const canonical = storefrontCanonicalUrl(store, "/categories");
+  const description = toMetaDescription(store.setting?.tagline, `Browse the collections ${store.name} sells.`);
+  const title = `Categories | ${store.name}`;
+
+  return {
+    alternates: {
+      canonical
+    },
+    description,
+    openGraph: {
+      description,
+      siteName: store.name,
+      title,
+      type: "website",
+      url: canonical
+    },
+    title
+  };
+}
 
 export default async function StorefrontCategoriesPage({ params }: StorefrontCategoriesPageProps) {
   const { slug } = await params;

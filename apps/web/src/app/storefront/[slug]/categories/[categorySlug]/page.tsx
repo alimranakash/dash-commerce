@@ -1,4 +1,5 @@
 import { storefrontBasePath } from "../../../../../modules/storefront/base-path";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
@@ -10,6 +11,12 @@ import { storefrontSectionHref } from "../../../../../modules/storefront/product
 import { StorefrontFooter } from "../../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../../modules/storefront/components/storefront-header";
 import {
+  storefrontCanonicalUrl,
+  toMetaDescription
+} from "../../../../../modules/seo/page-metadata";
+import { encodeUrlPathSegment } from "../../../../../modules/seo/url";
+import {
+  getStorefrontBySlug,
   getStorefrontCategoryBySlug,
   getStorefrontCategories,
   getStorefrontProductCount,
@@ -36,6 +43,56 @@ type StorefrontCategoryProductsPageProps = {
     tag?: string;
   }>;
 };
+
+/**
+ * The canonical points at the bare category, not at the sorted or paginated
+ * view the shopper is on. Every filter combination is the same collection in a
+ * different order, and the products are listed individually in the sitemap, so
+ * there is nothing a crawler reaches only by indexing page 4.
+ */
+export async function generateMetadata({
+  params
+}: StorefrontCategoryProductsPageProps): Promise<Metadata> {
+  const { categorySlug, slug } = await params;
+  const store = await getStorefrontBySlug(slug);
+
+  if (!store) {
+    return {};
+  }
+
+  const category = await getStorefrontCategoryBySlug(store.id, categorySlug);
+
+  if (!category) {
+    return {
+      title: `Category not found | ${store.name}`
+    };
+  }
+
+  const canonical = storefrontCanonicalUrl(
+    store,
+    `/categories/${encodeUrlPathSegment(category.slug)}`
+  );
+  const description = toMetaDescription(
+    category.description,
+    `Shop ${category.name} from ${store.name}.`
+  );
+  const title = `${category.name} | ${store.name}`;
+
+  return {
+    alternates: {
+      canonical
+    },
+    description,
+    openGraph: {
+      description,
+      siteName: store.name,
+      title,
+      type: "website",
+      url: canonical
+    },
+    title
+  };
+}
 
 export default async function StorefrontCategoryProductsPage({
   params,

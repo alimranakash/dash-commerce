@@ -1,4 +1,5 @@
 import { storefrontBasePath } from "../../../../../modules/storefront/base-path";
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
@@ -8,7 +9,14 @@ import { StorefrontFooter } from "../../../../../modules/storefront/components/s
 import { StorefrontHeader } from "../../../../../modules/storefront/components/storefront-header";
 import { GeneralProductPage } from "../../../../../modules/storefront/templates/general-default/product-page";
 import {
+  storefrontCanonicalOrigin,
+  storefrontCanonicalUrl,
+  toMetaDescription
+} from "../../../../../modules/seo/page-metadata";
+import { encodeUrlPathSegment, toAbsoluteUrl } from "../../../../../modules/seo/url";
+import {
   getBestSellingStorefrontProducts,
+  getStorefrontBySlug,
   getRelatedStorefrontProducts,
   getStorefrontProductBySlug,
   getStorefrontProducts,
@@ -27,6 +35,65 @@ type StorefrontProductPageProps = {
     cartError?: string;
   }>;
 };
+
+/**
+ * A product's own title, description and canonical.
+ *
+ * Without this the page inherits the layout's metadata, so every product on
+ * the store canonicalises to the homepage — and a sitemap listing those
+ * products would be submitting URLs that each disclaim themselves.
+ */
+export async function generateMetadata({ params }: StorefrontProductPageProps): Promise<Metadata> {
+  const { productSlug, slug } = await params;
+  const store = await getStorefrontBySlug(slug);
+
+  if (!store) {
+    return {};
+  }
+
+  const product = await getStorefrontProductBySlug(store.id, productSlug);
+
+  // Unlike most storefront routes this one renders an "unavailable" panel
+  // rather than calling notFound(), so the noindex has to be explicit or that
+  // panel is what a crawler files under this URL.
+  if (!product) {
+    return {
+      robots: {
+        follow: true,
+        index: false
+      },
+      title: `Product unavailable | ${store.name}`
+    };
+  }
+
+  const canonical = storefrontCanonicalUrl(
+    store,
+    `/products/${encodeUrlPathSegment(product.slug)}`
+  );
+  const description = toMetaDescription(
+    product.description,
+    `${product.title} from ${store.name}.`
+  );
+  const title = `${product.title} | ${store.name}`;
+  const leadImage = product.images[0]?.url;
+  const imageUrl = leadImage ? toAbsoluteUrl(storefrontCanonicalOrigin(store), leadImage) : null;
+
+  return {
+    alternates: {
+      canonical
+    },
+    description,
+    openGraph: {
+      description,
+      ...(imageUrl ? { images: [imageUrl] } : {}),
+      siteName: store.name,
+      title,
+      type: "website",
+      url: canonical
+    },
+    title
+  };
+}
 
 export default async function StorefrontProductPage({
   params,

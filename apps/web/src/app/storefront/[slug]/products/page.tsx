@@ -1,4 +1,5 @@
 import { storefrontBasePath } from "../../../../modules/storefront/base-path";
+import type { Metadata } from "next";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { getPublicProductTaxonomyItems } from "../../../../modules/products/product-taxonomy.service";
@@ -8,7 +9,9 @@ import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../../../modules/storef
 import { storefrontSectionHref } from "../../../../modules/storefront/product-sections";
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../modules/storefront/components/storefront-header";
+import { storefrontCanonicalUrl, toMetaDescription } from "../../../../modules/seo/page-metadata";
 import {
+  getStorefrontBySlug,
   getStorefrontCategories,
   getStorefrontProductCount,
   getStorefrontProducts,
@@ -34,6 +37,37 @@ type StorefrontProductsPageProps = {
     tag?: string;
   }>;
 };
+
+/** Every sort, filter and page of the shop canonicalises to the bare list. */
+export async function generateMetadata({
+  params
+}: StorefrontProductsPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const store = await getStorefrontBySlug(slug);
+
+  if (!store) {
+    return {};
+  }
+
+  const canonical = storefrontCanonicalUrl(store, "/products");
+  const description = toMetaDescription(store.setting?.tagline, `Browse every product available from ${store.name}.`);
+  const title = `All products | ${store.name}`;
+
+  return {
+    alternates: {
+      canonical
+    },
+    description,
+    openGraph: {
+      description,
+      siteName: store.name,
+      title,
+      type: "website",
+      url: canonical
+    },
+    title
+  };
+}
 
 export default async function StorefrontProductsPage({
   params,

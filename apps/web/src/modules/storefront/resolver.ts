@@ -1,5 +1,6 @@
 import { prisma } from "@dash/db";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { ensureCategoryImageSchema } from "../categories/category-image-schema";
 import {
   getCartCrossSellProducts,
@@ -35,7 +36,18 @@ type StorefrontProductQuery = {
   take?: number | undefined;
 };
 
-export async function getStorefrontBySlug(slug: string) {
+/**
+ * The store behind a storefront slug.
+ *
+ * Request-scoped rather than plain, because one storefront render asks for it
+ * three times over — the layout's metadata, the layout itself, and the page —
+ * and each of those was its own query. `cache` collapses them into one for the
+ * length of a request and changes nothing else: the settings backfill below is
+ * idempotent, and the next request still reads fresh rows.
+ */
+export const getStorefrontBySlug = cache(loadStorefrontBySlug);
+
+async function loadStorefrontBySlug(slug: string) {
   const store = await prisma.store.findFirst({
     where: {
       slug,
@@ -344,7 +356,10 @@ export async function getStorefrontCategories(storeId: string) {
   });
 }
 
-export async function getStorefrontCategoryBySlug(storeId: string, categorySlug: string) {
+/** Request-scoped: the category page reads it for its metadata and its body. */
+export const getStorefrontCategoryBySlug = cache(loadStorefrontCategoryBySlug);
+
+async function loadStorefrontCategoryBySlug(storeId: string, categorySlug: string) {
   await ensureCategoryImageSchema();
 
   return prisma.category.findFirst({
@@ -355,7 +370,13 @@ export async function getStorefrontCategoryBySlug(storeId: string, categorySlug:
   });
 }
 
-export async function getStorefrontProductBySlug(storeId: string, productSlug: string) {
+/**
+ * Request-scoped for the same reason: the product page reads the product once
+ * for its metadata and once for its body.
+ */
+export const getStorefrontProductBySlug = cache(loadStorefrontProductBySlug);
+
+async function loadStorefrontProductBySlug(storeId: string, productSlug: string) {
   await ensureCategoryImageSchema();
 
   const product = await prisma.product.findFirst({
@@ -659,7 +680,15 @@ async function taxonomyProductWhere(storeId: string, input: StorefrontProductQue
   };
 }
 
-function publicProductWhere(storeId: string) {
+/**
+ * The one definition of "a shopper may see this product".
+ *
+ * Exported because the sitemap has to narrow by exactly the same predicate the
+ * storefront reads with: a DRAFT or HIDDEN product can no more be submitted to
+ * a crawler than linked from a category page, and a second copy of the clause
+ * is a second place for that to stop being true.
+ */
+export function publicProductWhere(storeId: string) {
   return {
     storeId,
     status: "ACTIVE" as const,

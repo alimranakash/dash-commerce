@@ -1,1 +1,1 @@
-export { default } from "../../../../storefront/[slug]/categories/[categorySlug]/page";
+export { default, generateMetadata } from "../../../../storefront/[slug]/categories/[categorySlug]/page";
