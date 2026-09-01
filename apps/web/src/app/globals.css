@@ -8704,11 +8704,32 @@ textarea {
   }
 }
 
-.sf-category-grid,
 .sf-trust {
   display: grid;
   gap: 18px;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+/* Five across, then a fixed step-down. Auto-fitting on a card width instead let
+   the column count drift with the viewport, which is what stranded a lone card
+   under a five-across row on a wide screen. */
+.sf-category-grid {
+  --sf-category-columns: 5;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(var(--sf-category-columns), minmax(0, 1fr));
+}
+
+@media (max-width: 1240px) {
+  .sf-category-grid {
+    --sf-category-columns: 4;
+  }
+}
+
+@media (max-width: 980px) {
+  .sf-category-grid {
+    --sf-category-columns: 3;
+  }
 }
 
 .sf-category-card,
@@ -13936,6 +13957,10 @@ textarea {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .sf-category-grid {
+    --sf-category-columns: 2;
+  }
+
   .general-section-heading {
     display: grid;
   }
@@ -14061,6 +14086,10 @@ textarea {
   .sf-shop-page .general-product-listing-grid,
   .sf-search-products .general-product-listing-grid {
     grid-template-columns: 1fr;
+  }
+
+  .sf-category-grid {
+    --sf-category-columns: 1;
   }
 }
 
