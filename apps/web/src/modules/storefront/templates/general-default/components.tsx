@@ -14,6 +14,7 @@ import {
   type GeneralRecommendedProduct
 } from "./general-recommended-for-you";
 import type { StorefrontProduct } from "../../storefront.types";
+import { toProductCardProducts } from "../../product-card-data";
 
 type GeneralSectionWrapperProps = {
   actionHref?: string;
@@ -133,7 +134,7 @@ export function GeneralProductGrid({
   section,
   storeSlug
 }: GeneralProductGridProps) {
-  return <ProductGrid currency={currency} gridId={gridId} products={products} section={section} storeSlug={storeSlug} />;
+  return <ProductGrid currency={currency} gridId={gridId} products={toProductCardProducts(products)} section={section} storeSlug={storeSlug} />;
 }
 
 export async function GeneralProductSection({

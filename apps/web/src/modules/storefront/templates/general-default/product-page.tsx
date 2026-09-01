@@ -1,5 +1,5 @@
 import { storefrontBasePath } from "../../base-path";
-import { preorderLabel } from "../../components/product-card";
+import { preorderLabel } from "../../format";
 import type { ComponentType } from "react";
 import Link from "next/link";
 import {
@@ -28,6 +28,7 @@ import type {
 import { GeneralProductAccordion } from "./product-accordion";
 import { GeneralProductGallery } from "./product-gallery";
 import { ProductVariantControls } from "./product-variant-controls";
+import { toProductCardProducts } from "../../product-card-data";
 
 type GeneralProductPageProps = {
   // Forwarded to the related and recently viewed grids so those rows use the same
@@ -175,7 +176,7 @@ export async function GeneralProductPage({
             cardVariant={cardVariant}
             currency={store.currency}
             gridId={relatedGridId}
-            products={relatedProducts}
+            products={toProductCardProducts(relatedProducts)}
             section={relatedSection}
             storeId={store.id}
             storeSlug={store.slug}

@@ -715,7 +715,9 @@
   min-height: 44px;
   padding: 0 18px;
   text-decoration: none;
-  transition: background-color 160ms ease, transform 160ms ease;
+  transition:
+    background-color 160ms ease,
+    transform 160ms ease;
 }
 
 .storefront-preview-button:hover {
@@ -735,7 +737,9 @@
   border-left: 4px solid var(--toast-accent);
   border-radius: 16px;
   bottom: calc(24px + var(--toast-offset));
-  box-shadow: 0 20px 54px rgb(44 32 92 / 0.16), 0 4px 14px rgb(44 32 92 / 0.07);
+  box-shadow:
+    0 20px 54px rgb(44 32 92 / 0.16),
+    0 4px 14px rgb(44 32 92 / 0.07);
   box-sizing: border-box;
   color: #202231;
   column-gap: 14px;
@@ -748,11 +752,16 @@
   position: fixed;
   right: 24px;
   z-index: 300;
-  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
 .storefront-settings-toast:hover {
-  box-shadow: 0 24px 64px rgb(44 32 92 / 0.2), 0 4px 12px rgb(44 32 92 / 0.08);
+  box-shadow:
+    0 24px 64px rgb(44 32 92 / 0.2),
+    0 4px 12px rgb(44 32 92 / 0.08);
   transform: translateY(-1px);
 }
 
@@ -812,7 +821,10 @@
   height: 36px;
   justify-content: center;
   margin-left: 2px;
-  transition: background-color 140ms ease, color 140ms ease, transform 140ms ease;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
   width: 36px;
 }
 
@@ -881,7 +893,9 @@
   font-weight: 750;
   padding: 9px 10px;
   text-decoration: none;
-  transition: background-color 140ms ease, color 140ms ease;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
 }
 
 .storefront-settings-sidebar a:hover {
@@ -947,9 +961,7 @@
 }
 
 .storefront-settings-page .theme-upload-box {
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.82), rgb(248 247 255 / 0.86)),
-    #fbfaff;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.82), rgb(248 247 255 / 0.86)), #fbfaff;
   border-color: #d8d1fb;
 }
 
@@ -3458,8 +3470,7 @@ textarea {
 }
 
 .sf-shop-empty > div {
-  background:
-    linear-gradient(135deg, #f4f4f4, #ffffff);
+  background: linear-gradient(135deg, #f4f4f4, #ffffff);
   border: 1px solid #eeeeee;
   height: 82px;
   margin-bottom: 18px;
@@ -3925,7 +3936,10 @@ textarea {
   height: 28px;
   justify-content: center;
   padding: 0;
-  transition: color 0.18s ease, opacity 0.18s ease, transform 0.18s ease;
+  transition:
+    color 0.18s ease,
+    opacity 0.18s ease,
+    transform 0.18s ease;
   width: 28px;
 }
 
@@ -3955,7 +3969,8 @@ textarea {
 
 .general-product-listing-slider {
   grid-auto-columns: calc(
-    (100% - (var(--product-grid-gap) * (var(--product-grid-columns) - 1))) / var(--product-grid-columns)
+    (100% - (var(--product-grid-gap) * (var(--product-grid-columns) - 1))) /
+      var(--product-grid-columns)
   );
   grid-auto-flow: column;
   grid-template-columns: none;
@@ -3995,7 +4010,9 @@ textarea {
 .general-product-listing-image img {
   height: 100%;
   object-fit: cover;
-  transition: opacity 220ms ease, transform 320ms ease;
+  transition:
+    opacity 220ms ease,
+    transform 320ms ease;
   width: 100%;
 }
 
@@ -4163,7 +4180,10 @@ textarea {
   font-weight: 620;
   line-height: 1;
   padding: 9px 10px;
-  transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
 }
 
 .tabbed-product-showcase-tabs button:hover {
@@ -4311,9 +4331,7 @@ textarea {
 }
 
 .general-collection-card div {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent),
-    #d9c8b0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent), #d9c8b0;
   border-radius: 12px;
   color: rgba(23, 23, 23, 0.5);
   display: grid;
@@ -4348,9 +4366,7 @@ textarea {
 
 .general-promo-banner {
   align-items: center;
-  background:
-    linear-gradient(90deg, rgba(236, 229, 214, 0.98), rgba(229, 218, 202, 0.74)),
-    #eee5d7;
+  background: linear-gradient(90deg, rgba(236, 229, 214, 0.98), rgba(229, 218, 202, 0.74)), #eee5d7;
   border-radius: 0;
   box-shadow: none;
   display: grid;
@@ -4959,7 +4975,8 @@ textarea {
 }
 
 .sf-page:not(:has(.fashion-hero)) .fashion-header-shell,
-.sf-page:not(:has(.fashion-hero)) .fashion-header-shell:not(.fashion-header-shell-has-announcement) {
+.sf-page:not(:has(.fashion-hero))
+  .fashion-header-shell:not(.fashion-header-shell-has-announcement) {
   height: auto;
 }
 
@@ -5157,9 +5174,7 @@ textarea {
 }
 
 .fashion-model {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.36), transparent 28%),
-    #4f4038;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.36), transparent 28%), #4f4038;
   bottom: 0;
   filter: saturate(0.88);
   position: absolute;
@@ -5350,7 +5365,10 @@ textarea {
 .fashion-footer-main {
   display: grid;
   gap: clamp(48px, 7vw, 120px);
-  grid-template-columns: minmax(280px, 1.45fr) minmax(140px, 0.55fr) minmax(150px, 0.55fr) minmax(280px, 1fr);
+  grid-template-columns: minmax(280px, 1.45fr) minmax(140px, 0.55fr) minmax(150px, 0.55fr) minmax(
+      280px,
+      1fr
+    );
   padding: clamp(58px, 7vw, 92px) clamp(32px, 3.2vw, 60px) clamp(66px, 7vw, 88px);
 }
 
@@ -5653,8 +5671,7 @@ textarea {
 .fashion-category-card::before {
   background:
     linear-gradient(180deg, transparent, rgba(36, 24, 20, 0.38)),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent),
-    #c8b5a4;
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent), #c8b5a4;
   content: "";
   inset: 0;
   position: absolute;
@@ -5740,9 +5757,7 @@ textarea {
 }
 
 .fashion-editorial-image {
-  background:
-    linear-gradient(180deg, rgba(36, 24, 20, 0.02), rgba(36, 24, 20, 0.2)),
-    #d8c8bc;
+  background: linear-gradient(180deg, rgba(36, 24, 20, 0.02), rgba(36, 24, 20, 0.2)), #d8c8bc;
   min-height: 560px;
   position: relative;
 }
@@ -6434,8 +6449,7 @@ textarea {
    cannot survive a full-width background, so it is gone. */
 .electronics-flash-deals {
   background:
-    radial-gradient(circle at 88% 12%, rgba(124, 58, 237, 0.16), transparent 30%),
-    #ffffff;
+    radial-gradient(circle at 88% 12%, rgba(124, 58, 237, 0.16), transparent 30%), #ffffff;
   display: grid;
   gap: var(--electronics-section-gap);
 }
@@ -7423,7 +7437,12 @@ textarea {
 }
 
 .beauty-curated-promo::after {
-  background: linear-gradient(180deg, rgba(45, 23, 33, 0.42) 0%, rgba(45, 23, 33, 0.06) 42%, rgba(45, 23, 33, 0.58) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(45, 23, 33, 0.42) 0%,
+    rgba(45, 23, 33, 0.06) 42%,
+    rgba(45, 23, 33, 0.58) 100%
+  );
   content: "";
   inset: 0;
   position: absolute;
@@ -7733,7 +7752,12 @@ textarea {
 }
 
 .beauty-spotlight-panel::after {
-  background: linear-gradient(180deg, rgba(45, 23, 33, 0.1) 0%, rgba(45, 23, 33, 0.04) 34%, rgba(45, 23, 33, 0.42) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(45, 23, 33, 0.1) 0%,
+    rgba(45, 23, 33, 0.04) 34%,
+    rgba(45, 23, 33, 0.42) 100%
+  );
   content: "";
   inset: 0;
   position: absolute;
@@ -10170,7 +10194,8 @@ textarea {
 .general-cart-row {
   display: grid;
   grid-template-columns:
-    minmax(0, 1fr) minmax(84px, 170px) minmax(120px, 190px) minmax(90px, 170px) 64px;
+    minmax(0, 1fr) minmax(84px, 170px) minmax(120px, 190px) minmax(90px, 170px)
+    64px;
 }
 
 .general-cart-head {
@@ -10389,7 +10414,9 @@ textarea {
   min-height: 46px;
   padding: 0 32px;
   text-align: center;
-  transition: filter 160ms ease, transform 160ms ease;
+  transition:
+    filter 160ms ease,
+    transform 160ms ease;
 }
 
 .general-cart-checkout {
@@ -10901,7 +10928,9 @@ textarea {
   justify-content: center;
   min-height: 44px;
   text-align: center;
-  transition: filter 160ms ease, transform 160ms ease;
+  transition:
+    filter 160ms ease,
+    transform 160ms ease;
   width: 100%;
 }
 
@@ -11686,21 +11715,6 @@ textarea {
   width: auto;
 }
 
-.storeos-panel {
-  display: grid;
-  gap: 20px;
-}
-
-.storeos-panel h2,
-.storeos-panel p {
-  margin: 0;
-}
-
-.storeos-panel p {
-  color: var(--muted);
-  line-height: 1.6;
-}
-
 .ai-shell {
   width: min(100%, 940px);
 }
@@ -11787,6 +11801,1274 @@ textarea {
 .ai-chat-form input:focus {
   border-color: var(--accent);
   outline: 2px solid rgb(19 93 102 / 18%);
+}
+
+/* --- AI Store Copilot -------------------------------------------------------
+   Its own `copilot-` namespace rather than the shared `.ai-chat` rules: this surface
+   answers from live store data and asks for approval before it changes any of
+   it, which needs a header, an evidence line and a proposal card the generic
+   chat block was never shaped for. Leaving `.ai-*` alone also means restyling
+   here cannot reach the other assistant surfaces. */
+
+/* The page header badge, and the prompt to add a key. Both say the same thing
+   in different places: what is answering, and what would answer better. */
+.copilot-engine {
+  align-items: center;
+  background: color-mix(in srgb, var(--foreground) 7%, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: 800;
+  gap: 6px;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+
+.copilot-engine.is-ready {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 24%, transparent);
+  color: var(--accent);
+}
+
+.copilot-callout {
+  align-items: center;
+  background: #fffaf4;
+  border: 1px solid #f4e6d8;
+  border-radius: 10px;
+  color: #8a6134;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.copilot-callout-body {
+  flex: 1;
+  min-width: 220px;
+}
+
+.copilot-callout-body strong {
+  display: block;
+  font-size: 0.88rem;
+}
+
+.copilot-callout-body p {
+  font-size: 0.83rem;
+  line-height: 1.55;
+  margin: 3px 0 0;
+}
+
+.copilot-callout-action {
+  background: #8a6134;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.83rem;
+  font-weight: 800;
+  padding: 9px 14px;
+  white-space: nowrap;
+}
+
+.copilot-callout-action:hover {
+  background: #74512b;
+}
+
+.copilot-chat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow:
+    0 1px 2px rgb(23 23 23 / 4%),
+    0 14px 34px rgb(23 23 23 / 5%);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+
+.copilot-chat-header {
+  align-items: center;
+  background: linear-gradient(180deg, var(--surface), var(--background));
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  padding: 14px 18px;
+}
+
+.copilot-chat-avatar {
+  align-items: center;
+  background: var(--accent);
+  border-radius: 10px;
+  color: var(--accent-foreground);
+  display: inline-flex;
+  flex: none;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.copilot-chat-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.copilot-chat-identity strong {
+  display: block;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.copilot-chat-identity p {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin: 2px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copilot-chat-reset {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  flex: none;
+  font-size: 0.78rem;
+  font-weight: 800;
+  gap: 6px;
+  padding: 7px 12px;
+  transition:
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.copilot-chat-reset:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.copilot-chat-reset:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.copilot-chat-log {
+  align-content: start;
+  background: var(--background);
+  display: grid;
+  gap: 18px;
+  max-height: min(58vh, 560px);
+  min-height: 320px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px 18px;
+}
+
+.copilot-turn {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 28px minmax(0, 1fr);
+}
+
+.copilot-turn-user {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: end;
+}
+
+.copilot-turn-avatar {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--accent);
+  display: inline-flex;
+  height: 28px;
+  justify-content: center;
+  margin-top: 2px;
+  width: 28px;
+}
+
+.copilot-bubble {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: grid;
+  gap: 8px;
+  max-width: min(72ch, 100%);
+  padding: 12px 14px;
+}
+
+.copilot-turn-user .copilot-bubble {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.copilot-turn-who {
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.copilot-turn-user .copilot-turn-who {
+  color: rgb(255 255 255 / 72%);
+}
+
+.copilot-turn-line {
+  line-height: 1.65;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* A downgrade notice, a failed tool, a refused change. Never a red box: the
+   answer above it is still usable, and the sentence explains what it cost. */
+.copilot-note {
+  align-items: flex-start;
+  background: #fffaf4;
+  border: 1px solid #f4e6d8;
+  border-radius: 8px;
+  color: #8a6134;
+  display: flex;
+  font-size: 0.83rem;
+  gap: 8px;
+  line-height: 1.5;
+  margin: 0;
+  padding: 8px 10px;
+}
+
+/* The evidence line: which engine wrote the answer, and what it read. */
+.copilot-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 0;
+}
+
+.copilot-pill {
+  align-items: center;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-radius: 999px;
+  color: var(--accent);
+  display: inline-flex;
+  font-size: 0.7rem;
+  font-weight: 800;
+  gap: 4px;
+  padding: 3px 9px;
+}
+
+.copilot-pill-quiet {
+  background: color-mix(in srgb, var(--foreground) 7%, var(--surface));
+  color: var(--muted);
+}
+
+.copilot-typing {
+  align-items: center;
+  display: flex;
+  gap: 5px;
+  margin: 0;
+}
+
+.copilot-typing span {
+  animation: copilot-typing-bounce 1.1s infinite ease-in-out;
+  background: var(--accent);
+  border-radius: 999px;
+  height: 6px;
+  opacity: 0.4;
+  width: 6px;
+}
+
+.copilot-typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.copilot-typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.copilot-typing em {
+  color: var(--muted);
+  font-size: 0.83rem;
+  font-style: normal;
+  margin-left: 4px;
+}
+
+@keyframes copilot-typing-bounce {
+  0%,
+  80%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+/* The proposal. Deliberately the heaviest thing on the screen — it is the one
+   moment the assistant asks to change the seller's shop. */
+.copilot-action {
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  border-radius: 10px;
+  display: grid;
+  gap: 12px;
+  margin-top: 4px;
+  padding: 14px;
+}
+
+.copilot-action-header {
+  align-items: flex-start;
+  color: var(--accent);
+  display: flex;
+  gap: 8px;
+}
+
+.copilot-action-header strong {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.copilot-action-header span {
+  color: var(--muted);
+  display: block;
+  font-size: 0.76rem;
+  margin-top: 2px;
+}
+
+.copilot-action-rows {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  margin: 0;
+}
+
+.copilot-action-rows > div {
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(96px, 33%) minmax(0, 1fr);
+  padding: 8px 12px;
+}
+
+.copilot-action-rows > div:last-child {
+  border-bottom: 0;
+}
+
+.copilot-action-rows dt {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.copilot-action-rows dd {
+  font-size: 0.86rem;
+  font-weight: 700;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.copilot-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.copilot-action-dismiss {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 800;
+  min-height: 40px;
+  padding: 0 16px;
+}
+
+.copilot-action-dismiss:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.copilot-action-dismiss:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.copilot-action-done {
+  align-items: center;
+  color: var(--accent);
+  display: flex;
+  font-size: 0.86rem;
+  font-weight: 800;
+  gap: 8px;
+  margin: 0;
+}
+
+.copilot-chat-footer {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 12px;
+  padding: 14px 18px 16px;
+}
+
+.copilot-suggestions {
+  display: grid;
+  gap: 8px;
+}
+
+.copilot-suggestions-label {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.copilot-suggestion-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.copilot-chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--foreground);
+  cursor: pointer;
+  font-size: 0.83rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.copilot-chip:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border-color: var(--accent);
+}
+
+.copilot-chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.copilot-composer {
+  align-items: end;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.copilot-composer-input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  /* Grows with the question where the browser supports it; everywhere else the
+     box scrolls at four lines rather than jumping the layout. */
+  field-sizing: content;
+  font: inherit;
+  line-height: 1.5;
+  max-height: 132px;
+  min-height: 48px;
+  padding: 13px 14px;
+  resize: none;
+  width: 100%;
+}
+
+.copilot-composer-input:focus {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  outline-offset: 1px;
+}
+
+.copilot-composer-input:disabled {
+  background: var(--background);
+  cursor: not-allowed;
+}
+
+.copilot-composer-send {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  min-height: 48px;
+}
+
+.copilot-composer-hint {
+  color: var(--muted);
+  display: flex;
+  font-size: 0.74rem;
+  gap: 12px;
+  justify-content: space-between;
+  margin: 0;
+}
+
+.copilot-composer-count {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px) {
+  .copilot-chat-log {
+    max-height: 62vh;
+    padding: 16px 12px;
+  }
+
+  .copilot-chat-header,
+  .copilot-chat-footer {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .copilot-chat-identity p {
+    display: none;
+  }
+
+  .copilot-composer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .copilot-action-rows > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copilot-chat-log {
+    scroll-behavior: auto;
+  }
+
+  .copilot-typing span {
+    animation: none;
+  }
+}
+
+/* --- StoreIM AI settings ----------------------------------------------------
+   One card per section, and each section is that card — the page used to wrap
+   every panel in `.dashboard-shell` and then render a second bordered card
+   inside it, which read as a box in a box on every screen wide enough to see
+   both edges.
+
+   The other thing this fixes is width. A settings form laid out in one column
+   leaves half a 1500px dashboard empty while its own fields are cramped, so the
+   two providers sit side by side, the connection facts sit in a stat row, and
+   the capability catalog is a grid rather than seven stacked bars. */
+
+.aiset-page {
+  display: grid;
+  gap: 16px;
+}
+
+.aiset-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgb(62 54 114 / 4%);
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+}
+
+.aiset-head {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.aiset-head-text {
+  display: grid;
+  gap: 4px;
+  min-width: 240px;
+}
+
+.aiset-eyebrow {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.aiset-section h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.aiset-section-copy {
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 78ch;
+}
+
+/* The one thing on this page a seller must not misread: where their key goes
+   and where it does not. */
+.aiset-note {
+  align-items: flex-start;
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  border-radius: 10px;
+  color: var(--foreground);
+  display: flex;
+  font-size: 0.82rem;
+  gap: 10px;
+  line-height: 1.6;
+  margin: 0;
+  padding: 12px 14px;
+}
+
+.aiset-note svg {
+  color: var(--accent);
+  margin-top: 2px;
+}
+
+.aiset-warning {
+  align-items: flex-start;
+  background: #fffaf4;
+  border: 1px solid #f4e6d8;
+  border-radius: 10px;
+  color: #8a6134;
+  display: flex;
+  font-size: 0.82rem;
+  gap: 10px;
+  line-height: 1.6;
+  margin: 0;
+  padding: 12px 14px;
+}
+
+.aiset-success {
+  align-items: center;
+  color: var(--accent);
+  display: flex;
+  font-size: 0.84rem;
+  font-weight: 700;
+  gap: 8px;
+  margin: 0;
+}
+
+/* Fields ------------------------------------------------------------------- */
+
+.aiset-field {
+  display: grid;
+  gap: 6px;
+}
+
+.aiset-field > span {
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.aiset-field input,
+.aiset-field select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.84rem;
+  min-height: 42px;
+  padding: 0 12px;
+  width: 100%;
+}
+
+.aiset-field input:focus,
+.aiset-field select:focus {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  outline-offset: 1px;
+}
+
+.aiset-field input:disabled,
+.aiset-field select:disabled {
+  background: var(--background);
+  cursor: not-allowed;
+}
+
+.aiset-field small {
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.aiset-default {
+  max-width: 460px;
+}
+
+/* Providers ---------------------------------------------------------------- */
+
+.aiset-providers {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.aiset-provider {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+/* The provider actually in use is ringed, so "which of these two is answering"
+   is a glance rather than a re-read of the dropdown above. */
+.aiset-provider.is-active {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 9%, transparent);
+}
+
+.aiset-provider-head {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.aiset-provider-head strong {
+  font-size: 0.9rem;
+}
+
+.aiset-keystate {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.76rem;
+  gap: 6px;
+  margin: 0;
+}
+
+.aiset-keystate code {
+  background: var(--background);
+  border-radius: 4px;
+  font-size: 0.72rem;
+  padding: 1px 5px;
+}
+
+.aiset-link {
+  align-items: center;
+  color: var(--accent);
+  display: inline-flex;
+  font-weight: 700;
+  gap: 4px;
+}
+
+.aiset-link:hover {
+  text-decoration: underline;
+}
+
+.aiset-check {
+  align-items: center;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  font-size: 0.78rem;
+  gap: 8px;
+}
+
+.aiset-check input {
+  accent-color: var(--accent);
+  height: 14px;
+  width: 14px;
+}
+
+.aiset-footer {
+  align-items: center;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  padding-top: 16px;
+}
+
+.aiset-footer-note {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+/* Connection facts --------------------------------------------------------- */
+
+.aiset-stats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  margin: 0;
+}
+
+.aiset-stat {
+  background: var(--background);
+  border-radius: 10px;
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px;
+}
+
+.aiset-stat dt {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.aiset-stat dd {
+  font-size: 0.86rem;
+  font-weight: 700;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Capabilities ------------------------------------------------------------- */
+
+.aiset-caps {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.aiset-cap {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+}
+
+.aiset-cap-head {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.aiset-cap-head strong {
+  font-size: 0.85rem;
+}
+
+.aiset-cap p {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.aiset-cap code {
+  color: color-mix(in srgb, var(--muted) 75%, transparent);
+  font-size: 0.7rem;
+}
+
+@media (max-width: 720px) {
+  .aiset-section {
+    padding: 16px;
+  }
+
+  .aiset-footer {
+    justify-content: stretch;
+  }
+}
+
+/* Two or more buttons in a resource header, which is a space-between flex row. */
+.resource-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* --- AI Product Content Studio ---------------------------------------------
+   Built on the product editor's card, so the studio reads as part of the
+   product it edits rather than as a separate tool. Only the things the editor
+   has no equivalent for are styled here: the suggestion block, the generate
+   buttons, and the counters. */
+.ai-studio {
+  display: grid;
+  gap: 18px;
+  width: min(100%, 940px);
+}
+
+.dash-dashboard .ai-studio-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ai-studio-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ai-studio-field-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.ai-studio-ghost-button,
+.ai-studio-accept-button {
+  align-items: center;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: 700;
+  gap: 6px;
+  padding: 8px 14px;
+  white-space: nowrap;
+}
+
+.ai-studio-ghost-button {
+  background: #ffffff;
+  border: 1px solid #e4e3ee;
+  color: #4b4860;
+}
+
+.ai-studio-ghost-button:hover:not(:disabled) {
+  border-color: #cfc6ff;
+  color: #5b21b6;
+}
+
+.ai-studio-ghost-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.ai-studio-accept-button {
+  background: #5b21b6;
+  border: 1px solid #5b21b6;
+  color: #ffffff;
+}
+
+.ai-studio-accept-button:hover {
+  background: #4c1d95;
+}
+
+/* The suggestion sits above the field it is for, visually detached from the
+   textarea, because it is not the value yet — accepting it is a decision. */
+.ai-studio-suggestion {
+  background: #faf8ff;
+  border: 1px solid #e0d7ff;
+  border-radius: 10px;
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.ai-studio-suggestion-label {
+  color: #6d3cf5;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.ai-studio-suggestion-text {
+  color: #241f3d;
+  font-size: 0.84rem;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.ai-studio-suggestion-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ai-studio-count {
+  color: #8a8798;
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin: 0;
+  text-align: right;
+}
+
+.ai-studio-count-over {
+  color: #b42318;
+}
+
+.ai-studio-count span {
+  color: #5b21b6;
+}
+
+.ai-studio-meta {
+  color: #8a8798;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.ai-studio-status {
+  color: #176b35;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* The one sentence that says where the words came from. Two colours because the
+   difference between "written by AI" and "assembled from your own details"
+   matters to the person about to publish it. */
+.ai-studio-source {
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  margin: 0;
+  padding: 10px 12px;
+}
+
+.ai-studio-source-storeos {
+  background: #f0ebff;
+  color: #5b21b6;
+}
+
+.ai-studio-source-template {
+  background: #fffaf4;
+  color: #8a6134;
+}
+
+.ai-studio-warning,
+.ai-studio-locked {
+  align-items: flex-start;
+  background: #fffaf4;
+  border: 1px solid #f4e6d8;
+  border-radius: 8px;
+  color: #8a6134;
+  display: flex;
+  font-size: 0.78rem;
+  gap: 8px;
+  line-height: 1.5;
+  margin: 0;
+  padding: 10px 12px;
+}
+
+.ai-studio-warning a,
+.ai-studio-locked a,
+.ai-studio .form-error a {
+  color: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+}
+
+.dash-dashboard .ai-studio-save {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 18px 20px;
+}
+
+.ai-studio-save div {
+  display: grid;
+  gap: 4px;
+}
+
+.ai-studio-save strong {
+  color: #20212a;
+  font-size: 0.9rem;
+}
+
+.ai-studio-save span {
+  color: #77748a;
+  font-size: 0.78rem;
+}
+
+@media (width <= 720px) {
+  .dash-dashboard .ai-studio-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ai-studio-field-heading {
+    flex-direction: column;
+  }
+}
+
+/* --- Inline "Generate with AI", beside a product field ---------------------
+   Deliberately quiet: a text button with a sparkle, not a filled one. It sits
+   next to every content field on the product form, and eight loud buttons down
+   one column would read as the point of the page rather than an offer. */
+.generate-with-ai {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.generate-with-ai-button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: #6d3cf5;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.74rem;
+  font-weight: 700;
+  gap: 5px;
+  padding: 4px 6px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.generate-with-ai-button:hover:not(:disabled) {
+  background: #f4f0ff;
+  color: #4c1d95;
+}
+
+.generate-with-ai-button:disabled {
+  color: #9a97a8;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.generate-with-ai-error,
+.generate-with-ai-source {
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.generate-with-ai-error {
+  color: #b42318;
+}
+
+.generate-with-ai-source {
+  color: #8a8798;
+}
+
+/* --- A content field on the product form ----------------------------------
+   Only the heading row and the caption are styled here. The field itself is a
+   direct child of `.field-shell`, which has been `display: grid` since long
+   before any of this existed, so the control is full width whether or not this
+   block has been rebuilt. This layout broke once by owning its own width. */
+.ai-field-head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+/* A field with a heading row spaces itself like a plain label, so a Title with
+   a Generate button and the Slug beside it line up on the same baseline. */
+.dash-dashboard .field-shell:has(> .ai-field-head) {
+  gap: 8px;
+}
+
+.dash-dashboard .ai-field-label {
+  color: #252238;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.ai-field-foot {
+  color: #8a8798;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.72rem;
+  gap: 12px;
+  justify-content: space-between;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* --- StoreIM AI content defaults ------------------------------------------------------ */
+.ai-settings-form {
+  display: grid;
+  gap: 18px;
+  width: min(100%, 940px);
+}
+
+.ai-settings-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* --- StoreIM AI > AI Product Content ------------------------------------------ */
+.ai-content-status {
+  display: grid;
+  gap: 4px 18px;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  margin: 0;
+}
+
+.ai-content-status dt {
+  color: #77748a;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.ai-content-status dd {
+  color: #20212a;
+  font-size: 0.82rem;
+  font-weight: 650;
+  margin: 0;
+}
+
+.ai-content-field-list,
+.ai-content-product-list {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ai-content-field-list li {
+  border-left: 2px solid #e0d7ff;
+  display: grid;
+  gap: 2px;
+  padding-left: 12px;
+}
+
+.ai-content-field-list strong {
+  color: #20212a;
+  font-size: 0.82rem;
+}
+
+.ai-content-field-list span,
+.ai-content-product-list span {
+  color: #77748a;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.ai-content-product-list li {
+  align-items: center;
+  border: 1px solid #ececf5;
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px 14px;
+}
+
+.ai-content-product-list strong {
+  color: #20212a;
+  display: block;
+  font-size: 0.84rem;
+}
+
+@media (width <= 720px) {
 }
 
 .media-upload-shell {
@@ -12859,64 +14141,66 @@ textarea {
   text-rendering: optimizeLegibility;
 }
 
-.sf-page :is(
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  p,
-  a,
-  button,
-  input,
-  textarea,
-  select,
-  label,
-  table,
-  thead,
-  tbody,
-  tfoot,
-  th,
-  td,
-  small,
-  strong,
-  b,
-  span,
-  li,
-  dt,
-  dd,
-  figcaption
-),
-.sf-theme-scope :is(
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  p,
-  a,
-  button,
-  input,
-  textarea,
-  select,
-  label,
-  table,
-  thead,
-  tbody,
-  tfoot,
-  th,
-  td,
-  small,
-  strong,
-  b,
-  span,
-  li,
-  dt,
-  dd,
-  figcaption
-) {
+.sf-page
+  :is(
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p,
+    a,
+    button,
+    input,
+    textarea,
+    select,
+    label,
+    table,
+    thead,
+    tbody,
+    tfoot,
+    th,
+    td,
+    small,
+    strong,
+    b,
+    span,
+    li,
+    dt,
+    dd,
+    figcaption
+  ),
+.sf-theme-scope
+  :is(
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p,
+    a,
+    button,
+    input,
+    textarea,
+    select,
+    label,
+    table,
+    thead,
+    tbody,
+    tfoot,
+    th,
+    td,
+    small,
+    strong,
+    b,
+    span,
+    li,
+    dt,
+    dd,
+    figcaption
+  ) {
   font-family: var(--sf-font-family) !important;
 }
 
@@ -12930,8 +14214,18 @@ textarea {
   font: inherit;
 }
 
-.sf-page :is(.sf-nav, .sf-nav a, .sf-brand-name, .sf-product-title, .sf-price, .sf-breadcrumb, .sf-footer),
-.sf-theme-scope :is(.sf-nav, .sf-nav a, .sf-brand-name, .sf-product-title, .sf-price, .sf-breadcrumb, .sf-footer) {
+.sf-page
+  :is(.sf-nav, .sf-nav a, .sf-brand-name, .sf-product-title, .sf-price, .sf-breadcrumb, .sf-footer),
+.sf-theme-scope
+  :is(
+    .sf-nav,
+    .sf-nav a,
+    .sf-brand-name,
+    .sf-product-title,
+    .sf-price,
+    .sf-breadcrumb,
+    .sf-footer
+  ) {
   font-family: var(--sf-font-family) !important;
 }
 
@@ -13011,15 +14305,16 @@ textarea {
   --general-grid-gap: 4px;
 }
 
-.sf-page[data-storefront-template="general-default"] :is(
-  .general-category-strip,
-  .general-collection-grid,
-  .general-product-grid,
-  .general-product-listing-grid,
-  .sf-search-products .general-product-listing-grid,
-  .tabbed-product-carousel .general-product-listing-grid,
-  .general-product-promo-grid
-) {
+.sf-page[data-storefront-template="general-default"]
+  :is(
+    .general-category-strip,
+    .general-collection-grid,
+    .general-product-grid,
+    .general-product-listing-grid,
+    .sf-search-products .general-product-listing-grid,
+    .tabbed-product-carousel .general-product-listing-grid,
+    .general-product-promo-grid
+  ) {
   --product-grid-gap: var(--general-grid-gap);
   column-gap: var(--general-grid-gap);
   gap: var(--general-grid-gap);
@@ -13042,10 +14337,8 @@ textarea {
   row-gap: var(--product-gallery-gap, var(--general-grid-gap));
 }
 
-.sf-page[data-storefront-template="general-default"] :is(
-  .general-product-listing-slider,
-  .tabbed-product-carousel .general-product-listing-slider
-) {
+.sf-page[data-storefront-template="general-default"]
+  :is(.general-product-listing-slider, .tabbed-product-carousel .general-product-listing-slider) {
   --product-grid-gap: var(--general-grid-gap);
 }
 
@@ -13060,10 +14353,9 @@ textarea {
   --general-grid-gap: clamp(14px, 1.6vw, 26px);
 }
 
-.sf-page[data-storefront-template="beauty-default"] .beauty-homepage :is(
-  .general-product-listing-grid,
-  .general-product-listing-slider
-) {
+.sf-page[data-storefront-template="beauty-default"]
+  .beauty-homepage
+  :is(.general-product-listing-grid, .general-product-listing-slider) {
   --product-grid-gap: var(--general-grid-gap);
   column-gap: var(--general-grid-gap);
   gap: var(--general-grid-gap);
@@ -13074,7 +14366,9 @@ textarea {
   gap: var(--general-grid-gap);
 }
 
-.sf-page[data-storefront-template="beauty-default"] .beauty-homepage .general-product-section-header {
+.sf-page[data-storefront-template="beauty-default"]
+  .beauty-homepage
+  .general-product-section-header {
   margin-bottom: clamp(18px, 2.5vw, 34px);
 }
 
@@ -13304,7 +14598,9 @@ textarea {
   padding: var(--general-section-padding-block) var(--general-section-padding-inline);
 }
 
-.sf-page[data-storefront-template="general-default"] .general-homepage :is(.general-section-heading, .general-product-section-header) {
+.sf-page[data-storefront-template="general-default"]
+  .general-homepage
+  :is(.general-section-heading, .general-product-section-header) {
   margin-bottom: clamp(18px, 2.5vw, 34px);
 }
 
@@ -13313,7 +14609,8 @@ textarea {
    pinned here and scoped to this template rather than edited into each rule.
    line-height travels with it: the display headers set 0.95, which reads as a
    collision once the smaller titles are raised to the same size. */
-.sf-page[data-storefront-template="general-default"] .general-homepage
+.sf-page[data-storefront-template="general-default"]
+  .general-homepage
   :is(
     .general-section-heading,
     .general-product-section-header,
@@ -13546,7 +14843,7 @@ textarea {
 .dash-dashboard .variant-primary-button:disabled,
 .dash-dashboard .variant-secondary-button:disabled {
   cursor: not-allowed;
-  opacity: .45;
+  opacity: 0.45;
 }
 
 .attribute-card-list,
@@ -13646,7 +14943,7 @@ textarea {
 .attribute-card button:disabled,
 .dash-dashboard .attribute-card button:disabled {
   cursor: not-allowed;
-  opacity: .45;
+  opacity: 0.45;
 }
 
 .variant-empty-state,
@@ -13832,7 +15129,7 @@ textarea {
 .variant-modal-backdrop,
 .dash-dashboard .variant-modal-backdrop {
   align-items: center;
-  background: rgba(24, 22, 34, .45);
+  background: rgba(24, 22, 34, 0.45);
   display: flex;
   inset: 0;
   justify-content: center;
@@ -13845,7 +15142,7 @@ textarea {
 .dash-dashboard .variant-modal {
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 24px 70px rgba(36, 28, 66, .2);
+  box-shadow: 0 24px 70px rgba(36, 28, 66, 0.2);
   max-width: 420px;
   padding: 24px;
 }
@@ -13879,8 +15176,8 @@ textarea {
 
 .general-product-sku {
   color: #737373;
-  font-size: .78rem;
-  letter-spacing: .02em;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
   margin: 0;
 }
 
@@ -13891,7 +15188,7 @@ textarea {
 
 .general-product-variant-matrix > span {
   color: #1f1f1f;
-  font-size: .78rem;
+  font-size: 0.78rem;
   font-weight: 700;
 }
 
@@ -13907,7 +15204,7 @@ textarea {
   border-radius: 0;
   color: #1e1e1e;
   cursor: pointer;
-  font-size: .76rem;
+  font-size: 0.76rem;
   min-height: 38px;
   padding: 0 14px;
 }
@@ -13923,7 +15220,7 @@ textarea {
   border: 1px solid #d9d9d9;
   border-radius: 0;
   color: #1e1e1e;
-  font-size: .82rem;
+  font-size: 0.82rem;
   min-height: 44px;
   padding: 0 12px;
   width: 100%;
@@ -14355,11 +15652,8 @@ textarea {
 @media (max-width: 640px) {
   /* Row-flow grids: home rows, shop, category, search, curated tabs, hot picks,
      spotlight, related products. */
-  .sf-page[data-storefront-template="beauty-default"] :is(
-    .general-product-listing-grid,
-    .beauty-spotlight-grid,
-    .beauty-hot-picks-grid
-  ) {
+  .sf-page[data-storefront-template="beauty-default"]
+    :is(.general-product-listing-grid, .beauty-spotlight-grid, .beauty-hot-picks-grid) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -14391,19 +15685,17 @@ textarea {
      button pushed the badge past the viewport and opened a 1px horizontal
      scroll. An overlaid pseudo-element gives the same 44px press target while
      the button box, the glyph and the badge all stay exactly where they were. */
-  .fashion-header-shell[data-storefront-header-template="beauty-default"] :is(
-    .fashion-mobile-menu-button,
-    .fashion-header-actions a,
-    .fashion-header-actions button
-  ) {
+  .fashion-header-shell[data-storefront-header-template="beauty-default"]
+    :is(.fashion-mobile-menu-button, .fashion-header-actions a, .fashion-header-actions button) {
     position: relative;
   }
 
-  .fashion-header-shell[data-storefront-header-template="beauty-default"] :is(
-    .fashion-mobile-menu-button,
-    .fashion-header-actions a,
-    .fashion-header-actions button
-  )::after {
+  .fashion-header-shell[data-storefront-header-template="beauty-default"]
+    :is(
+      .fashion-mobile-menu-button,
+      .fashion-header-actions a,
+      .fashion-header-actions button
+    )::after {
     content: "";
     /* 20px glyph + 12px a side = 44px; the cart's 21px glyph lands at 45px. */
     inset: -12px;
@@ -14446,12 +15738,13 @@ textarea {
   /* Section "View all" links, the shop-header link and the filter toggle are all
      20-24px of bare text. The extra height is space under the baseline, which the
      inline-flex centring absorbs, so nothing moves except the press target. */
-  [data-storefront-template="beauty-default"] :is(
-    .beauty-section-heading a,
-    .general-product-section-cta,
-    .sf-shop-page-header a,
-    .sf-shop-toolbar-left button
-  ) {
+  [data-storefront-template="beauty-default"]
+    :is(
+      .beauty-section-heading a,
+      .general-product-section-cta,
+      .sf-shop-page-header a,
+      .sf-shop-toolbar-left button
+    ) {
     align-items: center;
     display: inline-flex;
     min-height: 44px;
@@ -14460,11 +15753,8 @@ textarea {
   /* Breadcrumbs stay inline: vertical padding on an inline box grows the press
      area without touching the line box, so the trail keeps its own height and
      its separators stay aligned. */
-  [data-storefront-template="beauty-default"] :is(
-    .sf-breadcrumb a,
-    .general-cart-breadcrumb a,
-    .general-product-breadcrumb a
-  ) {
+  [data-storefront-template="beauty-default"]
+    :is(.sf-breadcrumb a, .general-cart-breadcrumb a, .general-product-breadcrumb a) {
     padding-block: 12px;
   }
 
@@ -14512,10 +15802,8 @@ textarea {
     font-size: 0.7rem;
   }
 
-  [data-storefront-template="beauty-default"] :is(
-    .general-product-sale-badge,
-    .general-product-shipping span
-  ) {
+  [data-storefront-template="beauty-default"]
+    :is(.general-product-sale-badge, .general-product-shipping span) {
     font-size: 0.72rem;
   }
 
@@ -14564,10 +15852,8 @@ textarea {
    Row-flow grids: the homepage trending row, the shop and category listings,
    search results, related products and recently viewed. */
 @media (max-width: 640px) {
-  .sf-page[data-storefront-template="fashion-default"] :is(
-    .fashion-product-grid,
-    .general-product-listing-grid
-  ) {
+  .sf-page[data-storefront-template="fashion-default"]
+    :is(.fashion-product-grid, .general-product-listing-grid) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -14611,7 +15897,12 @@ textarea {
      which keeps its own `z-index: 1`. Mobile only: the tiles are ~158px wide
      here, where the type covers most of the frame. */
   [data-storefront-template="fashion-default"] .fashion-category-card::after {
-    background: linear-gradient(180deg, rgba(24, 16, 13, 0.42), rgba(24, 16, 13, 0.12) 45%, rgba(24, 16, 13, 0.55));
+    background: linear-gradient(
+      180deg,
+      rgba(24, 16, 13, 0.42),
+      rgba(24, 16, 13, 0.12) 45%,
+      rgba(24, 16, 13, 0.55)
+    );
     content: "";
     inset: 0;
     pointer-events: none;
@@ -14681,19 +15972,17 @@ textarea {
    pseudo-element gives the 44px press target while the button box, the glyph
    and the badge all stay exactly where they were. */
 @media (max-width: 900px) {
-  .fashion-header-shell[data-storefront-header-template="fashion-default"] :is(
-    .fashion-mobile-menu-button,
-    .fashion-header-actions a,
-    .fashion-header-actions button
-  ) {
+  .fashion-header-shell[data-storefront-header-template="fashion-default"]
+    :is(.fashion-mobile-menu-button, .fashion-header-actions a, .fashion-header-actions button) {
     position: relative;
   }
 
-  .fashion-header-shell[data-storefront-header-template="fashion-default"] :is(
-    .fashion-mobile-menu-button,
-    .fashion-header-actions a,
-    .fashion-header-actions button
-  )::after {
+  .fashion-header-shell[data-storefront-header-template="fashion-default"]
+    :is(
+      .fashion-mobile-menu-button,
+      .fashion-header-actions a,
+      .fashion-header-actions button
+    )::after {
     content: "";
     /* 20px glyph + 12px a side = 44px; the cart's 21px glyph lands at 45px. */
     inset: -12px;
@@ -14773,21 +16062,15 @@ textarea {
    Breadcrumbs stay inline: vertical padding on an inline box grows the press
    area without touching the line box. */
 @media (max-width: 768px) {
-  [data-storefront-template="fashion-default"] :is(
-    .general-product-section-cta,
-    .sf-shop-page-header a,
-    .sf-shop-toolbar-left button
-  ) {
+  [data-storefront-template="fashion-default"]
+    :is(.general-product-section-cta, .sf-shop-page-header a, .sf-shop-toolbar-left button) {
     align-items: center;
     display: inline-flex;
     min-height: 44px;
   }
 
-  [data-storefront-template="fashion-default"] :is(
-    .sf-breadcrumb a,
-    .general-cart-breadcrumb a,
-    .general-product-breadcrumb a
-  ) {
+  [data-storefront-template="fashion-default"]
+    :is(.sf-breadcrumb a, .general-cart-breadcrumb a, .general-product-breadcrumb a) {
     padding-block: 12px;
   }
 
@@ -14804,10 +16087,8 @@ textarea {
 /* Labels that shrink with their container had landed near 10.5px at phone
    width. These floor them at ~11.5px, the smallest size the template uses. */
 @media (max-width: 680px) {
-  [data-storefront-template="fashion-default"] :is(
-    .general-product-sale-badge,
-    .general-product-shipping span
-  ) {
+  [data-storefront-template="fashion-default"]
+    :is(.general-product-sale-badge, .general-product-shipping span) {
     font-size: 0.72rem;
   }
 
@@ -14819,7 +16100,8 @@ textarea {
      template still under 10px. The disc grows with it so the digit keeps its
      ring, and both stay pinned to fashion: beauty renders this same header. */
   .fashion-header-shell[data-storefront-header-template="fashion-default"]
-    .sf-cart-icon-action span {
+    .sf-cart-icon-action
+    span {
     font-size: 0.72rem;
     height: 17px;
     line-height: 17px;
@@ -14869,10 +16151,8 @@ textarea {
   }
 
   /* Cart line steppers and the row's remove button were all 34px squares. */
-  [data-storefront-template="fashion-default"] :is(
-    .general-cart-quantity button,
-    .general-cart-remove
-  ) {
+  [data-storefront-template="fashion-default"]
+    :is(.general-cart-quantity button, .general-cart-remove) {
     height: 44px;
     width: 44px;
   }
@@ -15036,11 +16316,8 @@ textarea {
   /* Homepage rows, flash deals, the recommended tab panel, and every surface
      that renders the shared listing grid (shop, category, search, related,
      recently viewed) all land on the same two-column rhythm. */
-  .sf-page[data-storefront-template="electronics-default"] :is(
-    .electronics-product-grid,
-    .electronics-recommended-grid,
-    .general-product-listing-grid
-  ) {
+  .sf-page[data-storefront-template="electronics-default"]
+    :is(.electronics-product-grid, .electronics-recommended-grid, .general-product-listing-grid) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -15205,31 +16482,26 @@ textarea {
    the added height is slack around the baseline that the inline-flex centring
    absorbs, so only the press target changes. */
 @media (max-width: 768px) {
-  [data-storefront-template="electronics-default"] :is(
-    .general-product-section-cta,
-    .sf-shop-page-header a,
-    .sf-shop-toolbar-left button,
-    .sf-shop-empty a
-  ) {
+  [data-storefront-template="electronics-default"]
+    :is(
+      .general-product-section-cta,
+      .sf-shop-page-header a,
+      .sf-shop-toolbar-left button,
+      .sf-shop-empty a
+    ) {
     align-items: center;
     display: inline-flex;
     min-height: 44px;
   }
 
-  [data-storefront-template="electronics-default"] :is(
-    .sf-pagination a,
-    .sf-pagination span
-  ) {
+  [data-storefront-template="electronics-default"] :is(.sf-pagination a, .sf-pagination span) {
     min-height: 44px;
   }
 
   /* Breadcrumbs stay inline — vertical padding on an inline box grows the press
      area without disturbing the line box. */
-  [data-storefront-template="electronics-default"] :is(
-    .sf-breadcrumb a,
-    .general-cart-breadcrumb a,
-    .general-product-breadcrumb a
-  ) {
+  [data-storefront-template="electronics-default"]
+    :is(.sf-breadcrumb a, .general-cart-breadcrumb a, .general-product-breadcrumb a) {
     padding-block: 12px;
   }
 
@@ -15274,11 +16546,8 @@ textarea {
      `.general-product-grid` and `.general-collection-grid` are the older card
      grids the template still ships; they follow the same count so a store that
      renders one reads no differently from a store that renders the other. */
-  .sf-theme-scope[data-storefront-template="general-default"] :is(
-    .general-product-grid,
-    .general-product-listing-grid,
-    .general-collection-grid
-  ) {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    :is(.general-product-grid, .general-product-listing-grid, .general-collection-grid) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -15286,10 +16555,8 @@ textarea {
      they show two cards per view rather than one near-full-width card. A slider
      row and a static row then read identically on a phone — only the overflow
      differs. */
-  .sf-theme-scope[data-storefront-template="general-default"] :is(
-    .general-product-listing-slider,
-    .tabbed-product-carousel .general-product-listing-slider
-  ) {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    :is(.general-product-listing-slider, .tabbed-product-carousel .general-product-listing-slider) {
     grid-auto-columns: calc((100% - var(--product-grid-gap, 4px)) / 2);
     grid-auto-flow: column;
     grid-template-columns: none;
@@ -15337,7 +16604,9 @@ textarea {
   /* `.general-homepage` is carried only to outrank the template grid-rhythm
      block above, whose `:is()` list resolves to two classes and would otherwise
      hold the strip at the 4px product-row gutter. */
-  .sf-theme-scope[data-storefront-template="general-default"] .general-homepage .general-category-strip {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    .general-homepage
+    .general-category-strip {
     column-gap: 14px;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     row-gap: 20px;
@@ -15364,10 +16633,8 @@ textarea {
     justify-items: start;
   }
 
-  .sf-theme-scope[data-storefront-template="general-default"] :is(
-    .general-section-heading a,
-    .general-product-section-cta
-  ) {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    :is(.general-section-heading a, .general-product-section-cta) {
     align-items: center;
     display: inline-flex;
     min-height: 44px;
@@ -15391,12 +16658,16 @@ textarea {
     max-width: none;
   }
 
-  .sf-theme-scope[data-storefront-template="general-default"] .general-product-slider-controls > span {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    .general-product-slider-controls
+    > span {
     min-width: 0;
     width: auto;
   }
 
-  .sf-theme-scope[data-storefront-template="general-default"] .general-product-slider-controls button {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    .general-product-slider-controls
+    button {
     height: 44px;
     width: 44px;
   }
@@ -15440,24 +16711,23 @@ textarea {
    bare text or small glyph boxes; the added height is slack around the baseline
    that the inline-flex centring absorbs, so only the press target changes. */
 @media (max-width: 768px) {
-  .sf-theme-scope[data-storefront-template="general-default"] :is(
-    .sf-shop-page-header a,
-    .sf-shop-toolbar-left button,
-    .sf-shop-empty a,
-    .sf-footer-column a,
-    .sf-footer-socials a,
-    .sf-footer-bottom nav a,
-    .general-cart-shipping-row a
-  ) {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    :is(
+      .sf-shop-page-header a,
+      .sf-shop-toolbar-left button,
+      .sf-shop-empty a,
+      .sf-footer-column a,
+      .sf-footer-socials a,
+      .sf-footer-bottom nav a,
+      .general-cart-shipping-row a
+    ) {
     align-items: center;
     display: inline-flex;
     min-height: 44px;
   }
 
-  .sf-theme-scope[data-storefront-template="general-default"] :is(
-    .sf-pagination a,
-    .sf-pagination span
-  ) {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    :is(.sf-pagination a, .sf-pagination span) {
     min-height: 44px;
   }
 
@@ -15476,35 +16746,30 @@ textarea {
 
   /* Breadcrumbs stay inline — vertical padding on an inline box grows the press
      area without disturbing the line box. */
-  .sf-theme-scope[data-storefront-template="general-default"] :is(
-    .sf-breadcrumb a,
-    .general-cart-breadcrumb a,
-    .general-product-breadcrumb a
-  ) {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    :is(.sf-breadcrumb a, .general-cart-breadcrumb a, .general-product-breadcrumb a) {
     padding-block: 12px;
   }
 
   /* Header glyph buttons and the brand mark were 42px boxes. */
-  .sf-theme-scope[data-storefront-template="general-default"] :is(
-    .sf-icon-action,
-    .sf-mobile-menu-button
-  ) {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    :is(.sf-icon-action, .sf-mobile-menu-button) {
     height: 44px;
     width: 44px;
   }
 
   /* Accordion and disclosure summaries — product details, cart order notes. */
-  .sf-theme-scope[data-storefront-template="general-default"] :is(
-    .general-product-accordion summary,
-    .general-cart-notes summary
-  ) {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    :is(.general-product-accordion summary, .general-cart-notes summary) {
     align-items: center;
     display: flex;
     justify-content: space-between;
     min-height: 44px;
   }
 
-  .sf-theme-scope[data-storefront-template="general-default"] .general-product-accordion summary::after {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    .general-product-accordion
+    summary::after {
     float: none;
   }
 }
@@ -15516,42 +16781,51 @@ textarea {
    at 38px tall. The stepper's track is a three-column grid, so the columns have
    to grow with the buttons or the wider button just overflows its cell. */
 @media (max-width: 768px) {
-  .sf-theme-scope[data-storefront-template="general-default"] .general-product-info .sf-quantity-control {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    .general-product-info
+    .sf-quantity-control {
     grid-template-columns: 44px 46px 44px;
     min-height: 44px;
   }
 
-  .sf-theme-scope[data-storefront-template="general-default"] .general-product-info .sf-quantity-control button {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    .general-product-info
+    .sf-quantity-control
+    button {
     height: 44px;
     width: 44px;
   }
 
-  .sf-theme-scope[data-storefront-template="general-default"] .general-product-info .sf-purchase-box input {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    .general-product-info
+    .sf-purchase-box
+    input {
     min-height: 44px;
     width: 46px;
   }
 
-  .sf-theme-scope[data-storefront-template="general-default"] .general-product-info .sf-purchase-actions button {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    .general-product-info
+    .sf-purchase-actions
+    button {
     min-height: 48px;
   }
 
   /* Variant swatches and the variant dropdown. */
-  .sf-theme-scope[data-storefront-template="general-default"] :is(
-    .general-product-variants button,
-    .general-product-variant-matrix button
-  ) {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    :is(.general-product-variants button, .general-product-variant-matrix button) {
     min-height: 44px;
   }
 
-  .sf-theme-scope[data-storefront-template="general-default"] .general-product-variant-select select {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    .general-product-variant-select
+    select {
     min-height: 44px;
   }
 
   /* Cart line steppers and the row's remove button were all 34px squares. */
-  .sf-theme-scope[data-storefront-template="general-default"] :is(
-    .general-cart-quantity button,
-    .general-cart-remove
-  ) {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    :is(.general-cart-quantity button, .general-cart-remove) {
     height: 44px;
     width: 44px;
   }
@@ -15575,25 +16849,29 @@ textarea {
      scope every other rule here hangs off. The header attribute is the one
      marker present on every surface that renders the drawer, cart and checkout
      included. */
-  body:has([data-storefront-header-template="general-default"]) :is(
-    .mini-cart-close,
-    .mini-cart-remove,
-    .mini-cart-item-actions .general-cart-quantity button
-  ) {
+  body:has([data-storefront-header-template="general-default"])
+    :is(
+      .mini-cart-close,
+      .mini-cart-remove,
+      .mini-cart-item-actions .general-cart-quantity button
+    ) {
     height: 44px;
     width: 44px;
   }
 
-  body:has([data-storefront-header-template="general-default"]) .mini-cart-item-actions .general-cart-quantity {
+  body:has([data-storefront-header-template="general-default"])
+    .mini-cart-item-actions
+    .general-cart-quantity {
     grid-template-columns: 44px 44px 44px;
   }
 
-  body:has([data-storefront-header-template="general-default"]) :is(
-    .mini-cart-view-cart,
-    .mini-cart-empty a,
-    .mini-cart-notes summary,
-    .general-cart-shipping-row a
-  ) {
+  body:has([data-storefront-header-template="general-default"])
+    :is(
+      .mini-cart-view-cart,
+      .mini-cart-empty a,
+      .mini-cart-notes summary,
+      .general-cart-shipping-row a
+    ) {
     align-items: center;
     display: inline-flex;
     min-height: 44px;
@@ -15609,13 +16887,14 @@ textarea {
    Labels that shrink with their container had landed near 10.5px at phone width.
    These floor them at ~11.5px, the smallest size the template uses. */
 @media (max-width: 680px) {
-  .sf-theme-scope[data-storefront-template="general-default"] :is(
-    .general-product-sale-badge,
-    .general-product-shipping,
-    .general-product-breadcrumb,
-    .sf-checkout-form-heading p,
-    .sf-checkout-summary-image span
-  ) {
+  .sf-theme-scope[data-storefront-template="general-default"]
+    :is(
+      .general-product-sale-badge,
+      .general-product-shipping,
+      .general-product-breadcrumb,
+      .sf-checkout-form-heading p,
+      .sf-checkout-summary-image span
+    ) {
     font-size: 0.75rem;
   }
 
@@ -16123,7 +17402,9 @@ textarea {
   display: flex;
   gap: 8px;
   padding: 0 6px 0 14px;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .sf-predictive-form:focus-within {
@@ -16342,4 +17623,1273 @@ textarea {
 
 .sf-search-notice strong {
   font-weight: 800;
+}
+
+/* --- AI Shopping Agent ------------------------------------------------------
+   The customer-facing assistant: a launcher pinned to the corner of every
+   storefront page, and a panel that opens over it.
+
+   Everything below draws from `--sf-primary`, so the assistant inherits each
+   shop's own colour rather than arriving in a chat-widget purple that belongs to
+   no storefront. It sits above the scroll-to-top button (z-index 60), because a
+   shopper mid-conversation is doing something more deliberate than scrolling.
+
+   The panel is a full sheet on a phone and a floating card from 560px up. Its
+   own log is what scrolls; the page behind it never scrolls sideways, which is
+   why the comparison table carries `overflow-x` of its own.
+   ------------------------------------------------------------------------- */
+
+.sfagent-launcher {
+  align-items: center;
+  background: var(--sf-primary, var(--store-primary, #135d66));
+  border: none;
+  border-radius: 999px;
+  bottom: calc(clamp(16px, 2.2vw, 28px) + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.22);
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.9rem;
+  font-weight: 700;
+  gap: 8px;
+  /* Left, because the scroll-to-top button already owns the right corner. */
+  left: clamp(16px, 2.2vw, 28px);
+  padding: 12px 18px;
+  position: fixed;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+  z-index: 70;
+}
+
+.sfagent-launcher:hover {
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.28);
+  transform: translateY(-2px);
+}
+
+.sfagent-panel {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 18px;
+  bottom: 0;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
+  color: var(--store-text, #171717);
+  display: flex;
+  flex-direction: column;
+  left: 0;
+  max-height: 100dvh;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 75;
+}
+
+@media (min-width: 560px) {
+  .sfagent-panel {
+    bottom: calc(clamp(16px, 2.2vw, 28px) + 62px + env(safe-area-inset-bottom, 0px));
+    height: min(640px, calc(100dvh - 140px));
+    left: clamp(16px, 2.2vw, 28px);
+    right: auto;
+    top: auto;
+    width: 400px;
+  }
+}
+
+.sfagent-head {
+  align-items: center;
+  background: var(--sf-primary, var(--store-primary, #135d66));
+  border-radius: 18px 18px 0 0;
+  color: #ffffff;
+  display: flex;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.sfagent-avatar {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  display: inline-flex;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+
+.sfagent-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.sfagent-identity strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.sfagent-identity p {
+  font-size: 0.75rem;
+  margin: 0;
+  opacity: 0.85;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sfagent-close {
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  padding: 6px;
+}
+
+.sfagent-close:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.sfagent-log {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.sfagent-turn {
+  display: flex;
+  max-width: 100%;
+}
+
+.sfagent-turn-user {
+  justify-content: flex-end;
+}
+
+.sfagent-bubble {
+  background: rgba(15, 23, 42, 0.045);
+  border-radius: 14px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  max-width: 92%;
+  padding: 10px 13px;
+}
+
+.sfagent-turn-user .sfagent-bubble {
+  background: var(--sf-primary, var(--store-primary, #135d66));
+  color: #ffffff;
+  max-width: 85%;
+}
+
+.sfagent-line {
+  margin: 0 0 6px;
+}
+
+.sfagent-line:last-child {
+  margin-bottom: 0;
+}
+
+.sfagent-note {
+  align-items: flex-start;
+  color: #92400e;
+  display: flex;
+  font-size: 0.78rem;
+  gap: 6px;
+  line-height: 1.45;
+  margin: 8px 0 0;
+}
+
+.sfagent-inline-link {
+  color: var(--sf-primary, var(--store-primary, #135d66));
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* --- Product cards inside the conversation -------------------------------- */
+
+.sfagent-products {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.sfagent-product {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 12px;
+  display: flex;
+  gap: 10px;
+  overflow: hidden;
+  padding: 8px;
+}
+
+.sfagent-product-media {
+  align-items: center;
+  background: rgba(15, 23, 42, 0.05);
+  border-radius: 8px;
+  display: flex;
+  flex: none;
+  height: 64px;
+  justify-content: center;
+  overflow: hidden;
+  width: 64px;
+}
+
+.sfagent-product-media img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.sfagent-product-media span {
+  color: rgba(15, 23, 42, 0.45);
+  font-size: 0.62rem;
+  text-align: center;
+}
+
+.sfagent-product-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sfagent-product-title {
+  color: var(--store-text, #171717);
+  font-size: 0.83rem;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sfagent-product-price {
+  align-items: baseline;
+  display: flex;
+  gap: 6px;
+  margin: 0;
+}
+
+.sfagent-product-price strong {
+  color: var(--sf-primary, var(--store-primary, #135d66));
+  font-size: 0.88rem;
+}
+
+.sfagent-product-price s {
+  color: rgba(15, 23, 42, 0.45);
+  font-size: 0.74rem;
+}
+
+.sfagent-product-stock {
+  color: #15803d;
+  font-size: 0.7rem;
+  margin: 0;
+}
+
+.sfagent-product-stock-out {
+  color: #b91c1c;
+}
+
+.sfagent-product-add,
+.sfagent-product-choose {
+  align-self: flex-start;
+  background: var(--sf-primary, var(--store-primary, #135d66));
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-top: 4px;
+  padding: 5px 11px;
+}
+
+.sfagent-product-add:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* --- Comparison ------------------------------------------------------------ */
+
+.sfagent-compare {
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 12px;
+  margin-top: 10px;
+  /* The table is the thing that scrolls, never the panel or the page. */
+  overflow-x: auto;
+}
+
+.sfagent-compare table {
+  border-collapse: collapse;
+  font-size: 0.74rem;
+  min-width: 100%;
+}
+
+.sfagent-compare th,
+.sfagent-compare td {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+  padding: 7px 9px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.sfagent-compare thead th {
+  background: rgba(15, 23, 42, 0.04);
+  font-weight: 800;
+  max-width: 130px;
+}
+
+.sfagent-compare tbody th {
+  color: rgba(15, 23, 42, 0.6);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sfagent-visually-hidden {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+/* --- The confirmation card ------------------------------------------------- */
+
+.sfagent-action {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: 12px;
+  margin-top: 10px;
+  padding: 10px 12px;
+}
+
+/* Placing an order spends money. It must not look like adding to a cart. */
+.sfagent-action-high {
+  border-color: var(--sf-primary, var(--store-primary, #135d66));
+  box-shadow: 0 0 0 3px rgba(19, 93, 102, 0.08);
+}
+
+.sfagent-action-head {
+  align-items: flex-start;
+  color: var(--sf-primary, var(--store-primary, #135d66));
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sfagent-action-head strong {
+  display: block;
+  font-size: 0.84rem;
+}
+
+.sfagent-action-head span {
+  color: rgba(15, 23, 42, 0.55);
+  font-size: 0.72rem;
+}
+
+.sfagent-action-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 10px;
+}
+
+.sfagent-action-rows > div {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.sfagent-action-rows dt {
+  color: rgba(15, 23, 42, 0.55);
+  flex: none;
+  font-size: 0.75rem;
+}
+
+.sfagent-action-rows dd {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 0;
+  text-align: right;
+  word-break: break-word;
+}
+
+.sfagent-action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.sfagent-confirm {
+  background: var(--sf-primary, var(--store-primary, #135d66));
+  border: none;
+  border-radius: 9px;
+  color: #ffffff;
+  cursor: pointer;
+  flex: 1;
+  font-size: 0.79rem;
+  font-weight: 700;
+  padding: 8px 12px;
+}
+
+.sfagent-confirm:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.sfagent-dismiss {
+  background: transparent;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  border-radius: 9px;
+  color: rgba(15, 23, 42, 0.65);
+  cursor: pointer;
+  font-size: 0.79rem;
+  padding: 8px 12px;
+}
+
+.sfagent-outcome-ok {
+  align-items: flex-start;
+  color: #15803d;
+  display: flex;
+  font-size: 0.78rem;
+  gap: 6px;
+  margin: 0;
+}
+
+/* --- The receipt and its payment link -------------------------------------- */
+
+.sfagent-receipt {
+  background: rgba(21, 128, 61, 0.06);
+  border: 1px solid rgba(21, 128, 61, 0.24);
+  border-radius: 12px;
+  margin-top: 10px;
+  padding: 10px 12px;
+}
+
+.sfagent-receipt header {
+  align-items: flex-start;
+  color: #15803d;
+  display: flex;
+  gap: 8px;
+}
+
+.sfagent-receipt header strong {
+  display: block;
+  font-size: 0.84rem;
+}
+
+.sfagent-receipt header span {
+  color: rgba(15, 23, 42, 0.6);
+  font-size: 0.74rem;
+}
+
+.sfagent-receipt p {
+  font-size: 0.76rem;
+  line-height: 1.5;
+  margin: 8px 0 0;
+}
+
+.sfagent-receipt-link {
+  background: #15803d;
+  border-radius: 9px;
+  color: #ffffff;
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-top: 10px;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+/* --- Composer -------------------------------------------------------------- */
+
+.sfagent-footer {
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.sfagent-cartbar {
+  align-items: center;
+  background: rgba(15, 23, 42, 0.05);
+  border-radius: 9px;
+  display: flex;
+  font-size: 0.76rem;
+  gap: 7px;
+  padding: 7px 10px;
+}
+
+.sfagent-cartbar span {
+  flex: 1;
+}
+
+.sfagent-cartbar-link {
+  color: var(--sf-primary, var(--store-primary, #135d66));
+  font-weight: 700;
+}
+
+.sfagent-suggestions {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.sfagent-chip {
+  background: rgba(15, 23, 42, 0.05);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 999px;
+  color: var(--store-text, #171717);
+  cursor: pointer;
+  flex: none;
+  font-size: 0.73rem;
+  padding: 5px 11px;
+  white-space: nowrap;
+}
+
+.sfagent-chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.sfagent-composer {
+  align-items: flex-end;
+  display: flex;
+  gap: 8px;
+}
+
+.sfagent-composer-input {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  border-radius: 11px;
+  flex: 1;
+  font-family: inherit;
+  font-size: 0.85rem;
+  max-height: 110px;
+  min-height: 40px;
+  padding: 10px 12px;
+  resize: none;
+}
+
+.sfagent-composer-input:focus {
+  border-color: var(--sf-primary, var(--store-primary, #135d66));
+  outline: none;
+}
+
+.sfagent-send {
+  align-items: center;
+  background: var(--sf-primary, var(--store-primary, #135d66));
+  border: none;
+  border-radius: 11px;
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  height: 40px;
+  justify-content: center;
+  width: 42px;
+}
+
+.sfagent-send:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.sfagent-hint {
+  color: rgba(15, 23, 42, 0.5);
+  font-size: 0.68rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.sfagent-typing {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+  margin: 0;
+}
+
+.sfagent-typing span {
+  animation: sfagent-bounce 1.1s infinite ease-in-out;
+  background: rgba(15, 23, 42, 0.35);
+  border-radius: 999px;
+  height: 5px;
+  width: 5px;
+}
+
+.sfagent-typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.sfagent-typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.sfagent-typing em {
+  color: rgba(15, 23, 42, 0.5);
+  font-size: 0.76rem;
+  font-style: normal;
+  margin-left: 4px;
+}
+
+@keyframes sfagent-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sfagent-typing span {
+    animation: none;
+  }
+
+  .sfagent-launcher {
+    transition: none;
+  }
+}
+
+/* --- StoreIM AI > AI Shopping Agent, the seller's console --------------------
+   Scoped to `.sfa-` so nothing here can reach the shopper-facing `.sfagent-`
+   widget, which shares a feature but not a surface: that one inherits each
+   shop's storefront colours, this one is the dashboard and takes the dashboard's
+   violet `--accent`.
+
+   The hero is a three-area grid — the controls, the preview, and a footer that
+   spans both — so the save row always sits under the whole card rather than
+   under one column of it, and the preview drops below the controls on a narrow
+   screen instead of squeezing them.
+   ------------------------------------------------------------------------- */
+
+.sfa-console {
+  display: grid;
+  gap: 16px;
+}
+
+.sfa-hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgb(62 54 114 / 4%);
+  display: grid;
+  gap: 24px;
+  grid-template-areas:
+    "main preview"
+    "footer footer";
+  grid-template-columns: minmax(0, 1fr) 236px;
+  padding: 24px;
+}
+
+/* Live is a different state, not a different layout: a tinted rail down the
+   left edge, so a seller can tell at a glance across the room. */
+.sfa-hero-live {
+  border-color: color-mix(in srgb, #16a34a 32%, var(--border));
+  box-shadow:
+    inset 3px 0 0 #16a34a,
+    0 8px 24px rgb(62 54 114 / 4%);
+}
+
+.sfa-hero-main {
+  display: grid;
+  gap: 12px;
+  grid-area: main;
+  min-width: 0;
+}
+
+.sfa-hero-state {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  font-size: 0.7rem;
+  font-weight: 900;
+  gap: 7px;
+  letter-spacing: 0.07em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.sfa-dot {
+  background: #b6b7c4;
+  border-radius: 999px;
+  height: 8px;
+  width: 8px;
+}
+
+.sfa-dot-live {
+  animation: sfa-pulse 2.4s ease-in-out infinite;
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgb(22 163 74 / 18%);
+}
+
+@keyframes sfa-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgb(22 163 74 / 18%);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgb(22 163 74 / 6%);
+  }
+}
+
+.sfa-hero h2 {
+  font-size: 1.22rem;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.sfa-hero-copy {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.65;
+  margin: 0;
+  max-width: 62ch;
+}
+
+/* --- The switch ------------------------------------------------------------ */
+
+.sfa-switch-row {
+  margin-top: 4px;
+}
+
+.sfa-switch {
+  align-items: flex-start;
+  background: color-mix(in srgb, var(--accent) 3%, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  gap: 13px;
+  padding: 14px 16px;
+  text-align: left;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease;
+  width: 100%;
+}
+
+.sfa-switch:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+.sfa-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.sfa-switch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.sfa-switch-track {
+  background: #c9cad6;
+  border-radius: 999px;
+  display: inline-flex;
+  flex: none;
+  height: 22px;
+  margin-top: 1px;
+  padding: 2px;
+  transition: background 0.18s ease;
+  width: 40px;
+}
+
+.sfa-switch[aria-checked="true"] .sfa-switch-track {
+  background: #16a34a;
+}
+
+.sfa-switch-knob {
+  background: #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 28%);
+  height: 18px;
+  transition: transform 0.18s ease;
+  width: 18px;
+}
+
+.sfa-switch[aria-checked="true"] .sfa-switch-knob {
+  transform: translateX(18px);
+}
+
+.sfa-switch-label {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.sfa-switch-label strong {
+  font-size: 0.88rem;
+}
+
+.sfa-switch-label small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+/* --- Which engine answers -------------------------------------------------- */
+
+.sfa-engine {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sfa-engine-chip {
+  align-items: center;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--accent) 78%, var(--foreground));
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 700;
+  gap: 6px;
+  padding: 5px 11px;
+}
+
+.sfa-engine-link {
+  align-items: center;
+  color: var(--accent);
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 700;
+  gap: 4px;
+}
+
+.sfa-engine-link:hover {
+  text-decoration: underline;
+}
+
+/* --- The preview -----------------------------------------------------------
+   A drawing, not a live render: it answers "what will my customers see" in the
+   half second before a seller decides whether to read the rest of the page. The
+   product row is deliberately blank bars rather than a real product, so it reads
+   as a diagram and nobody mistakes it for their own catalogue. */
+
+.sfa-preview {
+  display: grid;
+  gap: 8px;
+  grid-area: preview;
+  justify-items: center;
+}
+
+.sfa-preview-frame {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 10px 26px rgb(62 54 114 / 8%);
+  overflow: hidden;
+  transition: opacity 0.2s ease;
+  width: 100%;
+}
+
+.sfa-preview-dim {
+  opacity: 0.45;
+}
+
+.sfa-preview-head {
+  align-items: center;
+  background: var(--accent);
+  color: #ffffff;
+  display: flex;
+  gap: 8px;
+  padding: 9px 11px;
+}
+
+.sfa-preview-head strong {
+  display: block;
+  font-size: 0.72rem;
+}
+
+.sfa-preview-head span {
+  font-size: 0.63rem;
+  opacity: 0.85;
+}
+
+.sfa-preview-avatar {
+  align-items: center;
+  background: rgb(255 255 255 / 20%);
+  border-radius: 999px;
+  display: inline-flex;
+  height: 22px;
+  justify-content: center;
+  width: 22px;
+}
+
+.sfa-preview-body {
+  display: grid;
+  gap: 7px;
+  padding: 11px;
+}
+
+.sfa-preview-bubble {
+  border-radius: 10px;
+  font-size: 0.68rem;
+  line-height: 1.4;
+  margin: 0;
+  max-width: 88%;
+  padding: 7px 9px;
+}
+
+.sfa-preview-them {
+  background: var(--accent);
+  color: #ffffff;
+  justify-self: end;
+}
+
+.sfa-preview-us {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--surface));
+  justify-self: start;
+}
+
+.sfa-preview-card {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  display: flex;
+  gap: 8px;
+  padding: 7px;
+}
+
+.sfa-preview-card > div {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+}
+
+.sfa-preview-thumb {
+  background: color-mix(in srgb, var(--foreground) 9%, var(--surface));
+  border-radius: 6px;
+  flex: none;
+  height: 34px;
+  width: 34px;
+}
+
+.sfa-preview-card strong {
+  background: color-mix(in srgb, var(--foreground) 13%, var(--surface));
+  border-radius: 3px;
+  height: 6px;
+  width: 74%;
+}
+
+.sfa-preview-card em {
+  background: color-mix(in srgb, var(--accent) 34%, var(--surface));
+  border-radius: 3px;
+  height: 6px;
+  width: 40%;
+}
+
+.sfa-preview-cta {
+  background: var(--accent);
+  border-radius: 5px;
+  color: #ffffff;
+  font-size: 0.56rem;
+  font-weight: 700;
+  justify-self: start;
+  padding: 3px 7px;
+}
+
+.sfa-preview-caption {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  font-size: 0.68rem;
+  gap: 5px;
+  margin: 0;
+}
+
+/* --- The save row ---------------------------------------------------------- */
+
+.sfa-hero-footer {
+  align-items: center;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  grid-area: footer;
+  justify-content: space-between;
+  padding-top: 16px;
+}
+
+.sfa-save-state {
+  font-size: 0.79rem;
+  margin: 0;
+  min-width: 200px;
+}
+
+.sfa-save-idle {
+  color: var(--muted);
+}
+
+/* Unsaved is the state the old card had no way to show, which is how a seller
+   ended up staring at a toggle wondering whether the button had worked. */
+.sfa-save-dirty {
+  color: #b45309;
+  font-weight: 700;
+}
+
+.sfa-save-ok {
+  align-items: center;
+  color: #15803d;
+  display: inline-flex;
+  font-weight: 700;
+  gap: 5px;
+}
+
+.sfa-save-error {
+  color: #be123c;
+  font-weight: 700;
+}
+
+.sfa-hero-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.sfa-primary {
+  align-items: center;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 9px;
+  color: var(--accent-foreground);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.82rem;
+  font-weight: 700;
+  gap: 7px;
+  padding: 9px 18px;
+}
+
+.sfa-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.sfa-secondary {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--foreground);
+  display: inline-flex;
+  font-size: 0.82rem;
+  font-weight: 700;
+  gap: 6px;
+  padding: 9px 15px;
+}
+
+.sfa-secondary:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  color: var(--accent);
+}
+
+.sfa-notice {
+  align-items: flex-start;
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  border-radius: 10px;
+  color: var(--foreground);
+  display: flex;
+  font-size: 0.82rem;
+  gap: 10px;
+  line-height: 1.6;
+  margin: 0;
+  padding: 12px 14px;
+}
+
+.sfa-notice svg {
+  color: var(--accent);
+  margin-top: 1px;
+}
+
+/* --- The explanatory panels ------------------------------------------------ */
+
+.sfa-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgb(62 54 114 / 4%);
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+
+.sfa-panel-head {
+  display: grid;
+  gap: 3px;
+}
+
+.sfa-panel-head h3 {
+  font-size: 0.98rem;
+  margin: 0;
+}
+
+.sfa-panel-head p {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 76ch;
+}
+
+/* The flow reads left to right on a desk and top to bottom on a phone, which is
+   why it is a wrapping grid rather than a row with connectors drawn between. */
+.sfa-flow {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sfa-flow li {
+  border-top: 2px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  display: grid;
+  gap: 8px;
+  padding-top: 11px;
+}
+
+.sfa-flow-index {
+  align-items: center;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  border-radius: 999px;
+  color: var(--accent);
+  display: inline-flex;
+  font-size: 0.7rem;
+  font-weight: 900;
+  height: 22px;
+  justify-content: center;
+  width: 22px;
+}
+
+.sfa-flow li strong {
+  display: block;
+  font-size: 0.84rem;
+  margin-bottom: 3px;
+}
+
+.sfa-flow li span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.sfa-cards {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.sfa-card {
+  background: color-mix(in srgb, var(--foreground) 2.5%, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: grid;
+  gap: 7px;
+  padding: 16px;
+}
+
+.sfa-card-icon {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  border-radius: 9px;
+  color: var(--accent);
+  display: inline-flex;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+
+.sfa-card strong {
+  font-size: 0.88rem;
+}
+
+.sfa-card p {
+  color: var(--muted);
+  font-size: 0.79rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.sfa-guardrails {
+  display: grid;
+  gap: 9px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sfa-guardrails li {
+  align-items: flex-start;
+  color: var(--foreground);
+  display: flex;
+  font-size: 0.82rem;
+  gap: 9px;
+  line-height: 1.6;
+}
+
+.sfa-guardrails svg {
+  color: #16a34a;
+  margin-top: 2px;
+}
+
+@media (max-width: 900px) {
+  .sfa-hero {
+    grid-template-areas:
+      "main"
+      "preview"
+      "footer";
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sfa-preview {
+    justify-items: start;
+    max-width: 260px;
+  }
+}
+
+@media (max-width: 560px) {
+  .sfa-hero,
+  .sfa-panel {
+    padding: 18px;
+  }
+
+  .sfa-hero-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sfa-hero-actions {
+    justify-content: stretch;
+  }
+
+  .sfa-primary,
+  .sfa-secondary {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sfa-dot-live {
+    animation: none;
+  }
+
+  .sfa-switch,
+  .sfa-switch-track,
+  .sfa-switch-knob {
+    transition: none;
+  }
 }

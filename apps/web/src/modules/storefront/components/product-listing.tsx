@@ -5,25 +5,13 @@ import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import type { StorefrontProductSectionSettings } from "../customization";
 import { formatStorefrontMoney } from "../format";
+import type { ProductCardProduct } from "../product-card-data";
 import {
   BEAUTY_PRODUCT_CARD_VARIANT,
   BeautyListingCard
 } from "../templates/beauty-default/beauty-listing-card";
 import { ProductSectionSliderControls } from "./product-section-slider-controls";
 import { StorefrontImage } from "./storefront-image";
-
-// The card only ever reads these fields, so a plain client-side snapshot (the
-// recently viewed rail) renders through the same component as a Prisma row.
-export type ProductCardProduct = {
-  compareAtPrice?: { toString(): string } | null | undefined;
-  createdAt: Date | string;
-  id: string;
-  images: Array<{ alt?: string | null | undefined; url: string }>;
-  price: { toString(): string };
-  slug: string;
-  stockQuantity: number;
-  title: string;
-};
 
 export type ProductGridProps = {
   // The active template's `productCardVariant`. Only variants this module knows
@@ -128,8 +116,8 @@ export function ProductCard({
   const basePath = useStorefrontBasePath();
   const primaryImage = product.images[0];
   const hoverImage = section.enableHoverImage ? product.images[1] : null;
-  const compareAtPrice = product.compareAtPrice?.toString();
-  const price = product.price.toString();
+  const compareAtPrice = product.compareAtPrice ?? undefined;
+  const price = product.price;
   const badge = productBadge(product);
   const variantCount = product.images.length > 1 ? `${product.images.length} Images` : "";
 

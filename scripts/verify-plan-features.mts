@@ -15,6 +15,8 @@
  *
  * Run with: npm run verify:plan-features
  */
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { prisma } from "@dash/db";
 import {
   PLAN_CATALOG,
@@ -327,6 +329,73 @@ async function main() {
     FREE_REPORTS.every((report) => !(report in REPORT_FEATURES)),
     FREE_REPORTS.filter((report) => report in REPORT_FEATURES).join(", ")
   );
+
+  console.log("\n=== StoreIM AI tiering ===");
+
+  // Two merchant-facing tools on Starter, the customer-facing agent and the
+  // API keys on Growth.
+  const AI_TIERS: Array<[PlanFeatureKey, string]> = [
+    ["ai_copilot", "Starter"],
+    ["ai_product_content", "Starter"],
+    ["ai_shopping_agent", "Growth"],
+    ["api_access", "Growth"]
+  ];
+
+  for (const [key, expected] of AI_TIERS) {
+    const actual = minPlanForFeature(key);
+
+    check(
+      `${key.padEnd(18)} unlocks at ${expected}`,
+      actual === expected,
+      actual === expected ? "" : `got ${String(actual)}`
+    );
+  }
+
+  check(
+    "every StoreIM AI surface ships today",
+    AI_TIERS.every(([key]) => PLAN_FEATURE_REGISTRY[key].status === "available"),
+    AI_TIERS.filter(([key]) => PLAN_FEATURE_REGISTRY[key].status !== "available")
+      .map(([key]) => key)
+      .join(", ")
+  );
+
+  // The rule that outranks the plan: a merchant paying for their own Gemini or
+  // OpenAI key must reach all three AI surfaces on any tier, free included. The
+  // services express this as `ownKey || planGrants`, so what would break it is
+  // someone rewriting one of those reads into an `&&`. Asserted by reading the
+  // source, since there is no database state that can show it.
+  const AI_SURFACE_SOURCES: Array<[string, string]> = [
+    ["store-copilot/store-copilot.service.ts", "ai_copilot"],
+    ["product-content/product-content.service.ts", "ai_product_content"],
+    ["shopping-agent/shopping-agent.service.ts", "ai_shopping_agent"]
+  ];
+
+  for (const [file, key] of AI_SURFACE_SOURCES) {
+    const source = readFileSync(
+      join(process.cwd(), "apps", "web", "src", "modules", file),
+      "utf8"
+    );
+
+    check(
+      `${file.split("/")[0]?.padEnd(15)} gates on ${key}`,
+      source.includes(`hasPlanFeature(storeId, "${key}")`)
+    );
+    check(
+      `${file.split("/")[0]?.padEnd(15)} still honours an own credential`,
+      source.includes("resolveAiProvider") || source.includes("hasOwnAiProvider")
+    );
+  }
+
+  // The plan-level display flag has to agree with the keys, or the pricing
+  // table promises AI on a plan that grants none of it.
+  for (const entry of PLAN_CATALOG) {
+    const grantsAny = AI_TIERS.slice(0, 3).some(([key]) => entry.features.includes(key));
+
+    check(
+      `${entry.slug.padEnd(8)} aiEnabled=${entry.aiEnabled} matches its AI keys`,
+      entry.aiEnabled === grantsAny
+    );
+  }
 
   console.log("\n=== Fail-closed states ===");
   const future = new Date(Date.now() + 86_400_000);

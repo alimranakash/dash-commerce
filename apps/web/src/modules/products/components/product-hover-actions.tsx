@@ -18,6 +18,7 @@ export function ProductHoverActions({ product, storeSlug }: ProductHoverActionsP
         <>
           <Link className="hover:text-[#6d3cf5]" href={`/dashboard/products/${product.id}/edit`}>Edit</Link><span>|</span>
           <Link className="hover:text-[#6d3cf5]" href={`/dashboard/products/${product.id}/edit`}>Builder</Link><span>|</span>
+          <Link className="hover:text-[#6d3cf5]" href={`/dashboard/products/${product.id}/content`}>AI Content</Link><span>|</span>
           <Link className="hover:text-[#6d3cf5]" href={`/s/${storeSlug}/products/${product.slug}`} target="_blank">View</Link>
           <span>|</span>
           <DeleteConfirmationButton action={archiveProductFormAction.bind(null, product.id)} ariaLabel={`Delete ${product.title}`} className="text-rose-500 hover:text-rose-700" title="Move to trash">Delete</DeleteConfirmationButton>

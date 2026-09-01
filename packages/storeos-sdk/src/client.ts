@@ -4,7 +4,9 @@ import type {
   StoreOSActionResponse,
   StoreOSChatMessageInput,
   StoreOSChatMessageResponse,
-  StoreOSConnection
+  StoreOSConnection,
+  StoreOSProductContentInput,
+  StoreOSProductContentResponse
 } from "./types";
 
 export type StoreOSClientOptions = {
@@ -72,6 +74,22 @@ export class StoreOSClient {
 
   async sendChatMessage(input: StoreOSChatMessageInput) {
     return this.request<StoreOSChatMessageResponse>("/assistant/chat", {
+      body: input,
+      method: "POST"
+    });
+  }
+
+  /**
+   * The `ai:product` surface: product copy written from the store's own
+   * catalogue row.
+   *
+   * A separate endpoint rather than an `executeAction` payload because the
+   * answer is content the seller reads and edits before anything is saved —
+   * `executeAction` is for things StoreOS goes and does, and its response says
+   * only whether the work was accepted.
+   */
+  async generateProductContent(input: StoreOSProductContentInput) {
+    return this.request<StoreOSProductContentResponse>("/product/content", {
       body: input,
       method: "POST"
     });

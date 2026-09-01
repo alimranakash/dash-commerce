@@ -9,6 +9,7 @@ import type { StorefrontProduct } from "../../storefront.types";
 import { BEAUTY_PRODUCT_CARD_VARIANT } from "./beauty-listing-card";
 import { BeautyCuratedPromo } from "./beauty-curated-promo";
 import { BeautyCuratedTabs, type BeautyCuratedTab } from "./beauty-curated-tabs";
+import { toProductCardProducts } from "../../product-card-data";
 
 const SECTION_ID = "beauty-curated";
 
@@ -93,7 +94,7 @@ export async function BeautyCuratedSection({
               currency={currency}
               gridId={`${SECTION_ID}-grid-${index}`}
               key={tabs[index]?.panelId ?? index}
-              products={group.products}
+              products={toProductCardProducts(group.products)}
               section={gridSection}
               storeId={storeId}
               storeSlug={storeSlug}

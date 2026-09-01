@@ -6,6 +6,7 @@ import {
   emptyProductRelationSelections,
   getProductRelationCandidates
 } from "../../../../modules/merchandising/merchandising.service";
+import { canGenerateProductContent } from "../../../../modules/product-content/product-content.service";
 import { ProductForm } from "../../../../modules/products/components/product-form";
 import { createProductFormAction } from "../../../../modules/products/product.actions";
 import { getProductTaxonomyItems } from "../../../../modules/products/product-taxonomy.service";
@@ -13,11 +14,12 @@ import { requireStore } from "../../../../modules/stores/queries";
 
 export default async function NewProductPage() {
   const store = await requireStore();
-  const [categories, tags, brands, relationCandidates] = await Promise.all([
+  const [categories, tags, brands, relationCandidates, aiEnabled] = await Promise.all([
     getCategoriesForStore(store.id),
     getProductTaxonomyItems(store.id, "TAG"),
     getProductTaxonomyItems(store.id, "BRAND"),
-    getProductRelationCandidates(store.id)
+    getProductRelationCandidates(store.id),
+    canGenerateProductContent(store.id)
   ]);
 
   return (
@@ -35,6 +37,7 @@ export default async function NewProductPage() {
         </div>
         <ProductForm
           action={createProductFormAction}
+          aiEnabled={aiEnabled}
           brands={brands.map((brand) => ({
             id: brand.id,
             name: brand.name

@@ -97,8 +97,8 @@ export async function reconnectStoreOSAction(
 
 function errorMessage(error: unknown) {
   if (error instanceof ZodError) {
-    return error.issues[0]?.message ?? "Please check your Dash AI request.";
+    return error.issues[0]?.message ?? "Please check your StoreIM AI request.";
   }
 
-  return error instanceof Error ? error.message : "Dash AI request failed.";
+  return error instanceof Error ? error.message : "StoreIM AI request failed.";
 }

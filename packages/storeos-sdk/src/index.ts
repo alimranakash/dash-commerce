@@ -20,5 +20,10 @@ export type {
   StoreOSConnectionStatus,
   StoreOSJsonValue,
   StoreOSPlatformType,
+  StoreOSProductContentField,
+  StoreOSProductContentInput,
+  StoreOSProductContentResponse,
+  StoreOSProductContentSource,
+  StoreOSProductContentTone,
   StoreOSStoreIdentity
 } from "./types";

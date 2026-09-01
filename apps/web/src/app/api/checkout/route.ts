@@ -1,16 +1,9 @@
-import { getStorefrontOrigin } from "../../../modules/abandoned-carts/abandoned-cart.service";
 import { storefrontBasePath, storefrontRequestOrigin } from "../../../modules/storefront/base-path";
-import { revalidatePath } from "next/cache";
 import { NextResponse, type NextRequest } from "next/server";
 import { readClientIp } from "../../../lib/request-ip";
 import { ZodError } from "zod";
+import { completeCheckoutOrder } from "../../../modules/checkout/checkout-completion";
 import { createCheckoutOrder } from "../../../modules/checkout/checkout.service";
-import { sendGa4PurchaseEvent } from "../../../modules/marketing/ga4-mp";
-import { sendMetaPurchaseEvent } from "../../../modules/marketing/meta-capi";
-import {
-  sendCustomOrderSms,
-  sendOrderConfirmationSms
-} from "../../../modules/orders/order-sms.service";
 import type { PaymentMethodTypeValue } from "../../../modules/payments/payment.schema";
 import { getStorefrontBySlug } from "../../../modules/storefront/resolver";
 
@@ -56,58 +49,17 @@ export async function POST(request: NextRequest) {
       return await redirectTo(request, store.slug, `/thank-you/${order.orderNumber}`);
     }
 
-    // Internal route on purpose: /s/<slug> is what Next serves, and the clean
-    // address is a rewrite onto it — revalidating that would revalidate nothing.
-    revalidatePath(`/s/${store.slug}`);
-    revalidatePath(`/s/${store.slug}/cart`);
-    revalidatePath(`/s/${store.slug}/checkout`);
-    revalidatePath("/dashboard/orders");
-
-    // Meta and GA4 record this as the page the purchase happened on, so it has
-    // to be the store's real public address — its custom domain when it has one.
-    // The request origin would report localhost:3000 and break both attribution
-    // and the domain check Meta runs on the event source URL.
-    const storefrontOrigin = await getStorefrontOrigin(store);
-    const thankYouUrl = `${storefrontOrigin.href}/thank-you/${order.orderNumber}`;
-
     // Post-order side effects only: the order is committed and the cart cleared
-    // before these run. Every sender resolves rather than rejects, and the extra
-    // catch on each guarantees a confirmed order can never be reported to the
-    // customer as a checkout failure. Each no-ops unless the seller enabled it,
-    // and because the catch is attached per sender, one being misconfigured or
-    // slow cannot suppress the others.
-    await Promise.all([
-      sendMetaPurchaseEvent({
-        eventSourceUrl: thankYouUrl,
-        orderId: order.id,
-        storeId: store.id
-      }).catch(() => undefined),
-      sendGa4PurchaseEvent({
-        // First-party cookie, readable here: it stitches the server event onto
-        // the same GA4 user as the browser session that placed the order.
-        gaCookie: request.cookies.get("_ga")?.value,
-        orderId: order.id,
-        pageLocation: thankYouUrl,
-        storeId: store.id
-      }).catch(() => undefined),
-      sendOrderConfirmationSms({
-        currency: store.currency,
-        orderNumber: order.orderNumber,
-        phone: order.customerPhone,
-        storeId: store.id,
-        storeName: store.name,
-        total: Number(order.totalAmount)
-      }).catch(() => undefined),
-      sendCustomOrderSms({
-        currency: store.currency,
-        customerName: order.customerName,
-        orderNumber: order.orderNumber,
-        phone: order.customerPhone,
-        storeId: store.id,
-        storeName: store.name,
-        total: Number(order.totalAmount)
-      }).catch(() => undefined)
-    ]);
+    // before these run. Shared with the AI Shopping Agent, which places an order
+    // through the same `createCheckoutOrder` — see `checkout-completion.ts` for
+    // why a second copy of this list was not an option.
+    await completeCheckoutOrder({
+      // First-party cookie, readable here: it stitches the GA4 server event onto
+      // the same user as the browser session that placed the order.
+      gaCookie: request.cookies.get("_ga")?.value,
+      order,
+      store
+    });
 
     return await redirectTo(request, store.slug, `/thank-you/${order.orderNumber}`);
   } catch (error) {

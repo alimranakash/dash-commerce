@@ -7,7 +7,7 @@ import { STOREOS_AI_CAPABILITIES, type StoreOSAiCapability } from "@dash/storeos
  *
  *     StoreIM AI
  *     ├── Chat            ai:chat        (live)
- *     ├── Product AI      ai:product     (planned)
+ *     ├── Product AI      ai:product     (live)
  *     ├── Marketing AI    ai:marketing   (planned)
  *     ├── Customer AI     ai:customer    (planned)
  *     ├── Order AI        ai:order       (planned)
@@ -71,8 +71,8 @@ export const STOREOS_CAPABILITY_CATALOG: readonly StoreOSCapabilityDefinition[] 
     label: "Order AI"
   },
   {
-    available: false,
-    description: "Descriptions, SEO content, and product suggestions.",
+    available: true,
+    description: "Product copy, SEO fields, and social captions written per product.",
     key: "ai:product",
     label: "Product AI"
   }

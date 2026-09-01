@@ -343,25 +343,6 @@ export function ProductVariantsEditor({
         </div>
       </section>
 
-      <section className="product-editor-card variant-section-card">
-        <div className="variant-section-heading">
-          <div>
-            <h3>SEO</h3>
-            <p>Future-ready fields for SEO title, meta description, and product URL previews.</p>
-          </div>
-        </div>
-        <div className="form-grid">
-          <label>
-            SEO title
-            <input name="seoTitle" placeholder="Use product title by default" type="text" />
-          </label>
-          <label>
-            Meta description
-            <input name="seoDescription" placeholder="Use short description by default" type="text" />
-          </label>
-        </div>
-      </section>
-
       {confirmGenerate ? (
         <div className="variant-modal-backdrop" role="dialog" aria-modal="true" aria-label="Generate variants">
           <div className="variant-modal">

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { ZodError } from "zod";
+import { PlanFeatureError, requirePlanFeature } from "../billing/subscription-limits";
 import { StoreAccessError, requireStoreManager } from "../stores/queries";
 import {
   AiApiKeyError,
@@ -56,6 +57,12 @@ export async function createAiApiKeyAction(
 ): Promise<AiKeyActionState> {
   try {
     const { store } = await requireStoreManager();
+
+    // Integrations is a Growth feature. Issuing and reading back a credential
+    // are what it sells; revoking and deleting are deliberately left open below,
+    // so a store that lapses can always shut off access it has already granted.
+    await requirePlanFeature(store.id, "api_access");
+
     const issued = await issueStoreApiKey(store.id, {
       expiresAt: text(formData, "expiresAt"),
       name: text(formData, "name"),
@@ -97,6 +104,9 @@ export async function revealAiApiKeyAction(
 ): Promise<AiKeyActionState> {
   try {
     const { store } = await requireStoreManager();
+
+    await requirePlanFeature(store.id, "api_access");
+
     const revealed = await revealStoreApiKey(store.id, text(formData, "apiKeyId"));
 
     if (!revealed) {
@@ -188,7 +198,11 @@ function toErrorState(error: unknown, fallback: string): AiKeyActionState {
     };
   }
 
-  if (error instanceof StoreAccessError || error instanceof AiApiKeyError) {
+  if (
+    error instanceof StoreAccessError ||
+    error instanceof AiApiKeyError ||
+    error instanceof PlanFeatureError
+  ) {
     return { message: error.message, status: "error" };
   }
 

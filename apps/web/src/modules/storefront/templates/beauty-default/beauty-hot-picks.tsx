@@ -7,6 +7,7 @@ import {
 import type { StorefrontProduct } from "../../storefront.types";
 import { BeautyListingCard } from "./beauty-listing-card";
 import { BeautyHotPicksTabs, type BeautyHotPicksTab } from "./beauty-hot-picks-tabs";
+import { toProductCardProduct } from "../../product-card-data";
 
 const SECTION_ID = "beauty-hot-picks";
 
@@ -93,7 +94,7 @@ export async function BeautyHotPicksSection({
               <BeautyListingCard
                 currency={currency}
                 key={product.id}
-                product={product}
+                product={toProductCardProduct(product)}
                 section={cardSection}
                 storeId={storeId}
                 storeSlug={storeSlug}

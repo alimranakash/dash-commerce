@@ -26,6 +26,7 @@ import type { StorefrontProductSort } from "../../../../modules/storefront/resol
 import { getStorefrontTemplateForStore } from "../../../../modules/storefront/templates/registry";
 import { getStorefrontThemeSettings } from "../../../../modules/storefront/themes/theme.service";
 import { storeSubdomain } from "../../../../lib/host-routing";
+import { toProductCardProducts } from "../../../../modules/storefront/product-card-data";
 
 type StorefrontSearchPageProps = {
   params: Promise<{
@@ -197,7 +198,7 @@ export default async function StorefrontSearchPage({
               cardVariant={template.productCardVariant}
               currency={store.currency}
               gridId={gridId}
-              products={products}
+              products={toProductCardProducts(products)}
               section={listingSection}
               storeId={store.id}
               storeSlug={store.slug}

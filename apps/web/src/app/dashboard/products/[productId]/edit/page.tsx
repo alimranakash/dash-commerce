@@ -2,6 +2,10 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { DashboardShell } from "../../../../../components/dashboard/dashboard-shell";
 import { getCategoriesForStore } from "../../../../../modules/categories/category.service";
+import {
+  canGenerateProductContent,
+  getProductContentFields
+} from "../../../../../modules/product-content/product-content.service";
 import { ProductStockHistory } from "../../../../../modules/inventory/components/product-stock-history";
 import { getStockMovementsForProduct } from "../../../../../modules/inventory/inventory.service";
 import { getPlatformRootDomain } from "../../../../../lib/host-routing";
@@ -30,7 +34,22 @@ type EditProductPageProps = {
 export default async function EditProductPage({ params }: EditProductPageProps) {
   const store = await requireStore();
   const { productId } = await params;
-  const [product, categories, stockMovements, tags, brands, selectedTagIds, selectedBrandIds, selectedCategoryIds, variantConfiguration, relationCandidates, relationSelections, relationSuggestions] = await Promise.all([
+  const [
+    product,
+    categories,
+    stockMovements,
+    tags,
+    brands,
+    selectedTagIds,
+    selectedBrandIds,
+    selectedCategoryIds,
+    variantConfiguration,
+    relationCandidates,
+    relationSelections,
+    relationSuggestions,
+    content,
+    aiEnabled
+  ] = await Promise.all([
     getProductByIdForStore(store.id, productId),
     getCategoriesForStore(store.id),
     getStockMovementsForProduct(store.organizationId, store.id, productId, 8),
@@ -42,7 +61,9 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     getProductVariantConfiguration(store.id, productId),
     getProductRelationCandidates(store.id),
     getProductRelationSelections(store.id, productId),
-    getProductRelationSuggestions(store.id, productId)
+    getProductRelationSuggestions(store.id, productId),
+    getProductContentFields(store.id, productId),
+    canGenerateProductContent(store.id)
   ]);
 
   if (!product) {
@@ -58,12 +79,21 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
             <h1>Edit product</h1>
             <p className="auth-copy">Update product details for {product.title}.</p>
           </div>
-          <Link className="secondary link-button" href="/dashboard/products">
-            Back
-          </Link>
+          <div className="resource-header-actions">
+            <Link
+              className="secondary link-button"
+              href={`/dashboard/products/${product.id}/content`}
+            >
+              AI Content Studio
+            </Link>
+            <Link className="secondary link-button" href="/dashboard/products">
+              Back
+            </Link>
+          </div>
         </div>
         <ProductForm
           action={updateProductFormAction.bind(null, product.id)}
+          aiEnabled={aiEnabled}
           brands={brands.map((brand) => ({
             id: brand.id,
             name: brand.name
@@ -78,6 +108,13 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
             id: product.id,
             title: product.title,
             slug: product.slug,
+            content: {
+              features: content?.features ?? undefined,
+              keywords: content?.keywords ?? undefined,
+              metaDescription: content?.metaDescription ?? undefined,
+              seoTitle: content?.seoTitle ?? undefined,
+              socialCaption: content?.socialCaption ?? undefined
+            },
             shortDescription: product.shortDescription ?? undefined,
             description: product.description ?? undefined,
             sku: product.sku ?? undefined,
@@ -87,7 +124,11 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
             stockQuantity: product.stockQuantity,
             lowStockThreshold: product.lowStockThreshold,
             categoryId: product.categoryId ?? undefined,
-            categoryIds: selectedCategoryIds.length ? selectedCategoryIds : product.categoryId ? [product.categoryId] : [],
+            categoryIds: selectedCategoryIds.length
+              ? selectedCategoryIds
+              : product.categoryId
+                ? [product.categoryId]
+                : [],
             status: product.status,
             visibility: product.visibility,
             brandIds: selectedBrandIds,

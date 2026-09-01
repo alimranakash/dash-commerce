@@ -37,6 +37,16 @@ export class AiApiRouteError extends Error {
 }
 
 export type AiRouteOptions = {
+  /**
+   * Tokens this endpoint spends from the key's allowance.
+   *
+   * A write costs more than a read, on the same bucket rather than a second
+   * one: an assistant that has decided to change twenty products should be
+   * slowed by the nineteenth, and reads are how it *finds* the twenty, so
+   * throttling both equally would make it worse at looking and no safer at
+   * acting. Defaults to 1.
+   */
+  cost?: number | undefined;
   /** The scope this endpoint requires. */
   scope: AiScope;
 };
@@ -74,7 +84,7 @@ export async function withAiApiRoute(
   // A second bucket, keyed by the credential rather than the address, so one
   // key cannot spend a whole shared egress IP's budget. The effective ceiling
   // is whichever of the two is tighter.
-  const perKey = consumeAiApiToken(aiApiKeyBucket(auth.identity.keyId));
+  const perKey = consumeAiApiToken(aiApiKeyBucket(auth.identity.keyId), options.cost ?? 1);
 
   if (!perKey.allowed) {
     return rateLimited(perKey);
@@ -140,6 +150,50 @@ export function parseAiQuery<TOutput>(request: Request, schema: ZodType<TOutput>
       400,
       "invalid_query",
       result.error.issues[0]?.message ?? "The query parameters are not valid."
+    );
+  }
+
+  return result.data;
+}
+
+/**
+ * Reads and validates a write endpoint's JSON body.
+ *
+ * The sibling of `parseAiQuery`, and it draws the same line: a malformed body
+ * is the caller's mistake and answers 400, while a *response* that fails its own
+ * schema stays a 500 because that one is our bug. Both failures are shaped here
+ * so no handler has to decide.
+ *
+ * A body that is not an object at all — an array, a bare string, `null` — is
+ * rejected before Zod sees it, so the message names the real problem rather than
+ * whichever field happened to be checked first.
+ */
+export async function parseAiBody<TOutput>(
+  request: Request,
+  schema: ZodType<TOutput>
+): Promise<TOutput> {
+  let raw: unknown;
+
+  try {
+    raw = await request.json();
+  } catch {
+    throw new AiApiRouteError(400, "invalid_body", "Send a JSON object as the request body.");
+  }
+
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new AiApiRouteError(400, "invalid_body", "Send a JSON object as the request body.");
+  }
+
+  const result = schema.safeParse(raw);
+
+  if (!result.success) {
+    const issue = result.error.issues[0];
+    const path = issue?.path.join(".");
+
+    throw new AiApiRouteError(
+      400,
+      "invalid_body",
+      path ? `${path}: ${issue?.message}` : (issue?.message ?? "The request body is not valid.")
     );
   }
 

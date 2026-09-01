@@ -30,7 +30,7 @@ export type StoreOSAssistantResponse = StoreOSChatMessageResponse & {
  * unconnected chat still demonstrates what StoreIM AI is for.
  */
 const FALLBACK_MESSAGE =
-  "Dash AI is not connected yet, so I cannot answer from your store data. Connect it from Dash AI > Settings and ask again.";
+  "StoreIM AI is not connected yet, so I cannot answer from your store data. Connect it from StoreIM AI > Settings and ask again.";
 
 const FALLBACK_SUGGESTIONS = [
   "আজ কত অর্ডার এসেছে?",
@@ -190,5 +190,5 @@ function fallbackResponse(): StoreOSAssistantResponse {
 function storeOSError(error: unknown) {
   void error;
 
-  return new Error("Dash AI could not be reached. Try connecting again.");
+  return new Error("StoreIM AI could not be reached. Try connecting again.");
 }

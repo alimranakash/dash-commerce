@@ -94,6 +94,56 @@ export async function getProductPageForStore(query: ProductPageQuery) {
   });
 }
 
+export type InventoryPageQuery = {
+  cursor?: string | undefined;
+  /** `low` is at or under the threshold; `out` is zero or below. */
+  filter?: "all" | "low" | "out" | undefined;
+  storeId: string;
+  take: number;
+};
+
+/**
+ * A page of the catalogue seen as stock rather than as products.
+ *
+ * Archived products are excluded outright: they are not for sale, so counting
+ * them as "out of stock" would put permanent noise at the top of every reorder
+ * list the seller asks for.
+ *
+ * `low` compares two columns, which Prisma cannot express in a `where` — so it
+ * is a raw `stockQuantity <= lowStockThreshold` fragment. It is still an
+ * ordinary parameterised query scoped by `storeId`; nothing in it comes from a
+ * caller.
+ */
+export async function getInventoryPageForStore(query: InventoryPageQuery) {
+  const filter = query.filter ?? "all";
+
+  return prisma.product.findMany({
+    where: {
+      storeId: query.storeId,
+      status: { not: "ARCHIVED" },
+      ...(filter === "out" ? { stockQuantity: { lte: 0 } } : {}),
+      ...(filter === "low"
+        ? {
+            stockQuantity: {
+              lte: prisma.product.fields.lowStockThreshold
+            }
+          }
+        : {})
+    },
+    orderBy: [{ stockQuantity: "asc" }, { id: "asc" }],
+    take: query.take,
+    ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
+    select: {
+      allowPreorder: true,
+      id: true,
+      lowStockThreshold: true,
+      sku: true,
+      stockQuantity: true,
+      title: true
+    }
+  });
+}
+
 export async function getProductByIdForStore(storeId: string, productId: string) {
   return prisma.product.findFirst({
     where: {

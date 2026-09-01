@@ -30,6 +30,8 @@ import type { PlanFeatureKey } from "../billing/plan-features";
  * grants it to Growth and Pro, which is the intended tier behaviour.
  */
 const STARTER_FEATURES: PlanFeatureKey[] = [
+  "ai_copilot",
+  "ai_product_content",
   "audiences",
   "bundles",
   "coupons",
@@ -74,6 +76,11 @@ const GROWTH_FEATURES: PlanFeatureKey[] = [
   ...STARTER_FEATURES,
   "abandoned_cart",
   "advanced_analytics",
+  // The public-facing half of StoreIM AI. The two merchant-facing surfaces are
+  // on Starter above; `aiEnabled` on the plan rows below now means "this plan
+  // includes some StoreIM AI", which is what the pricing table states, while
+  // the per-surface keys are what the services actually read.
+  "ai_shopping_agent",
   "api_access",
   "blocked_ips",
   "campaigns",
@@ -186,11 +193,11 @@ export const PLAN_CATALOG: PlanCatalogEntry[] = [
     trialDays: FREE_PLAN_TRIAL_DAYS
   },
   {
-    aiEnabled: false,
+    aiEnabled: true,
     currency: "BDT",
     customDomainEnabled: true,
     customerLimit: 1000,
-    description: "Custom domain and higher limits for stores finding traction.",
+    description: "Custom domain, AI copywriting, and higher limits for stores finding traction.",
     features: STARTER_FEATURES,
     isActive: true,
     isFeatured: false,

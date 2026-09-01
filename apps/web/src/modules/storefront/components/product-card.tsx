@@ -2,7 +2,7 @@
 
 import { useStorefrontBasePath } from "../base-path-provider";
 import Link from "next/link";
-import { formatStorefrontMoney } from "../format";
+import { formatStorefrontMoney, preorderLabel } from "../format";
 import type { StorefrontProduct } from "../storefront.types";
 import { StorefrontImage } from "./storefront-image";
 
@@ -53,26 +53,6 @@ export function ProductPrice({
       {compareAtPrice ? <span>{formatStorefrontMoney(compareAtPrice, currency)}</span> : null}
     </div>
   );
-}
-
-/**
- * What a shopper is told when they are buying something that is not here yet.
- *
- * The date is the point of it: "pre-order" on its own reads as a delay of
- * unknown length, which is how a seller loses the order they just took.
- */
-export function preorderLabel(releaseAt: Date | string | null | undefined) {
-  if (!releaseAt) {
-    return "Pre-order";
-  }
-
-  const date = new Date(releaseAt);
-
-  if (Number.isNaN(date.getTime())) {
-    return "Pre-order";
-  }
-
-  return `Pre-order · ships around ${new Intl.DateTimeFormat("en", { day: "numeric", month: "short" }).format(date)}`;
 }
 
 export function StockStatus({

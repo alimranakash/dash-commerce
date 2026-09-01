@@ -3,7 +3,8 @@
 import { useStorefrontBasePath } from "../base-path-provider";
 import { useEffect, useState } from "react";
 import type { StorefrontProductSectionSettings } from "../customization";
-import { ProductGrid, SectionHeader, type ProductCardProduct } from "./product-listing";
+import type { ProductCardProduct } from "../product-card-data";
+import { ProductGrid, SectionHeader } from "./product-listing";
 import { storefrontSectionHref } from "../product-sections";
 
 // A snapshot is stored per product view so the rail can render without another

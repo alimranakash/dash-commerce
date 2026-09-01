@@ -19,7 +19,7 @@ const actionItems = [
   },
   {
     href: "/dashboard/ai",
-    label: "Dash AI"
+    label: "StoreIM AI"
   }
 ];
 

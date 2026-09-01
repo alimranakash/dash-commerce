@@ -23,6 +23,9 @@ export const PLAN_FEATURE_KEYS = [
   "advanced_analytics",
   "advanced_attribution",
   "affiliate_tracking",
+  "ai_copilot",
+  "ai_product_content",
+  "ai_shopping_agent",
   "api_access",
   "audiences",
   "blocked_ips",
@@ -99,10 +102,48 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
     label: "Affiliate Tracking",
     status: "planned"
   },
+  /**
+   * Every StoreIM AI surface the platform pays for: the Store Copilot, the
+   * Product Content Studio and the storefront Shopping Agent, all running on the
+   * platform engine.
+   *
+   * A merchant who brings their own Gemini or OpenAI key is still not gated —
+   * they are paying the model bill themselves, and `hasOwnAiProvider` is checked
+   * beside this key everywhere it is enforced. This entitlement is what the
+   * platform charges for, which is exactly what makes it a plan feature.
+   */
+  /**
+   * The three StoreIM AI surfaces are sold separately, because they are not the
+   * same purchase: the Copilot and the content studio are tools the merchant
+   * points at their own shop, while the Shopping Agent is a public assistant
+   * answering their customers.
+   *
+   * All three keep the rule that a store also qualifies through its *own*
+   * Gemini or OpenAI credential — the merchant pays that bill, so no plan may
+   * stand between them and a key they are funding. The plan grant is the "or",
+   * never an "and"; see the `ownKey || planGrants` reads in
+   * store-copilot.service.ts, product-content.service.ts and
+   * shopping-agent.service.ts.
+   */
+  ai_copilot: {
+    description: "Ask your store questions in plain language and act on the answers.",
+    label: "AI Store Copilot",
+    status: "available"
+  },
+  ai_product_content: {
+    description: "Generate product titles, descriptions and SEO copy from your catalogue.",
+    label: "AI Product Content",
+    status: "available"
+  },
+  ai_shopping_agent: {
+    description: "A chat assistant on the storefront that searches, recommends, and takes orders.",
+    label: "AI Shopping Agent",
+    status: "available"
+  },
   api_access: {
-    description: "Programmatic store access for external integrations.",
-    label: "API Access",
-    status: "planned"
+    description: "Mint API keys that let external integrations read this store programmatically.",
+    label: "Integrations",
+    status: "available"
   },
   /**
    * Blocking an address is the destructive half of fake-order triage — a shared
@@ -173,7 +214,8 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
     status: "planned"
   },
   exchanges: {
-    description: "Swap requests where goods come back and a replacement goes out, settled against stock.",
+    description:
+      "Swap requests where goods come back and a replacement goes out, settled against stock.",
     label: "Exchanges",
     status: "available"
   },
@@ -285,7 +327,8 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
     status: "available"
   },
   refunds: {
-    description: "Money-back requests with nothing to collect, recorded against the original order.",
+    description:
+      "Money-back requests with nothing to collect, recorded against the original order.",
     label: "Refunds",
     status: "available"
   },
@@ -300,8 +343,7 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
     status: "available"
   },
   search_discovery: {
-    description:
-      "Tune storefront search: synonym groups, pinned results, and query redirects.",
+    description: "Tune storefront search: synonym groups, pinned results, and query redirects.",
     label: "Search & Discovery",
     status: "available"
   },

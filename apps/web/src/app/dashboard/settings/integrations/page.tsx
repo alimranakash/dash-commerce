@@ -1,4 +1,5 @@
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
+import { FeatureGate } from "../../../../modules/billing/components/feature-gate";
 import {
   createAiApiKeyAction,
   deleteAiApiKeyAction,
@@ -16,7 +17,7 @@ import { getStoreAccess } from "../../../../modules/stores/queries";
  *
  * Where a seller hands StoreOS AI a key to read this store with, and takes it
  * back. The StoreOS connection itself is shown here read-only for context —
- * reconnecting still lives on Dash AI > Settings, so there is one place that
+ * reconnecting still lives on StoreIM AI > Settings, so there is one place that
  * owns that action.
  *
  * `getStoreAccess()` rather than `requireStore()`: a member may look at which
@@ -35,7 +36,14 @@ export default async function IntegrationsSettingsPage() {
     <DashboardShell storeSlug={access.store.slug}>
       <section className="resource-page max-w-none">
         <div>
-          <h1 className="m-0 text-[1.65rem] font-semibold leading-tight">Integrations</h1>
+          <span className="flex flex-wrap items-center gap-2">
+            <h1 className="m-0 text-[1.65rem] font-semibold leading-tight">Integrations</h1>
+            {/*
+              Existing keys stay listed, revocable and deletable on any plan;
+              issuing one and reading one back is what the entitlement buys.
+            */}
+            <FeatureGate feature="api_access" storeId={access.store.id} />
+          </span>
           <p className="mt-2 text-sm text-[#737582]">
             StoreOS AI answers questions about this store — how today went, what is running low,
             which products are selling. To do that it needs to read your data, and an API key is how

@@ -19,6 +19,7 @@ import {
 import type { StorefrontProductSort } from "../../../../../modules/storefront/resolver";
 import { getStorefrontTemplateForStore } from "../../../../../modules/storefront/templates/registry";
 import { getStorefrontThemeSettings } from "../../../../../modules/storefront/themes/theme.service";
+import { toProductCardProducts } from "../../../../../modules/storefront/product-card-data";
 
 type StorefrontCategoryProductsPageProps = {
   params: Promise<{
@@ -136,7 +137,7 @@ export default async function StorefrontCategoryProductsPage({
               cardVariant={template.productCardVariant}
               currency={store.currency}
               gridId={gridId}
-              products={products}
+              products={toProductCardProducts(products)}
               section={listingSection}
               storeId={store.id}
               storeSlug={store.slug}

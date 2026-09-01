@@ -52,6 +52,17 @@ type NavItem = {
  */
 const NAV_FEATURE_BY_HREF: Record<string, PlanFeatureKey> = {
   "/dashboard/abandoned-cart": "abandoned_cart",
+  // All three StoreIM AI capabilities ride one key, because a seller does not
+  // buy "the copilot", "product content" and "the shopping agent" separately —
+  // they buy AI. StoreIM AI > Settings is deliberately absent: it is where a
+  // seller enters their *own* Gemini or OpenAI key, which no plan gates, so
+  // badging it Paid would put a lock on the one door that is always open.
+  // StoreIM AI is three separate purchases, not one. Settings is absent on
+  // purpose: entering your own Gemini or OpenAI key is how a store qualifies
+  // without a plan, so that page must never be behind one.
+  "/dashboard/ai": "ai_copilot",
+  "/dashboard/ai/product-content": "ai_product_content",
+  "/dashboard/ai/shopping-agent": "ai_shopping_agent",
   "/dashboard/coupons": "coupons",
   "/dashboard/expenses": "expenses",
   // The campaign workspace, not the channel it eventually sends on — the
@@ -80,6 +91,7 @@ const NAV_FEATURE_BY_HREF: Record<string, PlanFeatureKey> = {
   "/dashboard/sales": "sales",
   "/dashboard/settings/courier": "courier_api",
   "/dashboard/settings/domains": "custom_domain",
+  "/dashboard/settings/integrations": "api_access",
   "/dashboard/settings/sms": "sms_notifications",
   "/dashboard/settings/team": "team",
   "/dashboard/storefront/search": "search_discovery",
@@ -176,16 +188,31 @@ const settingsLinks = [
  *
  * It used to be two entries buried in Settings — the assistant at the bottom
  * of the list, the API keys that feed it three rows above — which made the one
- * feature look like two unrelated settings pages. Chat Agent is the parent's
- * own route, the way All Products is under Products.
+ * feature look like two unrelated settings pages. AI Store Copilot is the
+ * parent's own route, the way All Products is under Products.
+ *
+ * Named for what it does rather than for what it is. "Chat Agent" described the
+ * widget; a seller opening this menu is looking for the thing that answers
+ * questions about their shop and can change it for them, and the name has to
+ * say so — the page, the module and `via: "store-copilot"` in the audit log all
+ * agree on it.
+ *
+ * The three capabilities come first and Integrations and Settings after, and the
+ * three are in the order a seller meets them: the one that answers *them*, the
+ * one that writes *for* them, and the one that answers their *customers*. AI
+ * Shopping Agent is the only entry in this menu that puts something on the
+ * storefront, which is why it is its own page rather than a card inside
+ * Settings — a seller looking for it goes to the menu, not to a settings scroll.
  *
  * Integrations keeps its /dashboard/settings/integrations path. It is listed
- * here rather than there because the page is entirely Dash AI keys and the
+ * here rather than there because the page is entirely StoreIM AI keys and the
  * connection they authenticate, but moving the route would break every link
  * and bookmark already pointing at it for no gain a seller can see.
  */
 const aiLinks: Array<{ href: string; label: string }> = [
-  { href: "/dashboard/ai", label: "Chat Agent" },
+  { href: "/dashboard/ai", label: "AI Store Copilot" },
+  { href: "/dashboard/ai/product-content", label: "AI Product Content" },
+  { href: "/dashboard/ai/shopping-agent", label: "AI Shopping Agent" },
   { href: "/dashboard/settings/integrations", label: "Integrations" },
   { href: "/dashboard/ai/settings", label: "Settings" }
 ];
@@ -265,7 +292,7 @@ const trailingLinks: NavItem[] = [{ href: "/dashboard/media", icon: Images, labe
  * listed individually because the whole group is manager-only; see
  * `isManagerOnlyHref`.
  *
- * Team, Chat Agent and Integrations are deliberately absent: a member may open
+ * Team, AI Store Copilot and Integrations are deliberately absent: a member may open
  * the team page read-only, read which API keys exist when something has stopped
  * working, and asking the assistant a question is ordinary work. The group's own
  * Settings is listed, because reconnecting is an integration change and
@@ -321,9 +348,13 @@ const iconColors: Record<string, string> = {
 
 export function DashboardNav({ onClose, open }: DashboardNavProps) {
   const pathname = usePathname() ?? "";
-  const productRouteActive = ["/dashboard/products", "/dashboard/attributes", "/dashboard/tags", "/dashboard/brands", "/dashboard/categories"].some(
-    (route) => pathname.startsWith(route)
-  );
+  const productRouteActive = [
+    "/dashboard/products",
+    "/dashboard/attributes",
+    "/dashboard/tags",
+    "/dashboard/brands",
+    "/dashboard/categories"
+  ].some((route) => pathname.startsWith(route));
   const orderRouteActive =
     pathname.startsWith("/dashboard/orders") || pathname.startsWith("/dashboard/fraud-check");
   const reportRouteActive = pathname.startsWith("/dashboard/reports");
@@ -334,16 +365,16 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
     pathname.startsWith("/dashboard/coupons") ||
     pathname.startsWith("/dashboard/abandoned-cart");
   const analyticsRouteActive = pathname.startsWith("/dashboard/analytics");
-  const storefrontRouteActive = pathname.startsWith("/dashboard/storefront") || pathname.startsWith("/dashboard/theme");
-  // Integrations is listed under Dash AI now, so Settings must not claim it —
+  const storefrontRouteActive =
+    pathname.startsWith("/dashboard/storefront") || pathname.startsWith("/dashboard/theme");
+  // Integrations is listed under StoreIM AI now, so Settings must not claim it —
   // otherwise both groups light up on the same path.
   const settingsRouteActive =
     (pathname.startsWith("/dashboard/settings") &&
       !pathname.startsWith("/dashboard/settings/integrations")) ||
     ["/dashboard/payments", "/dashboard/shipping"].some((route) => pathname.startsWith(route));
   const aiRouteActive =
-    pathname.startsWith("/dashboard/ai") ||
-    pathname.startsWith("/dashboard/settings/integrations");
+    pathname.startsWith("/dashboard/ai") || pathname.startsWith("/dashboard/settings/integrations");
   const [productsOpen, setProductsOpen] = useState(productRouteActive);
   const [ordersOpen, setOrdersOpen] = useState(orderRouteActive);
   const [reportsOpen, setReportsOpen] = useState(reportRouteActive);
@@ -415,279 +446,413 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
 
   return (
     <EntitledFeaturesContext.Provider value={entitledFeatures}>
-    <aside
-      className={`fixed inset-y-0 left-0 z-50 flex w-[248px] flex-col border-r border-[#ececf7] bg-white transition-transform duration-200 lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
-    >
-      <div className="flex h-16 items-center justify-between border-b border-[#f0f0f7] px-5">
-        <Link className="flex items-center gap-2" href="/dashboard" onClick={onClose}>
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#6941ff] text-[15px] font-bold leading-none text-white" suppressHydrationWarning>{"S"}</span>
-          <span className="text-[15px] font-semibold tracking-tight text-[#111827]" suppressHydrationWarning>{"Store"}<span className="text-[#6941ff]">{"IM"}</span></span>
-        </Link>
-        <button className="text-gray-500 lg:hidden" onClick={onClose} type="button">
-          <X className="h-5 w-5" />
-        </button>
-      </div>
-
-      <nav className="flex-1 overflow-y-auto px-3 py-4 text-[13px]" aria-label="Dashboard navigation">
-        <NavLink href="/dashboard" icon={LayoutDashboard} label="Dashboard" onClick={onClose} pathname={pathname} />
-
-        <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${productRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
-          <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/products" onClick={onClose}>
-            <Package className="h-4 w-4 text-orange-500" />
-            <SafeNavText text="Products" />
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-[248px] flex-col border-r border-[#ececf7] bg-white transition-transform duration-200 lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
+      >
+        <div className="flex h-16 items-center justify-between border-b border-[#f0f0f7] px-5">
+          <Link className="flex items-center gap-2" href="/dashboard" onClick={onClose}>
+            <span
+              className="grid h-8 w-8 place-items-center rounded-lg bg-[#6941ff] text-[15px] font-bold leading-none text-white"
+              suppressHydrationWarning
+            >
+              {"S"}
+            </span>
+            <span
+              className="text-[15px] font-semibold tracking-tight text-[#111827]"
+              suppressHydrationWarning
+            >
+              {"Store"}
+              <span className="text-[#6941ff]">{"IM"}</span>
+            </span>
           </Link>
-          <button aria-label="Toggle products menu" className="p-2" onClick={() => setProductsOpen((current) => !current)} type="button">
-            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${productsOpen ? "rotate-180" : ""}`} />
+          <button className="text-gray-500 lg:hidden" onClick={onClose} type="button">
+            <X className="h-5 w-5" />
           </button>
         </div>
-        {productsOpen ? (
-          <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
-            {productLinks.map((link) => (
-              <Link
-                aria-current={isProductLinkActive(pathname, link.href) ? "page" : undefined}
-                className={`block rounded-md px-3 py-2 text-[12px] transition ${isProductLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
-                href={link.href}
-                key={link.href}
-                onClick={onClose}
-              >
-                <SafeNavText text={link.label} />
-                <NavFeatureBadge href={link.href} />
-              </Link>
-            ))}
-          </div>
-        ) : null}
 
-        <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${orderRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
-          <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/orders" onClick={onClose}>
-            <ReceiptText className="h-4 w-4 text-blue-600" />
-            <SafeNavText text="Orders" />
-          </Link>
-          <button aria-label="Toggle orders menu" className="p-2" onClick={() => setOrdersOpen((current) => !current)} type="button">
-            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${ordersOpen ? "rotate-180" : ""}`} />
-          </button>
-        </div>
-        {ordersOpen ? (
-          <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
-            {orderLinks.map((link) => (
-              <Link
-                aria-current={isOrderLinkActive(pathname, link.href) ? "page" : undefined}
-                className={`block rounded-md px-3 py-2 text-[12px] transition ${isOrderLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
-                href={link.href}
-                key={link.href}
-                onClick={onClose}
-              >
-                <SafeNavText text={link.label} />
-                <NavFeatureBadge href={link.href} />
-              </Link>
-            ))}
-          </div>
-        ) : null}
-
-        <div className="mt-1 space-y-1">
-          {visibleMainLinks.map((link) => (
-            <NavLink
-              href={link.href}
-              icon={link.icon}
-              {...(iconColors[normalizeLabel(link.label)] ? { iconClassName: iconColors[normalizeLabel(link.label)] } : {})}
-              key={link.href}
-              label={link.label}
-              onClick={onClose}
-              pathname={pathname}
-            />
-          ))}
-        </div>
-
-        <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${reportRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
-          <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/reports" onClick={onClose}>
-            <FileText className="h-4 w-4 text-pink-500" />
-            <SafeNavText text="Reports" />
-          </Link>
-          <button aria-label="Toggle reports menu" className="p-2" onClick={() => setReportsOpen((current) => !current)} type="button">
-            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${reportsOpen ? "rotate-180" : ""}`} />
-          </button>
-        </div>
-        {reportsOpen ? (
-          <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
-            {reportLinks.map((link) => (
-              <Link
-                aria-current={isReportLinkActive(pathname, link.href) ? "page" : undefined}
-                className={`block rounded-md px-3 py-2 text-[12px] transition ${isReportLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
-                href={link.href}
-                key={link.href}
-                onClick={onClose}
-              >
-                <SafeNavText text={link.label} />
-                <NavFeatureBadge href={link.href} />
-              </Link>
-            ))}
-          </div>
-        ) : null}
-
-        <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${marketingRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
-          <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/marketing" onClick={onClose}>
-            <Megaphone className="h-4 w-4 text-fuchsia-500" />
-            <SafeNavText text="Marketing" />
-          </Link>
-          <button aria-label="Toggle marketing menu" className="p-2" onClick={() => setMarketingOpen((current) => !current)} type="button">
-            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${marketingOpen ? "rotate-180" : ""}`} />
-          </button>
-        </div>
-        {marketingOpen ? (
-          <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
-            {visibleMarketingLinks.map((link) => (
-              <Link
-                aria-current={isMarketingLinkActive(pathname, link.href) ? "page" : undefined}
-                className={`block rounded-md px-3 py-2 text-[12px] transition ${isMarketingLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
-                href={link.href}
-                key={link.href}
-                onClick={onClose}
-              >
-                <SafeNavText text={link.label} />
-                <NavFeatureBadge href={link.href} />
-              </Link>
-            ))}
-          </div>
-        ) : null}
-
-        {/* Every page here changes what loads on the storefront for visitors, so
-            members do not get the group at all rather than a list of dead ends. */}
-        {canManage ? (
-        <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${analyticsRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
-          <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/analytics" onClick={onClose}>
-            <Radar className="h-4 w-4 text-sky-500" />
-            <SafeNavText text="Analytics & Tracking" />
-          </Link>
-          <button aria-label="Toggle analytics menu" className="p-2" onClick={() => setAnalyticsOpen((current) => !current)} type="button">
-            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${analyticsOpen ? "rotate-180" : ""}`} />
-          </button>
-        </div>
-        ) : null}
-        {canManage && analyticsOpen ? (
-          <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
-            {analyticsLinks.map((link) => (
-              <Link
-                aria-current={isAnalyticsLinkActive(pathname, link.href) ? "page" : undefined}
-                className={`block rounded-md px-3 py-2 text-[12px] transition ${isAnalyticsLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
-                href={link.href}
-                key={link.href}
-                onClick={onClose}
-              >
-                <SafeNavText text={link.label} />
-                <NavFeatureBadge href={link.href} />
-              </Link>
-            ))}
-          </div>
-        ) : null}
-
-        {/* The whole group edits the customer-facing storefront, so members do
-            not get it at all rather than an expandable section of dead ends. */}
-        {canManage ? (
-        <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${storefrontRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
-          <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/storefront/themes" onClick={onClose}>
-            <Store className="h-4 w-4 text-violet-600" />
-            <SafeNavText text="Storefront" />
-          </Link>
-          <button aria-label="Toggle storefront menu" className="p-2" onClick={() => setStorefrontOpen((current) => !current)} type="button">
-            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${storefrontOpen ? "rotate-180" : ""}`} />
-          </button>
-        </div>
-        ) : null}
-        {canManage && storefrontOpen ? (
-          <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
-            {storefrontLinks.map((link) => (
-              <Link
-                aria-current={isStorefrontLinkActive(pathname, link.href, link.label) ? "page" : undefined}
-                className={`block rounded-md px-3 py-2 text-[12px] transition ${isStorefrontLinkActive(pathname, link.href, link.label) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
-                href={link.href}
-                key={`${link.href}-${link.label}`}
-                onClick={onClose}
-              >
-                <SafeNavText text={link.label} />
-                <NavFeatureBadge href={link.href} />
-              </Link>
-            ))}
-          </div>
-        ) : null}
-
-        <div className="mt-1 space-y-1">
-          {trailingLinks.map((link) => (
-            <NavLink
-              href={link.href}
-              icon={link.icon}
-              {...(iconColors[normalizeLabel(link.label)] ? { iconClassName: iconColors[normalizeLabel(link.label)] } : {})}
-              key={link.href}
-              label={link.label}
-              onClick={onClose}
-              pathname={pathname}
-            />
-          ))}
-        </div>
-
-        <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${aiRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
-          <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/ai" onClick={onClose}>
-            <Sparkles className="h-4 w-4 text-violet-500" />
-            <SafeNavText text="Dash AI" />
-          </Link>
-          <button aria-label="Toggle Dash AI menu" className="p-2" onClick={() => setAiOpen((current) => !current)} type="button">
-            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${aiOpen ? "rotate-180" : ""}`} />
-          </button>
-        </div>
-        {aiOpen ? (
-          <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
-            {visibleAiLinks.map((link) => (
-              <Link
-                aria-current={isAiLinkActive(pathname, link.href) ? "page" : undefined}
-                className={`block rounded-md px-3 py-2 text-[12px] transition ${isAiLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
-                href={link.href}
-                key={link.href}
-                onClick={onClose}
-              >
-                <SafeNavText text={link.label} />
-                <NavFeatureBadge href={link.href} />
-              </Link>
-            ))}
-          </div>
-        ) : null}
-
-        <div className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${settingsRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}>
-          <Link className="flex flex-1 items-center gap-3 px-3 py-2.5" href="/dashboard/settings" onClick={onClose}>
-            <Settings className="h-4 w-4 text-cyan-500" />
-            <SafeNavText text="Settings" />
-          </Link>
-          <button aria-label="Toggle settings menu" className="p-2" onClick={() => setSettingsOpen((current) => !current)} type="button">
-            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${settingsOpen ? "rotate-180" : ""}`} />
-          </button>
-        </div>
-        {settingsOpen ? (
-          <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
-            {visibleSettingsLinks.map((link) => (
-              <Link
-                aria-current={isSettingsLinkActive(pathname, link.href) ? "page" : undefined}
-                className={`block rounded-md px-3 py-2 text-[12px] transition ${isSettingsLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
-                href={link.href}
-                key={link.href}
-                onClick={onClose}
-              >
-                <SafeNavText text={link.label} />
-                <NavFeatureBadge href={link.href} />
-              </Link>
-            ))}
-          </div>
-        ) : null}
-      </nav>
-
-      <div className="border-t border-[#f0f0f7] p-3">
-        <Link
-          className="mb-2 flex items-center justify-center gap-2 rounded-lg bg-[#f3f0ff] px-3 py-2 text-xs font-semibold text-[#6d3cf5]"
-          href="/dashboard/open-storefront"
-          onClick={onClose}
-          target="_blank"
+        <nav
+          className="flex-1 overflow-y-auto px-3 py-4 text-[13px]"
+          aria-label="Dashboard navigation"
         >
-          <BarChart3 className="h-3.5 w-3.5" /> <SafeNavText text="Open Storefront" />
-        </Link>
-        <LogoutButton />
-      </div>
-    </aside>
+          <NavLink
+            href="/dashboard"
+            icon={LayoutDashboard}
+            label="Dashboard"
+            onClick={onClose}
+            pathname={pathname}
+          />
+
+          <div
+            className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${productRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}
+          >
+            <Link
+              className="flex flex-1 items-center gap-3 px-3 py-2.5"
+              href="/dashboard/products"
+              onClick={onClose}
+            >
+              <Package className="h-4 w-4 text-orange-500" />
+              <SafeNavText text="Products" />
+            </Link>
+            <button
+              aria-label="Toggle products menu"
+              className="p-2"
+              onClick={() => setProductsOpen((current) => !current)}
+              type="button"
+            >
+              <ChevronDown
+                className={`h-3.5 w-3.5 transition-transform ${productsOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+          </div>
+          {productsOpen ? (
+            <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
+              {productLinks.map((link) => (
+                <Link
+                  aria-current={isProductLinkActive(pathname, link.href) ? "page" : undefined}
+                  className={`block rounded-md px-3 py-2 text-[12px] transition ${isProductLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                  href={link.href}
+                  key={link.href}
+                  onClick={onClose}
+                >
+                  <SafeNavText text={link.label} />
+                  <NavFeatureBadge href={link.href} />
+                </Link>
+              ))}
+            </div>
+          ) : null}
+
+          <div
+            className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${orderRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}
+          >
+            <Link
+              className="flex flex-1 items-center gap-3 px-3 py-2.5"
+              href="/dashboard/orders"
+              onClick={onClose}
+            >
+              <ReceiptText className="h-4 w-4 text-blue-600" />
+              <SafeNavText text="Orders" />
+            </Link>
+            <button
+              aria-label="Toggle orders menu"
+              className="p-2"
+              onClick={() => setOrdersOpen((current) => !current)}
+              type="button"
+            >
+              <ChevronDown
+                className={`h-3.5 w-3.5 transition-transform ${ordersOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+          </div>
+          {ordersOpen ? (
+            <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
+              {orderLinks.map((link) => (
+                <Link
+                  aria-current={isOrderLinkActive(pathname, link.href) ? "page" : undefined}
+                  className={`block rounded-md px-3 py-2 text-[12px] transition ${isOrderLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                  href={link.href}
+                  key={link.href}
+                  onClick={onClose}
+                >
+                  <SafeNavText text={link.label} />
+                  <NavFeatureBadge href={link.href} />
+                </Link>
+              ))}
+            </div>
+          ) : null}
+
+          <div className="mt-1 space-y-1">
+            {visibleMainLinks.map((link) => (
+              <NavLink
+                href={link.href}
+                icon={link.icon}
+                {...(iconColors[normalizeLabel(link.label)]
+                  ? { iconClassName: iconColors[normalizeLabel(link.label)] }
+                  : {})}
+                key={link.href}
+                label={link.label}
+                onClick={onClose}
+                pathname={pathname}
+              />
+            ))}
+          </div>
+
+          <div
+            className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${reportRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}
+          >
+            <Link
+              className="flex flex-1 items-center gap-3 px-3 py-2.5"
+              href="/dashboard/reports"
+              onClick={onClose}
+            >
+              <FileText className="h-4 w-4 text-pink-500" />
+              <SafeNavText text="Reports" />
+            </Link>
+            <button
+              aria-label="Toggle reports menu"
+              className="p-2"
+              onClick={() => setReportsOpen((current) => !current)}
+              type="button"
+            >
+              <ChevronDown
+                className={`h-3.5 w-3.5 transition-transform ${reportsOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+          </div>
+          {reportsOpen ? (
+            <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
+              {reportLinks.map((link) => (
+                <Link
+                  aria-current={isReportLinkActive(pathname, link.href) ? "page" : undefined}
+                  className={`block rounded-md px-3 py-2 text-[12px] transition ${isReportLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                  href={link.href}
+                  key={link.href}
+                  onClick={onClose}
+                >
+                  <SafeNavText text={link.label} />
+                  <NavFeatureBadge href={link.href} />
+                </Link>
+              ))}
+            </div>
+          ) : null}
+
+          <div
+            className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${marketingRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}
+          >
+            <Link
+              className="flex flex-1 items-center gap-3 px-3 py-2.5"
+              href="/dashboard/marketing"
+              onClick={onClose}
+            >
+              <Megaphone className="h-4 w-4 text-fuchsia-500" />
+              <SafeNavText text="Marketing" />
+            </Link>
+            <button
+              aria-label="Toggle marketing menu"
+              className="p-2"
+              onClick={() => setMarketingOpen((current) => !current)}
+              type="button"
+            >
+              <ChevronDown
+                className={`h-3.5 w-3.5 transition-transform ${marketingOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+          </div>
+          {marketingOpen ? (
+            <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
+              {visibleMarketingLinks.map((link) => (
+                <Link
+                  aria-current={isMarketingLinkActive(pathname, link.href) ? "page" : undefined}
+                  className={`block rounded-md px-3 py-2 text-[12px] transition ${isMarketingLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                  href={link.href}
+                  key={link.href}
+                  onClick={onClose}
+                >
+                  <SafeNavText text={link.label} />
+                  <NavFeatureBadge href={link.href} />
+                </Link>
+              ))}
+            </div>
+          ) : null}
+
+          {/* Every page here changes what loads on the storefront for visitors, so
+            members do not get the group at all rather than a list of dead ends. */}
+          {canManage ? (
+            <div
+              className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${analyticsRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}
+            >
+              <Link
+                className="flex flex-1 items-center gap-3 px-3 py-2.5"
+                href="/dashboard/analytics"
+                onClick={onClose}
+              >
+                <Radar className="h-4 w-4 text-sky-500" />
+                <SafeNavText text="Analytics & Tracking" />
+              </Link>
+              <button
+                aria-label="Toggle analytics menu"
+                className="p-2"
+                onClick={() => setAnalyticsOpen((current) => !current)}
+                type="button"
+              >
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform ${analyticsOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+            </div>
+          ) : null}
+          {canManage && analyticsOpen ? (
+            <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
+              {analyticsLinks.map((link) => (
+                <Link
+                  aria-current={isAnalyticsLinkActive(pathname, link.href) ? "page" : undefined}
+                  className={`block rounded-md px-3 py-2 text-[12px] transition ${isAnalyticsLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                  href={link.href}
+                  key={link.href}
+                  onClick={onClose}
+                >
+                  <SafeNavText text={link.label} />
+                  <NavFeatureBadge href={link.href} />
+                </Link>
+              ))}
+            </div>
+          ) : null}
+
+          {/* The whole group edits the customer-facing storefront, so members do
+            not get it at all rather than an expandable section of dead ends. */}
+          {canManage ? (
+            <div
+              className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${storefrontRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}
+            >
+              <Link
+                className="flex flex-1 items-center gap-3 px-3 py-2.5"
+                href="/dashboard/storefront/themes"
+                onClick={onClose}
+              >
+                <Store className="h-4 w-4 text-violet-600" />
+                <SafeNavText text="Storefront" />
+              </Link>
+              <button
+                aria-label="Toggle storefront menu"
+                className="p-2"
+                onClick={() => setStorefrontOpen((current) => !current)}
+                type="button"
+              >
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform ${storefrontOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+            </div>
+          ) : null}
+          {canManage && storefrontOpen ? (
+            <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
+              {storefrontLinks.map((link) => (
+                <Link
+                  aria-current={
+                    isStorefrontLinkActive(pathname, link.href, link.label) ? "page" : undefined
+                  }
+                  className={`block rounded-md px-3 py-2 text-[12px] transition ${isStorefrontLinkActive(pathname, link.href, link.label) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                  href={link.href}
+                  key={`${link.href}-${link.label}`}
+                  onClick={onClose}
+                >
+                  <SafeNavText text={link.label} />
+                  <NavFeatureBadge href={link.href} />
+                </Link>
+              ))}
+            </div>
+          ) : null}
+
+          <div className="mt-1 space-y-1">
+            {trailingLinks.map((link) => (
+              <NavLink
+                href={link.href}
+                icon={link.icon}
+                {...(iconColors[normalizeLabel(link.label)]
+                  ? { iconClassName: iconColors[normalizeLabel(link.label)] }
+                  : {})}
+                key={link.href}
+                label={link.label}
+                onClick={onClose}
+                pathname={pathname}
+              />
+            ))}
+          </div>
+
+          <div
+            className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${aiRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}
+          >
+            <Link
+              className="flex flex-1 items-center gap-3 px-3 py-2.5"
+              href="/dashboard/ai"
+              onClick={onClose}
+            >
+              <Sparkles className="h-4 w-4 text-violet-500" />
+              <SafeNavText text="StoreIM AI" />
+              {/* The only section heading that carries a badge. Every capability
+                  under it is the same paid entitlement, so marking the parent
+                  says it once instead of three times. */}
+              <NavFeatureBadge href="/dashboard/ai" />
+            </Link>
+            <button
+              aria-label="Toggle StoreIM AI menu"
+              className="p-2"
+              onClick={() => setAiOpen((current) => !current)}
+              type="button"
+            >
+              <ChevronDown
+                className={`h-3.5 w-3.5 transition-transform ${aiOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+          </div>
+          {aiOpen ? (
+            <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
+              {visibleAiLinks.map((link) => (
+                <Link
+                  aria-current={isAiLinkActive(pathname, link.href) ? "page" : undefined}
+                  className={`block rounded-md px-3 py-2 text-[12px] transition ${isAiLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                  href={link.href}
+                  key={link.href}
+                  onClick={onClose}
+                >
+                  <SafeNavText text={link.label} />
+                  <NavFeatureBadge href={link.href} />
+                </Link>
+              ))}
+            </div>
+          ) : null}
+
+          <div
+            className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${settingsRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}
+          >
+            <Link
+              className="flex flex-1 items-center gap-3 px-3 py-2.5"
+              href="/dashboard/settings"
+              onClick={onClose}
+            >
+              <Settings className="h-4 w-4 text-cyan-500" />
+              <SafeNavText text="Settings" />
+            </Link>
+            <button
+              aria-label="Toggle settings menu"
+              className="p-2"
+              onClick={() => setSettingsOpen((current) => !current)}
+              type="button"
+            >
+              <ChevronDown
+                className={`h-3.5 w-3.5 transition-transform ${settingsOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+          </div>
+          {settingsOpen ? (
+            <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
+              {visibleSettingsLinks.map((link) => (
+                <Link
+                  aria-current={isSettingsLinkActive(pathname, link.href) ? "page" : undefined}
+                  className={`block rounded-md px-3 py-2 text-[12px] transition ${isSettingsLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                  href={link.href}
+                  key={link.href}
+                  onClick={onClose}
+                >
+                  <SafeNavText text={link.label} />
+                  <NavFeatureBadge href={link.href} />
+                </Link>
+              ))}
+            </div>
+          ) : null}
+        </nav>
+
+        <div className="border-t border-[#f0f0f7] p-3">
+          <Link
+            className="mb-2 flex items-center justify-center gap-2 rounded-lg bg-[#f3f0ff] px-3 py-2 text-xs font-semibold text-[#6d3cf5]"
+            href="/dashboard/open-storefront"
+            onClick={onClose}
+            target="_blank"
+          >
+            <BarChart3 className="h-3.5 w-3.5" /> <SafeNavText text="Open Storefront" />
+          </Link>
+          <LogoutButton />
+        </div>
+      </aside>
     </EntitledFeaturesContext.Provider>
   );
 }
@@ -744,7 +909,9 @@ function isOrderLinkActive(pathname: string, href: string) {
   }
 
   if (href === "/dashboard/orders/verification") {
-    return matchesRoute(pathname, href) || matchesRoute(pathname, "/dashboard/orders/verification-queue");
+    return (
+      matchesRoute(pathname, href) || matchesRoute(pathname, "/dashboard/orders/verification-queue")
+    );
   }
 
   // Everything else, /dashboard/fraud-check included — it is listed in this
@@ -767,7 +934,7 @@ function matchesRoute(pathname: string, href: string) {
 }
 
 /**
- * Chat Agent owns only its own path.
+ * AI Store Copilot owns only its own path.
  *
  * It shares a prefix with /dashboard/ai/settings, so the usual startsWith would
  * light both up at once on that path — the same trap All Products and
@@ -785,7 +952,14 @@ function isSettingsLinkActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function NavLink({ href, icon: Icon, iconClassName, label, onClick, pathname }: NavItem & { iconClassName?: string; onClick: () => void; pathname: string }) {
+function NavLink({
+  href,
+  icon: Icon,
+  iconClassName,
+  label,
+  onClick,
+  pathname
+}: NavItem & { iconClassName?: string; onClick: () => void; pathname: string }) {
   const active = href === "/dashboard" ? pathname === href : pathname.startsWith(href);
   const navLabel = normalizeLabel(label);
 

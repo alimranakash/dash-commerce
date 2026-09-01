@@ -484,10 +484,10 @@ async function main() {
     console.log("\n=== Capability boundary ===");
 
     check(
-      "only chat is implemented today",
+      "chat and product content are the implemented surfaces today",
       STOREOS_CAPABILITY_CATALOG.filter((capability) => capability.available)
         .map((capability) => capability.key)
-        .join(",") === "ai:chat"
+        .join(",") === "ai:chat,ai:product"
     );
     check(
       "the full capability surface is declared",
@@ -559,7 +559,9 @@ async function main() {
       join(webSrc, "modules", "storeos", "components", "storeos-connection-panel.tsx"),
       join(webSrc, "modules", "storeos", "components", "ai-chat.tsx"),
       join(webSrc, "modules", "ai", "components", "ai-integration-settings.tsx"),
+      join(webSrc, "modules", "product-content", "components", "product-content-studio.tsx"),
       join(webSrc, "app", "dashboard", "ai", "page.tsx"),
+      join(webSrc, "app", "dashboard", "products", "[productId]", "content", "page.tsx"),
       join(webSrc, "app", "dashboard", "settings", "integrations", "page.tsx")
     ];
 

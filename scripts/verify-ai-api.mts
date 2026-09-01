@@ -65,7 +65,12 @@ import { GET as getMetricsRoute } from "../apps/web/src/app/api/ai/v1/metrics/ro
 import { GET as getOrdersRoute } from "../apps/web/src/app/api/ai/v1/orders/route";
 import { GET as getProductsRoute } from "../apps/web/src/app/api/ai/v1/products/route";
 import { GET as getReportRoute } from "../apps/web/src/app/api/ai/v1/reports/[reportKey]/route";
-import { AI_REPORT_KEYS, aiStoreContextSchema } from "../apps/web/src/modules/ai/ai.schema";
+import {
+  AI_REPORT_KEYS,
+  AI_WRITE_SCOPES,
+  aiStoreContextSchema,
+  isGrantableScope
+} from "../apps/web/src/modules/ai/ai.schema";
 
 let failures = 0;
 
@@ -257,18 +262,35 @@ async function main() {
       JSON.stringify(issued.record.scopes)
     );
 
-    let writeScopeRefused = false;
+    // Was "a write scope cannot be granted while nothing enforces it". The
+    // action endpoints landed, so all three write verbs are now enforced and
+    // therefore issuable. What is asserted is the *invariant* rather than the
+    // snapshot: whatever sits in AI_WRITE_SCOPES is refused, and a scope is only
+    // taken out of that list by the change that adds the endpoint checking it.
+    let writeScopeIssued: Awaited<ReturnType<typeof issueStoreApiKey>> | null = null;
 
     try {
-      await issueStoreApiKey(primary.storeId, {
-        name: "Should not exist",
+      writeScopeIssued = await issueStoreApiKey(primary.storeId, {
+        name: "Write scope key",
         scopes: ["write:products"]
       });
     } catch {
-      writeScopeRefused = true;
+      writeScopeIssued = null;
     }
 
-    check("a write scope cannot be granted while nothing enforces it", writeScopeRefused);
+    check(
+      "an enforced write scope can now be granted",
+      writeScopeIssued !== null &&
+        writeScopeIssued.record.scopes.includes("write:products"),
+      "PATCH /api/ai/v1/products/[productId] requires it"
+    );
+    check(
+      "every scope still listed as unenforced stays ungrantable",
+      AI_WRITE_SCOPES.every((scope) => !isGrantableScope(scope)),
+      AI_WRITE_SCOPES.length === 0
+        ? "the list is empty: every write verb has an endpoint"
+        : AI_WRITE_SCOPES.join(", ")
+    );
 
     // -------------------------------------------------- the raw key is not kept
 

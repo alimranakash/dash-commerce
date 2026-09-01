@@ -599,6 +599,8 @@ model Store {
   productAttributeValues     ProductAttributeValue[]
   productVariants            ProductVariant[]
   productRelations           ProductRelation[]
+  productContents            ProductContent[]
+  aiSetting                  StoreAiSetting?
   abandonedCarts             AbandonedCart[]
   searchSynonyms             SearchSynonym[]
   searchBoosts               SearchBoost[]
@@ -1026,6 +1028,7 @@ model Product {
   returnReplacements  OrderReturnItem[]           @relation("OrderReturnReplacementProduct")
   relations           ProductRelation[]           @relation("ProductRelationSource")
   relatedFrom         ProductRelation[]           @relation("ProductRelationTarget")
+  content             ProductContent?
   orderBumps          OrderBump[]
   bundleItems         BundleItem[]
   createdAt           DateTime                    @default(now())
@@ -1045,6 +1048,81 @@ model Product {
   @@index([storeId, demoPackId])
   @@index([categoryId])
   @@index([searchVector], type: Gin)
+}
+
+/// The store's own AI provider configuration.
+///
+/// Distinct from `StoreOSConnection`, which is the *platform's* link to the
+/// central engine and carries no merchant credential. This row is the seller
+/// bringing their own key: a Gemini or OpenAI key they pay for, encrypted with
+/// `lib/secret-box.ts` and readable only on the server. The plaintext key never
+/// leaves this process — the dashboard is sent `*hint` and nothing else.
+///
+/// `defaultProvider` picks between those keys and `storeos`, so a store that has
+/// configured nothing still routes through StoreIM AI exactly as it did before.
+model StoreAiSetting {
+  id                 String   @id @default(cuid())
+  storeId            String   @unique
+  /// One of "storeos", "gemini", "openai". Validated by aiProviderSchema, kept
+  /// as text so adding a provider is not a migration.
+  defaultProvider    String   @default("storeos")
+  geminiApiKeyCipher String?
+  /// Last four characters, so settings can prove which key is stored.
+  geminiApiKeyHint   String?
+  geminiModel        String   @default("gemini-2.5-flash")
+  openaiApiKeyCipher String?
+  openaiApiKeyHint   String?
+  openaiModel        String   @default("gpt-4o-mini")
+  /// Defaults the Product Content Studio and the inline buttons start from, so
+  /// a seller sets their register once instead of on every product.
+  contentTone        String   @default("friendly")
+  contentLanguage    String   @default("en")
+  /// The seller's standing steer, prepended to every product-content request.
+  brandVoice         String?
+  /// Whether the AI Shopping Agent answers customers on this shop's storefront.
+  ///
+  /// Off until the seller turns it on, and deliberately not implied by holding a
+  /// provider key: the other AI surfaces spend that key on the seller's own
+  /// clicks, while this one spends it on public traffic and speaks to their
+  /// customers in their shop's name. That is a decision only they can make.
+  shoppingAgentEnabled Boolean @default(false)
+  store              Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now()) @updatedAt
+}
+
+/// The product copy that has nowhere to sit on `Product`.
+///
+/// Highlights, the SEO trio, and the social caption are written by the AI
+/// Product Content Studio and edited by the seller, but none of them is a
+/// column the catalogue, the cart, or the storefront reads today — so they
+/// live in a satellite row rather than widening the table every query in the
+/// app selects from. Title, short description and description are deliberately
+/// *not* here: those already exist on `Product` and the studio writes them
+/// there, so there is never a second copy of a field the storefront renders.
+///
+/// `features` is one highlight per line and `keywords` is a comma-separated
+/// list, which is how a seller types them into the textarea they are edited in.
+model ProductContent {
+  id              String    @id @default(cuid())
+  storeId         String
+  productId       String    @unique
+  features        String?
+  seoTitle        String?
+  metaDescription String?
+  keywords        String?
+  socialCaption   String?
+  /// Which engine wrote the last generated draft — "storeos" or "template".
+  /// Recorded so a seller can be told what they are reading, and never used as
+  /// a gate.
+  lastSource      String?
+  lastGeneratedAt DateTime?
+  store           Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product         Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+
+  @@index([storeId])
 }
 
 model ProductImage {

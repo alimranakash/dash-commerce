@@ -2,7 +2,7 @@
 
 import { useStorefrontBasePath } from "../../base-path-provider";
 import Link from "next/link";
-import type { ProductCardProduct } from "../../components/product-listing";
+import type { ProductCardProduct } from "../../product-card-data";
 import { StorefrontImage } from "../../components/storefront-image";
 import type { StorefrontProductSectionSettings } from "../../customization";
 import { formatStorefrontMoney } from "../../format";
@@ -37,8 +37,8 @@ export function BeautyListingCard({
   const href = `${basePath}/products/${product.slug}`;
   const primaryImage = product.images[0];
   const hoverImage = section.enableHoverImage ? product.images[1] : undefined;
-  const price = product.price.toString();
-  const compareAtPrice = product.compareAtPrice?.toString();
+  const price = product.price;
+  const compareAtPrice = product.compareAtPrice ?? undefined;
   const isSoldOut = product.stockQuantity < 1;
   const isOnSale = Boolean(compareAtPrice && Number(compareAtPrice) > Number(price));
   const flag = beautyCardFlag({ isOnSale, isSoldOut, product, section });

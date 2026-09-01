@@ -111,20 +111,20 @@ function resolvePhase(
 
 function phaseDetail(phase: StoreOSConnectionPhase, linkProvisioned: boolean) {
   if (!linkProvisioned) {
-    return "Dash AI is not switched on for this platform yet. Nothing is needed from you — it becomes available once the platform enables it.";
+    return "StoreIM AI is not switched on for this platform yet. Nothing is needed from you — it becomes available once the platform enables it.";
   }
 
   switch (phase) {
     case "connected":
-      return "Dash AI is connected to this store and answering from your own data.";
+      return "StoreIM AI is connected to this store and answering from your own data.";
     case "connecting":
-      return "Connecting Dash AI to this store.";
+      return "Connecting StoreIM AI to this store.";
     case "failed":
-      return "Dash AI could not be reached on the last attempt. Try connecting again.";
+      return "StoreIM AI could not be reached on the last attempt. Try connecting again.";
     case "reconnect-required":
-      return "This store's Dash AI connection is no longer valid. Connect again to restore it.";
+      return "This store's StoreIM AI connection is no longer valid. Connect again to restore it.";
     case "not-connected":
-      return "Dash AI is not connected to this store yet. Connect it to start asking about your orders, sales, and stock.";
+      return "StoreIM AI is not connected to this store yet. Connect it to start asking about your orders, sales, and stock.";
   }
 }
 

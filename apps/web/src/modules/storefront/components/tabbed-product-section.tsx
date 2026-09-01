@@ -8,6 +8,7 @@ import {
   type StorefrontTabbedProductSource
 } from "../customization";
 import type { StorefrontProduct } from "../storefront.types";
+import { toProductCardProducts } from "../product-card-data";
 
 type TabbedProductSectionProps = {
   currency: string;
@@ -76,7 +77,7 @@ export function TabbedProductSection({
                 <ProductGrid
                   currency={currency}
                   gridId={`${sectionId}-panel-${index}`}
-                  products={products}
+                  products={toProductCardProducts(products)}
                   section={panelSection}
                   storeSlug={storeSlug}
                 />

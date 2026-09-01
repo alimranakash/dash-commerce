@@ -43,6 +43,8 @@ const EXPECTED_GUARDS: Record<string, GuardExpectation> = {
   "media/media.actions.ts": "member",
   "orders/order.actions.ts": "member",
   "payments/payment.actions.ts": "manager",
+  "product-content/product-content.actions.ts": "member",
+  "ai-provider/ai-provider.actions.ts": "manager",
   "products/product-taxonomy.actions.ts": "member",
   "products/product.actions.ts": "member",
   "purchases/purchase.actions.ts": "member",

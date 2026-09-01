@@ -115,3 +115,65 @@ export type StoreOSActionResponse = {
   status: "accepted" | "queued" | "unsupported";
   message?: string;
 };
+
+/**
+ * The eight pieces of copy the Product Content Studio can ask for.
+ *
+ * Named on the wire rather than positional so a caller can request one field
+ * without the engine guessing which; `Partial` on the way back because StoreOS
+ * is allowed to return fewer than were asked for (a field it cannot write for
+ * this product is an omission, not an empty string the seller has to delete).
+ */
+export type StoreOSProductContentField =
+  | "description"
+  | "features"
+  | "keywords"
+  | "metaDescription"
+  | "seoTitle"
+  | "shortDescription"
+  | "socialCaption"
+  | "title";
+
+export type StoreOSProductContentTone = "friendly" | "premium" | "professional";
+
+/**
+ * What the engine is told about the product it is writing for.
+ *
+ * Every field is derived from the store's own product row by the caller, the
+ * same way `StoreOSStoreIdentity` is derived from the store row: nothing here
+ * may originate in a browser request beyond the product id, which the caller has
+ * already resolved against the authenticated store. `costPrice` is deliberately
+ * absent — it is the seller's margin and no copywriter needs it.
+ */
+export type StoreOSProductContentSource = {
+  brand?: string;
+  categoryName?: string;
+  currency: string;
+  description?: string;
+  features?: string;
+  id: string;
+  keywords?: string;
+  price: string;
+  shortDescription?: string;
+  sku?: string;
+  tags?: string[];
+  title: string;
+};
+
+export type StoreOSProductContentInput = {
+  connectionId: string;
+  context?: StoreOSCapabilities;
+  /** Which fields to write. Never empty — an empty ask is caught before here. */
+  fields: StoreOSProductContentField[];
+  /** The seller's own steer, verbatim. */
+  instructions?: string;
+  locale?: string;
+  product: StoreOSProductContentSource;
+  tone?: StoreOSProductContentTone;
+};
+
+export type StoreOSProductContentResponse = {
+  content: Partial<Record<StoreOSProductContentField, string>>;
+  /** Anything the engine wants the seller told — a field it declined, and why. */
+  warnings?: string[];
+};

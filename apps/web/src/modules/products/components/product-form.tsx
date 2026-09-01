@@ -1,9 +1,16 @@
 "use client";
 
 import { Button } from "@dash/ui";
-import { useActionState, useMemo, useState, type ReactNode } from "react";
+import { useActionState, useCallback, useMemo, useState, type ReactNode } from "react";
 import { normalizeSlug } from "../../../lib/slug";
 import { mediaUploadHintForUsage } from "../../media/media.schema";
+import { GenerateWithAiButton } from "../../product-content/components/generate-with-ai-button";
+import {
+  PRODUCT_CONTENT_FIELD_META,
+  PRODUCT_CONTENT_LIMITS,
+  type ProductContentDraftContext,
+  type ProductContentField
+} from "../../product-content/product-content.schema";
 import { ProductRelationsEditor } from "../../merchandising/components/product-relations-editor";
 import type {
   ProductRelationOption,
@@ -26,10 +33,24 @@ export type ProductFormCategory = {
   name: string;
 };
 
+/**
+ * The five fields that live on `ProductContent` rather than `Product`, edited
+ * here so the seller writes a product's whole content in one form instead of
+ * finishing it in a second place.
+ */
+export type ProductFormContent = {
+  features?: string | undefined;
+  keywords?: string | undefined;
+  metaDescription?: string | undefined;
+  seoTitle?: string | undefined;
+  socialCaption?: string | undefined;
+};
+
 export type ProductFormValue = {
   id?: string;
   title?: string;
   slug?: string;
+  content?: ProductFormContent | undefined;
   shortDescription?: string | undefined;
   description?: string | undefined;
   sku?: string | undefined;
@@ -52,6 +73,8 @@ export type ProductFormValue = {
 
 type ProductFormProps = {
   action: (state: ProductActionState, formData: FormData) => Promise<ProductActionState>;
+  /** False when the store's plan has no StoreIM AI. The fields stay editable. */
+  aiEnabled: boolean;
   brands: ProductFormCategory[];
   categories: ProductFormCategory[];
   /** Only used to price the products offered in the upsell picker. */
@@ -72,6 +95,7 @@ const initialState: ProductActionState = {
 
 export function ProductForm({
   action,
+  aiEnabled,
   brands,
   categories,
   currency,
@@ -87,11 +111,25 @@ export function ProductForm({
   const [state, formAction, isPending] = useActionState(action, initialState);
   const [title, setTitle] = useState(product?.title ?? "");
   const [slug, setSlug] = useState(product?.slug ?? "");
+  // Controlled from here down, because the Generate buttons write into them.
+  const [shortDescription, setShortDescription] = useState(product?.shortDescription ?? "");
+  const [description, setDescription] = useState(product?.description ?? "");
+  const [features, setFeatures] = useState(product?.content?.features ?? "");
+  const [seoTitle, setSeoTitle] = useState(product?.content?.seoTitle ?? "");
+  const [metaDescription, setMetaDescription] = useState(product?.content?.metaDescription ?? "");
+  const [keywords, setKeywords] = useState(product?.content?.keywords ?? "");
+  const [socialCaption, setSocialCaption] = useState(product?.content?.socialCaption ?? "");
   const [productPrice, setProductPrice] = useState(product?.price ?? "");
   const [productSku, setProductSku] = useState(product?.sku ?? "");
   const [slugTouched, setSlugTouched] = useState(Boolean(product?.slug));
   const [categoryOptions, setCategoryOptions] = useState(categories);
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(product?.categoryIds?.length ? product.categoryIds : product?.categoryId ? [product.categoryId] : []);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
+    product?.categoryIds?.length
+      ? product.categoryIds
+      : product?.categoryId
+        ? [product.categoryId]
+        : []
+  );
   const [categoryMessage, setCategoryMessage] = useState<string | null>(null);
   const [creatingCategory, setCreatingCategory] = useState(false);
   const [tagOptions, setTagOptions] = useState(tags);
@@ -102,8 +140,60 @@ export function ProductForm({
   const [brandMessage, setBrandMessage] = useState<string | null>(null);
   const [creatingTag, setCreatingTag] = useState(false);
   const [creatingBrand, setCreatingBrand] = useState(false);
-  const domainPreview = useMemo(() => (slug ? `${storeSlug}.${platformDomain}/products/${slug}` : ""), [platformDomain, slug, storeSlug]);
+  const domainPreview = useMemo(
+    () => (slug ? `${storeSlug}.${platformDomain}/products/${slug}` : ""),
+    [platformDomain, slug, storeSlug]
+  );
   const imageUrls = product?.imageUrls ?? [];
+
+  /**
+   * What the AI is told about the product being edited.
+   *
+   * Read at click time rather than at render time, so a title typed thirty
+   * seconds ago and a category picked two seconds ago are both in it. Null when
+   * there is no title yet: every field is written *from* the product name, and a
+   * draft generated from nothing would be a draft about nothing.
+   *
+   * Taxonomy is sent as names, not ids. They are the words the seller chose for
+   * this product, and copy in their own vocabulary needs less editing.
+   */
+  const draftContext = useCallback((): ProductContentDraftContext | null => {
+    const productTitle = title.trim();
+
+    if (productTitle.length < 2) {
+      return null;
+    }
+
+    const names = (options: ProductFormCategory[], ids: string[]) =>
+      options.filter((option) => ids.includes(option.id)).map((option) => option.name);
+
+    return {
+      brand: names(brandOptions, selectedBrandIds)[0] ?? null,
+      categoryName: names(categoryOptions, selectedCategoryIds)[0] ?? null,
+      description: description.trim() || null,
+      features: features.trim() || null,
+      keywords: keywords.trim() || null,
+      price: productPrice.trim() || null,
+      shortDescription: shortDescription.trim() || null,
+      sku: productSku.trim() || null,
+      tags: names(tagOptions, selectedTagIds),
+      title: productTitle
+    };
+  }, [
+    brandOptions,
+    categoryOptions,
+    description,
+    features,
+    keywords,
+    productPrice,
+    productSku,
+    selectedBrandIds,
+    selectedCategoryIds,
+    selectedTagIds,
+    shortDescription,
+    tagOptions,
+    title
+  ]);
 
   function handleTitleChange(value: string) {
     setTitle(value);
@@ -126,7 +216,9 @@ export function ProductForm({
       return null;
     }
 
-    setCategoryOptions((current) => [...current, result.category].sort((a, b) => a.name.localeCompare(b.name)));
+    setCategoryOptions((current) =>
+      [...current, result.category].sort((a, b) => a.name.localeCompare(b.name))
+    );
     setCategoryMessage("Category created.");
 
     return result.category;
@@ -145,7 +237,9 @@ export function ProductForm({
       return null;
     }
 
-    setTagOptions((current) => [...current, result.item].sort((a, b) => a.name.localeCompare(b.name)));
+    setTagOptions((current) =>
+      [...current, result.item].sort((a, b) => a.name.localeCompare(b.name))
+    );
     setTagMessage("Tag created.");
 
     return result.item;
@@ -164,7 +258,9 @@ export function ProductForm({
       return null;
     }
 
-    setBrandOptions((current) => [...current, result.item].sort((a, b) => a.name.localeCompare(b.name)));
+    setBrandOptions((current) =>
+      [...current, result.item].sort((a, b) => a.name.localeCompare(b.name))
+    );
     setBrandMessage("Brand created.");
 
     return result.item;
@@ -182,17 +278,22 @@ export function ProductForm({
           >
             <div className="form-grid">
               <FieldError errors={state.fieldErrors} name="title">
-                <label>
-                  Title
-                  <input
-                    name="title"
-                    onChange={(event) => handleTitleChange(event.target.value)}
-                    placeholder="Breathable Mesh Cap"
-                    required
-                    type="text"
-                    value={title}
-                  />
-                </label>
+                <FieldHeading
+                  aiEnabled={aiEnabled}
+                  field="title"
+                  getContext={draftContext}
+                  label="Title"
+                  onGenerated={handleTitleChange}
+                />
+                <input
+                  aria-label="Title"
+                  name="title"
+                  onChange={(event) => handleTitleChange(event.target.value)}
+                  placeholder="Breathable Mesh Cap"
+                  required
+                  type="text"
+                  value={title}
+                />
               </FieldError>
               <FieldError errors={state.fieldErrors} name="slug">
                 <label>
@@ -211,32 +312,108 @@ export function ProductForm({
               </FieldError>
             </div>
             {domainPreview ? <p className="domain-preview">{domainPreview}</p> : null}
-            <FieldError errors={state.fieldErrors} name="shortDescription">
-              <label>
-                Short description
-                <input
-                  defaultValue={product?.shortDescription}
-                  name="shortDescription"
-                  placeholder="A short product summary for cards and product pages."
-                  type="text"
-                />
-              </label>
-            </FieldError>
-            <FieldError errors={state.fieldErrors} name="description">
-              <label>
-                Description
-                <textarea defaultValue={product?.description} name="description" placeholder="Describe the product, materials, and benefits." rows={6} />
-              </label>
-            </FieldError>
+            <AiField
+              aiEnabled={aiEnabled}
+              errors={state.fieldErrors}
+              field="shortDescription"
+              getContext={draftContext}
+              name="shortDescription"
+              onChange={setShortDescription}
+              placeholder="A short product summary for cards and product pages."
+              value={shortDescription}
+            />
+            <AiField
+              aiEnabled={aiEnabled}
+              errors={state.fieldErrors}
+              field="description"
+              getContext={draftContext}
+              name="description"
+              onChange={setDescription}
+              placeholder="Describe the product, materials, and benefits."
+              rows={6}
+              value={description}
+            />
+          </ProductEditorCard>
+
+          <ProductEditorCard
+            description="Highlights, the search-engine fields, and a ready-to-paste social caption. Every one of them can be written for you."
+            title="Content, SEO and social"
+          >
+            <AiField
+              aiEnabled={aiEnabled}
+              errors={state.fieldErrors}
+              field="features"
+              getContext={draftContext}
+              name="features"
+              onChange={setFeatures}
+              placeholder={"Breathable mesh panel\nAdjustable strap\nMachine washable"}
+              rows={4}
+              value={features}
+            />
+            <AiField
+              aiEnabled={aiEnabled}
+              errors={state.fieldErrors}
+              field="seoTitle"
+              getContext={draftContext}
+              name="seoTitle"
+              onChange={setSeoTitle}
+              placeholder="Breathable Mesh Cap | Your Store"
+              showLimit
+              value={seoTitle}
+            />
+            <AiField
+              aiEnabled={aiEnabled}
+              errors={state.fieldErrors}
+              field="metaDescription"
+              getContext={draftContext}
+              name="metaDescription"
+              onChange={setMetaDescription}
+              placeholder="Shown under the title in search results."
+              rows={2}
+              showLimit
+              value={metaDescription}
+            />
+            <AiField
+              aiEnabled={aiEnabled}
+              errors={state.fieldErrors}
+              field="keywords"
+              getContext={draftContext}
+              name="keywords"
+              onChange={setKeywords}
+              placeholder="mesh cap, summer cap, breathable hat"
+              value={keywords}
+            />
+            <AiField
+              aiEnabled={aiEnabled}
+              errors={state.fieldErrors}
+              field="socialCaption"
+              getContext={draftContext}
+              name="socialCaption"
+              onChange={setSocialCaption}
+              placeholder="Write the Facebook or Instagram post for this product."
+              rows={3}
+              value={socialCaption}
+            />
+            {product?.id ? (
+              <p className="product-editor-hint">
+                Want all eight fields side by side, with a review step?{" "}
+                <a href={`/dashboard/products/${product.id}/content`}>Open the AI Content Studio</a>
+                .
+              </p>
+            ) : null}
           </ProductEditorCard>
 
           <ProductEditorCard
             description="Use one main image and up to three gallery images."
             title="Media"
           >
-            {state.fieldErrors?.images ? <p className="field-error">{state.fieldErrors.images}</p> : null}
+            {state.fieldErrors?.images ? (
+              <p className="field-error">{state.fieldErrors.images}</p>
+            ) : null}
             <ProductImageSlots imageUrls={imageUrls} />
-            <p className="product-editor-hint">Gallery limit: 3 images. The storefront shows 4 images total including the main image.</p>
+            <p className="product-editor-hint">
+              Gallery limit: 3 images. The storefront shows 4 images total including the main image.
+            </p>
             <p className="product-editor-hint">{mediaUploadHintForUsage("PRODUCT")}</p>
           </ProductEditorCard>
 
@@ -245,19 +422,48 @@ export function ProductForm({
             title="Pricing and inventory"
           >
             <div className="form-grid product-editor-money-grid">
-              <MoneyField defaultValue={product?.price} errors={state.fieldErrors} label="Price" name="price" onChange={setProductPrice} required />
-              <MoneyField defaultValue={product?.compareAtPrice} errors={state.fieldErrors} label="Compare-at price" name="compareAtPrice" />
-              <MoneyField defaultValue={product?.costPrice} errors={state.fieldErrors} label="Cost price" name="costPrice" />
+              <MoneyField
+                defaultValue={product?.price}
+                errors={state.fieldErrors}
+                label="Price"
+                name="price"
+                onChange={setProductPrice}
+                required
+              />
+              <MoneyField
+                defaultValue={product?.compareAtPrice}
+                errors={state.fieldErrors}
+                label="Compare-at price"
+                name="compareAtPrice"
+              />
+              <MoneyField
+                defaultValue={product?.costPrice}
+                errors={state.fieldErrors}
+                label="Cost price"
+                name="costPrice"
+              />
               <FieldError errors={state.fieldErrors} name="sku">
                 <label>
                   SKU
-                  <input name="sku" onChange={(event) => setProductSku(event.target.value)} placeholder="SKU-001" type="text" value={productSku} />
+                  <input
+                    name="sku"
+                    onChange={(event) => setProductSku(event.target.value)}
+                    placeholder="SKU-001"
+                    type="text"
+                    value={productSku}
+                  />
                 </label>
               </FieldError>
               <FieldError errors={state.fieldErrors} name="stockQuantity">
                 <label>
                   Stock
-                  <input defaultValue={product?.stockQuantity ?? 0} min={0} name="stockQuantity" required type="number" />
+                  <input
+                    defaultValue={product?.stockQuantity ?? 0}
+                    min={0}
+                    name="stockQuantity"
+                    required
+                    type="number"
+                  />
                 </label>
               </FieldError>
               <FieldError errors={state.fieldErrors} name="allowPreorder">
@@ -291,7 +497,13 @@ export function ProductForm({
               <FieldError errors={state.fieldErrors} name="lowStockThreshold">
                 <label>
                   Low stock threshold
-                  <input defaultValue={product?.lowStockThreshold ?? 0} min={0} name="lowStockThreshold" required type="number" />
+                  <input
+                    defaultValue={product?.lowStockThreshold ?? 0}
+                    min={0}
+                    name="lowStockThreshold"
+                    required
+                    type="number"
+                  />
                 </label>
               </FieldError>
             </div>
@@ -352,7 +564,9 @@ export function ProductForm({
                 selectedIds={selectedCategoryIds}
               />
             </FieldError>
-            {categoryMessage ? <p className="product-editor-inline-message">{categoryMessage}</p> : null}
+            {categoryMessage ? (
+              <p className="product-editor-inline-message">{categoryMessage}</p>
+            ) : null}
 
             <TaxonomyMultiSelect
               createLabel="Create tag"
@@ -396,6 +610,121 @@ export function ProductForm({
   );
 }
 
+/**
+ * The label row above a field, with its Generate button on the right.
+ *
+ * A `<span>` rather than a `<label>` wrapping the control, because a `<button>`
+ * inside a label is also a click on the field that label points at. The control
+ * carries its own `aria-label` instead, so the accessible name survives.
+ */
+function FieldHeading({
+  aiEnabled,
+  field,
+  getContext,
+  label,
+  onGenerated
+}: {
+  aiEnabled: boolean;
+  field: ProductContentField;
+  getContext: () => ProductContentDraftContext | null;
+  label: string;
+  onGenerated: (value: string) => void;
+}) {
+  return (
+    <span className="ai-field-head">
+      <span className="ai-field-label">{label}</span>
+      <GenerateWithAiButton
+        disabled={!aiEnabled}
+        field={field}
+        getContext={getContext}
+        onGenerated={onGenerated}
+      />
+    </span>
+  );
+}
+
+/**
+ * One content field: a heading row, the control, and an optional caption.
+ *
+ * The three parts are direct children of `FieldError`'s `.field-shell`, which is
+ * already `display: grid` — so the control is full width by the same rule every
+ * other field on this form has always used, rather than by a wrapper of its own.
+ * That is deliberate after this layout broke once: a field that needs new CSS to
+ * be the right width is a field that renders wrong the first time a stylesheet
+ * is stale.
+ *
+ * `rows` chooses the control. A field whose value is one line stays an
+ * `<input>`, matching the rest of the form; only genuinely multi-line copy gets
+ * a textarea.
+ */
+function AiField({
+  aiEnabled,
+  errors,
+  field,
+  getContext,
+  name,
+  onChange,
+  placeholder,
+  rows,
+  showLimit,
+  value
+}: {
+  aiEnabled: boolean;
+  errors?: Record<string, string> | undefined;
+  field: ProductContentField;
+  getContext: () => ProductContentDraftContext | null;
+  name: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  /** Omit for a single-line input. */
+  rows?: number | undefined;
+  /** Only where the ceiling is a real editorial constraint, such as SEO. */
+  showLimit?: boolean | undefined;
+  value: string;
+}) {
+  const meta = PRODUCT_CONTENT_FIELD_META[field];
+  const limit = PRODUCT_CONTENT_LIMITS[field];
+
+  return (
+    <FieldError errors={errors} name={name}>
+      <FieldHeading
+        aiEnabled={aiEnabled}
+        field={field}
+        getContext={getContext}
+        label={meta.label}
+        onGenerated={onChange}
+      />
+      {rows ? (
+        <textarea
+          aria-label={meta.label}
+          name={name}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          rows={rows}
+          value={value}
+        />
+      ) : (
+        <input
+          aria-label={meta.label}
+          name={name}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          type="text"
+          value={value}
+        />
+      )}
+      {showLimit ? (
+        <p className="ai-field-foot">
+          <span>{meta.description}</span>
+          <span className={value.length > limit ? "ai-studio-count-over" : undefined}>
+            {value.length} / {limit}
+          </span>
+        </p>
+      ) : null}
+    </FieldError>
+  );
+}
+
 function ProductEditorCard({
   children,
   description,
@@ -435,7 +764,15 @@ function MoneyField({
     <FieldError errors={errors} name={name}>
       <label>
         {label}
-        <input defaultValue={defaultValue} min={0} name={name} onChange={(event) => onChange?.(event.target.value)} required={required} step="0.01" type="number" />
+        <input
+          defaultValue={defaultValue}
+          min={0}
+          name={name}
+          onChange={(event) => onChange?.(event.target.value)}
+          required={required}
+          step="0.01"
+          type="number"
+        />
       </label>
     </FieldError>
   );

@@ -24,7 +24,10 @@ import Link from "next/link";
 import type { ComponentType, ReactNode } from "react";
 import { ParallaxStage, TypingText } from "./landing-interactions";
 import styles from "./landing-page.module.css";
+import type { PlanCatalogEntry } from "../../modules/admin/plan-catalog";
 import { DEFAULT_PLAN_SLUG, FREE_PLAN_TRIAL_DAYS, PLAN_CATALOG } from "../../modules/admin/plan-catalog";
+import type { PlanFeatureKey } from "../../modules/billing/plan-features";
+import { PLAN_FEATURE_REGISTRY } from "../../modules/billing/plan-features";
 
 const features = [
   { icon: Store, title: "1 Minute Store Builder", text: "Launch a polished storefront with your brand, products, and domain." },
@@ -35,7 +38,7 @@ const features = [
   { icon: CreditCard, title: "Payments", text: "Offer COD and Bangladesh-first manual payment methods with confidence." },
   { icon: Truck, title: "Courier", text: "Configure delivery zones today and connect courier automation tomorrow." },
   { icon: BarChart3, title: "Reports", text: "Understand revenue, orders, inventory, customers, and growth without spreadsheets." },
-  { icon: Bot, title: "Dash AI", text: "Ask your store questions in natural language and get useful answers instantly." }
+  { icon: Bot, title: "StoreIM AI", text: "Ask your store questions in natural language and get useful answers instantly." }
 ];
 
 export function LandingPage() {
@@ -47,7 +50,7 @@ export function LandingPage() {
           <span>Store<b>IM</b></span>
         </Link>
         <nav className={styles.nav} aria-label="Primary navigation">
-          <a href="#story">Platform</a><a href="#journey">Journey</a><a href="#ai">AI</a><a href="#pricing">Pricing</a><Link href="/docs">Docs</Link>
+          <a href="#story">Platform</a><a href="#journey">Journey</a><a href="#ai">AI</a><a href="#pricing">Pricing</a><a href="#compare">Compare</a><Link href="/docs">Docs</Link>
         </nav>
         <div className={styles.headerActions}>
           <Link className={styles.loginLink} href="/login">Login</Link>
@@ -74,7 +77,7 @@ export function LandingPage() {
           <div className={`${styles.floatingMetric} ${styles.floatingMetricLeft}`}><span>Gross revenue</span><b>৳67,743</b><small><TrendingArrow /> 18.4%</small></div>
           <div className={`${styles.floatingMetric} ${styles.floatingMetricRight}`}><span>Conversion</span><b>4.8%</b><small>Best this month</small></div>
           <div className={styles.aiFloat}>
-            <div><span><Bot /></span><p>Dash AI</p><small>Online</small></div>
+            <div><span><Bot /></span><p>StoreIM AI</p><small>Online</small></div>
             <p>Revenue is up 18% this week. Your top product is nearly out of stock.</p>
           </div>
         </ParallaxStage>
@@ -137,13 +140,13 @@ export function LandingPage() {
         <div className={styles.aiCopy}>
           <div className={styles.eyebrow}><Bot /> StoreIM intelligence</div>
           <h2>Your store can finally answer back.</h2>
-          <p>Ask in the language you naturally use. Dash AI turns live commerce data into focused answers, useful context, and a clearer next step.</p>
+          <p>Ask in the language you naturally use. StoreIM AI turns live commerce data into focused answers, useful context, and a clearer next step.</p>
           <ul><li><Check /> Understand sales without building reports</li><li><Check /> Surface low stock before it costs a sale</li><li><Check /> Keep every answer scoped to your store</li></ul>
         </div>
         <div className={styles.aiStage}>
           <div className={styles.aiMetricTop}><span>Live context</span><b>384 signals</b></div>
           <div className={styles.chatWindow}>
-            <header><span><Bot /></span><div><b>Dash AI</b><small>Connected to StoreIM</small></div><i /></header>
+            <header><span><Bot /></span><div><b>StoreIM AI</b><small>Connected to StoreIM</small></div><i /></header>
             <div className={styles.chatBody}>
               <p className={styles.userBubble}>আজ কত অর্ডার এসেছে?</p>
               <div className={styles.aiBubble}><span><Sparkles /></span><p><TypingText text="আজ ১৮টি অর্ডার এসেছে, মোট বিক্রি ৳২২,৫০০।" /></p></div>
@@ -191,7 +194,10 @@ export function LandingPage() {
             />
           ))}
         </div>
+        <a className={styles.compareLink} href="#compare">Compare every feature <ChevronRight /></a>
       </section>
+
+      <FeatureComparison />
 
       <section className={styles.finalCta}>
         <div className={styles.finalGlow} />
@@ -293,7 +299,7 @@ function PricingCard({ badge, cta, featured, features, name, price, text }: { ba
  */
 const pricingHighlights: Record<string, string[]> = {
   free: ["Storefront, products and orders", "COD and manual payments"],
-  growth: ["Dash AI assistant and POS", "Advanced analytics and reports", "Server-side tracking (GA4 + Meta Conversions API)", "Google Ads and TikTok tracking", "API access"],
+  growth: ["StoreIM AI assistant and POS", "Advanced analytics and reports", "Server-side tracking (GA4 + Meta Conversions API)", "Google Ads and TikTok tracking", "API access"],
   pro: ["Marketing, WhatsApp, email and SMS automation (coming soon)", "Affiliate tracking and advanced attribution (coming soon)"],
   starter: ["Custom domain", "Courier API and fraud check", "Abandoned cart recovery", "Marketing analytics and pixel tracking"]
 };
@@ -324,5 +330,274 @@ const pricingPlans = [...PLAN_CATALOG]
 
 function planLimit(value: number) {
   return value === 0 ? "Unlimited" : value.toLocaleString("en");
+}
+
+/**
+ * Plan comparison table.
+ *
+ * Every row is derived from `PLAN_CATALOG` and `PLAN_FEATURE_REGISTRY` for the
+ * same reason the pricing cards are: the marketing page must not be able to
+ * advertise an entitlement the product does not grant. Move a feature key
+ * between tiers in the catalog and it moves here on the next build; the "Soon"
+ * tag comes from the registry's own `status`, so nothing on this page claims a
+ * planned capability already works.
+ *
+ * The only hand-written rows are the two every plan includes — the storefront
+ * itself and COD/manual payments — which are not gated, so there is no key to
+ * read them from.
+ */
+type ComparisonValue = boolean | string;
+type ComparisonCell = { plan: PlanCatalogEntry; value: ComparisonValue };
+type ComparisonRow = { cells: ComparisonCell[]; hint: string; label: string; planned?: boolean };
+type ComparisonGroup = { rows: ComparisonRow[]; title: string };
+
+const comparisonPlans = [...PLAN_CATALOG].sort((a, b) => a.sortOrder - b.sortOrder);
+
+/** One gated capability: label, blurb, and per-tier availability, all from the registry. */
+function featureRow(key: PlanFeatureKey): ComparisonRow {
+  const definition = PLAN_FEATURE_REGISTRY[key];
+
+  return {
+    cells: comparisonPlans.map((plan) => ({ plan, value: plan.features.includes(key) })),
+    hint: definition.description,
+    label: definition.label,
+    ...(definition.status === "planned" ? { planned: true } : {})
+  };
+}
+
+/** Anything that is not a feature key — a numeric plan column, or a universal capability. */
+function valueRow(
+  label: string,
+  hint: string,
+  read: (plan: PlanCatalogEntry) => ComparisonValue
+): ComparisonRow {
+  return { cells: comparisonPlans.map((plan) => ({ plan, value: read(plan) })), hint, label };
+}
+
+const comparisonGroups: ComparisonGroup[] = [
+  {
+    rows: [
+      valueRow("Products", "How many products your catalog can hold.", (plan) =>
+        planLimit(plan.productLimit)
+      ),
+      valueRow("Orders per month", "Orders placed in the current calendar month.", (plan) =>
+        planLimit(plan.orderLimit)
+      ),
+      valueRow("Customers", "Customer records saved against your store.", (plan) =>
+        planLimit(plan.customerLimit)
+      ),
+      valueRow("Staff accounts", "Teammates who can sign in to the dashboard.", (plan) =>
+        plan.staffLimit.toLocaleString("en")
+      ),
+      valueRow("Free trial", "Time on the plan before the first invoice.", (plan) =>
+        plan.trialDays > 0 ? `${plan.trialDays} days` : false
+      )
+    ],
+    title: "Plan limits"
+  },
+  {
+    rows: [
+      valueRow(
+        "Storefront, products and orders",
+        "The full store — catalog, cart, checkout and order records.",
+        () => true
+      ),
+      valueRow(
+        "COD and manual payments",
+        "Cash on delivery plus bKash, Nagad and Rocket.",
+        () => true
+      ),
+      featureRow("custom_domain"),
+      featureRow("footer_branding"),
+      featureRow("inventory"),
+      featureRow("bundles"),
+      featureRow("preorders"),
+      featureRow("search_discovery")
+    ],
+    title: "Storefront and catalog"
+  },
+  {
+    rows: [
+      featureRow("coupons"),
+      featureRow("order_bump"),
+      featureRow("upsell_cross_sell"),
+      featureRow("abandoned_cart"),
+      featureRow("incomplete_orders")
+    ],
+    title: "Selling and conversion"
+  },
+  {
+    rows: [
+      featureRow("order_tracking"),
+      featureRow("courier_api"),
+      featureRow("returns"),
+      featureRow("exchanges"),
+      featureRow("refunds")
+    ],
+    title: "Orders and delivery"
+  },
+  {
+    rows: [
+      featureRow("fraud_check"),
+      featureRow("fake_orders"),
+      featureRow("order_verification"),
+      featureRow("blocked_ips")
+    ],
+    title: "Order risk"
+  },
+  {
+    rows: [
+      featureRow("audiences"),
+      featureRow("marketing_templates"),
+      featureRow("campaigns"),
+      featureRow("sms_notifications"),
+      featureRow("marketing_analytics"),
+      featureRow("affiliate_tracking")
+    ],
+    title: "Marketing"
+  },
+  {
+    rows: [
+      featureRow("marketing_automation"),
+      featureRow("email_automation"),
+      featureRow("sms_automation"),
+      featureRow("whatsapp_automation"),
+      featureRow("facebook_automation")
+    ],
+    title: "Automation"
+  },
+  {
+    rows: [
+      featureRow("google_analytics"),
+      featureRow("meta_pixel"),
+      featureRow("tiktok_tracking"),
+      featureRow("gtm_tracking"),
+      featureRow("google_ads_tracking"),
+      featureRow("custom_tracking"),
+      featureRow("server_side_tracking"),
+      featureRow("advanced_analytics"),
+      featureRow("advanced_attribution")
+    ],
+    title: "Analytics and tracking"
+  },
+  {
+    rows: [
+      valueRow(
+        "StoreIM AI assistant",
+        "Ask your store questions in plain language and get answers from live data.",
+        (plan) => plan.aiEnabled
+      ),
+      valueRow(
+        "Point of sale",
+        "Counter sales recorded against the same catalog and stock.",
+        (plan) => plan.posEnabled
+      ),
+      featureRow("team"),
+      featureRow("sales"),
+      featureRow("expenses"),
+      featureRow("purchases"),
+      featureRow("suppliers"),
+      featureRow("api_access")
+    ],
+    title: "Operations and team"
+  }
+];
+
+function FeatureComparison() {
+  return (
+    <section className={styles.comparisonSection} id="compare">
+      <SectionIntro
+        centered
+        eyebrow="Plan comparison"
+        text="Limits, capabilities, and exactly where each one unlocks. Rows marked “Soon” are on the roadmap and arrive on your plan the day they ship."
+        title="Every feature, side by side."
+      />
+      <div className={styles.comparisonCard}>
+        <div className={styles.comparisonScroll}>
+          <table className={styles.comparisonTable}>
+            <caption className={styles.srOnly}>StoreIM plan feature comparison</caption>
+            <thead>
+              <tr>
+                <th scope="col"><span className={styles.comparisonCorner}>Feature</span></th>
+                {comparisonPlans.map((plan) => (
+                  <th
+                    data-featured={plan.isFeatured ? "true" : undefined}
+                    key={plan.slug}
+                    scope="col"
+                  >
+                    <span className={styles.planHead}>
+                      {plan.isFeatured ? <em>Most popular</em> : null}
+                      <span>{plan.name}</span>
+                      <b>৳{Number(plan.priceMonthly).toLocaleString("en")}</b>
+                      <small>
+                        {plan.slug === DEFAULT_PLAN_SLUG
+                          ? `free for ${plan.trialDays} days`
+                          : "per month"}
+                      </small>
+                    </span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            {comparisonGroups.map((group) => (
+              <tbody key={group.title}>
+                <tr className={styles.comparisonGroup}>
+                  <th colSpan={comparisonPlans.length + 1} scope="colgroup">{group.title}</th>
+                </tr>
+                {group.rows.map((row) => (
+                  <tr key={row.label}>
+                    <th scope="row">
+                      <span className={styles.rowLabel}>
+                        {row.label}
+                        {row.planned ? <i className={styles.soonTag}>Soon</i> : null}
+                      </span>
+                      <small className={styles.rowHint}>{row.hint}</small>
+                    </th>
+                    {row.cells.map((cell) => (
+                      <td
+                        data-featured={cell.plan.isFeatured ? "true" : undefined}
+                        key={cell.plan.slug}
+                      >
+                        <ComparisonMark plan={cell.plan.name} value={cell.value} />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            ))}
+          </table>
+        </div>
+      </div>
+      <div className={styles.comparisonFoot}>
+        <p>
+          Every store starts on Free for {FREE_PLAN_TRIAL_DAYS} days. Move up a plan whenever your
+          store outgrows the one it is on.
+        </p>
+        <Link className={styles.comparisonCta} href="/register">
+          Start your free year <ArrowRight />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * A single cell. Ticks and dashes carry no text, so each one also emits the plan
+ * name for a screen reader — a column header alone does not say which plan a
+ * bare tick belongs to once the table is being read row by row.
+ */
+function ComparisonMark({ plan, value }: { plan: string; value: ComparisonValue }) {
+  if (typeof value === "string") {
+    return <b className={styles.cellText}>{value}</b>;
+  }
+
+  return (
+    <>
+      <span aria-hidden="true" className={value ? styles.cellYes : styles.cellNo}>
+        {value ? <Check /> : "—"}
+      </span>
+      <span className={styles.srOnly}>{value ? `Included on ${plan}` : `Not on ${plan}`}</span>
+    </>
+  );
 }
 type CardProps = { icon: ComponentType<{ className?: string }>; text: string; title: string };

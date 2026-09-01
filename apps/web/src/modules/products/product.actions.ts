@@ -7,6 +7,8 @@ import { canCreateProduct } from "../billing/subscription-limits";
 import { createCategory } from "../categories/category.service";
 import { setProductRelations } from "../merchandising/merchandising.service";
 import type { SetProductRelationsInput } from "../merchandising/merchandising.schema";
+import type { ProductContentWrite } from "../product-content/product-content.repository";
+import { saveProductContentFields } from "../product-content/product-content.service";
 import { requireStore } from "../stores/queries";
 import {
   archiveProduct,
@@ -69,6 +71,7 @@ export async function createProductFormAction(
       variants: payload.variants
     });
     await setProductRelations(store.id, product.id, payload.relations);
+    await saveProductContentFields(store.id, product.id, payload.content);
   } catch (error) {
     return productErrorState(error);
   }
@@ -115,6 +118,7 @@ export async function updateProductFormAction(
       variants: payload.variants
     });
     await setProductRelations(store.id, product.id, payload.relations);
+    await saveProductContentFields(store.id, product.id, payload.content);
   } catch (error) {
     return productErrorState(error);
   }
@@ -158,6 +162,8 @@ type ProductFormPayload = {
   attributes: ProductAttributeInput[];
   brandIds: string[];
   categoryIds: string[];
+  /** The five fields that live on `ProductContent`, saved in the same submit. */
+  content: ProductContentWrite;
   input: CreateProductInput;
   relations: SetProductRelationsInput;
   tagIds: string[];
@@ -180,6 +186,13 @@ function productPayloadFromFormData(formData: FormData): ProductFormPayload {
     attributes: productAttributesFromFormData(formData),
     brandIds: getValues(formData, "brandIds"),
     categoryIds,
+    content: {
+      features: nullableValue(formData, "features"),
+      keywords: nullableValue(formData, "keywords"),
+      metaDescription: nullableValue(formData, "metaDescription"),
+      seoTitle: nullableValue(formData, "seoTitle"),
+      socialCaption: nullableValue(formData, "socialCaption")
+    },
     input: {
       title: getValue(formData, "title"),
       slug: optionalValue(formData, "slug"),

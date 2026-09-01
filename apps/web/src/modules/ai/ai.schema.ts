@@ -36,23 +36,24 @@ export type AiScope = (typeof AI_SCOPES)[number];
 export const aiScopeSchema = z.enum(AI_SCOPES);
 
 /**
- * The scopes that may actually be granted today.
+ * Scopes that exist in the vocabulary but cannot be granted yet.
  *
- * The write verbs exist in the vocabulary so the model, the docs and the storage
- * format are settled before the first write endpoint lands — but nothing
- * enforces them yet, and a scope nothing enforces is a permission that silently
- * means nothing. Issuing one would be worse than refusing it: the seller would
- * believe they had limited the AI when they had not. So key issuance refuses
- * them until the endpoints that check them exist.
+ * The rule this list enforces: **a scope nothing checks is a permission that
+ * silently means nothing**, and issuing one would be worse than refusing it —
+ * the seller would believe they had limited the AI when they had not. So a
+ * scope stays here until an endpoint actually requires it.
  *
- * To enable a write scope later: implement the endpoint that requires it, then
- * move it out of `AI_WRITE_SCOPES`.
+ * It is empty now. All three write verbs were listed here until the action
+ * endpoints landed:
+ *
+ *   - `write:products`  → PATCH /api/ai/v1/products/[productId]
+ *   - `write:marketing` → POST  /api/ai/v1/coupons
+ *   - `write:orders`    → POST  /api/ai/v1/orders/[orderId]/status
+ *
+ * Adding a scope: name it in `AI_SCOPES`, put it here, and take it out again in
+ * the same change that adds the endpoint checking it.
  */
-export const AI_WRITE_SCOPES: readonly AiScope[] = [
-  "write:marketing",
-  "write:orders",
-  "write:products"
-];
+export const AI_WRITE_SCOPES: readonly AiScope[] = [];
 
 export function isGrantableScope(scope: AiScope) {
   return !AI_WRITE_SCOPES.includes(scope);
@@ -722,3 +723,235 @@ export const aiReportResponseSchema = z.strictObject({
 });
 
 export type AiReportResponse = z.infer<typeof aiReportResponseSchema>;
+
+/* -------------------------------------------------------------------------- */
+/*                                  Customers                                  */
+/* -------------------------------------------------------------------------- */
+
+export const aiCustomerQuerySchema = aiPageQuerySchema.extend({
+  /** Matched against name, phone and email. */
+  search: z.string().trim().min(1).max(120).optional()
+});
+
+export type AiCustomerQuery = z.infer<typeof aiCustomerQuerySchema>;
+
+/**
+ * One customer, as the AI is allowed to see it.
+ *
+ * The contact details are **masked** — `maskPhone` and `maskEmail` from
+ * `ai-redact.ts`, the same treatment the orders endpoint already gives them.
+ * An assistant answering "who are my best customers" needs to name and rank
+ * them; it does not need a list of reachable phone numbers, and a key that
+ * leaked would otherwise hand over the store's whole contact book.
+ *
+ * `totalSpent` is a string for the same reason every other money field is: a
+ * Decimal through `JSON.stringify` becomes a float and loses paisa.
+ */
+export const aiCustomerSchema = z.strictObject({
+  createdAt: z.string(),
+  currency: z.string(),
+  /** Masked, e.g. `a***@shop.com`. Null when the account has no email. */
+  email: z.string().nullable(),
+  id: z.string(),
+  lastOrderAt: z.string().nullable(),
+  name: z.string(),
+  orderCount: z.number().int(),
+  /** Masked, e.g. `+8801*****89`. */
+  phone: z.string(),
+  totalSpent: z.string()
+});
+
+export type AiCustomer = z.infer<typeof aiCustomerSchema>;
+
+export const aiCustomerListResponseSchema = z.strictObject({
+  data: z.array(aiCustomerSchema),
+  page: aiPageInfoSchema,
+  storeId: z.string()
+});
+
+export type AiCustomerListResponse = z.infer<typeof aiCustomerListResponseSchema>;
+
+/* -------------------------------------------------------------------------- */
+/*                                  Inventory                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * What the seller is actually asking when they ask about stock.
+ *
+ * `low` and `out` are the two questions worth a round trip — "what do I need to
+ * reorder" and "what am I losing sales on" — so they are filters rather than
+ * something the caller reconstructs by walking the whole catalogue and
+ * comparing two numbers itself.
+ */
+export const aiInventoryFilterSchema = z.enum(["all", "low", "out"]);
+
+export const aiInventoryQuerySchema = aiPageQuerySchema.extend({
+  filter: aiInventoryFilterSchema.default("all")
+});
+
+export type AiInventoryQuery = z.infer<typeof aiInventoryQuerySchema>;
+
+/** Derived, not stored: the comparison every caller would otherwise redo. */
+export const aiStockStateSchema = z.enum(["in_stock", "low", "out_of_stock"]);
+
+export const aiInventoryItemSchema = z.strictObject({
+  /** True when the product may still be sold past zero. */
+  allowPreorder: z.boolean(),
+  id: z.string(),
+  lowStockThreshold: z.number().int(),
+  sku: z.string().nullable(),
+  state: aiStockStateSchema,
+  /** Negative on a pre-order product means units owed, not a data error. */
+  stockQuantity: z.number().int(),
+  title: z.string()
+});
+
+export type AiInventoryItem = z.infer<typeof aiInventoryItemSchema>;
+
+export const aiInventoryListResponseSchema = z.strictObject({
+  data: z.array(aiInventoryItemSchema),
+  page: aiPageInfoSchema,
+  storeId: z.string()
+});
+
+export type AiInventoryListResponse = z.infer<typeof aiInventoryListResponseSchema>;
+
+/* -------------------------------------------------------------------------- */
+/*                                   Actions                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The write half of the API.
+ *
+ * Three deliberate constraints run through everything below:
+ *
+ * 1. **No creation of products or orders, and no deletion of anything.** An
+ *    assistant that can edit what exists is useful; one that can invent
+ *    catalogue entries or remove a seller's records is a liability. Coupons are
+ *    the one create, because a coupon is additive and expires.
+ * 2. **Every field is optional and absent means untouched.** A patch that
+ *    reaches only the field the seller asked about cannot blank the eleven it
+ *    never mentioned.
+ * 3. **The bodies validate here, but the *rules* stay in the domain services.**
+ *    These schemas check shape; `updateProduct`, `createCoupon` and
+ *    `updateOrderStatus` still enforce slug/SKU uniqueness, coupon invariants
+ *    and status transitions, so the API cannot reach a state the dashboard
+ *    could not.
+ */
+
+const aiMoneySchema = z
+  .union([z.string(), z.number()])
+  .transform((value) => String(value).trim())
+  .refine((value) => /^\d+(\.\d{1,2})?$/.test(value), {
+    message: "Use a valid amount with up to 2 decimal places."
+  });
+
+const aiOptionalTextSchema = (max: number) =>
+  z
+    .union([z.string().trim().max(max), z.null()])
+    .transform((value) => value || null)
+    .optional();
+
+export const aiProductUpdateBodySchema = z
+  .strictObject({
+    compareAtPrice: z.union([aiMoneySchema, z.null()]).optional(),
+    description: aiOptionalTextSchema(10000),
+    features: aiOptionalTextSchema(2000),
+    keywords: aiOptionalTextSchema(500),
+    metaDescription: aiOptionalTextSchema(160),
+    price: aiMoneySchema.optional(),
+    seoTitle: aiOptionalTextSchema(70),
+    shortDescription: aiOptionalTextSchema(320),
+    socialCaption: aiOptionalTextSchema(600),
+    status: aiProductStatusSchema.optional(),
+    stockQuantity: z.coerce.number().int().min(0).optional(),
+    title: z.string().trim().min(2).max(160).optional(),
+    visibility: aiProductVisibilitySchema.optional()
+  })
+  .refine((value) => Object.keys(value).length > 0, {
+    message: "Send at least one field to update."
+  });
+
+export type AiProductUpdateBody = z.infer<typeof aiProductUpdateBodySchema>;
+
+export const aiProductUpdateResponseSchema = z.strictObject({
+  /** The field names that actually changed, so the assistant can say so. */
+  changed: z.array(z.string()),
+  product: aiProductSchema,
+  storeId: z.string()
+});
+
+export type AiProductUpdateResponse = z.infer<typeof aiProductUpdateResponseSchema>;
+
+/**
+ * Coupon creation.
+ *
+ * A thin echo of `createCouponSchema` rather than a re-import of it: that schema
+ * is shaped for an HTML form, where every key is always present and dates
+ * arrive as `YYYY-MM-DD` strings. This one is shaped for a JSON caller, and the
+ * values it produces are handed straight to `createCoupon`, which re-validates
+ * them against the real thing including every cross-field invariant.
+ */
+export const aiCouponCreateBodySchema = z.strictObject({
+  code: z.string().trim().min(3).max(40),
+  description: z.string().trim().max(500).optional(),
+  discountType: z.enum(["FIXED_CART", "FREE_SHIPPING", "PERCENTAGE"]).default("PERCENTAGE"),
+  discountValue: aiMoneySchema,
+  /** `YYYY-MM-DD`, read as the end of that day. */
+  expiresAt: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  maxDiscountAmount: aiMoneySchema.optional(),
+  maxSubtotal: aiMoneySchema.optional(),
+  minSubtotal: aiMoneySchema.optional(),
+  name: z.string().trim().min(2).max(140),
+  startsAt: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
+  usageLimitPerCustomer: z.coerce.number().int().min(1).optional(),
+  usageLimitTotal: z.coerce.number().int().min(1).optional()
+});
+
+export type AiCouponCreateBody = z.infer<typeof aiCouponCreateBodySchema>;
+
+export const aiCouponSchema = z.strictObject({
+  code: z.string(),
+  discountType: z.string(),
+  discountValue: z.string(),
+  expiresAt: z.string().nullable(),
+  id: z.string(),
+  name: z.string(),
+  startsAt: z.string().nullable(),
+  status: z.string()
+});
+
+export const aiCouponCreateResponseSchema = z.strictObject({
+  coupon: aiCouponSchema,
+  storeId: z.string()
+});
+
+export type AiCouponCreateResponse = z.infer<typeof aiCouponCreateResponseSchema>;
+
+/**
+ * Order status.
+ *
+ * Exactly the three the dashboard's own buttons set. `PENDING` and `CONFIRMED`
+ * are absent because nothing in the dashboard moves an order *back* into them,
+ * and an API that can is an API that can undo a seller's decision. Refunds and
+ * payment status are not here at all: money moving is not an agent's call.
+ */
+export const aiOrderStatusUpdateSchema = z.enum(["CANCELLED", "COMPLETED", "PROCESSING"]);
+
+export const aiOrderStatusBodySchema = z.strictObject({
+  status: aiOrderStatusUpdateSchema
+});
+
+export type AiOrderStatusBody = z.infer<typeof aiOrderStatusBodySchema>;
+
+export const aiOrderStatusResponseSchema = z.strictObject({
+  id: z.string(),
+  orderNumber: z.string(),
+  /** What it was, so the assistant can report the change rather than the state. */
+  previousStatus: aiOrderStatusSchema,
+  status: aiOrderStatusSchema,
+  storeId: z.string()
+});
+
+export type AiOrderStatusResponse = z.infer<typeof aiOrderStatusResponseSchema>;

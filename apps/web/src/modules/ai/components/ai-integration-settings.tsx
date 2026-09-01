@@ -9,7 +9,7 @@ import { ApiKeyRevealPanel, SecretValue } from "./api-key-reveal-panel";
 import type { AiKeyActionState } from "../ai-key.actions";
 import type { AiScope, ApiKeySummary } from "../ai.schema";
 import { storeOSPhaseLabel } from "../../storeos/storeos-connection-state";
-// One definition of "what state is this connection in", shared with the Dash AI
+// One definition of "what state is this connection in", shared with the StoreIM AI
 // settings page. Two summaries of the same row that disagree is worse than one.
 import type { StoreOSConnectionView } from "../../storeos/storeos-connection-state";
 
@@ -247,7 +247,7 @@ function ConnectionSummary({
           )}
         </div>
         <a className="text-xs font-semibold text-[#6d3cf5] hover:underline" href="/dashboard/ai">
-          Open Dash AI
+          Open StoreIM AI
         </a>
       </div>
 

@@ -386,6 +386,51 @@ export async function getStorefrontProductBySlug(storeId: string, productSlug: s
 }
 
 /**
+ * Named products, in the order they were asked for.
+ *
+ * For surfaces that already hold ids and need the rows behind them — the AI
+ * Shopping Agent re-reading the products a model named before it will draw a
+ * card for one. It goes through `publicProductWhere` like every other read in
+ * this file, which is the point: an id for a DRAFT, HIDDEN or another store's
+ * product simply does not come back, so a caller cannot surface one by holding
+ * its id.
+ *
+ * The order is restored afterwards because the database has no opinion about it
+ * and a comparison table's columns have to line up with the sentence above them.
+ */
+export async function getStorefrontProductsByIds(storeId: string, productIds: string[]) {
+  const unique = [...new Set(productIds.filter(Boolean))];
+
+  if (unique.length === 0) {
+    return [];
+  }
+
+  await ensureCategoryImageSchema();
+
+  const products = await prisma.product.findMany({
+    where: {
+      ...publicProductWhere(storeId),
+      id: {
+        in: unique
+      }
+    },
+    include: {
+      category: true,
+      images: {
+        orderBy: {
+          position: "asc"
+        }
+      }
+    }
+  });
+  const byId = new Map(products.map((product) => [product.id, product]));
+
+  return unique
+    .map((id) => byId.get(id))
+    .filter((product): product is (typeof products)[number] => product !== undefined);
+}
+
+/**
  * The rail under a product, filled from three sources in falling order of how
  * much each one actually knows:
  *

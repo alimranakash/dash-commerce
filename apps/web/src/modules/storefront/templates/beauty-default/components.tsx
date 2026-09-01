@@ -15,6 +15,7 @@ import {
 import type { StorefrontProduct } from "../../storefront.types";
 import { FashionHeroSlider } from "../fashion-default/fashion-hero-slider";
 import { BEAUTY_PRODUCT_CARD_VARIANT, BeautyListingCard } from "./beauty-listing-card";
+import { toProductCardProduct, toProductCardProducts } from "../../product-card-data";
 
 type BeautySectionProps = {
   actionHref?: string;
@@ -201,7 +202,7 @@ export async function BeautyProductGrid({
         cardVariant={BEAUTY_PRODUCT_CARD_VARIANT}
         currency={currency}
         gridId={gridId}
-        products={products}
+        products={toProductCardProducts(products)}
         section={section}
         storeId={storeId}
         storeSlug={storeSlug}
@@ -245,7 +246,7 @@ export function BeautyProductCard({
   return (
     <BeautyListingCard
       currency={currency}
-      product={product}
+      product={toProductCardProduct(product)}
       section={DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.listing}
       storeId={product.storeId}
       storeSlug={storeSlug}

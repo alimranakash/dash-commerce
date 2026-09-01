@@ -6,6 +6,7 @@ import {
   getMarketingMetaTags,
   getMarketingTagPlan
 } from "../../../modules/marketing/marketing.service";
+import { ShoppingAgentDock } from "../../../modules/shopping-agent/components/shopping-agent-dock";
 import { storefrontBasePath } from "../../../modules/storefront/base-path";
 import { StorefrontBasePathProvider } from "../../../modules/storefront/base-path-provider";
 import { ScrollToTopButton } from "../../../modules/storefront/components/scroll-to-top-button";
@@ -101,6 +102,10 @@ export default async function StorefrontLayout({ children, params }: StorefrontL
         {/* Inside the theme scope so the fixed button inherits this store's colour
           tokens and template attribute; mounted here, once, instead of per footer. */}
         <ScrollToTopButton />
+        {/* Once for the whole storefront, so the conversation survives a shopper
+          moving from a category to a product to the cart. Renders nothing unless
+          the seller switched the assistant on and the store is entitled to it. */}
+        <ShoppingAgentDock store={store} />
         <MarketingTags tags={marketing.bodyEnd} />
       </StorefrontBasePathProvider>
     </StorefrontThemeProvider>
