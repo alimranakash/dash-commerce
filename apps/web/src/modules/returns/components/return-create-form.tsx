@@ -3,7 +3,8 @@
 import { Button } from "@dash/ui";
 import { ImageIcon, Info } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import type { OrderReturnActionState } from "../return.actions";
 import { orderRefundMethods, orderReturnReasons, orderReturnTypes } from "../return.schema";
 import type { OrderReturnType } from "../return.schema";
@@ -74,6 +75,13 @@ export function ReturnCreateForm({
   shippingAmount
 }: ReturnCreateFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
+  const { openUpgrade } = useUpgradePrompt();
+
+  // A plan refusal opens the shared upgrade dialog rather than reading as a
+  // validation error the seller could fix by editing the fields.
+  useEffect(() => {
+    openUpgrade(state.lockedFeature);
+  }, [openUpgrade, state]);
   const [type, setType] = useState<OrderReturnType>(defaultType);
   const [rows, setRows] = useState<LineState[]>(() =>
     lines.map((line) => ({
@@ -149,7 +157,7 @@ export function ReturnCreateForm({
       <input name="items" type="hidden" value={itemsPayload} />
       <input name="type" type="hidden" value={type} />
 
-      {state.status === "error" && state.message ? (
+      {state.status === "error" && state.message && !state.lockedFeature ? (
         <p className="error-message">{state.message}</p>
       ) : null}
 

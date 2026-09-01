@@ -82,12 +82,12 @@ const TURN_COST = 2;
 /** Tool reads per turn. The plan schema already caps the model's ask at four. */
 const MAX_TOOLS_PER_TURN = 4;
 
-/** Shown to a store with neither a plan nor a key, on the page and in the chat. */
+/** Shown to a store whose plan does not include the copilot, on the page and in the chat. */
 export const STORE_COPILOT_LOCKED_MESSAGE =
-  "StoreIM AI is part of a paid plan. Upgrade to unlock it, or add your own Gemini or OpenAI key in StoreIM AI settings — a key you own works on any plan.";
+  "The AI Store Copilot is not included in your current plan. Upgrade from Billing to unlock it.";
 
 export type StoreCopilotCapability = {
-  /** Neither a provider key nor a plan that grants `ai`. Nothing will answer. */
+  /** The plan does not grant `ai_copilot`. Nothing will answer. */
   locked: boolean;
   /** The provider label for the UI, or null when there is no key. */
   providerLabel: string | null;
@@ -98,9 +98,14 @@ export type StoreCopilotCapability = {
  * Whether this store can hold a conversation, for the page's banner.
  *
  * The page uses it to decide what to render — the chat, the key prompt, or the
- * upgrade panel. It is never the enforcement: `askStoreCopilot` re-resolves both
- * the credential and the entitlement itself rather than trusting a prop, so a
- * locked store that reaches the action anyway is still refused.
+ * upgrade panel. It is never the enforcement: `askStoreCopilot` re-resolves the
+ * entitlement itself rather than trusting a prop, so a locked store that reaches
+ * the action anyway is still refused.
+ *
+ * **The plan alone decides `locked`.** A store's own Gemini or OpenAI key is
+ * what makes `ready` true — it chooses *who writes the answer*, and buys a real
+ * conversation over the offline briefing — but it never buys the surface. The
+ * shopping agent and the content studio draw the same line.
  */
 export async function getStoreCopilotCapability(storeId: string): Promise<StoreCopilotCapability> {
   const [provider, planAllowsAi] = await Promise.all([
@@ -109,7 +114,7 @@ export async function getStoreCopilotCapability(storeId: string): Promise<StoreC
   ]);
 
   return {
-    locked: !provider && !planAllowsAi,
+    locked: !planAllowsAi,
     providerLabel: provider ? AI_PROVIDER_META[provider.provider].label : null,
     ready: provider !== null
   };
@@ -140,8 +145,9 @@ export async function askStoreCopilot(
   ]);
 
   // Re-checked here rather than trusted from the page, so the entitlement holds
-  // for anything that can reach the server action.
-  if (!provider && !planAllowsAi) {
+  // for anything that can reach the server action. The plan is the whole test:
+  // a key the store owns picks the engine, it does not buy the surface.
+  if (!planAllowsAi) {
     return {
       action: null,
       actionPreview: null,

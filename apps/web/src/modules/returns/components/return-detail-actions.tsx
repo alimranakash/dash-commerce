@@ -2,7 +2,8 @@
 
 import { Button } from "@dash/ui";
 import { CheckCircle2, PackageCheck, ThumbsUp, Trash2, Truck, XCircle } from "lucide-react";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import {
   advanceOrderReturnStatusFormAction,
   deleteOrderReturnFormAction,
@@ -89,10 +90,17 @@ export function ReturnRefundForm({
   refundAmount: number;
 }) {
   const [state, formAction, isPending] = useActionState(action, initialState);
+  const { openUpgrade } = useUpgradePrompt();
+
+  // A plan refusal opens the shared upgrade dialog rather than reading as a
+  // validation error the seller could fix by editing the fields.
+  useEffect(() => {
+    openUpgrade(state.lockedFeature);
+  }, [openUpgrade, state]);
 
   return (
     <form action={formAction} className="grid gap-4">
-      {state.status === "error" && state.message ? (
+      {state.status === "error" && state.message && !state.lockedFeature ? (
         <p className="error-message">{state.message}</p>
       ) : null}
       <p className="m-0 text-xs text-[#777985]">

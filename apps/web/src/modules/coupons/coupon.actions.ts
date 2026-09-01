@@ -3,13 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
-import { requirePlanFeature } from "../billing/subscription-limits";
+import type { PlanFeatureKey } from "../billing/plan-features";
+import { PlanFeatureError, requirePlanFeature } from "../billing/subscription-limits";
 import { requireStore } from "../stores/queries";
 import { CouponError, createCoupon, deleteCoupon, setCouponStatus, updateCoupon } from "./coupon.service";
 import type { CouponFormInput } from "./coupon.schema";
 
 export type CouponActionState = {
   fieldErrors?: Record<string, string>;
+  /** Set when the plan refused the write, so the form can open the upgrade dialog. */
+  lockedFeature?: PlanFeatureKey;
   message?: string;
   status: "error" | "idle";
 };
@@ -139,6 +142,13 @@ function optionalValue(value: FormDataEntryValue | null | undefined) {
 }
 
 function couponErrorState(error: unknown): CouponActionState {
+  // Carried as a key rather than left as a sentence, so the form opens the
+  // dashboard's shared upgrade dialog instead of printing the refusal as though
+  // it were a validation error the seller could fix in the fields.
+  if (error instanceof PlanFeatureError) {
+    return { lockedFeature: error.featureKey, message: error.message, status: "error" };
+  }
+
   if (error instanceof ZodError) {
     return {
       fieldErrors: Object.fromEntries(

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { ZodError } from "zod";
+import type { PlanFeatureKey } from "../billing/plan-features";
 import { PlanFeatureError, requirePlanFeature } from "../billing/subscription-limits";
 import { StoreAccessError, requireStoreManager } from "../stores/queries";
 import {
@@ -41,6 +42,8 @@ export type AiKeyActionState = {
     scopes: AiScope[];
   };
   fieldErrors?: Record<string, string>;
+  /** Set when the plan refused the write, so the form can open the upgrade dialog. */
+  lockedFeature?: PlanFeatureKey;
   message?: string;
   /** Set by a successful reveal — the stored key, decrypted for this render. */
   revealedKey?: {
@@ -198,11 +201,13 @@ function toErrorState(error: unknown, fallback: string): AiKeyActionState {
     };
   }
 
-  if (
-    error instanceof StoreAccessError ||
-    error instanceof AiApiKeyError ||
-    error instanceof PlanFeatureError
-  ) {
+  // Carried as a key so the form opens the shared upgrade dialog rather than
+  // printing the refusal as though it were a field the seller could fix.
+  if (error instanceof PlanFeatureError) {
+    return { lockedFeature: error.featureKey, message: error.message, status: "error" };
+  }
+
+  if (error instanceof StoreAccessError || error instanceof AiApiKeyError) {
     return { message: error.message, status: "error" };
   }
 

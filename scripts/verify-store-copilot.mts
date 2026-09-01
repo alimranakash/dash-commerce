@@ -418,13 +418,17 @@ check(
 
 console.log("\n=== StoreIM AI is a paid entitlement ===");
 
-check("`ai` is a registered feature key", PLAN_FEATURE_KEYS.includes("ai"));
-check("`ai` is paid — the Free tier does not grant it", isPaidFeature("ai"));
+check("`ai_copilot` is a registered feature key", PLAN_FEATURE_KEYS.includes("ai_copilot"));
+check("`ai_copilot` is paid — the Free tier does not grant it", isPaidFeature("ai_copilot"));
 
-// `aiEnabled` gates the services and the `ai` key draws the sidebar badge. They
-// are two spellings of one entitlement, so a plan carrying one without the other
-// means either a "Paid" pill over a working page or a working page with no pill.
-const aiKeyPlans = PLAN_CATALOG.filter((plan) => plan.features.includes("ai"))
+// `aiEnabled` is the pricing table's "this plan includes some StoreIM AI" flag,
+// and the three per-surface keys are what the services read. A plan carrying one
+// without the other means either a "Paid" pill over a working page or a working
+// page with no pill, so the two are asserted to agree.
+const AI_SURFACE_KEYS = ["ai_copilot", "ai_product_content", "ai_shopping_agent"] as const;
+const aiKeyPlans = PLAN_CATALOG.filter((plan) =>
+  AI_SURFACE_KEYS.some((key) => plan.features.includes(key))
+)
   .map((plan) => plan.slug)
   .sort();
 const aiFlagPlans = PLAN_CATALOG.filter((plan) => plan.aiEnabled)
@@ -432,16 +436,20 @@ const aiFlagPlans = PLAN_CATALOG.filter((plan) => plan.aiEnabled)
   .sort();
 
 check(
-  "the `ai` key is granted by exactly the plans with aiEnabled",
+  "some StoreIM AI key is granted by exactly the plans with aiEnabled",
   aiKeyPlans.join(",") === aiFlagPlans.join(","),
-  `key: [${aiKeyPlans.join(", ")}] vs aiEnabled: [${aiFlagPlans.join(", ")}]`
+  `keys: [${aiKeyPlans.join(", ")}] vs aiEnabled: [${aiFlagPlans.join(", ")}]`
 );
-check("and that is Growth and Pro", aiKeyPlans.join(",") === "growth,pro", aiKeyPlans.join(", "));
+check(
+  "and that is Starter up",
+  aiKeyPlans.join(",") === "growth,pro,starter",
+  aiKeyPlans.join(", ")
+);
 
 check(
-  "the copilot refuses a store with neither a plan nor its own key",
-  source.service.includes("canUseAI") &&
-    source.service.includes("if (!provider && !planAllowsAi)") &&
+  "the copilot refuses a store whose plan does not include it",
+  source.service.includes('hasPlanFeature(storeId, "ai_copilot")') &&
+    source.service.includes("if (!planAllowsAi)") &&
     source.service.includes("STORE_COPILOT_LOCKED_MESSAGE")
 );
 check(
@@ -449,11 +457,13 @@ check(
   source.actions.includes("getStoreCopilotCapability(store.id)).locked")
 );
 check(
-  // The one exemption, and the same one `canGenerateProductContent` makes: a
-  // merchant paying their own model bill is not something a plan may block.
-  "a store on its own provider key is never plan-gated",
-  source.service.includes("if (!provider && !planAllowsAi)") &&
-    !source.service.includes("if (!planAllowsAi)")
+  // The rule the plan sells on, shared with the content studio and the shopping
+  // agent: a key the merchant owns picks the engine that writes the answer, and
+  // buys a real conversation over the offline briefing. It is not a second way
+  // to qualify for the surface.
+  "an own provider key does not stand in for the plan",
+  !source.service.includes("if (!provider && !planAllowsAi)") &&
+    source.service.includes("locked: !planAllowsAi")
 );
 
 console.log("\n=== Redaction is inherited, not re-implemented ===");

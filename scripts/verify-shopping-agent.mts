@@ -599,17 +599,23 @@ check(
 
 console.log("\n=== StoreIM AI is a paid entitlement, and the seller opts in ===");
 
-check("`ai` is a registered feature key", PLAN_FEATURE_KEYS.includes("ai"));
-check("`ai` is paid — the Free tier does not grant it", isPaidFeature("ai"));
 check(
-  "the agent is gated on the same entitlement as the other StoreIM AI surfaces",
-  source.service.includes("canUseAI")
+  "`ai_shopping_agent` is a registered feature key",
+  PLAN_FEATURE_KEYS.includes("ai_shopping_agent")
 );
 check(
-  // The same exemption `canGenerateProductContent` and the copilot make: a
-  // merchant paying their own model bill is not something a plan may block.
-  "a shop on its own provider key is never plan-gated",
-  source.service.includes("Boolean(provider) || planAllowsAi")
+  "`ai_shopping_agent` is paid — the Free tier does not grant it",
+  isPaidFeature("ai_shopping_agent")
+);
+check(
+  "the agent is gated on its own key, not on the copilot's",
+  source.service.includes('hasPlanFeature(storeId, "ai_shopping_agent")')
+);
+check(
+  // The rule the plan sells on: a key the merchant owns picks the engine that
+  // writes the replies, it is not a second way to qualify for the surface.
+  "an own provider key does not stand in for the plan",
+  source.service.includes("entitled,") && !source.service.includes("Boolean(provider) ||")
 );
 check(
   "and the seller's own switch is required on top of the entitlement",
@@ -617,18 +623,36 @@ check(
     source.service.includes("!capability.enabled || !capability.entitled")
 );
 check(
-  "the switch defaults off, so holding a key never publishes an assistant by itself",
+  "the switch defaults off, so a plan alone never publishes an assistant",
   readFileSync(join(process.cwd(), "packages", "db", "prisma", "schema.prisma"), "utf8").includes(
     "shoppingAgentEnabled Boolean @default(false)"
   )
 );
+check(
+  // The hole this section was written after: the save action reflected the plan
+  // in its message and stored the `true` anyway, so an unentitled store kept a
+  // switch that would go live the moment it was entitled again.
+  "switching the agent ON is refused by the plan, in the action that writes it",
+  source.actions.includes('requirePlanFeature(store.id, "ai_shopping_agent")') &&
+    source.actions.includes("if (enabled) {")
+);
+check(
+  "and the refusal comes back as a key the page can open the upgrade dialog with",
+  source.actions.includes("lockedFeature: error.featureKey")
+);
+check(
+  // Symmetrical to the coupon, bundle and blocklist gates: a lapsed store has to
+  // be able to take a public assistant off its own storefront.
+  "switching it OFF is never gated",
+  !source.actions.includes("requirePlanFeature(store.id, \"ai_shopping_agent\");\n    const view")
+);
 
-const aiPlans = PLAN_CATALOG.filter((plan) => plan.features.includes("ai"))
+const aiPlans = PLAN_CATALOG.filter((plan) => plan.features.includes("ai_shopping_agent"))
   .map((plan) => plan.slug)
   .sort();
 
 check(
-  "the `ai` key is granted from Growth up",
+  "the `ai_shopping_agent` key is granted from Growth up",
   aiPlans.join(",") === "growth,pro",
   aiPlans.join(", ")
 );

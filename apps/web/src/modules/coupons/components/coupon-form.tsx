@@ -2,7 +2,8 @@
 
 import { CalendarDays } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useState, type InputHTMLAttributes, type ReactNode } from "react";
+import { useActionState, useEffect, useState, type InputHTMLAttributes, type ReactNode } from "react";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import type { CouponActionState } from "../coupon.actions";
 import type { CouponDiscountType, CouponStatus } from "../coupon.schema";
 
@@ -48,9 +49,16 @@ const initialState: CouponActionState = {
 
 export function CouponForm({ action, cancelHref, coupon, currency, heading }: CouponFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
+  const { openUpgrade } = useUpgradePrompt();
   const [discountType, setDiscountType] = useState<CouponDiscountType>(
     coupon?.discountType ?? "PERCENTAGE"
   );
+
+  // A plan refusal opens the shared upgrade dialog rather than reading as a
+  // validation error the seller could fix by editing the fields.
+  useEffect(() => {
+    openUpgrade(state.lockedFeature);
+  }, [openUpgrade, state]);
   const [status, setStatus] = useState<CouponStatus>(coupon?.status ?? "ACTIVE");
 
   const isPercentage = discountType === "PERCENTAGE";
@@ -88,7 +96,7 @@ export function CouponForm({ action, cancelHref, coupon, currency, heading }: Co
         </div>
       </div>
 
-      {state.status === "error" ? (
+      {state.status === "error" && !state.lockedFeature ? (
         <p
           aria-live="polite"
           className="m-0 rounded-lg border border-[#f5c9d0] bg-[#fdf2f4] px-4 py-3 text-sm text-[#b3273f]"

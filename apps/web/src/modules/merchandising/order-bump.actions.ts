@@ -2,13 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { ZodError } from "zod";
-import { requirePlanFeature } from "../billing/subscription-limits";
+import type { PlanFeatureKey } from "../billing/plan-features";
+import { PlanFeatureError, requirePlanFeature } from "../billing/subscription-limits";
 import { requireStore } from "../stores/queries";
 import { saveOrderBump } from "./order-bump.service";
 import type { OrderBumpDiscountType } from "./order-bump.schema";
 
 export type OrderBumpActionState = {
   fieldErrors?: Record<string, string>;
+  /** Set when the plan refused the write, so the form can open the upgrade dialog. */
+  lockedFeature?: PlanFeatureKey;
   message?: string;
   status: "error" | "idle" | "saved";
 };
@@ -54,6 +57,12 @@ function getValue(formData: FormData, key: string) {
 }
 
 function orderBumpErrorState(error: unknown): OrderBumpActionState {
+  // Carried as a key so the form opens the shared upgrade dialog rather than
+  // printing the refusal as though it were a field the seller could fix.
+  if (error instanceof PlanFeatureError) {
+    return { lockedFeature: error.featureKey, message: error.message, status: "error" };
+  }
+
   if (error instanceof ZodError) {
     return {
       fieldErrors: Object.fromEntries(

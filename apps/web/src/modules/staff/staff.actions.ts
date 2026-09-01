@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import { requireUser } from "../../lib/auth";
-import { requirePlanFeature } from "../billing/subscription-limits";
+import type { PlanFeatureKey } from "../billing/plan-features";
+import { PlanFeatureError, requirePlanFeature } from "../billing/subscription-limits";
 import { StoreAccessError, requireStoreManager } from "../stores/queries";
 import {
   StaffError,
@@ -19,6 +20,8 @@ import type { AssignableStaffRole, OrganizationRole } from "./staff.schema";
 
 export type StaffActionState = {
   fieldErrors?: Record<string, string>;
+  /** Set when the plan refused the write, so the form can open the upgrade dialog. */
+  lockedFeature?: PlanFeatureKey;
   /**
    * Set only by a successful invite. `path` is relative because the raw token
    * exists for one render and the browser already knows which host it is on —
@@ -196,6 +199,12 @@ function revalidateTeam() {
 }
 
 function toErrorState(error: unknown, fallback: string): StaffActionState {
+  // Carried as a key so the form opens the shared upgrade dialog rather than
+  // printing the refusal as though it were a field the seller could fix.
+  if (error instanceof PlanFeatureError) {
+    return { lockedFeature: error.featureKey, message: error.message, status: "error" };
+  }
+
   if (error instanceof StaffError) {
     return { fieldErrors: error.fieldErrors, message: error.message, status: "error" };
   }

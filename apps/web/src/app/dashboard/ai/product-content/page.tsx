@@ -61,11 +61,11 @@ export default async function AiProductContentPage() {
 
         {aiEnabled ? null : (
           <p className="ai-studio-warning">
-            Generating is off: this store has no Gemini or OpenAI key of its own, and its plan does
-            not include StoreIM AI. Add your own key in{" "}
-            <Link href="/dashboard/ai/settings">StoreIM AI settings</Link> — a key you bring is never
-            plan-gated — or <Link href={BILLING_UPGRADE_PATH}>see plans</Link>. Every content field
-            can still be written and saved by hand.
+            Generating is off: this store&apos;s plan does not include AI Product Content.{" "}
+            <Link href={BILLING_UPGRADE_PATH}>See plans</Link> to unlock it. A Gemini or OpenAI key
+            of your own chooses which engine writes the drafts once the plan includes the studio; it
+            does not open the studio on its own. Every content field can still be written and saved
+            by hand.
           </p>
         )}
 
@@ -83,7 +83,7 @@ export default async function AiProductContentPage() {
                 {providerReady
                   ? "Ready"
                   : provider === "storeos"
-                    ? "Not available on this plan — add your own key, or upgrade"
+                    ? "Not available on this plan — upgrade to unlock it"
                     : `No ${AI_PROVIDER_META[provider].label} key stored — drafts fall back`}
               </dd>
               <dt>Model</dt>

@@ -454,15 +454,19 @@ function main() {
     "no provider call and no platform credential on the product side"
   );
   check(
-    "a key the seller owns is never plan-gated",
-    /canGenerateProductContent[\s\S]*?return ownKey \|\| planAi;/.test(service),
-    "they pay for the Gemini or OpenAI call, so no plan stands in the way"
+    "the studio is entitled by the plan and nothing else",
+    /canGenerateProductContent[\s\S]*?return hasPlanFeature\(storeId, "ai_product_content"\);/.test(
+      service
+    ),
+    "a key the seller owns picks the engine below; it does not open the studio"
   );
   check(
-    "generation is refused only when there is neither a key nor the plan",
-    /if \(!provider && !planAllowsDashAi\) \{\s*throw new ProductContentAiLockedError/.test(
-      service
-    )
+    "generation is refused whenever the plan does not include it",
+    /if \(!planAllowsDashAi\) \{\s*throw new ProductContentAiLockedError/.test(service)
+  );
+  check(
+    "and no own-key bypass survives beside either read",
+    !/ownKey \|\||\|\| planAi\b|!provider && !planAllowsDashAi/.test(service)
   );
   check(
     "the platform engine stays plan-gated",

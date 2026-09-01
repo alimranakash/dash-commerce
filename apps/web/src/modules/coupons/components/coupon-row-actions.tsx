@@ -3,6 +3,7 @@
 import { Loader2, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import { deleteCouponAction, setCouponStatusAction } from "../coupon.actions";
 import type { CouponStatus } from "../coupon.schema";
 
@@ -15,6 +16,7 @@ type CouponRowActionsProps = {
 export function CouponRowActions({ code, couponId, status }: CouponRowActionsProps) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const { openUpgrade } = useUpgradePrompt();
 
   function toggleStatus() {
     setError(null);
@@ -23,6 +25,13 @@ export function CouponRowActions({ code, couponId, status }: CouponRowActionsPro
         couponId,
         status === "ACTIVE" ? "INACTIVE" : "ACTIVE"
       );
+
+      // Re-activating is authoring, so an unentitled store is refused here and
+      // gets the upgrade dialog. Deactivating is never gated — see the action.
+      if (result.lockedFeature) {
+        openUpgrade(result.lockedFeature);
+        return;
+      }
 
       if (result.status === "error") {
         setError(result.message ?? "Coupon status could not be changed.");

@@ -5,11 +5,7 @@ import {
   requestOpenAiCompletion
 } from "../ai-provider/ai-provider-client";
 import { AI_PROVIDER_META } from "../ai-provider/ai-provider.schema";
-import {
-  getAiContentDefaults,
-  hasOwnAiProvider,
-  resolveAiProvider
-} from "../ai-provider/ai-provider.service";
+import { getAiContentDefaults, resolveAiProvider } from "../ai-provider/ai-provider.service";
 import { hasPlanFeature } from "../billing/subscription-limits";
 import { getProductByIdForStore } from "../products/product.repository";
 import {
@@ -85,23 +81,18 @@ export class ProductContentAiLockedError extends Error {
 /**
  * Whether the Generate buttons should be live for this store.
  *
- * Two independent ways to qualify, and the first is the one that was missing:
- *
- * - the store has **its own** provider key, which it pays for — no plan has any
- *   business standing in the way of a credential the seller bought; or
- * - the plan includes **StoreIM AI**, the platform's own engine, which the platform
- *   pays for and therefore gets to gate.
+ * The plan grant is the whole test. A store's own Gemini or OpenAI key decides
+ * *which engine writes the draft* — and `generateProductContent` prefers it over
+ * the platform's, because the seller is paying that bill — but it does not buy
+ * the studio itself. Entitlement is what the plan is sold on, so a key is never
+ * a way around the tier a feature sits at; the copilot and the shopping agent
+ * draw the same line.
  *
  * Pages call this to decide whether to disable the buttons, and
  * `generateProductContent` re-checks it rather than trusting them.
  */
 export async function canGenerateProductContent(storeId: string) {
-  const [ownKey, planAi] = await Promise.all([
-    hasOwnAiProvider(storeId),
-    hasPlanFeature(storeId, "ai_product_content")
-  ]);
-
-  return ownKey || planAi;
+  return hasPlanFeature(storeId, "ai_product_content");
 }
 
 /**
@@ -170,7 +161,9 @@ export async function generateProductContent(
     hasPlanFeature(storeId, "ai_product_content")
   ]);
 
-  if (!provider && !planAllowsDashAi) {
+  // The plan is the whole gate. A key the store owns chooses the engine below;
+  // it does not unlock the studio, so this holds for anything reaching here.
+  if (!planAllowsDashAi) {
     throw new ProductContentAiLockedError();
   }
 

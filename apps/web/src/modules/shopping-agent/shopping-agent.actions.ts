@@ -6,6 +6,8 @@ import { ZodError } from "zod";
 import { readClientIp } from "../../lib/request-ip";
 import { saveShoppingAgentSettings } from "../ai-provider/ai-provider.service";
 import type { AiSettingsView } from "../ai-provider/ai-provider.schema";
+import type { PlanFeatureKey } from "../billing/plan-features";
+import { PlanFeatureError, requirePlanFeature } from "../billing/subscription-limits";
 import { storefrontBasePath } from "../storefront/base-path";
 import { getStorefrontBySlug } from "../storefront/resolver";
 import { requireStoreManager } from "../stores/queries";
@@ -205,12 +207,30 @@ async function resolveAgentStore(storeSlug: string): Promise<ShoppingAgentStore 
 export type ShoppingAgentSettingsState = {
   /** The store's live standing after the save, recomputed on the server. */
   capability?: ShoppingAgentCapability;
+  /** Set when the plan refused the save, so the page can open the upgrade dialog. */
+  lockedFeature?: PlanFeatureKey;
   message?: string;
   status: "idle" | "success" | "error";
   /** The saved settings, so the form re-renders from the server's word for it. */
   view?: AiSettingsView;
 };
 
+/**
+ * Switching the assistant on is a **write to the storefront**, so the plan is
+ * checked here and not merely reflected in the panel.
+ *
+ * The previous version saved whatever the switch said and told an unentitled
+ * seller "Saved, but nothing will answer" — which stored a `true` the storefront
+ * would honour the moment the store was entitled again, and read as though the
+ * plan were a delivery delay rather than a gate. `requirePlanFeature` refuses
+ * instead, and `PlanFeatureError` is turned into `lockedFeature` so the seller
+ * gets the upgrade dialog every other gated form in the dashboard opens.
+ *
+ * Switching it **off** is deliberately left ungated, the same line
+ * `coupon.actions.ts` draws on deactivating a coupon: a public assistant that is
+ * answering customers has to be stoppable by the seller whose shop it is
+ * standing in, whatever has happened to their billing.
+ */
 export async function saveShoppingAgentSettingsAction(
   _state: ShoppingAgentSettingsState,
   formData: FormData
@@ -218,10 +238,15 @@ export async function saveShoppingAgentSettingsAction(
   try {
     const { store } = await requireStoreManager();
     const enabled = formData.get("shoppingAgentEnabled") === "on";
+
+    if (enabled) {
+      await requirePlanFeature(store.id, "ai_shopping_agent");
+    }
+
     const view = await saveShoppingAgentSettings(store.id, { enabled });
-    // Read back rather than assumed from `enabled`: a store that is switched on
-    // but has lost its plan and holds no key is not live, and the panel has to
-    // say so instead of congratulating the seller.
+    // Read back rather than assumed from `enabled`: a store switched on whose
+    // plan has since lapsed is not live, and the panel has to say so instead of
+    // congratulating the seller.
     const capability = await getShoppingAgentCapability(store.id);
 
     revalidatePath("/dashboard/ai/shopping-agent");
@@ -233,14 +258,16 @@ export async function saveShoppingAgentSettingsAction(
     return {
       capability,
       message: capability.enabled
-        ? capability.entitled
-          ? "The shopping assistant is live on your storefront."
-          : "Saved, but nothing will answer until this store has StoreIM AI."
+        ? "The shopping assistant is live on your storefront."
         : "The shopping assistant is switched off.",
       status: "success",
       view
     };
   } catch (error) {
+    if (error instanceof PlanFeatureError) {
+      return { lockedFeature: error.featureKey, message: error.message, status: "error" };
+    }
+
     return {
       message: error instanceof Error ? error.message : "That setting could not be saved.",
       status: "error"

@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import { saveOrderBumpFormAction, type OrderBumpActionState } from "../order-bump.actions";
 import { orderBumpOfferPrice, type OrderBumpDiscountType } from "../order-bump.schema";
 import type { OrderBumpProductOption, OrderBumpSettings } from "../order-bump.service";
@@ -17,6 +18,13 @@ const initialState: OrderBumpActionState = {
 
 export function OrderBumpForm({ currency, products, settings }: OrderBumpFormProps) {
   const [state, formAction, isPending] = useActionState(saveOrderBumpFormAction, initialState);
+  const { openUpgrade } = useUpgradePrompt();
+
+  // A plan refusal opens the shared upgrade dialog rather than reading as a
+  // validation error the seller could fix by editing the fields.
+  useEffect(() => {
+    openUpgrade(state.lockedFeature);
+  }, [openUpgrade, state]);
   const [enabled, setEnabled] = useState(settings.enabled);
   const [productId, setProductId] = useState(settings.productId ?? "");
   const [discountType, setDiscountType] = useState<OrderBumpDiscountType>(settings.discountType);
@@ -41,7 +49,7 @@ export function OrderBumpForm({ currency, products, settings }: OrderBumpFormPro
 
   return (
     <form action={formAction} className="grid max-w-3xl gap-5">
-      {state.status === "error" ? (
+      {state.status === "error" && !state.lockedFeature ? (
         <p className="m-0 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700">{state.message}</p>
       ) : null}
       {state.status === "saved" ? (

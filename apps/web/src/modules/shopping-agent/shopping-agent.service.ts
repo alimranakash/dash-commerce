@@ -124,7 +124,7 @@ export type ShoppingAgentCapability = {
   enabled: boolean;
   /** The provider label for the badge, or null when it runs guided. */
   providerLabel: string | null;
-  /** False when neither a plan nor a key backs it, whatever the switch says. */
+  /** False unless the plan grants `ai_shopping_agent`, whatever the switch says. */
   entitled: boolean;
 };
 
@@ -134,11 +134,18 @@ export type ShoppingAgentCapability = {
  * Read on the storefront layout, and re-resolved inside `askShoppingAgent`
  * rather than trusted from a prop — a shop that switched the agent off, or lost
  * its plan, must not keep answering through a browser tab that was already open.
+ *
+ * **The plan is the only thing that grants this.** A store's own Gemini or
+ * OpenAI key decides *who writes the replies*, never *whether there is an
+ * assistant to write them* — a key is not a way around the tier a feature is
+ * sold at. `getStoreCopilotCapability` and `canGenerateProductContent` draw the
+ * same line, so all three StoreIM AI surfaces answer the entitlement question
+ * the one way: the plan, and nothing else.
  */
 export async function getShoppingAgentCapability(
   storeId: string
 ): Promise<ShoppingAgentCapability> {
-  const [provider, planAllowsAi, enabled] = await Promise.all([
+  const [provider, entitled, enabled] = await Promise.all([
     resolveAiProvider(storeId),
     hasPlanFeature(storeId, "ai_shopping_agent"),
     isShoppingAgentEnabled(storeId)
@@ -146,7 +153,7 @@ export async function getShoppingAgentCapability(
 
   return {
     enabled,
-    entitled: Boolean(provider) || planAllowsAi,
+    entitled,
     providerLabel: provider ? AI_PROVIDER_META[provider.provider].label : null
   };
 }

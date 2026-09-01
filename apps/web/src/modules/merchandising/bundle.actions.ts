@@ -3,13 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
-import { requirePlanFeature } from "../billing/subscription-limits";
+import type { PlanFeatureKey } from "../billing/plan-features";
+import { PlanFeatureError, requirePlanFeature } from "../billing/subscription-limits";
 import { requireStore } from "../stores/queries";
 import { deleteBundle, saveBundle, setBundleStatus } from "./bundle.service";
 import type { BundleDiscountType, BundleStatus, BundleType } from "./bundle.schema";
 
 export type BundleActionState = {
   fieldErrors?: Record<string, string>;
+  /** Set when the plan refused the write, so the form can open the upgrade dialog. */
+  lockedFeature?: PlanFeatureKey;
   message?: string;
   status: "error" | "idle";
 };
@@ -134,6 +137,12 @@ function getValue(formData: FormData, key: string) {
 }
 
 function bundleErrorState(error: unknown): BundleActionState {
+  // Carried as a key so the form opens the shared upgrade dialog rather than
+  // printing the refusal as though it were a field the seller could fix.
+  if (error instanceof PlanFeatureError) {
+    return { lockedFeature: error.featureKey, message: error.message, status: "error" };
+  }
+
   if (error instanceof ZodError) {
     return {
       fieldErrors: Object.fromEntries(

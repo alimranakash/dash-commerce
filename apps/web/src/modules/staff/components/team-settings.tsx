@@ -1,7 +1,8 @@
 "use client";
 
 import { ArrowUpRight, Loader2, MailPlus, Trash2, UserMinus, Users } from "lucide-react";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import { DashboardCard } from "../../../components/dashboard/dashboard-card";
 import { DeleteConfirmationButton } from "../../../components/dashboard/delete-confirmation-button";
 import { StatusBadge } from "../../../components/dashboard/status-badge";
@@ -375,8 +376,24 @@ function MemberRow({
   );
 }
 
+/**
+ * The one place a staff action's outcome is rendered, which is why the upgrade
+ * dialog is opened from here rather than from each of the four rows that own a
+ * `useActionState`. Inviting and changing a role are the gated halves of Team;
+ * revoking and removing are not, so only some of these ever carry a refusal.
+ */
 function ActionMessage({ state }: { state: StaffActionState }) {
   const isSuccess = state.status === "success";
+  const { openUpgrade } = useUpgradePrompt();
+
+  useEffect(() => {
+    openUpgrade(state.lockedFeature);
+  }, [openUpgrade, state]);
+
+  // The dialog says it; a red box under the row would only say it twice.
+  if (state.lockedFeature) {
+    return null;
+  }
 
   return (
     <p

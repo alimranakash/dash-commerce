@@ -2,6 +2,8 @@ import { Trash2 } from "lucide-react";
 import { DeleteConfirmationButton } from "../../../components/dashboard/delete-confirmation-button";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { FeatureGate } from "../../billing/components/feature-gate";
+import { LockedFeaturePrompt } from "../../billing/components/locked-feature-prompt";
+import type { PlanFeatureKey } from "../../billing/plan-features";
 import {
   createSearchBoostFormAction,
   createSearchRedirectFormAction,
@@ -15,6 +17,8 @@ import type { getSearchDiscoveryOverview } from "../search-admin.service";
 type SearchDiscoveryManagementProps = {
   boostableProducts: Array<{ id: string; title: string }>;
   error?: string | null;
+  /** The key a refused save came back with, or null on an ordinary render. */
+  lockedFeature?: PlanFeatureKey | null;
   message?: string | null;
   overview: Awaited<ReturnType<typeof getSearchDiscoveryOverview>>;
   storeId: string;
@@ -24,6 +28,7 @@ type SearchDiscoveryManagementProps = {
 export function SearchDiscoveryManagement({
   boostableProducts,
   error,
+  lockedFeature = null,
   message,
   overview,
   storeId,
@@ -43,6 +48,7 @@ export function SearchDiscoveryManagement({
           */}
           <FeatureGate feature="search_discovery" storeId={storeId} />
         </div>
+        <LockedFeaturePrompt feature={lockedFeature} />
         {message ? <p className="success-message">{message}</p> : null}
         {error ? <p className="form-error">{error}</p> : null}
 

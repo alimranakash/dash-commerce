@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useEffect, type ReactNode } from "react";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import { AudienceRuleBuilder } from "./audience-rule-builder";
 import type { MarketingActionState } from "../audience.actions";
 import type { AudienceRules } from "../audience.schema";
@@ -30,6 +31,13 @@ export function AudienceForm({
   heading
 }: AudienceFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
+  const { openUpgrade } = useUpgradePrompt();
+
+  // A plan refusal opens the shared upgrade dialog rather than reading as a
+  // validation error the seller could fix by editing the fields.
+  useEffect(() => {
+    openUpgrade(state.lockedFeature);
+  }, [openUpgrade, state]);
 
   return (
     <form action={formAction} className="grid gap-5">
@@ -52,7 +60,7 @@ export function AudienceForm({
         </div>
       </div>
 
-      {state.status === "error" ? (
+      {state.status === "error" && !state.lockedFeature ? (
         <p
           aria-live="polite"
           className="m-0 rounded-lg border border-[#f5c9d0] bg-[#fdf2f4] px-4 py-3 text-sm text-[#b3273f]"

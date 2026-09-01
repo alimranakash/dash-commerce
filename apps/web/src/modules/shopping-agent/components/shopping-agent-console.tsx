@@ -13,11 +13,23 @@ import {
   Sparkles
 } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useState, type ReactNode } from "react";
+import { useActionState, useEffect, useState, type ReactNode } from "react";
 import type { AiSettingsView } from "../../ai-provider/ai-provider.schema";
-import { BILLING_UPGRADE_PATH } from "../../billing/components/paid-badge";
+import { BILLING_UPGRADE_PATH, PaidBadge } from "../../billing/components/paid-badge";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
+import { minPlanForFeature } from "../../admin/plan-catalog";
 import type { ShoppingAgentSettingsState } from "../shopping-agent.actions";
 import type { ShoppingAgentCapability } from "../shopping-agent.service";
+
+/** The key this page is sold under, for the badge and the upgrade dialog. */
+const FEATURE = "ai_shopping_agent" as const;
+
+/**
+ * Name of the cheapest plan that includes it — "Growth" today. Read from the
+ * catalog rather than written into the copy, so re-pricing the agent does not
+ * leave this page naming a tier it no longer sits on.
+ */
+const unlockingPlan = minPlanForFeature(FEATURE);
 
 const initialState: ShoppingAgentSettingsState = { status: "idle" };
 
@@ -65,12 +77,20 @@ export function ShoppingAgentConsole({
   storeName: string;
 }) {
   const [state, formAction, isPending] = useActionState(action, initialState);
+  const { openUpgrade } = useUpgradePrompt();
   const capability = state.capability ?? initialCapability;
   const view = state.view ?? settings;
   const saved = view.shoppingAgentEnabled;
 
   const [enabled, setEnabled] = useState(saved);
   const [lastSaved, setLastSaved] = useState(saved);
+
+  // A save the plan refused opens the same dialog every other gated form in the
+  // dashboard opens, rather than leaving a sentence under the button. Keyed on
+  // `state` so a second refused attempt re-opens it after a dismissal.
+  useEffect(() => {
+    openUpgrade(state.lockedFeature);
+  }, [openUpgrade, state]);
 
   // Adopt the server's word whenever it changes — React's own pattern for
   // adjusting state to a changed input, which is why it is a render-phase set
@@ -111,7 +131,7 @@ export function ShoppingAgentConsole({
                 : "Your catalogue is answering your customers"
               : capability.entitled
                 ? "Nothing is answering your customers yet"
-                : "StoreIM AI is not on this plan"}
+                : "The AI Shopping Agent is not on this plan"}
           </h2>
 
           <p className="sfa-hero-copy">
@@ -121,15 +141,34 @@ export function ShoppingAgentConsole({
                 : "Replies are searched straight from your catalogue. Add a Gemini or OpenAI key and it will answer in its own words instead."
               : capability.entitled
                 ? "Turn it on and a chat button appears on every page of your shop. You can switch it off again at any time and it disappears immediately."
-                : "Upgrade your plan, or add your own Gemini or OpenAI key — a key you own works on any plan, because you are paying that bill."}
+                : `The storefront assistant is included from the ${unlockingPlan ?? "next"} plan up. Upgrade and you can switch it on here.`}
           </p>
 
           <div className="sfa-switch-row">
+            {/* Locked, the switch is not dead — it opens the upgrade dialog.
+                A control that simply does not respond reads as a broken page,
+                and the seller is owed the reason plus the way out of it. It
+                still never flips *on*: `setEnabled` is not reached, so nothing
+                is submitted and the server gate is never asked a question it
+                would have to refuse.
+
+                Turning it **off** stays available on any plan, matching the
+                server action. A store whose plan lapsed while the assistant was
+                live must be able to take it off its own storefront; billing is
+                no reason to trap a seller with a public chat window they no
+                longer want. */}
             <button
               aria-checked={enabled}
               className="sfa-switch"
-              disabled={!canManage || !capability.entitled || isPending}
-              onClick={() => setEnabled((current) => !current)}
+              disabled={!canManage || isPending}
+              onClick={() => {
+                if (!capability.entitled && !enabled) {
+                  openUpgrade(FEATURE);
+                  return;
+                }
+
+                setEnabled((current) => !current);
+              }}
               role="switch"
               type="button"
             >
@@ -137,11 +176,22 @@ export function ShoppingAgentConsole({
                 <span className="sfa-switch-knob" />
               </span>
               <span className="sfa-switch-label">
-                <strong>Answer customers on my storefront</strong>
+                <strong>
+                  Answer customers on my storefront
+                  {capability.entitled ? null : (
+                    <span className="ml-1.5 align-middle">
+                      <PaidBadge feature={FEATURE} interactive={false} showPlan />
+                    </span>
+                  )}
+                </strong>
                 <small>
-                  {enabled
-                    ? "The chat button shows on every page of your shop."
-                    : "Your storefront shows no chat button."}
+                  {capability.entitled || enabled
+                    ? enabled
+                      ? "The chat button shows on every page of your shop."
+                      : "Your storefront shows no chat button."
+                    : unlockingPlan
+                      ? `Included from the ${unlockingPlan} plan up.`
+                      : "Not included in your current plan."}
                 </small>
               </span>
             </button>
@@ -196,7 +246,9 @@ export function ShoppingAgentConsole({
 
         <footer className="sfa-hero-footer">
           <p className="sfa-save-state">
-            {state.status === "error" ? (
+            {/* A plan refusal is said by the dialog, so it is not repeated here
+                — the convention every other gated form in the dashboard follows. */}
+            {state.status === "error" && !state.lockedFeature ? (
               <span className="sfa-save-error">{state.message}</span>
             ) : isDirty ? (
               <span className="sfa-save-dirty">
@@ -227,11 +279,7 @@ export function ShoppingAgentConsole({
             )}
 
             {canManage ? (
-              <button
-                className="sfa-primary"
-                disabled={!capability.entitled || isPending || !isDirty}
-                type="submit"
-              >
+              <button className="sfa-primary" disabled={isPending || !isDirty} type="submit">
                 {isPending ? (
                   <>
                     <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />

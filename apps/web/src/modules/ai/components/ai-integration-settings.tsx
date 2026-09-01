@@ -2,6 +2,7 @@
 
 import { Ban, Eye, EyeOff, KeyRound, Loader2, Plug, Trash2 } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import { DashboardCard } from "../../../components/dashboard/dashboard-card";
 import { DeleteConfirmationButton } from "../../../components/dashboard/delete-confirmation-button";
 import { StatusBadge } from "../../../components/dashboard/status-badge";
@@ -463,8 +464,24 @@ function ApiKeyRow({
   );
 }
 
+/**
+ * The one place a key action's outcome is rendered, so the upgrade dialog is
+ * opened from here rather than from each panel that owns a `useActionState`.
+ * Creating and rotating a key are the gated halves of Integrations; revoking and
+ * deleting stay open, so only some of these ever carry a refusal.
+ */
 function ActionMessage({ state }: { state: AiKeyActionState }) {
   const isSuccess = state.status === "success";
+  const { openUpgrade } = useUpgradePrompt();
+
+  useEffect(() => {
+    openUpgrade(state.lockedFeature);
+  }, [openUpgrade, state]);
+
+  // The dialog says it; a red box beside it would only say it twice.
+  if (state.lockedFeature) {
+    return null;
+  }
 
   return (
     <p

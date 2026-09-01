@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { normalizeBangladeshPhone } from "../courier/courier-phone";
-import { requirePlanFeature } from "../billing/subscription-limits";
+import type { PlanFeatureKey } from "../billing/plan-features";
+import { PlanFeatureError, requirePlanFeature } from "../billing/subscription-limits";
 import { requireStore } from "../stores/queries";
 import { isNotificationError } from "./notifications-errors";
 import { sendSms } from "./notifications.service";
@@ -10,6 +11,8 @@ import { saveStoreMessagingSettings } from "./store-messaging.service";
 import { CUSTOM_ORDER_SMS_MAX_LENGTH } from "./templates";
 
 export type StoreMessagingState = {
+  /** Set when the plan refused the write, so the form can open the upgrade dialog. */
+  lockedFeature?: PlanFeatureKey;
   message?: string;
   status: "idle" | "error" | "success";
 };
@@ -156,6 +159,12 @@ async function smsPlanRefusal(storeId: string): Promise<StoreMessagingState | nu
 
     return null;
   } catch (error) {
+    // Carried as a key so the form opens the shared upgrade dialog rather than
+    // printing the refusal beside the switch the seller just tried to use.
+    if (error instanceof PlanFeatureError) {
+      return { lockedFeature: error.featureKey, message: error.message, status: "error" };
+    }
+
     return {
       message: error instanceof Error ? error.message : "SMS is not included in your plan.",
       status: "error"

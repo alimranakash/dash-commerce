@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
-import { requirePlanFeature } from "../billing/subscription-limits";
+import { PlanFeatureError, requirePlanFeature } from "../billing/subscription-limits";
 import { requireStore } from "../stores/queries";
 import {
   addSearchBoost,
@@ -104,6 +104,14 @@ async function runAndReport(work: () => Promise<unknown>, scope: string) {
   try {
     await work();
   } catch (error) {
+    // These forms report by redirecting rather than through `useActionState`, so
+    // a plan refusal travels as a `locked` param the page turns back into the
+    // dashboard's shared upgrade dialog. Sent apart from `error` because it is
+    // not something the seller can fix by editing the field they just filled in.
+    if (error instanceof PlanFeatureError) {
+      redirect(`${SEARCH_SETTINGS_PATH}?locked=${encodeURIComponent(error.featureKey)}`);
+    }
+
     const message =
       error instanceof ZodError
         ? (error.issues[0]?.message ?? "That input is not valid.")

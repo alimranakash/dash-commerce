@@ -359,16 +359,23 @@ async function main() {
       .join(", ")
   );
 
-  // The rule that outranks the plan: a merchant paying for their own Gemini or
-  // OpenAI key must reach all three AI surfaces on any tier, free included. The
-  // services express this as `ownKey || planGrants`, so what would break it is
-  // someone rewriting one of those reads into an `&&`. Asserted by reading the
-  // source, since there is no database state that can show it.
+  // The plan decides every AI surface, and nothing else does.
+  //
+  // A store's own Gemini or OpenAI key picks *which engine writes the reply* —
+  // all three still call `resolveAiProvider` to prefer it over the platform's —
+  // but it is not a second way to qualify. What would break the rule is someone
+  // reintroducing an `ownKey ||` beside one of these plan reads, so that shape
+  // is asserted against directly. Read from the source, since no database state
+  // can show it.
   const AI_SURFACE_SOURCES: Array<[string, string]> = [
     ["store-copilot/store-copilot.service.ts", "ai_copilot"],
     ["product-content/product-content.service.ts", "ai_product_content"],
     ["shopping-agent/shopping-agent.service.ts", "ai_shopping_agent"]
   ];
+
+  /** `ownKey || plan` in any of its spellings — the bypass that must not return. */
+  const OWN_KEY_BYPASS =
+    /(?:ownKey|provider|hasOwnAiProvider\(\w*\))\s*(?:!==\s*null\s*)?\|\||\|\|\s*(?:ownKey|Boolean\(provider\)|hasOwnAiProvider)/;
 
   for (const [file, key] of AI_SURFACE_SOURCES) {
     const source = readFileSync(
@@ -381,8 +388,12 @@ async function main() {
       source.includes(`hasPlanFeature(storeId, "${key}")`)
     );
     check(
-      `${file.split("/")[0]?.padEnd(15)} still honours an own credential`,
-      source.includes("resolveAiProvider") || source.includes("hasOwnAiProvider")
+      `${file.split("/")[0]?.padEnd(15)} lets no own key bypass the plan`,
+      !OWN_KEY_BYPASS.test(source)
+    );
+    check(
+      `${file.split("/")[0]?.padEnd(15)} still picks the engine from an own credential`,
+      source.includes("resolveAiProvider")
     );
   }
 

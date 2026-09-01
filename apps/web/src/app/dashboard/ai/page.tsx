@@ -83,11 +83,11 @@ export default async function AIAssistantPage() {
           <div className="copilot-callout">
             <Lock aria-hidden="true" className="h-5 w-5 shrink-0" />
             <div className="copilot-callout-body">
-              <strong>StoreIM AI is part of a paid plan.</strong>
+              <strong>The AI Store Copilot is not included in your plan.</strong>
               <p>
-                Upgrade to unlock the Store Copilot and AI product content. You can also{" "}
-                <Link href="/dashboard/ai/settings">add your own Gemini or OpenAI key</Link> — a key
-                you bought works on any plan, because you are paying the model bill yourself.
+                Upgrade to unlock it. Your own Gemini or OpenAI key decides which engine writes the
+                answers once you have it — it is not a way to open the Copilot on a plan that does
+                not include it.
               </p>
             </div>
             <Link className="copilot-callout-action" href="/dashboard/billing">

@@ -2,7 +2,8 @@
 
 import { Button } from "@dash/ui";
 import { Loader2, MessageSquare, PenLine, ShieldCheck, TriangleAlert, Truck } from "lucide-react";
-import { useActionState, useState, type ReactNode } from "react";
+import { useActionState, useEffect, useState, type ReactNode } from "react";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import type { StoreMessagingState } from "../store-messaging.actions";
 import { CUSTOM_ORDER_SMS_MAX_LENGTH, CUSTOM_ORDER_SMS_PLACEHOLDERS } from "../templates";
 
@@ -37,9 +38,16 @@ export function StoreSmsSettings({
   usage: Usage;
 }) {
   const [state, formAction, isPending] = useActionState(saveAction, initialState);
+  const { openUpgrade } = useUpgradePrompt();
   const [customEnabled, setCustomEnabled] = useState(settings.orderCustomEnabled);
   const [customMessage, setCustomMessage] = useState(settings.orderCustomMessage);
   const outOfAllowance = usage.remaining !== null && usage.remaining <= 0;
+
+  // Switching SMS on without the plan for it opens the shared upgrade dialog.
+  // Switching it off is never refused — see `saveStoreMessagingAction`.
+  useEffect(() => {
+    openUpgrade(state.lockedFeature);
+  }, [openUpgrade, state]);
 
   return (
     <div className="grid gap-4">
@@ -50,7 +58,7 @@ export function StoreSmsSettings({
         </Banner>
       ) : null}
 
-      {state.message ? (
+      {state.message && !state.lockedFeature ? (
         <Banner tone={state.status === "error" ? "error" : "success"}>{state.message}</Banner>
       ) : null}
 

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState, type ReactNode } from "react";
+import { useActionState, useEffect, useState, type ReactNode } from "react";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import { countSmsSegments } from "../campaign.schema";
 import { CAMPAIGN_PLACEHOLDERS } from "../campaign-message";
 import type { MarketingActionState } from "../audience.actions";
@@ -22,6 +23,13 @@ const initialState: MarketingActionState = { status: "idle" };
 
 export function TemplateForm({ action, cancelHref, heading, template }: TemplateFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
+  const { openUpgrade } = useUpgradePrompt();
+
+  // A plan refusal opens the shared upgrade dialog rather than reading as a
+  // validation error the seller could fix by editing the fields.
+  useEffect(() => {
+    openUpgrade(state.lockedFeature);
+  }, [openUpgrade, state]);
   const [body, setBody] = useState(template?.body ?? "");
   const { limit, segments, unicode } = countSmsSegments(body);
 
@@ -46,7 +54,7 @@ export function TemplateForm({ action, cancelHref, heading, template }: Template
         </div>
       </div>
 
-      {state.status === "error" ? (
+      {state.status === "error" && !state.lockedFeature ? (
         <p
           aria-live="polite"
           className="m-0 rounded-lg border border-[#f5c9d0] bg-[#fdf2f4] px-4 py-3 text-sm text-[#b3273f]"

@@ -2,7 +2,8 @@
 
 import { Plus, X } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
+import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import type { BundleActionState } from "../bundle.actions";
 import { priceBundles } from "../bundle-pricing";
 import { MAX_BUNDLE_ITEMS, describeBundle, type BundleDiscountType, type BundleStatus, type BundleType } from "../bundle.schema";
@@ -37,6 +38,13 @@ export function BundleForm({
   submitLabel
 }: BundleFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
+  const { openUpgrade } = useUpgradePrompt();
+
+  // A plan refusal opens the shared upgrade dialog rather than reading as a
+  // validation error the seller could fix by editing the fields.
+  useEffect(() => {
+    openUpgrade(state.lockedFeature);
+  }, [openUpgrade, state]);
   const [type, setType] = useState<BundleType>(bundle?.type ?? "SET");
   const [discountType, setDiscountType] = useState<BundleDiscountType>(bundle?.discountType ?? "PERCENTAGE");
   const [discountValue, setDiscountValue] = useState(bundle?.discountValue ?? "10");
@@ -123,7 +131,7 @@ export function BundleForm({
         </Link>
       </div>
 
-      {state.status === "error" ? (
+      {state.status === "error" && !state.lockedFeature ? (
         <p className="m-0 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700">{state.message}</p>
       ) : null}
 
