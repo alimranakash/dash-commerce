@@ -3,6 +3,7 @@
 import { Button } from "@dash/ui";
 import { Eye, MessageCircle, Search, Send, UserCheck, X } from "lucide-react";
 import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
+import { AdminMobileField } from "../../../components/admin/admin-ui";
 import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 import {
   assignSupportTicketAction,
@@ -125,6 +126,23 @@ export function AdminSupportManagement({
     });
   }
 
+  /** Shared by the desktop row and the mobile card so the two cannot drift apart. */
+  function ticketActions(ticket: AdminSupportTicketListItem) {
+    return (
+      <>
+        <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]" onClick={() => setSelectedTicketId(ticket.id)} title="View ticket" type="button">
+          <Eye className="h-4 w-4" />
+        </button>
+        <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50" onClick={() => setSelectedTicketId(ticket.id)} title="Reply" type="button">
+          <MessageCircle className="h-4 w-4" />
+        </button>
+        <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50" disabled={ticket.status === "CLOSED"} onClick={() => setCloseTarget({ id: ticket.id, subject: ticket.subject })} title="Close ticket" type="button">
+          <X className="h-4 w-4" />
+        </button>
+      </>
+    );
+  }
+
   return (
     <>
       <section className="rounded-xl border border-[#ececf5] bg-white p-5 shadow-sm">
@@ -134,7 +152,7 @@ export function AdminSupportManagement({
             <p className="m-0 mt-1 text-sm text-[#74758a]">Showing {filterLabel.toLowerCase()}.</p>
           </div>
 
-          <DashboardQueryForm actionPath="/admin/support" className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_150px_150px_160px_44px] 2xl:w-[900px]">
+          <DashboardQueryForm actionPath="/admin/support" className="grid gap-3 sm:grid-cols-2 2xl:w-[900px] 2xl:grid-cols-[minmax(220px,1fr)_150px_150px_160px_44px]">
             <input
               className="h-11 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none placeholder:text-[#a2a3b0] focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10"
               defaultValue={search}
@@ -151,66 +169,82 @@ export function AdminSupportManagement({
             <select className="h-11 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10" defaultValue={activeCategory} name="category">
               {categoryOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
-            <button aria-label="Search support tickets" className="grid h-11 cursor-pointer place-items-center rounded-lg bg-[#7c3aed] text-white hover:bg-[#6d28d9]" type="submit">
+            <button aria-label="Search support tickets" className="grid h-11 cursor-pointer place-items-center rounded-lg bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:col-span-2 2xl:col-span-1" type="submit">
               <Search className="h-4 w-4" />
             </button>
           </DashboardQueryForm>
         </div>
 
         {hasTickets ? (
-          <div className="overflow-hidden rounded-xl border border-[#efeff5] bg-white">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1120px] border-collapse text-left text-xs">
-                <thead className="bg-[#f7f7fa] text-[#565762]">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold">Ticket</th>
-                    <th className="px-4 py-3 font-semibold">User</th>
-                    <th className="px-4 py-3 font-semibold">Store</th>
-                    <th className="px-4 py-3 font-semibold">Category</th>
-                    <th className="px-4 py-3 font-semibold">Priority</th>
-                    <th className="px-4 py-3 font-semibold">Status</th>
-                    <th className="px-4 py-3 font-semibold">Created</th>
-                    <th className="px-4 py-3 text-right font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#efeff5]">
-                  {tickets.map((ticket) => (
-                    <tr className="transition hover:bg-[#fbfaff]" key={ticket.id}>
-                      <td className="px-4 py-4">
-                        <div className="font-semibold text-[#20212c]">{ticket.subject}</div>
-                        <div className="mt-1 line-clamp-1 max-w-xs text-[11px] text-[#74758a]">{ticket.message}</div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="font-semibold text-[#30313d]">{ticket.userName}</div>
-                        <div className="mt-1 text-[11px] text-[#74758a]">{ticket.userEmail}</div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="font-semibold text-[#30313d]">{ticket.storeName}</div>
-                        <div className="mt-1 text-[11px] text-[#74758a]">{ticket.storeDomain}</div>
-                      </td>
-                      <td className="px-4 py-4"><CategoryBadge category={ticket.category} /></td>
-                      <td className="px-4 py-4"><PriorityBadge priority={ticket.priority} /></td>
-                      <td className="px-4 py-4"><TicketStatusBadge status={ticket.status} /></td>
-                      <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{ticket.createdAt}</td>
-                      <td className="px-4 py-4">
-                        <div className="flex justify-end gap-1.5">
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]" onClick={() => setSelectedTicketId(ticket.id)} title="View ticket" type="button">
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50" onClick={() => setSelectedTicketId(ticket.id)} title="Reply" type="button">
-                            <MessageCircle className="h-4 w-4" />
-                          </button>
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50" disabled={ticket.status === "CLOSED"} onClick={() => setCloseTarget({ id: ticket.id, subject: ticket.subject })} title="Close ticket" type="button">
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
+          <>
+            <div className="hidden overflow-hidden rounded-xl border border-[#efeff5] bg-white lg:block">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[1120px] border-collapse text-left text-xs">
+                  <thead className="bg-[#f7f7fa] text-[#565762]">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">Ticket</th>
+                      <th className="px-4 py-3 font-semibold">User</th>
+                      <th className="px-4 py-3 font-semibold">Store</th>
+                      <th className="px-4 py-3 font-semibold">Category</th>
+                      <th className="px-4 py-3 font-semibold">Priority</th>
+                      <th className="px-4 py-3 font-semibold">Status</th>
+                      <th className="px-4 py-3 font-semibold">Created</th>
+                      <th className="px-4 py-3 text-right font-semibold">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-[#efeff5]">
+                    {tickets.map((ticket) => (
+                      <tr className="transition hover:bg-[#fbfaff]" key={ticket.id}>
+                        <td className="px-4 py-4">
+                          <div className="font-semibold text-[#20212c]">{ticket.subject}</div>
+                          <div className="mt-1 line-clamp-1 max-w-xs text-[11px] text-[#74758a]">{ticket.message}</div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="font-semibold text-[#30313d]">{ticket.userName}</div>
+                          <div className="mt-1 text-[11px] text-[#74758a]">{ticket.userEmail}</div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="font-semibold text-[#30313d]">{ticket.storeName}</div>
+                          <div className="mt-1 text-[11px] text-[#74758a]">{ticket.storeDomain}</div>
+                        </td>
+                        <td className="px-4 py-4"><CategoryBadge category={ticket.category} /></td>
+                        <td className="px-4 py-4"><PriorityBadge priority={ticket.priority} /></td>
+                        <td className="px-4 py-4"><TicketStatusBadge status={ticket.status} /></td>
+                        <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{ticket.createdAt}</td>
+                        <td className="px-4 py-4">
+                          <div className="flex justify-end gap-1.5">{ticketActions(ticket)}</div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+
+            <div className="grid gap-3 lg:hidden">
+              {tickets.map((ticket) => (
+                <article className="rounded-xl border border-[#efeff5] bg-white p-4" key={ticket.id}>
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-[#20212c]">{ticket.subject}</div>
+                    <p className="m-0 mt-1 line-clamp-2 text-[11px] leading-5 text-[#74758a]">{ticket.message}</p>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <TicketStatusBadge status={ticket.status} />
+                    <PriorityBadge priority={ticket.priority} />
+                    <CategoryBadge category={ticket.category} />
+                  </div>
+                  <dl className="mt-3 grid grid-cols-2 gap-3 border-t border-[#f0eff5] pt-3">
+                    <AdminMobileField label="User" value={ticket.userName} />
+                    <AdminMobileField label="Store" value={ticket.storeName} />
+                    <AdminMobileField label="Email" value={ticket.userEmail} />
+                    <AdminMobileField label="Domain" value={ticket.storeDomain} />
+                    <AdminMobileField label="Created" value={ticket.createdAt} />
+                  </dl>
+                  <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[#f0eff5] pt-3">{ticketActions(ticket)}</div>
+                </article>
+              ))}
+            </div>
+          </>
         ) : (
           <AdminSupportEmpty />
         )}
@@ -268,7 +302,7 @@ function TicketDetailsDrawer({ admins, onClose, ticket }: { admins: AdminSupport
           </div>
 
           <DetailSection title="Admin Controls">
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 lg:grid-cols-3">
               <form action={updateSupportTicketStatusAction.bind(null, ticket.id)} className="grid gap-2">
                 <span className="text-xs font-semibold text-[#74758a]">Status</span>
                 <div className="flex gap-2">
@@ -363,8 +397,8 @@ function ReplyForm({ ticketId }: { ticketId: string }) {
 
 function CloseTicketModal({ disabled, onClose, onConfirm, ticket }: { disabled: boolean; onClose: () => void; onConfirm: () => void; ticket: CloseTarget }) {
   return (
-    <div aria-modal="true" className="fixed inset-0 z-[110] grid place-items-center bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+    <div aria-modal="true" className="fixed inset-0 z-[110] flex justify-center overflow-y-auto bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
+      <div className="my-auto w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-red-50 text-red-600">
           <X className="h-6 w-6" />
         </div>

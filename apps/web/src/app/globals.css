@@ -17645,32 +17645,65 @@ textarea {
   border: none;
   border-radius: 999px;
   bottom: calc(clamp(16px, 2.2vw, 28px) + env(safe-area-inset-bottom, 0px));
-  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.22);
+  /* Two shadows rather than one: a tight contact shadow that keeps the pill
+     attached to the page, and a wide soft one that lifts it off. A single
+     blurred drop shadow is what makes a floating button look pasted on. */
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.18),
+    0 12px 28px -8px rgba(15, 23, 42, 0.42);
   color: #ffffff;
   cursor: pointer;
   display: inline-flex;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  gap: 8px;
+  gap: 9px;
+  height: 48px;
+  justify-content: center;
   /* Left, because the scroll-to-top button already owns the right corner. */
   left: clamp(16px, 2.2vw, 28px);
-  padding: 12px 18px;
+  letter-spacing: -0.01em;
+  padding: 0 20px;
   position: fixed;
   transition:
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+    box-shadow 0.22s ease,
+    transform 0.22s ease,
+    padding 0.22s ease,
+    width 0.22s ease;
   z-index: 70;
 }
 
 .sfagent-launcher:hover {
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.28);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.18),
+    0 16px 34px -8px rgba(15, 23, 42, 0.48);
   transform: translateY(-2px);
 }
 
+.sfagent-launcher:focus-visible {
+  outline: 2px solid var(--sf-primary, var(--store-primary, #135d66));
+  outline-offset: 3px;
+}
+
+/* Open, the launcher stops selling the feature and becomes the panel's anchor:
+   a round dismiss the panel appears to grow out of. The header already carries
+   a close button, and a second wide one below the panel read as a stray
+   control rather than part of the same widget. */
+.sfagent-launcher-open {
+  padding: 0;
+  width: 48px;
+}
+
+.sfagent-launcher-open .sfagent-launcher-label {
+  display: none;
+}
+
 .sfagent-panel {
+  animation: sfagent-sheet-in 0.24s cubic-bezier(0.16, 1, 0.3, 1);
   background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.1);
-  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  /* Square on a phone: this is a full sheet, and rounded corners over the page
+     behind it only advertise that it does not quite cover the screen. */
+  border-radius: 0;
   bottom: 0;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.24);
   color: var(--store-text, #171717);
@@ -17678,6 +17711,9 @@ textarea {
   flex-direction: column;
   left: 0;
   max-height: 100dvh;
+  /* The panel clips its own header and footer, so neither has to repeat the
+     corner radius and get it subtly wrong. */
+  overflow: hidden;
   position: fixed;
   right: 0;
   top: 0;
@@ -17686,33 +17722,63 @@ textarea {
 
 @media (min-width: 560px) {
   .sfagent-panel {
+    animation: sfagent-panel-in 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+    border-radius: 20px;
     bottom: calc(clamp(16px, 2.2vw, 28px) + 62px + env(safe-area-inset-bottom, 0px));
-    height: min(640px, calc(100dvh - 140px));
+    box-shadow:
+      0 2px 8px rgba(15, 23, 42, 0.08),
+      0 32px 64px -16px rgba(15, 23, 42, 0.32);
+    height: min(660px, calc(100dvh - 140px));
     left: clamp(16px, 2.2vw, 28px);
     right: auto;
     top: auto;
-    width: 400px;
+    width: 408px;
+  }
+}
+
+/* Rising from the launcher rather than appearing on top of the page, which is
+   what tells the shopper where it came from and where it will go back to. */
+@keyframes sfagent-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
+@keyframes sfagent-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
   }
 }
 
 .sfagent-head {
   align-items: center;
-  background: var(--sf-primary, var(--store-primary, #135d66));
-  border-radius: 18px 18px 0 0;
+  /* Still the shop's own colour, with a slight fall across it — a flat block of
+     brand at the top of a white panel is the single thing that most makes a
+     chat widget look like a template. */
+  background: linear-gradient(
+    135deg,
+    var(--sf-primary, var(--store-primary, #135d66)),
+    color-mix(in srgb, var(--sf-primary, var(--store-primary, #135d66)) 78%, #000000)
+  );
   color: #ffffff;
   display: flex;
-  gap: 10px;
+  flex: none;
+  gap: 11px;
   padding: 14px 16px;
 }
 
 .sfagent-avatar {
   align-items: center;
   background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 999px;
   display: inline-flex;
-  height: 32px;
+  flex: none;
+  height: 34px;
   justify-content: center;
-  width: 32px;
+  width: 34px;
 }
 
 .sfagent-identity {
@@ -17722,39 +17788,123 @@ textarea {
 
 .sfagent-identity strong {
   display: block;
-  font-size: 0.95rem;
+  font-size: 0.94rem;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
 }
 
 .sfagent-identity p {
-  font-size: 0.75rem;
-  margin: 0;
-  opacity: 0.85;
+  align-items: center;
+  display: flex;
+  font-size: 0.74rem;
+  gap: 6px;
+  margin: 2px 0 0;
+  opacity: 0.82;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* Answering, not merely installed. */
+.sfagent-status-dot {
+  background: #4ade80;
+  border-radius: 999px;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.22);
+  flex: none;
+  height: 6px;
+  width: 6px;
+}
+
 .sfagent-close {
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 9px;
   color: inherit;
   cursor: pointer;
   display: inline-flex;
-  padding: 6px;
+  flex: none;
+  padding: 7px;
+  transition: background 0.15s ease;
 }
 
 .sfagent-close:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.sfagent-close:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 1px;
 }
 
 .sfagent-log {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   overflow-y: auto;
-  padding: 16px;
+  /* The page behind must not start scrolling when the conversation hits its
+     end, which on a phone reads as the panel dragging the storefront with it. */
+  overscroll-behavior: contain;
+  padding: 18px 16px;
+  scrollbar-color: rgba(15, 23, 42, 0.18) transparent;
+  scrollbar-width: thin;
+}
+
+/* A short conversation hanging from the top leaves a white hole above the
+   composer. Pushing the first turn down keeps the talking next to the box the
+   shopper types in — and unlike `justify-content: flex-end`, an auto margin
+   still scrolls correctly once the thread overflows. */
+.sfagent-log > :first-child {
+  margin-top: auto;
+}
+
+.sfagent-log::-webkit-scrollbar {
+  width: 10px;
+}
+
+.sfagent-log::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.16);
+  background-clip: content-box;
+  border: 3px solid transparent;
+  border-radius: 999px;
+}
+
+.sfagent-log::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.28);
+  background-clip: content-box;
+}
+
+/* The opening card. It exists to give the empty panel something to be about,
+   and it is gone the moment the shopper says anything. */
+.sfagent-intro {
+  padding: 4px 6px 10px;
+  text-align: center;
+}
+
+.sfagent-intro-mark {
+  align-items: center;
+  background: color-mix(in srgb, var(--sf-primary, var(--store-primary, #135d66)) 10%, #ffffff);
+  border-radius: 999px;
+  color: var(--sf-primary, var(--store-primary, #135d66));
+  display: inline-flex;
+  height: 42px;
+  justify-content: center;
+  margin-bottom: 10px;
+  width: 42px;
+}
+
+.sfagent-intro strong {
+  display: block;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+}
+
+.sfagent-intro p {
+  color: rgba(15, 23, 42, 0.55);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  margin: 4px auto 0;
+  max-width: 30ch;
 }
 
 .sfagent-turn {
@@ -17766,17 +17916,23 @@ textarea {
   justify-content: flex-end;
 }
 
+/* The one square corner is the tail: it points at whoever is speaking, which
+   is cheaper to read than a colour difference alone and survives a shop whose
+   brand colour happens to be grey. */
 .sfagent-bubble {
-  background: rgba(15, 23, 42, 0.045);
-  border-radius: 14px;
-  font-size: 0.88rem;
-  line-height: 1.55;
+  background: rgba(15, 23, 42, 0.05);
+  border-radius: 16px 16px 16px 5px;
+  font-size: 0.875rem;
+  letter-spacing: -0.005em;
+  line-height: 1.6;
   max-width: 92%;
-  padding: 10px 13px;
+  padding: 11px 14px;
 }
 
 .sfagent-turn-user .sfagent-bubble {
   background: var(--sf-primary, var(--store-primary, #135d66));
+  border-radius: 16px 16px 5px 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
   color: #ffffff;
   max-width: 85%;
 }
@@ -17822,6 +17978,14 @@ textarea {
   gap: 10px;
   overflow: hidden;
   padding: 8px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.sfagent-product:hover {
+  border-color: rgba(15, 23, 42, 0.18);
+  box-shadow: 0 4px 14px -6px rgba(15, 23, 42, 0.3);
 }
 
 .sfagent-product-media {
@@ -17905,6 +18069,11 @@ textarea {
   font-weight: 700;
   margin-top: 4px;
   padding: 5px 11px;
+}
+
+.sfagent-product-add:hover:not(:disabled),
+.sfagent-product-choose:hover {
+  filter: brightness(1.08);
 }
 
 .sfagent-product-add:disabled {
@@ -18107,11 +18276,16 @@ textarea {
 /* --- Composer -------------------------------------------------------------- */
 
 .sfagent-footer {
+  background: #ffffff;
   border-top: 1px solid rgba(15, 23, 42, 0.08);
+  /* A hairline alone does not read as "the conversation continues above this".
+     The shadow does, and it costs no height. */
+  box-shadow: 0 -6px 16px -14px rgba(15, 23, 42, 0.5);
   display: flex;
+  flex: none;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  gap: 9px;
+  padding: 11px 14px calc(12px + env(safe-area-inset-bottom, 0px));
 }
 
 .sfagent-cartbar {
@@ -18133,23 +18307,40 @@ textarea {
   font-weight: 700;
 }
 
+/* Wrapped, not scrolled. At most four chips ever render — the opening set, or
+   the three follow-ups the reply schema caps at — so every option fits in two
+   rows. The horizontal scroller this replaces showed one and a half of them
+   behind a native scrollbar, which is both ugly and a question the shopper
+   never gets to read. */
 .sfagent-suggestions {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 2px;
 }
 
 .sfagent-chip {
-  background: rgba(15, 23, 42, 0.05);
-  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.14);
   border-radius: 999px;
   color: var(--store-text, #171717);
   cursor: pointer;
-  flex: none;
-  font-size: 0.73rem;
-  padding: 5px 11px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 6px 12px;
+  text-overflow: ellipsis;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
   white-space: nowrap;
+}
+
+.sfagent-chip:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--sf-primary, var(--store-primary, #135d66)) 8%, #ffffff);
+  border-color: color-mix(in srgb, var(--sf-primary, var(--store-primary, #135d66)) 38%, #ffffff);
+  color: var(--sf-primary, var(--store-primary, #135d66));
 }
 
 .sfagent-chip:disabled {
@@ -18166,18 +18357,31 @@ textarea {
 .sfagent-composer-input {
   background: #ffffff;
   border: 1px solid rgba(15, 23, 42, 0.16);
-  border-radius: 11px;
+  border-radius: 12px;
+  color: var(--store-text, #171717);
   flex: 1;
   font-family: inherit;
-  font-size: 0.85rem;
-  max-height: 110px;
-  min-height: 40px;
-  padding: 10px 12px;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  /* Matches COMPOSER_MAX_HEIGHT in the widget, which grows the box to fit and
+     stops here. */
+  max-height: 132px;
+  min-height: 42px;
+  padding: 11px 13px;
   resize: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.sfagent-composer-input::placeholder {
+  color: rgba(15, 23, 42, 0.42);
 }
 
 .sfagent-composer-input:focus {
   border-color: var(--sf-primary, var(--store-primary, #135d66));
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--sf-primary, var(--store-primary, #135d66)) 15%, transparent);
   outline: none;
 }
 
@@ -18185,25 +18389,61 @@ textarea {
   align-items: center;
   background: var(--sf-primary, var(--store-primary, #135d66));
   border: none;
-  border-radius: 11px;
+  border-radius: 12px;
   color: #ffffff;
   cursor: pointer;
   display: inline-flex;
-  height: 40px;
+  flex: none;
+  height: 42px;
   justify-content: center;
-  width: 42px;
+  transition:
+    filter 0.15s ease,
+    opacity 0.15s ease;
+  width: 44px;
+}
+
+.sfagent-send:hover:not(:disabled) {
+  filter: brightness(1.08);
 }
 
 .sfagent-send:disabled {
   cursor: not-allowed;
-  opacity: 0.45;
+  opacity: 0.4;
+}
+
+/* One visible ring for every control in the panel, in the shop's own colour.
+   Keyboard shoppers exist, and a chat whose tab order is invisible is not
+   usable by them. */
+.sfagent-chip:focus-visible,
+.sfagent-confirm:focus-visible,
+.sfagent-dismiss:focus-visible,
+.sfagent-product-add:focus-visible,
+.sfagent-product-choose:focus-visible,
+.sfagent-receipt-link:focus-visible,
+.sfagent-send:focus-visible {
+  outline: 2px solid var(--sf-primary, var(--store-primary, #135d66));
+  outline-offset: 2px;
 }
 
 .sfagent-hint {
-  color: rgba(15, 23, 42, 0.5);
-  font-size: 0.68rem;
-  line-height: 1.4;
+  align-items: flex-start;
+  color: rgba(15, 23, 42, 0.48);
+  display: flex;
+  font-size: 0.67rem;
+  gap: 5px;
+  line-height: 1.45;
   margin: 0;
+}
+
+.sfagent-hint svg {
+  margin-top: 2px;
+}
+
+.sfagent-counter {
+  color: rgba(15, 23, 42, 0.45);
+  font-size: 0.67rem;
+  margin: -4px 0 0;
+  text-align: right;
 }
 
 .sfagent-typing {
@@ -18252,7 +18492,16 @@ textarea {
     animation: none;
   }
 
-  .sfagent-launcher {
+  .sfagent-panel {
+    animation: none;
+  }
+
+  .sfagent-chip,
+  .sfagent-close,
+  .sfagent-composer-input,
+  .sfagent-launcher,
+  .sfagent-product,
+  .sfagent-send {
     transition: none;
   }
 }

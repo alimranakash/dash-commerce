@@ -53,7 +53,7 @@ export function AdminShell({ admin, children }: AdminShellProps) {
 
   return (
     <main className="min-h-screen bg-[#f5f6ff] text-[#20212a]">
-      <aside className={`fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-[#ececf7] bg-white transition-transform duration-200 lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 flex w-[260px] max-w-[85vw] flex-col border-r border-[#ececf7] bg-white transition-transform duration-200 lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex h-16 items-center justify-between border-b border-[#f0f0f7] px-5">
           <Link className="flex items-center gap-2" href="/admin" onClick={() => setOpen(false)}>
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#7c3aed] text-white"><Shield className="h-4 w-4" /></span>
@@ -62,7 +62,7 @@ export function AdminShell({ admin, children }: AdminShellProps) {
               <small className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7b7c88]">Console</small>
             </span>
           </Link>
-          <button className="text-gray-500 lg:hidden" onClick={() => setOpen(false)} type="button">
+          <button aria-label="Close admin navigation" className="-mr-1 grid h-9 w-9 place-items-center rounded-lg text-gray-500 hover:bg-[#f7f7fb] lg:hidden" onClick={() => setOpen(false)} type="button">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -91,18 +91,18 @@ export function AdminShell({ admin, children }: AdminShellProps) {
       {open ? <button aria-label="Close admin navigation" className="fixed inset-0 z-40 bg-black/20 lg:hidden" onClick={() => setOpen(false)} type="button" /> : null}
 
       <div className="min-h-screen lg:pl-[260px]">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#ececf7] bg-white px-4 sm:px-6 lg:px-7">
-          <div className="flex items-center gap-3">
-            <button className="text-gray-600 lg:hidden" onClick={() => setOpen(true)} type="button">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-[#ececf7] bg-white px-4 sm:px-6 lg:px-7">
+          <div className="flex min-w-0 items-center gap-3">
+            <button aria-label="Open admin navigation" className="-ml-1 grid h-9 w-9 shrink-0 place-items-center rounded-lg text-gray-600 hover:bg-[#f7f7fb] lg:hidden" onClick={() => setOpen(true)} type="button">
               <Menu className="h-5 w-5" />
             </button>
-            <div>
-              <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7c3aed]">Admin Console</p>
-              <h1 className="m-0 text-base font-semibold text-[#20212a]">Platform Control Center</h1>
+            <div className="min-w-0">
+              <p className="m-0 truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7c3aed]">Admin Console</p>
+              <h1 className="m-0 truncate text-sm font-semibold text-[#20212a] sm:text-base">Platform Control Center</h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 text-xs">
+          <div className="flex shrink-0 items-center gap-2 text-xs sm:gap-3">
             <Link className="hidden rounded-lg border border-[#ddd6fe] px-3 py-2 font-semibold text-[#6d3cf5] hover:bg-[#f7f3ff] sm:inline-flex" href="/dashboard">
               Back to Dashboard
             </Link>

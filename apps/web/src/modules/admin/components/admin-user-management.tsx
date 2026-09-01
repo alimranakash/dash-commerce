@@ -3,6 +3,7 @@
 import { Button } from "@dash/ui";
 import { Eye, Search, ShieldCheck, ShieldOff, Trash2, UserCheck, UserX, X } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
+import { AdminMobileField } from "../../../components/admin/admin-ui";
 import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 import {
   activateAdminUserAction,
@@ -76,6 +77,38 @@ export function AdminUserManagement({ activeRole, activeStatus, platformDomain, 
     });
   }
 
+  /** Shared by the desktop row and the mobile card so the two cannot drift apart. */
+  function userActions(user: AdminUserListItem) {
+    return (
+      <>
+        <button className="grid h-8 w-8 place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]" onClick={() => setSelectedUser(user)} title="View user" type="button">
+          <Eye className="h-4 w-4" />
+        </button>
+        {user.role === "ADMIN" ? (
+          <button className="grid h-8 w-8 place-items-center rounded-lg text-amber-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={pending || user.isCurrentAdmin} onClick={() => runAction(removeUserAdminAction, user.id)} title="Remove admin" type="button">
+            <ShieldOff className="h-4 w-4" />
+          </button>
+        ) : (
+          <button className="grid h-8 w-8 place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50" disabled={pending} onClick={() => runAction(makeUserAdminAction, user.id)} title="Make admin" type="button">
+            <ShieldCheck className="h-4 w-4" />
+          </button>
+        )}
+        {user.isSuspended ? (
+          <button className="grid h-8 w-8 place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50" disabled={pending} onClick={() => runAction(activateAdminUserAction, user.id)} title="Activate user" type="button">
+            <UserCheck className="h-4 w-4" />
+          </button>
+        ) : (
+          <button className="grid h-8 w-8 place-items-center rounded-lg text-amber-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={pending || user.isCurrentAdmin} onClick={() => runAction(suspendAdminUserAction, user.id)} title="Suspend user" type="button">
+            <UserX className="h-4 w-4" />
+          </button>
+        )}
+        <button className="grid h-8 w-8 place-items-center rounded-lg text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={pending || user.isCurrentAdmin} onClick={() => setDeleteTarget(user)} title="Delete user" type="button">
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </>
+    );
+  }
+
   return (
     <>
       <section className="rounded-xl border border-[#ececf5] bg-white p-5 shadow-sm">
@@ -85,7 +118,7 @@ export function AdminUserManagement({ activeRole, activeStatus, platformDomain, 
             <p className="m-0 mt-1 text-sm text-[#74758a]">Showing {filterLabel.toLowerCase()} users.</p>
           </div>
 
-          <DashboardQueryForm actionPath="/admin/users" className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_130px_150px_44px] xl:w-[680px]">
+          <DashboardQueryForm actionPath="/admin/users" className="grid gap-3 sm:grid-cols-2 xl:w-[680px] xl:grid-cols-[minmax(220px,1fr)_130px_150px_44px]">
             <input
               className="h-11 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none placeholder:text-[#a2a3b0] focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10"
               defaultValue={search}
@@ -99,82 +132,86 @@ export function AdminUserManagement({ activeRole, activeStatus, platformDomain, 
             <select className="h-11 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10" defaultValue={activeStatus} name="status">
               {statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
-            <button aria-label="Search users" className="grid h-11 place-items-center rounded-lg bg-[#7c3aed] text-white hover:bg-[#6d28d9]" type="submit">
+            <button aria-label="Search users" className="grid h-11 place-items-center rounded-lg bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:col-span-2 xl:col-span-1" type="submit">
               <Search className="h-4 w-4" />
             </button>
           </DashboardQueryForm>
         </div>
 
         {hasUsers ? (
-          <div className="overflow-hidden rounded-xl border border-[#efeff5] bg-white">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1040px] border-collapse text-left text-xs">
-                <thead className="bg-[#f7f7fa] text-[#565762]">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold">User</th>
-                    <th className="px-4 py-3 font-semibold">Contact</th>
-                    <th className="px-4 py-3 font-semibold">Role</th>
-                    <th className="px-4 py-3 font-semibold">Stores</th>
-                    <th className="px-4 py-3 font-semibold">Status</th>
-                    <th className="px-4 py-3 font-semibold">Joined</th>
-                    <th className="px-4 py-3 font-semibold">Last Activity</th>
-                    <th className="px-4 py-3 text-right font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#efeff5]">
-                  {users.map((user) => (
-                    <tr className="transition hover:bg-[#fbfaff]" key={user.id}>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-3">
-                          <span className="grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-[#f3f0ff] text-[#6d3cf5]">
-                            {user.image ? <img alt={user.name} className="h-full w-full object-cover" src={user.image} /> : user.name.charAt(0).toUpperCase()}
-                          </span>
-                          <div>
-                            <div className="font-semibold text-[#20212c]">{user.name}</div>
-                            {user.isCurrentAdmin ? <div className="mt-1 text-[11px] text-[#7c3aed]">Current admin</div> : null}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-[#565762]">{user.contact}</td>
-                      <td className="px-4 py-4"><RoleBadge role={user.role} /></td>
-                      <td className="px-4 py-4">{user.storesCount}</td>
-                      <td className="px-4 py-4"><UserStatusBadge suspended={user.isSuspended} /></td>
-                      <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{user.createdAt}</td>
-                      <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{user.lastActivity}</td>
-                      <td className="px-4 py-4">
-                        <div className="flex justify-end gap-1.5">
-                          <button className="grid h-8 w-8 place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]" onClick={() => setSelectedUser(user)} title="View user" type="button">
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          {user.role === "ADMIN" ? (
-                            <button className="grid h-8 w-8 place-items-center rounded-lg text-amber-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={pending || user.isCurrentAdmin} onClick={() => runAction(removeUserAdminAction, user.id)} title="Remove admin" type="button">
-                              <ShieldOff className="h-4 w-4" />
-                            </button>
-                          ) : (
-                            <button className="grid h-8 w-8 place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50" disabled={pending} onClick={() => runAction(makeUserAdminAction, user.id)} title="Make admin" type="button">
-                              <ShieldCheck className="h-4 w-4" />
-                            </button>
-                          )}
-                          {user.isSuspended ? (
-                            <button className="grid h-8 w-8 place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50" disabled={pending} onClick={() => runAction(activateAdminUserAction, user.id)} title="Activate user" type="button">
-                              <UserCheck className="h-4 w-4" />
-                            </button>
-                          ) : (
-                            <button className="grid h-8 w-8 place-items-center rounded-lg text-amber-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={pending || user.isCurrentAdmin} onClick={() => runAction(suspendAdminUserAction, user.id)} title="Suspend user" type="button">
-                              <UserX className="h-4 w-4" />
-                            </button>
-                          )}
-                          <button className="grid h-8 w-8 place-items-center rounded-lg text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={pending || user.isCurrentAdmin} onClick={() => setDeleteTarget(user)} title="Delete user" type="button">
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
+          <>
+            <div className="hidden overflow-hidden rounded-xl border border-[#efeff5] bg-white lg:block">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[1040px] border-collapse text-left text-xs">
+                  <thead className="bg-[#f7f7fa] text-[#565762]">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">User</th>
+                      <th className="px-4 py-3 font-semibold">Contact</th>
+                      <th className="px-4 py-3 font-semibold">Role</th>
+                      <th className="px-4 py-3 font-semibold">Stores</th>
+                      <th className="px-4 py-3 font-semibold">Status</th>
+                      <th className="px-4 py-3 font-semibold">Joined</th>
+                      <th className="px-4 py-3 font-semibold">Last Activity</th>
+                      <th className="px-4 py-3 text-right font-semibold">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-[#efeff5]">
+                    {users.map((user) => (
+                      <tr className="transition hover:bg-[#fbfaff]" key={user.id}>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-3">
+                            <span className="grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-[#f3f0ff] text-[#6d3cf5]">
+                              {user.image ? <img alt={user.name} className="h-full w-full object-cover" src={user.image} /> : user.name.charAt(0).toUpperCase()}
+                            </span>
+                            <div>
+                              <div className="font-semibold text-[#20212c]">{user.name}</div>
+                              {user.isCurrentAdmin ? <div className="mt-1 text-[11px] text-[#7c3aed]">Current admin</div> : null}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-[#565762]">{user.contact}</td>
+                        <td className="px-4 py-4"><RoleBadge role={user.role} /></td>
+                        <td className="px-4 py-4">{user.storesCount}</td>
+                        <td className="px-4 py-4"><UserStatusBadge suspended={user.isSuspended} /></td>
+                        <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{user.createdAt}</td>
+                        <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{user.lastActivity}</td>
+                        <td className="px-4 py-4">
+                          <div className="flex justify-end gap-1.5">{userActions(user)}</div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+
+            <div className="grid gap-3 lg:hidden">
+              {users.map((user) => (
+                <article className="rounded-xl border border-[#efeff5] bg-white p-4" key={user.id}>
+                  <div className="flex items-start gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-[#f3f0ff] text-sm font-semibold text-[#6d3cf5]">
+                      {user.image ? <img alt={user.name} className="h-full w-full object-cover" src={user.image} /> : user.name.charAt(0).toUpperCase()}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-semibold text-[#20212c]">{user.name}</div>
+                      <div className="mt-0.5 break-all text-xs text-[#74758a]">{user.contact}</div>
+                      {user.isCurrentAdmin ? <div className="mt-1 text-[11px] text-[#7c3aed]">Current admin</div> : null}
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <RoleBadge role={user.role} />
+                    <UserStatusBadge suspended={user.isSuspended} />
+                  </div>
+                  <dl className="mt-3 grid grid-cols-2 gap-3 border-t border-[#f0eff5] pt-3">
+                    <AdminMobileField label="Stores" value={user.storesCount.toString()} />
+                    <AdminMobileField label="Joined" value={user.createdAt} />
+                    <AdminMobileField label="Last activity" value={user.lastActivity} />
+                  </dl>
+                  <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[#f0eff5] pt-3">{userActions(user)}</div>
+                </article>
+              ))}
+            </div>
+          </>
         ) : (
           <AdminUsersEmpty />
         )}
@@ -282,8 +319,8 @@ function DeleteUserModal({
   user: AdminUserListItem;
 }) {
   return (
-    <div aria-modal="true" className="fixed inset-0 z-[110] grid place-items-center bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+    <div aria-modal="true" className="fixed inset-0 z-[110] flex justify-center overflow-y-auto bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
+      <div className="my-auto w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-red-50 text-red-600">
           <Trash2 className="h-6 w-6" />
         </div>

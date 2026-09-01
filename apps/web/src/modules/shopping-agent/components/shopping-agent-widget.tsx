@@ -80,6 +80,12 @@ const HISTORY_TURNS = 8;
 /** Matches the `message` ceiling in `shoppingAgentAskSchema`. */
 const MESSAGE_LIMIT = 600;
 
+/** Where the auto-growing composer stops. Matches the CSS `max-height`. */
+const COMPOSER_MAX_HEIGHT = 132;
+
+/** How close to the ceiling the character counter appears. */
+const COUNTER_THRESHOLD = 80;
+
 export function ShoppingAgentWidget({
   ask,
   currency,
@@ -104,11 +110,13 @@ export function ShoppingAgentWidget({
   ]);
   const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const launcherRef = useRef<HTMLButtonElement>(null);
 
   const lastReply = [...entries].reverse().find((entry) => entry.reply)?.reply;
   const followUps = lastReply?.followUps ?? [];
   const prompts = followUps.length ? followUps : suggestedPrompts;
   const isAsking = isPending && runningIndex === null && addingId === null;
+  const remaining = MESSAGE_LIMIT - input.length;
 
   // A chat that does not follow its own tail makes the shopper scroll after
   // every message they send.
@@ -122,6 +130,39 @@ export function ShoppingAgentWidget({
     }
   }, [isOpen]);
 
+  // Escape closes the panel and hands focus back to the launcher, the contract
+  // every other overlay on the storefront keeps. Bound to the document rather
+  // than the panel so it still works while focus sits on a product link inside
+  // the conversation.
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+        launcherRef.current?.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
+  /**
+   * The composer grows with the message instead of scrolling inside one line.
+   *
+   * Height is cleared before it is measured so the box shrinks again when the
+   * shopper deletes a line; the CSS max-height is what stops it from eating the
+   * conversation above it.
+   */
+  function fitComposer(element: HTMLTextAreaElement) {
+    element.style.height = "auto";
+    element.style.height = `${Math.min(element.scrollHeight, COMPOSER_MAX_HEIGHT)}px`;
+  }
+
   function sendMessage(message: string) {
     const trimmed = message.trim().slice(0, MESSAGE_LIMIT);
 
@@ -130,6 +171,11 @@ export function ShoppingAgentWidget({
     }
 
     setInput("");
+
+    if (inputRef.current) {
+      inputRef.current.style.height = "auto";
+    }
+
     setEntries((current) => [...current, { content: trimmed, role: "user" }]);
 
     startTransition(async () => {
@@ -228,11 +274,15 @@ export function ShoppingAgentWidget({
 
   return (
     <>
+      {/* Open, the launcher drops its label and becomes the panel's anchor: the
+          header already carries a close button, and two wide buttons doing the
+          same thing is what left the corner looking unfinished. */}
       <button
         aria-expanded={isOpen}
         aria-label={isOpen ? "Close the shopping assistant" : "Ask the shopping assistant"}
-        className="sfagent-launcher"
+        className={`sfagent-launcher${isOpen ? " sfagent-launcher-open" : ""}`}
         onClick={() => setIsOpen((current) => !current)}
+        ref={launcherRef}
         type="button"
       >
         {isOpen ? (
@@ -240,7 +290,7 @@ export function ShoppingAgentWidget({
         ) : (
           <MessagesSquare aria-hidden="true" className="h-5 w-5" />
         )}
-        <span>{isOpen ? "Close" : "Ask for help"}</span>
+        <span className="sfagent-launcher-label">Ask for help</span>
       </button>
 
       {isOpen ? (
@@ -251,10 +301,12 @@ export function ShoppingAgentWidget({
             </span>
             <div className="sfagent-identity">
               <strong>Shopping assistant</strong>
+              {/* The shop's name is already on every pixel of the page behind
+                  this panel. Repeating it here only pushed the half that matters
+                  — where the answers come from — past the ellipsis. */}
               <p>
-                {engineLabel
-                  ? `${storeName} · answers from this shop's catalogue`
-                  : `${storeName} · searching this shop's catalogue`}
+                <span aria-hidden="true" className="sfagent-status-dot" />
+                {engineLabel ? "Answers from this catalogue" : "Searching this catalogue"}
               </p>
             </div>
             <button
@@ -268,6 +320,21 @@ export function ShoppingAgentWidget({
           </header>
 
           <div aria-busy={isPending} className="sfagent-log" ref={logRef} role="log">
+            {/* Only while the greeting is still alone. The log anchors its
+                content to the bottom, so without this the panel opens as one
+                small bubble under a tall empty rectangle. */}
+            {entries.length === 1 ? (
+              <div className="sfagent-intro">
+                <span aria-hidden="true" className="sfagent-intro-mark">
+                  <Sparkles className="h-5 w-5" />
+                </span>
+                <strong>Ask anything about {storeName}</strong>
+                <p>
+                  Find a product, compare two of them or check your cart, without leaving the page.
+                </p>
+              </div>
+            ) : null}
+
             {entries.map((entry, index) => (
               <article
                 className={`sfagent-turn sfagent-turn-${entry.role}`}
@@ -420,7 +487,10 @@ export function ShoppingAgentWidget({
                 className="sfagent-composer-input"
                 disabled={isPending}
                 maxLength={MESSAGE_LIMIT}
-                onChange={(event) => setInput(event.target.value)}
+                onChange={(event) => {
+                  setInput(event.target.value);
+                  fitComposer(event.target);
+                }}
                 onKeyDown={(event) => {
                   // Enter sends, Shift+Enter breaks the line. Somebody typing a
                   // one-line question should never reach for the mouse.
@@ -444,10 +514,17 @@ export function ShoppingAgentWidget({
               </button>
             </form>
 
+            {remaining <= COUNTER_THRESHOLD ? (
+              <p className="sfagent-counter">{remaining} characters left</p>
+            ) : null}
+
             <p className="sfagent-hint">
-              {engineLabel
-                ? "An assistant — check the product page before you buy. Nothing is added or ordered without your confirmation."
-                : "Answers are searched from this shop's catalogue. Nothing is added or ordered without your confirmation."}
+              <ShieldCheck aria-hidden="true" className="h-3 w-3 shrink-0" />
+              <span>
+                {engineLabel
+                  ? "An assistant — check the product page before you buy. Nothing is added or ordered without your confirmation."
+                  : "Answers are searched from this shop's catalogue. Nothing is added or ordered without your confirmation."}
+              </span>
             </p>
           </div>
         </section>

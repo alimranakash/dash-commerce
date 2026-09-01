@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Bug, Eye, FileText, Search, ShieldAlert, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import { AdminMobileField } from "../../../components/admin/admin-ui";
 import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 
 export type AdminSystemLogListItem = {
@@ -66,7 +67,7 @@ export function AdminLogManagement({ activeLevel, activeSource, dateRange, logs,
             <p className="m-0 mt-1 text-sm text-[#74758a]">Showing {filterLabel.toLowerCase()} logs.</p>
           </div>
 
-          <DashboardQueryForm actionPath="/admin/logs" className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_140px_160px_minmax(170px,1fr)_44px] 2xl:w-[900px]">
+          <DashboardQueryForm actionPath="/admin/logs" className="grid gap-3 sm:grid-cols-2 2xl:w-[900px] 2xl:grid-cols-[minmax(220px,1fr)_140px_160px_minmax(170px,1fr)_44px]">
             <input
               className="h-11 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none placeholder:text-[#a2a3b0] focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10"
               defaultValue={search}
@@ -87,58 +88,83 @@ export function AdminLogManagement({ activeLevel, activeSource, dateRange, logs,
               placeholder="eg. 01 Jan 2026 - 31 Jan 2026"
               type="text"
             />
-            <button aria-label="Search logs" className="grid h-11 cursor-pointer place-items-center rounded-lg bg-[#7c3aed] text-white hover:bg-[#6d28d9]" type="submit">
+            <button aria-label="Search logs" className="grid h-11 cursor-pointer place-items-center rounded-lg bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:col-span-2 2xl:col-span-1" type="submit">
               <Search className="h-4 w-4" />
             </button>
           </DashboardQueryForm>
         </div>
 
         {hasLogs ? (
-          <div className="overflow-hidden rounded-xl border border-[#efeff5] bg-white">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1080px] border-collapse text-left text-xs">
-                <thead className="bg-[#f7f7fa] text-[#565762]">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold">Level</th>
-                    <th className="px-4 py-3 font-semibold">Source</th>
-                    <th className="px-4 py-3 font-semibold">Message</th>
-                    <th className="px-4 py-3 font-semibold">User</th>
-                    <th className="px-4 py-3 font-semibold">Store</th>
-                    <th className="px-4 py-3 font-semibold">Date</th>
-                    <th className="px-4 py-3 text-right font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#efeff5]">
-                  {logs.map((log) => (
-                    <tr className="transition hover:bg-[#fbfaff]" key={log.id}>
-                      <td className="px-4 py-4"><LogLevelBadge level={log.level} /></td>
-                      <td className="px-4 py-4"><SourceBadge source={log.source} /></td>
-                      <td className="px-4 py-4">
-                        <div className="max-w-md font-semibold text-[#20212c]">{log.message}</div>
-                        <div className="mt-1 text-[11px] text-[#74758a]">{log.id}</div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="font-semibold text-[#30313d]">{log.userName}</div>
-                        <div className="mt-1 text-[11px] text-[#74758a]">{log.userEmail}</div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="font-semibold text-[#30313d]">{log.storeName}</div>
-                        <div className="mt-1 text-[11px] text-[#74758a]">{log.storeDomain}</div>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{log.createdAt}</td>
-                      <td className="px-4 py-4">
-                        <div className="flex justify-end">
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]" onClick={() => setSelectedLog(log)} title="View log" type="button">
-                            <Eye className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
+          <>
+            <div className="hidden overflow-hidden rounded-xl border border-[#efeff5] bg-white lg:block">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[1080px] border-collapse text-left text-xs">
+                  <thead className="bg-[#f7f7fa] text-[#565762]">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">Level</th>
+                      <th className="px-4 py-3 font-semibold">Source</th>
+                      <th className="px-4 py-3 font-semibold">Message</th>
+                      <th className="px-4 py-3 font-semibold">User</th>
+                      <th className="px-4 py-3 font-semibold">Store</th>
+                      <th className="px-4 py-3 font-semibold">Date</th>
+                      <th className="px-4 py-3 text-right font-semibold">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-[#efeff5]">
+                    {logs.map((log) => (
+                      <tr className="transition hover:bg-[#fbfaff]" key={log.id}>
+                        <td className="px-4 py-4"><LogLevelBadge level={log.level} /></td>
+                        <td className="px-4 py-4"><SourceBadge source={log.source} /></td>
+                        <td className="px-4 py-4">
+                          <div className="max-w-md font-semibold text-[#20212c]">{log.message}</div>
+                          <div className="mt-1 text-[11px] text-[#74758a]">{log.id}</div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="font-semibold text-[#30313d]">{log.userName}</div>
+                          <div className="mt-1 text-[11px] text-[#74758a]">{log.userEmail}</div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="font-semibold text-[#30313d]">{log.storeName}</div>
+                          <div className="mt-1 text-[11px] text-[#74758a]">{log.storeDomain}</div>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{log.createdAt}</td>
+                        <td className="px-4 py-4">
+                          <div className="flex justify-end">
+                            <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]" onClick={() => setSelectedLog(log)} title="View log" type="button">
+                              <Eye className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+
+            <div className="grid gap-3 lg:hidden">
+              {logs.map((log) => (
+                <article className="rounded-xl border border-[#efeff5] bg-white p-4" key={log.id}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <LogLevelBadge level={log.level} />
+                    <SourceBadge source={log.source} />
+                    <button className="ml-auto grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]" onClick={() => setSelectedLog(log)} title="View log" type="button">
+                      <Eye className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-[#20212c]">{log.message}</div>
+                  <div className="mt-1 break-all text-[11px] text-[#74758a]">{log.id}</div>
+                  <dl className="mt-3 grid grid-cols-2 gap-3 border-t border-[#f0eff5] pt-3">
+                    <AdminMobileField label="User" value={log.userName} />
+                    <AdminMobileField label="Store" value={log.storeName} />
+                    <AdminMobileField label="Email" value={log.userEmail} />
+                    <AdminMobileField label="Domain" value={log.storeDomain} />
+                    <AdminMobileField label="Date" value={log.createdAt} />
+                  </dl>
+                </article>
+              ))}
+            </div>
+          </>
         ) : (
           <AdminLogsEmpty />
         )}

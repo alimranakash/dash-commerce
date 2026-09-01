@@ -42,6 +42,22 @@ export function AdminMetricCard({
   );
 }
 
+/**
+ * One label/value pair inside a mobile list card.
+ *
+ * The admin tables carry 8-10 columns and never fit below `lg`, so each row is
+ * re-rendered there as a card of these rather than being left to scroll
+ * sideways. Renders as a `dt`/`dd` pair, so the card's wrapper must be a `dl`.
+ */
+export function AdminMobileField({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <dt className="m-0 text-[10px] font-medium uppercase tracking-[0.08em] text-[#92939d]">{label}</dt>
+      <dd className="m-0 mt-1 break-words text-xs text-[#30313d]">{value}</dd>
+    </div>
+  );
+}
+
 export function AdminPlaceholderCard({ title }: { title: string }) {
   return (
     <div className="rounded-xl border border-[#ececf5] bg-white p-8 text-center shadow-sm">

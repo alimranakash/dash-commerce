@@ -5,6 +5,7 @@ import { CheckCircle2, Download, Eye, FileText, RefreshCcw, Search, X, XCircle }
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
+import { AdminMobileField } from "../../../components/admin/admin-ui";
 import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 import { markPaymentFailedAction, markPaymentPaidAction } from "../admin-payments.actions";
 
@@ -129,6 +130,29 @@ export function AdminPaymentManagement({
     });
   }
 
+  /** Shared by the desktop row and the mobile card so the two cannot drift apart. */
+  function paymentActions(payment: AdminPaymentListItem) {
+    return (
+      <>
+        <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]" onClick={() => setSelectedPayment(payment)} title="View payment" type="button">
+          <Eye className="h-4 w-4" />
+        </button>
+        <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={pending || payment.status !== "PENDING"} onClick={() => setStatusTarget({ action: paymentStatusActions.paid, payment })} title="Approve payment" type="button">
+          <CheckCircle2 className="h-4 w-4" />
+        </button>
+        <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-amber-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={pending || payment.status !== "PENDING"} onClick={() => setStatusTarget({ action: paymentStatusActions.failed, payment })} title="Reject payment" type="button">
+          <XCircle className="h-4 w-4" />
+        </button>
+        <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#7c3aed] hover:bg-[#f3f0ff]" onClick={() => setPlaceholder({ message: "Refund processing will be connected when gateway integrations are added.", title: "Refund Placeholder" })} title="Refund" type="button">
+          <RefreshCcw className="h-4 w-4" />
+        </button>
+        <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#2563eb] hover:bg-blue-50" onClick={() => setPlaceholder({ message: "Receipt downloads will be generated when invoice PDFs are added.", title: "Receipt Placeholder" })} title="Download receipt" type="button">
+          <Download className="h-4 w-4" />
+        </button>
+      </>
+    );
+  }
+
   return (
     <>
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -160,7 +184,7 @@ export function AdminPaymentManagement({
             <Link className="inline-flex h-11 cursor-pointer items-center justify-center rounded-lg border border-[#dcd7f5] bg-white px-4 text-xs font-semibold text-[#6d3cf5] hover:bg-[#f7f4ff]" href="/admin/payments/settings">
               Manual Payment Settings
             </Link>
-            <DashboardQueryForm actionPath="/admin/payments" className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_150px_150px_minmax(170px,1fr)_44px] 2xl:w-[900px]">
+            <DashboardQueryForm actionPath="/admin/payments" className="grid gap-3 sm:grid-cols-2 2xl:w-[900px] 2xl:grid-cols-[minmax(220px,1fr)_150px_150px_minmax(170px,1fr)_44px]">
             <input
               className="h-11 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none placeholder:text-[#a2a3b0] focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10"
               defaultValue={search}
@@ -181,7 +205,7 @@ export function AdminPaymentManagement({
               placeholder="eg. 01 Jan 2026 - 31 Jan 2026"
               type="text"
             />
-            <button aria-label="Search payments" className="grid h-11 cursor-pointer place-items-center rounded-lg bg-[#7c3aed] text-white hover:bg-[#6d28d9]" type="submit">
+            <button aria-label="Search payments" className="grid h-11 cursor-pointer place-items-center rounded-lg bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:col-span-2 2xl:col-span-1" type="submit">
               <Search className="h-4 w-4" />
             </button>
             </DashboardQueryForm>
@@ -189,69 +213,83 @@ export function AdminPaymentManagement({
         </div>
 
         {hasPayments ? (
-          <div className="overflow-hidden rounded-xl border border-[#efeff5] bg-white">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1180px] border-collapse text-left text-xs">
-                <thead className="bg-[#f7f7fa] text-[#565762]">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold">Store</th>
-                    <th className="px-4 py-3 font-semibold">Owner</th>
-                    <th className="px-4 py-3 font-semibold">Plan</th>
-                    <th className="px-4 py-3 font-semibold">Payment Method</th>
-                    <th className="px-4 py-3 font-semibold">Transaction ID</th>
-                    <th className="px-4 py-3 font-semibold">Sender Number</th>
-                    <th className="px-4 py-3 font-semibold">Amount</th>
-                    <th className="px-4 py-3 font-semibold">Status</th>
-                    <th className="px-4 py-3 font-semibold">Created At</th>
-                    <th className="px-4 py-3 text-right font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#efeff5]">
-                  {payments.map((payment) => (
-                    <tr className="transition hover:bg-[#fbfaff]" key={payment.id}>
-                      <td className="px-4 py-4">
-                        <div className="font-semibold text-[#20212c]">{payment.storeName}</div>
-                        <div className="mt-1 text-[11px] text-[#74758a]">{payment.invoiceNumber}</div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="font-semibold text-[#30313d]">{payment.ownerName}</div>
-                        <div className="mt-1 text-[11px] text-[#74758a]">{payment.ownerEmail}</div>
-                      </td>
-                      <td className="px-4 py-4 font-semibold text-[#20212c]">{payment.planName}</td>
-                      <td className="px-4 py-4">
-                        <div className="font-semibold text-[#20212c]">{paymentMethodLabel(payment.paymentMethod)}</div>
-                        <div className="mt-1"><GatewayBadge gateway={payment.gateway} /></div>
-                      </td>
-                      <td className="px-4 py-4 font-mono text-[11px] text-[#30313d]">{payment.paymentReference}</td>
-                      <td className="px-4 py-4 text-[#565762]">{payment.senderNumber}</td>
-                      <td className="px-4 py-4 font-semibold text-[#20212c]">{payment.currency} {formatMoney(payment.amount)}</td>
-                      <td className="px-4 py-4"><PaymentStatusBadge status={payment.status} /></td>
-                      <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{payment.createdAt}</td>
-                      <td className="px-4 py-4">
-                        <div className="flex justify-end gap-1.5">
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]" onClick={() => setSelectedPayment(payment)} title="View payment" type="button">
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={pending || payment.status !== "PENDING"} onClick={() => setStatusTarget({ action: paymentStatusActions.paid, payment })} title="Approve payment" type="button">
-                            <CheckCircle2 className="h-4 w-4" />
-                          </button>
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-amber-700 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-40" disabled={pending || payment.status !== "PENDING"} onClick={() => setStatusTarget({ action: paymentStatusActions.failed, payment })} title="Reject payment" type="button">
-                            <XCircle className="h-4 w-4" />
-                          </button>
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#7c3aed] hover:bg-[#f3f0ff]" onClick={() => setPlaceholder({ message: "Refund processing will be connected when gateway integrations are added.", title: "Refund Placeholder" })} title="Refund" type="button">
-                            <RefreshCcw className="h-4 w-4" />
-                          </button>
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#2563eb] hover:bg-blue-50" onClick={() => setPlaceholder({ message: "Receipt downloads will be generated when invoice PDFs are added.", title: "Receipt Placeholder" })} title="Download receipt" type="button">
-                            <Download className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
+          <>
+            <div className="hidden overflow-hidden rounded-xl border border-[#efeff5] bg-white lg:block">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[1180px] border-collapse text-left text-xs">
+                  <thead className="bg-[#f7f7fa] text-[#565762]">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">Store</th>
+                      <th className="px-4 py-3 font-semibold">Owner</th>
+                      <th className="px-4 py-3 font-semibold">Plan</th>
+                      <th className="px-4 py-3 font-semibold">Payment Method</th>
+                      <th className="px-4 py-3 font-semibold">Transaction ID</th>
+                      <th className="px-4 py-3 font-semibold">Sender Number</th>
+                      <th className="px-4 py-3 font-semibold">Amount</th>
+                      <th className="px-4 py-3 font-semibold">Status</th>
+                      <th className="px-4 py-3 font-semibold">Created At</th>
+                      <th className="px-4 py-3 text-right font-semibold">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-[#efeff5]">
+                    {payments.map((payment) => (
+                      <tr className="transition hover:bg-[#fbfaff]" key={payment.id}>
+                        <td className="px-4 py-4">
+                          <div className="font-semibold text-[#20212c]">{payment.storeName}</div>
+                          <div className="mt-1 text-[11px] text-[#74758a]">{payment.invoiceNumber}</div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="font-semibold text-[#30313d]">{payment.ownerName}</div>
+                          <div className="mt-1 text-[11px] text-[#74758a]">{payment.ownerEmail}</div>
+                        </td>
+                        <td className="px-4 py-4 font-semibold text-[#20212c]">{payment.planName}</td>
+                        <td className="px-4 py-4">
+                          <div className="font-semibold text-[#20212c]">{paymentMethodLabel(payment.paymentMethod)}</div>
+                          <div className="mt-1"><GatewayBadge gateway={payment.gateway} /></div>
+                        </td>
+                        <td className="px-4 py-4 font-mono text-[11px] text-[#30313d]">{payment.paymentReference}</td>
+                        <td className="px-4 py-4 text-[#565762]">{payment.senderNumber}</td>
+                        <td className="px-4 py-4 font-semibold text-[#20212c]">{payment.currency} {formatMoney(payment.amount)}</td>
+                        <td className="px-4 py-4"><PaymentStatusBadge status={payment.status} /></td>
+                        <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{payment.createdAt}</td>
+                        <td className="px-4 py-4">
+                          <div className="flex justify-end gap-1.5">{paymentActions(payment)}</div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+
+            <div className="grid gap-3 lg:hidden">
+              {payments.map((payment) => (
+                <article className="rounded-xl border border-[#efeff5] bg-white p-4" key={payment.id}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold text-[#20212c]">{payment.storeName}</div>
+                      <div className="mt-0.5 break-all text-[11px] text-[#74758a]">{payment.invoiceNumber}</div>
+                    </div>
+                    <strong className="shrink-0 text-sm font-semibold text-[#20212c]">{payment.currency} {formatMoney(payment.amount)}</strong>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <PaymentStatusBadge status={payment.status} />
+                    <GatewayBadge gateway={payment.gateway} />
+                  </div>
+                  <dl className="mt-3 grid grid-cols-2 gap-3 border-t border-[#f0eff5] pt-3">
+                    <AdminMobileField label="Owner" value={payment.ownerName} />
+                    <AdminMobileField label="Plan" value={payment.planName} />
+                    <AdminMobileField label="Email" value={payment.ownerEmail} />
+                    <AdminMobileField label="Method" value={paymentMethodLabel(payment.paymentMethod)} />
+                    <AdminMobileField label="Transaction ID" value={<span className="font-mono text-[11px]">{payment.paymentReference}</span>} />
+                    <AdminMobileField label="Sender number" value={payment.senderNumber} />
+                    <AdminMobileField label="Created at" value={payment.createdAt} />
+                  </dl>
+                  <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[#f0eff5] pt-3">{paymentActions(payment)}</div>
+                </article>
+              ))}
+            </div>
+          </>
         ) : (
           <AdminPaymentsEmpty />
         )}
@@ -360,8 +398,8 @@ function StatusConfirmModal({
   statusAction: PaymentStatusAction;
 }) {
   return (
-    <div aria-modal="true" className="fixed inset-0 z-[110] grid place-items-center bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+    <div aria-modal="true" className="fixed inset-0 z-[110] flex justify-center overflow-y-auto bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
+      <div className="my-auto w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#f3f0ff] text-[#7c3aed]">
           <FileText className="h-6 w-6" />
         </div>
@@ -382,8 +420,8 @@ function StatusConfirmModal({
 
 function PlaceholderModal({ message, onClose, title }: { message: string; onClose: () => void; title: string }) {
   return (
-    <div aria-modal="true" className="fixed inset-0 z-[110] grid place-items-center bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-2xl">
+    <div aria-modal="true" className="fixed inset-0 z-[110] flex justify-center overflow-y-auto bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
+      <div className="my-auto w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-2xl">
         <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#f3f0ff] text-[#7c3aed]">
           <FileText className="h-6 w-6" />
         </div>

@@ -31,7 +31,7 @@ export async function AdminMessagingHealth() {
         />
       </div>
 
-      <div className="mt-4 grid grid-cols-4 gap-2">
+      <div className="mt-4 grid grid-cols-2 gap-2 2xl:grid-cols-4">
         <Total label="Sent" tone="green" value={health.totals.SENT} />
         <Total label="Failed" tone={health.totals.FAILED > 0 ? "red" : "gray"} value={health.totals.FAILED} />
         <Total label="Over plan" tone={health.totals.BLOCKED > 0 ? "amber" : "gray"} value={health.totals.BLOCKED} />

@@ -3,6 +3,7 @@
 import { Button } from "@dash/ui";
 import { CalendarClock, CheckCircle2, Edit3, Eye, MessageSquare, PauseCircle, RotateCcw, Search, TimerReset, Trash2, X } from "lucide-react";
 import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
+import { AdminMobileField } from "../../../components/admin/admin-ui";
 import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 import {
   activateSubscriptionAction,
@@ -121,6 +122,44 @@ export function AdminSubscriptionManagement({
     });
   }
 
+  /** Shared by the desktop row and the mobile card so the two cannot drift apart. */
+  function subscriptionActions(subscription: AdminSubscriptionListItem) {
+    return (
+      <>
+        <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]" onClick={() => setSelectedSubscription(subscription)} title="View details" type="button">
+          <Eye className="h-4 w-4" />
+        </button>
+        <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#2563eb] hover:bg-blue-50" onClick={() => setPlanTarget(subscription)} title="Change plan" type="button">
+          <Edit3 className="h-4 w-4" />
+        </button>
+        <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#7c3aed] hover:bg-[#f3f0ff]" onClick={() => setTrialTarget(subscription)} title="Extend trial" type="button">
+          <TimerReset className="h-4 w-4" />
+        </button>
+        <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#0f766e] hover:bg-teal-50" onClick={() => setSmsTarget(subscription)} title="SMS allowance" type="button">
+          <MessageSquare className="h-4 w-4" />
+        </button>
+        <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50" disabled={pending} onClick={() => setStatusTarget({ action: statusActions.activate, subscription })} title="Activate" type="button">
+          <CheckCircle2 className="h-4 w-4" />
+        </button>
+        <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-amber-700 hover:bg-amber-50" disabled={pending} onClick={() => setStatusTarget({ action: statusActions.pastDue, subscription })} title="Mark past due" type="button">
+          <CalendarClock className="h-4 w-4" />
+        </button>
+        {subscription.status === "CANCELLED" ? (
+          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50" disabled={pending} onClick={() => setStatusTarget({ action: statusActions.resume, subscription })} title="Resume" type="button">
+            <RotateCcw className="h-4 w-4" />
+          </button>
+        ) : (
+          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-red-600 hover:bg-red-50" disabled={pending} onClick={() => setStatusTarget({ action: statusActions.cancel, subscription })} title="Cancel" type="button">
+            <PauseCircle className="h-4 w-4" />
+          </button>
+        )}
+        <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-red-600 hover:bg-red-50" disabled={pending} onClick={() => setDeleteTarget(subscription)} title="Delete" type="button">
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </>
+    );
+  }
+
   return (
     <>
       <section className="rounded-xl border border-[#ececf5] bg-white p-5 shadow-sm">
@@ -133,7 +172,7 @@ export function AdminSubscriptionManagement({
             <p className="m-0 mt-1 text-sm text-[#74758a]">Showing {filterLabel.toLowerCase()} subscriptions.</p>
           </div>
 
-          <DashboardQueryForm actionPath="/admin/subscriptions" className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_150px_170px_150px_44px] 2xl:w-[840px]">
+          <DashboardQueryForm actionPath="/admin/subscriptions" className="grid gap-3 sm:grid-cols-2 2xl:w-[840px] 2xl:grid-cols-[minmax(220px,1fr)_150px_170px_150px_44px]">
             <input
               className="h-11 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none placeholder:text-[#a2a3b0] focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10"
               defaultValue={search}
@@ -151,86 +190,81 @@ export function AdminSubscriptionManagement({
             <select className="h-11 rounded-lg border border-[#e5e3f1] bg-white px-3.5 text-sm outline-none focus:border-[#8b5cf6] focus:ring-4 focus:ring-[#7c3aed]/10" defaultValue={activeBillingCycle} name="billingCycle">
               {billingOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
-            <button aria-label="Search subscriptions" className="grid h-11 cursor-pointer place-items-center rounded-lg bg-[#7c3aed] text-white hover:bg-[#6d28d9]" type="submit">
+            <button aria-label="Search subscriptions" className="grid h-11 cursor-pointer place-items-center rounded-lg bg-[#7c3aed] text-white hover:bg-[#6d28d9] sm:col-span-2 2xl:col-span-1" type="submit">
               <Search className="h-4 w-4" />
             </button>
           </DashboardQueryForm>
         </div>
 
         {hasSubscriptions ? (
-          <div className="overflow-hidden rounded-xl border border-[#efeff5] bg-white">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1180px] border-collapse text-left text-xs">
-                <thead className="bg-[#f7f7fa] text-[#565762]">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold">Store</th>
-                    <th className="px-4 py-3 font-semibold">Owner</th>
-                    <th className="px-4 py-3 font-semibold">Plan</th>
-                    <th className="px-4 py-3 font-semibold">Status</th>
-                    <th className="px-4 py-3 font-semibold">Billing Cycle</th>
-                    <th className="px-4 py-3 font-semibold">Trial Ends</th>
-                    <th className="px-4 py-3 font-semibold">Current Period</th>
-                    <th className="px-4 py-3 font-semibold">Created</th>
-                    <th className="px-4 py-3 text-right font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#efeff5]">
-                  {subscriptions.map((subscription) => (
-                    <tr className="transition hover:bg-[#fbfaff]" key={subscription.id}>
-                      <td className="px-4 py-4">
-                        <div className="font-semibold text-[#20212c]">{subscription.storeName}</div>
-                        <div className="mt-1 text-[11px] text-[#74758a]">{subscription.storeDomain}</div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="font-semibold text-[#30313d]">{subscription.ownerName}</div>
-                        <div className="mt-1 text-[11px] text-[#74758a]">{subscription.ownerEmail}</div>
-                      </td>
-                      <td className="px-4 py-4 font-semibold text-[#20212c]">{subscription.planName}</td>
-                      <td className="px-4 py-4"><SubscriptionStatusBadge status={subscription.status} /></td>
-                      <td className="px-4 py-4"><BillingBadge billingCycle={subscription.billingCycle} /></td>
-                      <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{subscription.trialEndsAt}</td>
-                      <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{subscription.currentPeriod}</td>
-                      <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{subscription.createdAt}</td>
-                      <td className="px-4 py-4">
-                        <div className="flex justify-end gap-1.5">
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]" onClick={() => setSelectedSubscription(subscription)} title="View details" type="button">
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#2563eb] hover:bg-blue-50" onClick={() => setPlanTarget(subscription)} title="Change plan" type="button">
-                            <Edit3 className="h-4 w-4" />
-                          </button>
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#7c3aed] hover:bg-[#f3f0ff]" onClick={() => setTrialTarget(subscription)} title="Extend trial" type="button">
-                            <TimerReset className="h-4 w-4" />
-                          </button>
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-[#0f766e] hover:bg-teal-50" onClick={() => setSmsTarget(subscription)} title="SMS allowance" type="button">
-                            <MessageSquare className="h-4 w-4" />
-                          </button>
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50" disabled={pending} onClick={() => setStatusTarget({ action: statusActions.activate, subscription })} title="Activate" type="button">
-                            <CheckCircle2 className="h-4 w-4" />
-                          </button>
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-amber-700 hover:bg-amber-50" disabled={pending} onClick={() => setStatusTarget({ action: statusActions.pastDue, subscription })} title="Mark past due" type="button">
-                            <CalendarClock className="h-4 w-4" />
-                          </button>
-                          {subscription.status === "CANCELLED" ? (
-                            <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50" disabled={pending} onClick={() => setStatusTarget({ action: statusActions.resume, subscription })} title="Resume" type="button">
-                              <RotateCcw className="h-4 w-4" />
-                            </button>
-                          ) : (
-                            <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-red-600 hover:bg-red-50" disabled={pending} onClick={() => setStatusTarget({ action: statusActions.cancel, subscription })} title="Cancel" type="button">
-                              <PauseCircle className="h-4 w-4" />
-                            </button>
-                          )}
-                          <button className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-red-600 hover:bg-red-50" disabled={pending} onClick={() => setDeleteTarget(subscription)} title="Delete" type="button">
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
+          <>
+            <div className="hidden overflow-hidden rounded-xl border border-[#efeff5] bg-white lg:block">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[1180px] border-collapse text-left text-xs">
+                  <thead className="bg-[#f7f7fa] text-[#565762]">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">Store</th>
+                      <th className="px-4 py-3 font-semibold">Owner</th>
+                      <th className="px-4 py-3 font-semibold">Plan</th>
+                      <th className="px-4 py-3 font-semibold">Status</th>
+                      <th className="px-4 py-3 font-semibold">Billing Cycle</th>
+                      <th className="px-4 py-3 font-semibold">Trial Ends</th>
+                      <th className="px-4 py-3 font-semibold">Current Period</th>
+                      <th className="px-4 py-3 font-semibold">Created</th>
+                      <th className="px-4 py-3 text-right font-semibold">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-[#efeff5]">
+                    {subscriptions.map((subscription) => (
+                      <tr className="transition hover:bg-[#fbfaff]" key={subscription.id}>
+                        <td className="px-4 py-4">
+                          <div className="font-semibold text-[#20212c]">{subscription.storeName}</div>
+                          <div className="mt-1 text-[11px] text-[#74758a]">{subscription.storeDomain}</div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="font-semibold text-[#30313d]">{subscription.ownerName}</div>
+                          <div className="mt-1 text-[11px] text-[#74758a]">{subscription.ownerEmail}</div>
+                        </td>
+                        <td className="px-4 py-4 font-semibold text-[#20212c]">{subscription.planName}</td>
+                        <td className="px-4 py-4"><SubscriptionStatusBadge status={subscription.status} /></td>
+                        <td className="px-4 py-4"><BillingBadge billingCycle={subscription.billingCycle} /></td>
+                        <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{subscription.trialEndsAt}</td>
+                        <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{subscription.currentPeriod}</td>
+                        <td className="whitespace-nowrap px-4 py-4 text-[#565762]">{subscription.createdAt}</td>
+                        <td className="px-4 py-4">
+                          <div className="flex justify-end gap-1.5">{subscriptionActions(subscription)}</div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+
+            <div className="grid gap-3 lg:hidden">
+              {subscriptions.map((subscription) => (
+                <article className="rounded-xl border border-[#efeff5] bg-white p-4" key={subscription.id}>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-[#20212c]">{subscription.storeName}</div>
+                    <div className="mt-0.5 break-all text-[11px] text-[#74758a]">{subscription.storeDomain}</div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <SubscriptionStatusBadge status={subscription.status} />
+                    <BillingBadge billingCycle={subscription.billingCycle} />
+                  </div>
+                  <dl className="mt-3 grid grid-cols-2 gap-3 border-t border-[#f0eff5] pt-3">
+                    <AdminMobileField label="Plan" value={subscription.planName} />
+                    <AdminMobileField label="Owner" value={subscription.ownerName} />
+                    <AdminMobileField label="Email" value={subscription.ownerEmail} />
+                    <AdminMobileField label="Trial ends" value={subscription.trialEndsAt} />
+                    <AdminMobileField label="Current period" value={subscription.currentPeriod} />
+                    <AdminMobileField label="Created" value={subscription.createdAt} />
+                  </dl>
+                  <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[#f0eff5] pt-3">{subscriptionActions(subscription)}</div>
+                </article>
+              ))}
+            </div>
+          </>
         ) : (
           <AdminSubscriptionsEmpty />
         )}
@@ -301,8 +335,8 @@ function ChangePlanModal({ onClose, plans, subscription }: { onClose: () => void
   }, [onClose, state.status]);
 
   return (
-    <div aria-modal="true" className="fixed inset-0 z-[100] grid place-items-center bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
-      <form action={formAction} className="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
+    <div aria-modal="true" className="fixed inset-0 z-[100] flex justify-center overflow-y-auto bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
+      <form action={formAction} className="my-auto w-full max-w-lg rounded-2xl bg-white shadow-2xl">
         <ModalHeader onClose={onClose} subtitle={subscription.storeName} title="Change Plan" />
         <div className="grid gap-4 p-5">
           <label className="grid gap-2">
@@ -364,8 +398,8 @@ function SmsAllowanceModal({ onClose, subscription }: { onClose: () => void; sub
   }, [onClose, state.status]);
 
   return (
-    <div aria-modal="true" className="fixed inset-0 z-[100] grid place-items-center bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
-      <form action={formAction} className="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
+    <div aria-modal="true" className="fixed inset-0 z-[100] flex justify-center overflow-y-auto bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
+      <form action={formAction} className="my-auto w-full max-w-lg rounded-2xl bg-white shadow-2xl">
         <ModalHeader onClose={onClose} subtitle={subscription.storeName} title="SMS Allowance" />
         <div className="grid gap-4 p-5">
           <p className="m-0 rounded-lg bg-[#f7f7fb] px-4 py-3 text-sm text-[#565762]">
@@ -406,8 +440,8 @@ function ExtendTrialModal({ onClose, subscription }: { onClose: () => void; subs
   }, [onClose, state.status]);
 
   return (
-    <div aria-modal="true" className="fixed inset-0 z-[100] grid place-items-center bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
-      <form action={formAction} className="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
+    <div aria-modal="true" className="fixed inset-0 z-[100] flex justify-center overflow-y-auto bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
+      <form action={formAction} className="my-auto w-full max-w-lg rounded-2xl bg-white shadow-2xl">
         <ModalHeader onClose={onClose} subtitle={subscription.storeName} title="Extend Trial" />
         <div className="grid gap-4 p-5">
           <label className="grid gap-2">
@@ -487,8 +521,8 @@ function StatusConfirmModal({
   subscription: AdminSubscriptionListItem;
 }) {
   return (
-    <div aria-modal="true" className="fixed inset-0 z-[110] grid place-items-center bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+    <div aria-modal="true" className="fixed inset-0 z-[110] flex justify-center overflow-y-auto bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
+      <div className="my-auto w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#f3f0ff] text-[#7c3aed]">
           <CalendarClock className="h-6 w-6" />
         </div>
@@ -525,8 +559,8 @@ function DeleteSubscriptionModal({
   subscription: AdminSubscriptionListItem;
 }) {
   return (
-    <div aria-modal="true" className="fixed inset-0 z-[110] grid place-items-center bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+    <div aria-modal="true" className="fixed inset-0 z-[110] flex justify-center overflow-y-auto bg-[#20212a]/45 p-4" onMouseDown={(event) => event.target === event.currentTarget && onClose()} role="dialog">
+      <div className="my-auto w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-red-50 text-red-600">
           <Trash2 className="h-6 w-6" />
         </div>

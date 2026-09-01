@@ -4,6 +4,7 @@ import { Button } from "@dash/ui";
 import { Eye, Power, Search, ShieldAlert, Store, Trash2, UserCog, X } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
+import { AdminMobileField } from "../../../components/admin/admin-ui";
 import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 import {
   activateAdminStoreAction,
@@ -75,6 +76,67 @@ export function AdminStoreManagement({ activeStatus, search, stores }: AdminStor
     });
   }
 
+  /** Shared by the desktop row and the mobile card so the two cannot drift apart. */
+  function storeActions(store: AdminStoreListItem) {
+    return (
+      <>
+        <button
+          className="grid h-8 w-8 place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]"
+          onClick={() => setSelectedStore(store)}
+          title="View details"
+          type="button"
+        >
+          <Eye className="h-4 w-4" />
+        </button>
+        <Link
+          className="grid h-8 w-8 place-items-center rounded-lg text-[#2563eb] hover:bg-blue-50"
+          href={store.storeUrl}
+          target="_blank"
+          title="View store"
+        >
+          <Store className="h-4 w-4" />
+        </Link>
+        <button
+          className="grid h-8 w-8 place-items-center rounded-lg text-[#7c3aed] hover:bg-[#f3f0ff]"
+          onClick={() => setSelectedStore(store)}
+          title="Impersonate placeholder"
+          type="button"
+        >
+          <UserCog className="h-4 w-4" />
+        </button>
+        {store.status === "SUSPENDED" ? (
+          <button
+            className="grid h-8 w-8 place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50"
+            disabled={pending}
+            onClick={() => runAction(activateAdminStoreAction, store.id)}
+            title="Activate"
+            type="button"
+          >
+            <Power className="h-4 w-4" />
+          </button>
+        ) : (
+          <button
+            className="grid h-8 w-8 place-items-center rounded-lg text-amber-700 hover:bg-amber-50"
+            disabled={pending}
+            onClick={() => runAction(suspendAdminStoreAction, store.id)}
+            title="Suspend"
+            type="button"
+          >
+            <ShieldAlert className="h-4 w-4" />
+          </button>
+        )}
+        <button
+          className="grid h-8 w-8 place-items-center rounded-lg text-red-600 hover:bg-red-50"
+          onClick={() => setDeleteTarget(store)}
+          title="Delete"
+          type="button"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </>
+    );
+  }
+
   return (
     <>
       <section className="rounded-xl border border-[#ececf5] bg-white p-5 shadow-sm">
@@ -119,108 +181,80 @@ export function AdminStoreManagement({ activeStatus, search, stores }: AdminStor
         </div>
 
         {hasStores ? (
-          <div className="overflow-hidden rounded-xl border border-[#efeff5] bg-white">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1120px] border-collapse text-left text-xs">
-                <thead className="bg-[#f7f7fa] text-[#565762]">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold">Store</th>
-                    <th className="px-4 py-3 font-semibold">Owner</th>
-                    <th className="px-4 py-3 font-semibold">Plan</th>
-                    <th className="px-4 py-3 font-semibold">Status</th>
-                    <th className="px-4 py-3 font-semibold">Products</th>
-                    <th className="px-4 py-3 font-semibold">Orders</th>
-                    <th className="px-4 py-3 font-semibold">Created</th>
-                    <th className="px-4 py-3 font-semibold">Last Activity</th>
-                    <th className="px-4 py-3 text-right font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#efeff5]">
-                  {stores.map((store) => (
-                    <tr className="transition hover:bg-[#fbfaff]" key={store.id}>
-                      <td className="px-4 py-4">
-                        <div className="font-semibold text-[#20212c]">{store.name}</div>
-                        <div className="mt-1 text-[11px] text-[#74758a]">{store.domain}</div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="font-semibold text-[#30313d]">{store.ownerName}</div>
-                        <div className="mt-1 text-[11px] text-[#74758a]">{store.ownerEmail}</div>
-                      </td>
-                      <td className="px-4 py-4">{store.plan}</td>
-                      <td className="px-4 py-4">
-                        <StoreStatusBadge status={store.status} />
-                      </td>
-                      <td className="px-4 py-4">{store.productsCount}</td>
-                      <td className="px-4 py-4">{store.ordersCount}</td>
-                      <td className="whitespace-nowrap px-4 py-4 text-[#565762]">
-                        {store.createdAt}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-4 text-[#565762]">
-                        {store.lastActivity}
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="flex justify-end gap-1.5">
-                          <button
-                            className="grid h-8 w-8 place-items-center rounded-lg text-[#6d3cf5] hover:bg-[#f3f0ff]"
-                            onClick={() => setSelectedStore(store)}
-                            title="View details"
-                            type="button"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <Link
-                            className="grid h-8 w-8 place-items-center rounded-lg text-[#2563eb] hover:bg-blue-50"
-                            href={store.storeUrl}
-                            target="_blank"
-                            title="View store"
-                          >
-                            <Store className="h-4 w-4" />
-                          </Link>
-                          <button
-                            className="grid h-8 w-8 place-items-center rounded-lg text-[#7c3aed] hover:bg-[#f3f0ff]"
-                            onClick={() => setSelectedStore(store)}
-                            title="Impersonate placeholder"
-                            type="button"
-                          >
-                            <UserCog className="h-4 w-4" />
-                          </button>
-                          {store.status === "SUSPENDED" ? (
-                            <button
-                              className="grid h-8 w-8 place-items-center rounded-lg text-emerald-700 hover:bg-emerald-50"
-                              disabled={pending}
-                              onClick={() => runAction(activateAdminStoreAction, store.id)}
-                              title="Activate"
-                              type="button"
-                            >
-                              <Power className="h-4 w-4" />
-                            </button>
-                          ) : (
-                            <button
-                              className="grid h-8 w-8 place-items-center rounded-lg text-amber-700 hover:bg-amber-50"
-                              disabled={pending}
-                              onClick={() => runAction(suspendAdminStoreAction, store.id)}
-                              title="Suspend"
-                              type="button"
-                            >
-                              <ShieldAlert className="h-4 w-4" />
-                            </button>
-                          )}
-                          <button
-                            className="grid h-8 w-8 place-items-center rounded-lg text-red-600 hover:bg-red-50"
-                            onClick={() => setDeleteTarget(store)}
-                            title="Delete"
-                            type="button"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
+          <>
+            <div className="hidden overflow-hidden rounded-xl border border-[#efeff5] bg-white lg:block">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[1120px] border-collapse text-left text-xs">
+                  <thead className="bg-[#f7f7fa] text-[#565762]">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">Store</th>
+                      <th className="px-4 py-3 font-semibold">Owner</th>
+                      <th className="px-4 py-3 font-semibold">Plan</th>
+                      <th className="px-4 py-3 font-semibold">Status</th>
+                      <th className="px-4 py-3 font-semibold">Products</th>
+                      <th className="px-4 py-3 font-semibold">Orders</th>
+                      <th className="px-4 py-3 font-semibold">Created</th>
+                      <th className="px-4 py-3 font-semibold">Last Activity</th>
+                      <th className="px-4 py-3 text-right font-semibold">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-[#efeff5]">
+                    {stores.map((store) => (
+                      <tr className="transition hover:bg-[#fbfaff]" key={store.id}>
+                        <td className="px-4 py-4">
+                          <div className="font-semibold text-[#20212c]">{store.name}</div>
+                          <div className="mt-1 text-[11px] text-[#74758a]">{store.domain}</div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="font-semibold text-[#30313d]">{store.ownerName}</div>
+                          <div className="mt-1 text-[11px] text-[#74758a]">{store.ownerEmail}</div>
+                        </td>
+                        <td className="px-4 py-4">{store.plan}</td>
+                        <td className="px-4 py-4">
+                          <StoreStatusBadge status={store.status} />
+                        </td>
+                        <td className="px-4 py-4">{store.productsCount}</td>
+                        <td className="px-4 py-4">{store.ordersCount}</td>
+                        <td className="whitespace-nowrap px-4 py-4 text-[#565762]">
+                          {store.createdAt}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-4 text-[#565762]">
+                          {store.lastActivity}
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex justify-end gap-1.5">{storeActions(store)}</div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+
+            <div className="grid gap-3 lg:hidden">
+              {stores.map((store) => (
+                <article className="rounded-xl border border-[#efeff5] bg-white p-4" key={store.id}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold text-[#20212c]">{store.name}</div>
+                      <div className="mt-0.5 break-all text-[11px] text-[#74758a]">{store.domain}</div>
+                    </div>
+                    <StoreStatusBadge status={store.status} />
+                  </div>
+                  <dl className="mt-3 grid grid-cols-2 gap-3 border-t border-[#f0eff5] pt-3">
+                    <AdminMobileField label="Owner" value={store.ownerName} />
+                    <AdminMobileField label="Plan" value={store.plan} />
+                    <AdminMobileField label="Email" value={store.ownerEmail} />
+                    <AdminMobileField label="Products" value={store.productsCount.toString()} />
+                    <AdminMobileField label="Orders" value={store.ordersCount.toString()} />
+                    <AdminMobileField label="Created" value={store.createdAt} />
+                    <AdminMobileField label="Last activity" value={store.lastActivity} />
+                  </dl>
+                  <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[#f0eff5] pt-3">{storeActions(store)}</div>
+                </article>
+              ))}
+            </div>
+          </>
         ) : (
           <AdminStoresEmpty />
         )}
@@ -381,11 +415,11 @@ function DeleteStoreModal({
   return (
     <div
       aria-modal="true"
-      className="fixed inset-0 z-[110] grid place-items-center bg-[#20212a]/45 p-4"
+      className="fixed inset-0 z-[110] flex justify-center overflow-y-auto bg-[#20212a]/45 p-4"
       onMouseDown={(event) => event.target === event.currentTarget && onClose()}
       role="dialog"
     >
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+      <div className="my-auto w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-red-50 text-red-600">
           <Trash2 className="h-6 w-6" />
         </div>
