@@ -167,3 +167,43 @@
     transition: none;
   }
 }
+
+/* dark-mode:generated:start */
+/* Written by npm run theme:dark - edit scripts/dark-mode/, not this. */
+[data-theme="dark"] .section {
+  background: #2b271f;
+}
+
+[data-theme="dark"] .media > span {
+  background: linear-gradient(145deg, #23242a14, transparent 42%),
+    linear-gradient(160deg, #552d14, #7e6559);
+  color: #ffffffb8;
+}
+
+[data-theme="dark"] .card:nth-child(2) .media > span {
+  background: linear-gradient(160deg, #464853, #485c53);
+}
+
+[data-theme="dark"] .card:nth-child(4) .media > span {
+  background: linear-gradient(160deg, #a68878, #7d5f5a);
+}
+
+[data-theme="dark"] .shade {
+  background: linear-gradient(180deg, transparent 48%, #24262d8f);
+}
+
+[data-theme="dark"] .content > span {
+  background: #23242af0;
+  border: 1px solid #383940e6;
+  color: #efedeb;
+}
+
+[data-theme="dark"] .card:hover .shade {
+  background: linear-gradient(180deg, #24262d0a 38%, #24262da3);
+}
+
+[data-theme="dark"] .card:hover .content > span {
+  background: #3a3431;
+  border-color: #656671;
+}
+/* dark-mode:generated:end */

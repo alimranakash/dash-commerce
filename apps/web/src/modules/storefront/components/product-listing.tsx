@@ -10,6 +10,7 @@ import {
   BEAUTY_PRODUCT_CARD_VARIANT,
   BeautyListingCard
 } from "../templates/beauty-default/beauty-listing-card";
+import { WishlistButton } from "../../wishlist/components/wishlist-button";
 import { ProductSectionSliderControls } from "./product-section-slider-controls";
 import { StorefrontImage } from "./storefront-image";
 
@@ -122,12 +123,23 @@ export function ProductCard({
   const variantCount = product.images.length > 1 ? `${product.images.length} Images` : "";
 
   return (
-    <Link className="general-product-listing-card" href={`${basePath}/products/${product.slug}`}>
+    // The whole card still opens the product, but it can no longer *be* the
+    // anchor: the heart is a button, and a button inside an anchor is markup no
+    // two browsers agree about. The link covers the card from behind instead,
+    // which leaves the click target exactly where it was.
+    <article className="general-product-listing-card">
+      <Link
+        className="general-product-listing-card-link"
+        href={`${basePath}/products/${product.slug}`}
+      >
+        <span className="sr-only">{product.title}</span>
+      </Link>
       <ProductImage
         alt={primaryImage?.alt ?? product.title}
         hoverSrc={hoverImage?.url}
         src={primaryImage?.url}
       />
+      <WishlistButton productId={product.id} productSlug={product.slug} />
       <div className="general-product-listing-meta">
         <div>
           <h3>{product.title}</h3>
@@ -142,7 +154,7 @@ export function ProductCard({
           {section.enableVariants && variantCount ? <span>{variantCount}</span> : null}
         </div>
       </div>
-    </Link>
+    </article>
   );
 }
 

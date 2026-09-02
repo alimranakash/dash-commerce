@@ -4,6 +4,7 @@ import { useStorefrontBasePath } from "../base-path-provider";
 import { useRouter } from "next/navigation";
 import { useState, type CSSProperties, type FormEvent } from "react";
 import { notifyCartUpdated, submitCartAction } from "../../cart/components/cart-client-actions";
+import { WishlistButton } from "../../wishlist/components/wishlist-button";
 
 type ProductPurchasePanelProps = {
   addToCartButtonColor?: string;
@@ -155,12 +156,14 @@ export function ProductPurchasePanel({
         {error ? <p className="sf-alert">{error}</p> : null}
       </form>
 
-      {secondaryActionsEnabled ? (
-        <div className="sf-secondary-actions">
-          <button type="button">Wishlist</button>
-          <button type="button">Share</button>
-        </div>
-      ) : null}
+      {/* Saving is not one of the decorative secondary actions. Share is the
+        seller's to switch off and the templates that lay out their own product
+        page do switch it off; the wishlist is a real feature, and it would have
+        no way in on those pages if it were behind the same flag. */}
+      <div className={`sf-secondary-actions${secondaryActionsEnabled ? "" : " sf-secondary-actions-single"}`}>
+        <WishlistButton productId={productId} productSlug={productSlug} variant="inline" />
+        {secondaryActionsEnabled ? <button type="button">Share</button> : null}
+      </div>
     </div>
   );
 }

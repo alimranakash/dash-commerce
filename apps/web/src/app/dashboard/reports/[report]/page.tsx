@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
-import { AbandonedCartsReportDashboard, CustomersReportDashboard, IncompleteOrdersReportDashboard, MerchandisingReportDashboard, OrdersReportDashboard, ProductsReportDashboard, RevenuesReportDashboard } from "../../../../modules/reports/components/report-section-dashboards";
+import { AbandonedCartsReportDashboard, CustomersReportDashboard, IncompleteOrdersReportDashboard, MerchandisingReportDashboard, OrdersReportDashboard, ProductsReportDashboard, RevenuesReportDashboard, WishlistReportDashboard } from "../../../../modules/reports/components/report-section-dashboards";
 import { DateRangeFilter } from "../../../../modules/reports/components/report-section-components";
-import { getAbandonedCartsReport, getCustomersReport, getIncompleteOrdersReport, getMerchandisingReport, getOrdersReport, getProductsReport, getRevenuesReport } from "../../../../modules/reports/report.service";
+import { getAbandonedCartsReport, getCustomersReport, getIncompleteOrdersReport, getMerchandisingReport, getOrdersReport, getProductsReport, getRevenuesReport, getWishlistReport } from "../../../../modules/reports/report.service";
 import { FeatureGate } from "../../../../modules/billing/components/feature-gate";
 import { hasPlanFeature } from "../../../../modules/billing/subscription-limits";
 import { REPORT_FEATURES, parseReportRange, type ReportRangeKey } from "../../../../modules/reports/report.types";
@@ -15,7 +15,8 @@ const reportTitles: Record<string, string> = {
   merchandising: "Upsell & Cross-sell",
   orders: "Orders",
   products: "Products",
-  revenues: "Revenues"
+  revenues: "Revenues",
+  wishlist: "Wishlist"
 };
 
 type ReportSectionPageProps = {
@@ -66,5 +67,8 @@ async function loadReportDashboard(report: string, storeId: string, currency: st
   if (report === "products") return <ProductsReportDashboard data={await getProductsReport(storeId, currency, range)} />;
   if (report === "customers") return <CustomersReportDashboard data={await getCustomersReport(storeId, currency, range)} />;
   if (report === "merchandising") return <MerchandisingReportDashboard data={await getMerchandisingReport(storeId, currency, range)} />;
+  // No currency argument: nothing in this one has a price on it. A wishlist is
+  // intent, and pricing it would be reporting revenue the store has not taken.
+  if (report === "wishlist") return <WishlistReportDashboard data={await getWishlistReport(storeId, range)} />;
   notFound();
 }

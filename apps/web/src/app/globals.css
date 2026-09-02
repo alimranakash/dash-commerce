@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* Dark mode. Both files are inert without `[data-theme="dark"]` on <html>, so
+   everything below this point renders exactly as it did before they existed.
+   They sit at the top because CSS requires every @import to come first, and
+   they still win in dark mode: each generated rule is the light rule it
+   shadows plus one attribute selector, which makes it the more specific of the
+   two no matter how far apart they are in the file. Generated first and
+   hand-written last, so a deliberate decision beats a mapped one. */
+@import "./dark-mode.generated.css";
+@import "./dark-mode.css";
+
 :root {
   --background: #f7f5ef;
   --foreground: #171717;
@@ -19170,4 +19180,169 @@ textarea {
   .sfa-switch-knob {
     transition: none;
   }
+}
+
+/* ==========================================================================
+   Wishlist
+   ==========================================================================
+   The heart appears on three surfaces that style everything else differently -
+   the shared listing card, the beauty tile and the product page - so the button
+   carries its own look and only its placement is per surface. */
+
+.sf-wishlist-button {
+  line-height: 0;
+  margin: 0;
+}
+
+.sf-wishlist-button button {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid rgba(23, 23, 23, 0.12);
+  color: #171717;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  gap: 8px;
+  justify-content: center;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.sf-wishlist-button button:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.sf-wishlist-heart {
+  height: 18px;
+  transition: fill 180ms ease;
+  width: 18px;
+}
+
+/* Saved is the filled heart. `currentColor` rather than a fixed red so a store
+   whose palette is not red still reads as "on" rather than as a stray accent. */
+.sf-wishlist-button.is-saved button {
+  border-color: color-mix(in srgb, var(--store-primary, #135d66) 45%, #ffffff);
+  color: var(--store-primary, #135d66);
+}
+
+.sf-wishlist-button.is-saved .sf-wishlist-heart {
+  fill: currentColor;
+}
+
+/* The card variant: a floating circle over the product image. */
+.sf-wishlist-button-icon {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 2;
+}
+
+.sf-wishlist-button-icon button {
+  border-radius: 999px;
+  box-shadow: 0 8px 20px rgba(23, 23, 23, 0.12);
+  height: 38px;
+  padding: 0;
+  width: 38px;
+}
+
+.sf-wishlist-button-icon button:hover {
+  border-color: color-mix(in srgb, var(--store-primary, #135d66) 45%, #ffffff);
+  color: var(--store-primary, #135d66);
+  transform: translateY(-1px);
+}
+
+/* The product page variant, sitting beside Share in the secondary row. */
+.sf-wishlist-button-inline button {
+  border-radius: 999px;
+  font-weight: 900;
+  min-height: 48px;
+  width: 100%;
+}
+
+/* The listing card stopped being an anchor when the heart arrived: a button
+   inside an anchor is markup no two browsers agree about. The link now covers
+   the card from behind, which keeps the click target exactly where it was. */
+.general-product-listing-card {
+  position: relative;
+}
+
+.general-product-listing-card-link {
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 1;
+}
+
+.beauty-product-tile-media .sf-wishlist-button-icon {
+  right: clamp(10px, 1vw, 16px);
+  top: clamp(10px, 1vw, 16px);
+}
+
+/* The header count, matching the cart badge it sits beside. */
+.sf-wishlist-icon-action {
+  position: relative;
+}
+
+.sf-wishlist-icon-action span {
+  align-items: center;
+  background: var(--store-primary, #135d66);
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  color: #ffffff;
+  display: inline-flex;
+  font-size: 0.66rem;
+  font-weight: 900;
+  height: 19px;
+  justify-content: center;
+  min-width: 19px;
+  padding: 0 5px;
+  position: absolute;
+  right: -5px;
+  top: -5px;
+}
+
+.sf-wishlist-notice {
+  background: #eef7f4;
+  border: 1px solid #cbe5dc;
+  border-radius: 8px;
+  font-weight: 800;
+  line-height: 1.5;
+  margin: 0;
+  padding: 14px 16px;
+}
+
+.sf-wishlist-clear {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+.sf-wishlist-clear button {
+  background: #ffffff;
+  border: 1px solid rgba(23, 23, 23, 0.14);
+  border-radius: 999px;
+  color: #575761;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  min-height: 44px;
+  padding: 0 26px;
+}
+
+.sf-wishlist-clear button:hover {
+  border-color: rgba(23, 23, 23, 0.3);
+  color: #171717;
+}
+
+/* The product page's heart with no Share beside it - the templates that lay out
+   their own product page switch Share off, and a lone button in a two-column
+   grid would sit in half the width for no reason. */
+.sf-secondary-actions-single {
+  grid-template-columns: minmax(0, 1fr);
 }

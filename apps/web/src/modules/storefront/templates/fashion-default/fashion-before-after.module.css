@@ -232,3 +232,55 @@
     transition: none;
   }
 }
+
+/* dark-mode:generated:start */
+/* Written by npm run theme:dark - edit scripts/dark-mode/, not this. */
+[data-theme="dark"] .section {
+  background: #303738;
+}
+
+[data-theme="dark"] .beforeFallback {
+  background: linear-gradient(90deg, #23242a1f, transparent),
+    linear-gradient(145deg, #464853, #4d5557);
+}
+
+[data-theme="dark"] .afterFallback {
+  background: linear-gradient(120deg, transparent 35%, #292a3238 36% 54%, transparent 55%),
+    linear-gradient(145deg, #18191f, #303738);
+}
+
+[data-theme="dark"] .label {
+  background: #23242a;
+  color: #ebecef;
+}
+
+[data-theme="dark"] .divider {
+  background: #23242ae6;
+}
+
+[data-theme="dark"] .handle {
+  background: #23242a;
+  box-shadow: 0 6px 22px #00000024;
+  color: #ebecef;
+}
+
+[data-theme="dark"] .handle:focus-visible {
+  outline: 2px solid #656671;
+}
+
+[data-theme="dark"] .section[data-dragging="true"] .handle {
+  box-shadow: 0 8px 26px #00000033;
+}
+
+[data-theme="dark"] .productCallout {
+  background: #485051b8;
+}
+
+[data-theme="dark"] .productCallout:hover {
+  background: #363d3fe0;
+}
+
+[data-theme="dark"] .thumbnail {
+  background: #23242a29;
+}
+/* dark-mode:generated:end */

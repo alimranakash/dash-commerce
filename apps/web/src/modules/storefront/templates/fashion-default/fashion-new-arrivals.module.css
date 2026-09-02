@@ -129,3 +129,33 @@
     min-height: 44px;
   }
 }
+
+/* dark-mode:generated:start */
+/* Written by npm run theme:dark - edit scripts/dark-mode/, not this. */
+[data-theme="dark"] .section {
+  background: #23242a;
+  color: #ebecef;
+}
+
+[data-theme="dark"] .tabs button {
+  color: #abacaf;
+}
+
+[data-theme="dark"] .tabs button span {
+  color: #ebecef;
+}
+
+[data-theme="dark"] .tabs button:hover,
+[data-theme="dark"] .tabs .activeTab {
+  color: #ebecef;
+}
+
+[data-theme="dark"] .shopLink {
+  color: #ebecef;
+}
+
+[data-theme="dark"] .empty {
+  border-block: 1px solid #383940;
+  color: #c5c5c9;
+}
+/* dark-mode:generated:end */

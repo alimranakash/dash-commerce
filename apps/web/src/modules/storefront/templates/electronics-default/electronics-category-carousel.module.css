@@ -161,3 +161,33 @@
     font-size: 0.9rem;
   }
 }
+
+/* dark-mode:generated:start */
+/* Written by npm run theme:dark - edit scripts/dark-mode/, not this. */
+[data-theme="dark"] .card {
+  background: #1f232b;
+  border: 1px solid #253253;
+  color: #e1eaf9;
+}
+
+[data-theme="dark"] .card:hover {
+  border-color: #334266;
+}
+
+[data-theme="dark"] .image :global(span) {
+  background: radial-gradient(circle at 32% 28%, #23242af2, transparent 17%),
+    linear-gradient(145deg, #111d33, #00113c);
+  color: #91aaed;
+}
+
+[data-theme="dark"] .label {
+  color: #e1eaf9;
+}
+
+[data-theme="dark"] .arrow {
+  background: #23242a;
+  border: 1px solid #59617414;
+  box-shadow: 0 8px 22px #080f2124;
+  color: #e6ecf4;
+}
+/* dark-mode:generated:end */

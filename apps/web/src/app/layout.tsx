@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import type { ReactNode } from "react";
+import { ThemeModeScript } from "../modules/theme-mode/components/theme-mode-script";
 import "./globals.css";
 
 const storefrontFont = DM_Sans({
@@ -20,8 +21,14 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={storefrontFont.variable} suppressHydrationWarning>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body className={storefrontFont.variable} suppressHydrationWarning>
+        {/* First thing in the document, before any surface paints: it stamps the
+          stored theme on <html> so a reader who chose dark never sees the light
+          page flash while React catches up. */}
+        <ThemeModeScript />
+        {children}
+      </body>
     </html>
   );
 }

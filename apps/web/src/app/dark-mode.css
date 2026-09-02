@@ -1,0 +1,162 @@
+/*
+ * Dark mode, hand-written half.
+ *
+ * This file holds the palette and the handful of things a colour mapping cannot
+ * work out on its own: form controls the browser paints, images that need
+ * holding back, and the storefront surfaces a merchant styles with an inline
+ * `style` attribute. The mechanical part - one dark counterpart for every colour
+ * already written in `globals.css` and in a Tailwind class - lives next door in
+ * `dark-mode.generated.css`.
+ *
+ * Everything here is scoped to `[data-theme="dark"]`, which `theme-mode.ts`
+ * stamps on <html>. With no attribute, nothing in either file matches and light
+ * mode renders exactly as it did before dark mode existed.
+ */
+
+:root[data-theme="dark"] {
+  /* Surfaces, lightest last. The page is *darker* than the cards on it, which is
+     the inverse of the light theme's white-on-tinted-grey and the reason the
+     generator maps near-whites by rank rather than by inversion. */
+  --dm-bg: #14151c;
+  --dm-surface: #1c1d26;
+  --dm-surface-2: #23242f;
+  --dm-surface-3: #2b2c39;
+
+  --dm-border: #33344180;
+  --dm-border-strong: #414353;
+
+  --dm-text: #e9eaf1;
+  --dm-text-muted: #b0b2c0;
+  --dm-text-subtle: #8b8d9d;
+
+  /* The product's violet, unchanged: brand colour is not a theme decision. */
+  --dm-accent: #7c3aed;
+  --dm-accent-soft: #241d3e;
+
+  color-scheme: dark;
+}
+
+/* The tokens `globals.css` already reads for the body and the marketing shell. */
+:root[data-theme="dark"] {
+  --background: var(--dm-bg);
+  --foreground: var(--dm-text);
+  --muted: var(--dm-text-muted);
+  --surface: var(--dm-surface);
+  --border: var(--dm-border-strong);
+}
+
+/* Form controls, scrollbars and the browser's own chrome. `color-scheme` above
+   does most of this; these are the parts it does not reach. */
+[data-theme="dark"] ::placeholder {
+  color: var(--dm-text-subtle);
+}
+
+[data-theme="dark"] ::selection {
+  background: color-mix(in oklab, var(--dm-accent) 45%, transparent);
+  color: var(--dm-text);
+}
+
+/* Dark mode is a display preference, not an edit: a shopper switching themes
+   must still see the product they are about to buy. Photography is left alone
+   and only the flat artwork that reads as UI - logos, payment marks, icons a
+   seller uploaded as black-on-white - is held back from glaring. */
+[data-theme="dark"] .sf-brand-mark img,
+[data-theme="dark"] .sf-payment-icons img,
+[data-theme="dark"] img[data-theme-dim="true"] {
+  filter: brightness(0.92) contrast(0.96);
+}
+
+/*
+ * Storefront surfaces a merchant controls.
+ *
+ * `StorefrontThemeProvider` and the header write their settings as inline
+ * custom properties, and an inline style beats any stylesheet, so these values
+ * cannot be re-declared - the rules that *consume* them have to be replaced.
+ * The generator does that automatically wherever it can see the `var()`; the
+ * rules below cover the surfaces that inherit their colour instead of naming it.
+ */
+[data-theme="dark"] .sf-theme-scope {
+  background: var(--dm-bg);
+  color: var(--dm-text);
+}
+
+[data-theme="dark"] .sf-page,
+[data-theme="dark"] .sf-page[data-storefront-template],
+[data-theme="dark"] .general-homepage {
+  background: var(--dm-bg);
+  color: var(--dm-text);
+}
+
+/* A hero is a photograph with type over it and already carries its own scrim;
+   repainting the plate behind it only shows while the image loads. */
+[data-theme="dark"] .general-hero {
+  background: var(--dm-surface-2);
+}
+
+/*
+ * The three shells.
+ *
+ * Each one sets its page colour as a Tailwind arbitrary value on a single
+ * element, so the generator covers them - but they are also the frame every
+ * other surface is judged against, so they are pinned here to the tokens rather
+ * than left to a mapped literal.
+ */
+[data-theme="dark"] .dash-dashboard,
+[data-theme="dark"] .admin-console {
+  --background: var(--dm-bg);
+  --foreground: var(--dm-text);
+  --muted: var(--dm-text-muted);
+  --surface: var(--dm-surface);
+  --border: var(--dm-border-strong);
+  --accent: var(--dm-accent);
+  background: var(--dm-bg);
+  color: var(--dm-text);
+}
+
+/* Chart and report canvases draw their own colours inline; give them a surface
+   that does not fight the ink. */
+[data-theme="dark"] .recharts-surface text,
+[data-theme="dark"] .recharts-cartesian-axis-tick text {
+  fill: var(--dm-text-muted);
+}
+
+[data-theme="dark"] .recharts-cartesian-grid line {
+  stroke: var(--dm-border-strong);
+}
+
+/* The theme control itself, shared by all three surfaces. */
+.theme-mode-toggle {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--theme-mode-border, #ececf5);
+  border-radius: 9999px;
+  color: inherit;
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+  width: 34px;
+}
+
+.theme-mode-toggle:hover {
+  background: var(--theme-mode-hover, #f5f4ff);
+}
+
+[data-theme="dark"] .theme-mode-toggle {
+  border-color: var(--dm-border-strong);
+}
+
+[data-theme="dark"] .theme-mode-toggle:hover {
+  background: var(--dm-surface-3);
+}
+
+/* Motion is a preference of its own; honouring it here too keeps the toggle from
+   flashing for anyone who asked the system not to animate. */
+@media (prefers-reduced-motion: reduce) {
+  .theme-mode-toggle {
+    transition: none;
+  }
+}

@@ -156,3 +156,31 @@
     transition: none;
   }
 }
+
+/* dark-mode:generated:start */
+/* Written by npm run theme:dark - edit scripts/dark-mode/, not this. */
+[data-theme="dark"] .darkPanel {
+  background: #2d2924;
+}
+
+[data-theme="dark"] .lightPanel {
+  background: #181920;
+}
+
+[data-theme="dark"] .darkFallback {
+  background: radial-gradient(circle at 56% 52%, #4637224d, transparent 12%),
+    linear-gradient(145deg, transparent 35%, #23242a0f),
+    linear-gradient(120deg, #2d2924, #4f4338 58%, #24262d);
+}
+
+[data-theme="dark"] .lightFallback {
+  background: linear-gradient(110deg, transparent 36%, #2a2b333d 36% 53%, transparent 53%),
+    linear-gradient(145deg, #1d1e24, #303138);
+}
+
+@media (max-width: 768px) {
+  [data-theme="dark"] .overlay {
+    background: linear-gradient(180deg, #24262d14, #24262d70 48%, transparent 50%);
+  }
+}
+/* dark-mode:generated:end */

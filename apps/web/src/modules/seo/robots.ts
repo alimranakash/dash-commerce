@@ -15,7 +15,10 @@ export const STOREFRONT_DISALLOWED_PATHS = [
   "/checkout",
   "/orders",
   "/search",
-  "/thank-you"
+  "/thank-you",
+  // One shopper's cookie rendered as a page. The page itself sends `noindex`;
+  // this is the half that stops it being fetched at all.
+  "/wishlist"
 ];
 
 /**

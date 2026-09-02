@@ -7,6 +7,8 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { PredictiveSearchTrigger } from "../../../search/components/predictive-search-trigger";
 import { MiniCartDrawer } from "../../../cart/components/mini-cart-drawer";
 import type { Cart } from "../../../cart/cart.types";
+import { ThemeModeToggle } from "../../../theme-mode/components/theme-mode-toggle";
+import { WishlistHeaderLink } from "../../../wishlist/components/wishlist-header-link";
 import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
   normalizeAdvancedSettings,
@@ -136,6 +138,8 @@ export function FashionStorefrontHeader({
                 <UserRound className="h-5 w-5" />
               </Link>
             ) : null}
+            <WishlistHeaderLink className="" iconClassName="h-5 w-5" />
+            <ThemeModeToggle className="" iconClassName="h-5 w-5" />
             {settings.header.showSearch ? (
               <PredictiveSearchTrigger
                 currency={currency}
@@ -173,6 +177,7 @@ export function FashionStorefrontHeader({
           ))}
           {settings.header.showSearch ? <Link href={`${homeHref}/search`} onClick={() => setMobileOpen(false)}>SEARCH</Link> : null}
           {settings.header.showAccount ? <Link href={`${homeHref}/account`} onClick={() => setMobileOpen(false)}>ACCOUNT</Link> : null}
+          <Link href={`${homeHref}/wishlist`} onClick={() => setMobileOpen(false)}>WISHLIST</Link>
           {settings.header.showCart ? <Link href={`${homeHref}/cart`} onClick={() => setMobileOpen(false)}>CART</Link> : null}
         </nav>
       ) : null}

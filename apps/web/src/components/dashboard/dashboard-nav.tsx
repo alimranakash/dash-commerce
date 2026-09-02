@@ -168,7 +168,11 @@ const reportLinks = [
   { href: "/dashboard/reports/customers", label: "Customers" },
   { href: "/dashboard/reports/merchandising", label: "Upsell & Cross-sell" },
   { href: "/dashboard/reports/abandoned-carts", label: "Abandoned Carts" },
-  { href: "/dashboard/reports/incomplete-orders", label: "Incomplete Orders" }
+  { href: "/dashboard/reports/incomplete-orders", label: "Incomplete Orders" },
+  // Absent from REPORT_FEATURES on purpose: like Orders and Products, it reports
+  // on the store itself rather than on a workspace the seller has to buy, and
+  // the storefront half that fills it is not sold either.
+  { href: "/dashboard/reports/wishlist", label: "Wishlist" }
 ];
 
 const settingsLinks = [

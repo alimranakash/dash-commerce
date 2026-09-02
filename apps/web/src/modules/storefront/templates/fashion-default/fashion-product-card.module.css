@@ -220,3 +220,37 @@
     transition: none;
   }
 }
+
+/* dark-mode:generated:start */
+/* Written by npm run theme:dark - edit scripts/dark-mode/, not this. */
+[data-theme="dark"] .media {
+  background: #1b1c22;
+  color: #ebecef;
+}
+
+[data-theme="dark"] .mediaLink > span {
+  background: linear-gradient(145deg, #251f17, #3d352b);
+  color: #ddd8d4;
+}
+
+[data-theme="dark"] .badges span[data-kind="sale"] {
+  background: #24262d;
+}
+
+[data-theme="dark"] .badges span[data-kind="trending"] {
+  background: #385d9f;
+}
+
+[data-theme="dark"] .quickAdd button {
+  background: #23242af0;
+  color: #ebecef;
+}
+
+[data-theme="dark"] .price del {
+  color: #abacaf;
+}
+
+[data-theme="dark"] .price strong[data-sale="true"] {
+  color: #ed9197;
+}
+/* dark-mode:generated:end */

@@ -6,6 +6,7 @@ import { DashboardNav } from "./dashboard-nav";
 import { DashboardTopbar } from "./dashboard-topbar";
 import { DeleteConfirmationProvider } from "./delete-confirmation-provider";
 import { PlanUpgradeProvider } from "../../modules/billing/components/plan-upgrade-provider";
+import { ThemeModeProvider } from "../../modules/theme-mode/components/theme-mode-provider";
 
 type DashboardShellProps = {
   children: ReactNode;
@@ -17,6 +18,7 @@ export function DashboardShell({ children, storeSlug }: DashboardShellProps) {
 
   return (
     <SessionProvider>
+      <ThemeModeProvider>
       <PlanUpgradeProvider>
       <DeleteConfirmationProvider>
         <main className="dash-dashboard min-h-screen bg-[#f5f6ff] text-[#18181b]">
@@ -40,6 +42,7 @@ export function DashboardShell({ children, storeSlug }: DashboardShellProps) {
         </main>
       </DeleteConfirmationProvider>
       </PlanUpgradeProvider>
+      </ThemeModeProvider>
     </SessionProvider>
   );
 }

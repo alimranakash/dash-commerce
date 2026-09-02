@@ -286,3 +286,36 @@
     text-align: left;
   }
 }
+
+/* dark-mode:generated:start */
+/* Written by npm run theme:dark - edit scripts/dark-mode/, not this. */
+[data-theme="dark"] .footer {
+  background: #2f3038;
+}
+
+[data-theme="dark"] .newsletter form {
+  border: 1px solid #38394024;
+}
+
+[data-theme="dark"] .newsletter input::placeholder {
+  color: #ffffff85;
+}
+
+[data-theme="dark"] .newsletter button {
+  background: #23242a;
+  color: #ebecef;
+}
+
+[data-theme="dark"] .bottom {
+  background: #25262e;
+}
+
+[data-theme="dark"] .payments span {
+  background: #23242a;
+  color: #e5eaf5;
+}
+
+[data-theme="dark"] .copyright {
+  color: #ffffff85;
+}
+/* dark-mode:generated:end */

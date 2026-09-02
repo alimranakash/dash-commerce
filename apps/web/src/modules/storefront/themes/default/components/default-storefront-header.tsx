@@ -7,6 +7,8 @@ import { useState, type CSSProperties } from "react";
 import { PredictiveSearchTrigger } from "../../../../search/components/predictive-search-trigger";
 import { MiniCartDrawer } from "../../../../cart/components/mini-cart-drawer";
 import type { Cart } from "../../../../cart/cart.types";
+import { ThemeModeToggle } from "../../../../theme-mode/components/theme-mode-toggle";
+import { WishlistHeaderLink } from "../../../../wishlist/components/wishlist-header-link";
 import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
   normalizeAdvancedSettings,
@@ -102,6 +104,8 @@ export function DefaultStorefrontHeader({
           {settings.header.showAccount ? <Link aria-label="Account" className="sf-icon-action" href={`${homeHref}/account`}>
             <UserRound className="h-4 w-4" />
           </Link> : null}
+          <WishlistHeaderLink />
+          <ThemeModeToggle className="sf-icon-action" />
           {settings.header.showCart ? (
             <MiniCartDrawer
               cart={cart}
@@ -141,6 +145,11 @@ export function DefaultStorefrontHeader({
           {settings.header.showAccount ? <Link href={`${homeHref}/account`} onClick={() => setOpen(false)}>
             Account
           </Link> : null}
+          {/* The header hides every icon but the cart below 900px, so without
+            this row the wishlist would be unreachable on a phone. */}
+          <Link href={`${homeHref}/wishlist`} onClick={() => setOpen(false)}>
+            Wishlist
+          </Link>
           {settings.header.showCart ? <Link href={`${homeHref}/cart`} onClick={() => setOpen(false)}>
             Cart
           </Link> : null}

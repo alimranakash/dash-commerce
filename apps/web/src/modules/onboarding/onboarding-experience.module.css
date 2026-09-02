@@ -17,3 +17,269 @@
 .fieldRow{display:grid;gap:12px;grid-template-columns:repeat(2,1fr);margin-top:28px}.fieldRow>.fieldLabel{margin-top:0}
 .slugStatus{align-items:center;color:#83859a;display:flex;font-size:9px;gap:6px;line-height:1.5;margin:11px 0 0}.slugStatus svg{flex:0 0 12px;height:12px;width:12px}.slugAvailable{color:#177356}.slugTaken{color:#a03a4b}
 @media(max-width:620px){.fieldRow{grid-template-columns:1fr}}
+
+/* dark-mode:generated:start */
+/* Written by npm run theme:dark - edit scripts/dark-mode/, not this. */
+[data-theme="dark"] .onboardingPage {
+  background: #1e1c2c;
+  color: #e8e8f3;
+}
+
+[data-theme="dark"] .topbar {
+  background: #1e1c2ce6;
+  border-bottom: 1px solid #383345;
+}
+
+[data-theme="dark"] .brand>b {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .brand i {
+  color: #ab91ed;
+}
+
+[data-theme="dark"] .topbar>div {
+  color: #c1c2cd;
+}
+
+[data-theme="dark"] .logout :global(button) {
+  background: #23242a!important;
+  border: 1px solid #383246!important;
+  color: #d3d5de!important;
+}
+
+[data-theme="dark"] .logout :global(button:hover) {
+  border-color: #403366!important;
+}
+
+[data-theme="dark"] .pageIntro>span {
+  color: #a691ed;
+}
+
+[data-theme="dark"] .pageIntro p {
+  color: #c1c2cd;
+}
+
+[data-theme="dark"] .formCard,
+[data-theme="dark"] .previewCard {
+  background: #23242a;
+  border: 1px solid #383345;
+}
+
+[data-theme="dark"] .progressHeader {
+  background: #212229;
+  border-bottom: 1px solid #3a3444;
+}
+
+[data-theme="dark"] .progressHeader span {
+  color: #a991ed;
+}
+
+[data-theme="dark"] .progressHeader b {
+  color: #d3d4de;
+}
+
+[data-theme="dark"] .progressTrack {
+  background: #1a1228;
+}
+
+[data-theme="dark"] .stepIcon {
+  background: linear-gradient(135deg,#150b37,#091737);
+  border: 1px solid #322553;
+  color: #aa91ed;
+}
+
+[data-theme="dark"] .stepCopy small {
+  color: #a991ed;
+}
+
+[data-theme="dark"] .stepCopy p {
+  color: #c1c2cd;
+}
+
+[data-theme="dark"] .fieldLabel {
+  color: #e8e9f3;
+}
+
+[data-theme="dark"] .fieldLabel>small {
+  color: #a9a9b2;
+}
+
+[data-theme="dark"] .inputShell,
+[data-theme="dark"] .slugInput,
+[data-theme="dark"] .fieldLabel>select {
+  background: #23242a;
+  border: 1px solid #383246;
+}
+
+[data-theme="dark"] .inputShell:focus-within,
+[data-theme="dark"] .slugInput:focus-within,
+[data-theme="dark"] .fieldLabel>select:focus {
+  border-color: #3f3366;
+  box-shadow: 0 0 0 3px #0f08211a;
+}
+
+[data-theme="dark"] .inputShell>svg {
+  color: #a8a9b3;
+}
+
+[data-theme="dark"] .inputShell input,
+[data-theme="dark"] .slugInput input {
+  color: #e8e8f3;
+}
+
+[data-theme="dark"] .slugInput>span,
+[data-theme="dark"] .slugInput>b {
+  background: #211d29;
+  color: #c2c3cc;
+}
+
+[data-theme="dark"] .slugInput>b {
+  border-left: 1px solid #3b3543;
+}
+
+[data-theme="dark"] .fieldLabel>select {
+  color: #e8e9f2;
+}
+
+[data-theme="dark"] .optionGrid button {
+  background: #23242a;
+  border: 1px solid #383345;
+  color: #d3d5de;
+}
+
+[data-theme="dark"] .optionGrid button:hover {
+  border-color: #403366;
+}
+
+[data-theme="dark"] .optionGrid button>span {
+  background: #1c162c;
+  color: #a991ed;
+}
+
+[data-theme="dark"] .optionGrid button svg {
+  color: #aa91ed;
+}
+
+[data-theme="dark"] .optionGrid .optionActive {
+  background: #1d1531;
+  border-color: #403366;
+}
+
+[data-theme="dark"] .autoConfig>div {
+  background: #1d172f;
+  border: 1px solid #332850;
+}
+
+[data-theme="dark"] .autoConfig svg {
+  color: #a891ed;
+}
+
+[data-theme="dark"] .autoConfig small {
+  color: #a8aab3;
+}
+
+[data-theme="dark"] .reviewList {
+  border: 1px solid #383345;
+}
+
+[data-theme="dark"] .reviewList>div {
+  border-top: 1px solid #3b3642;
+}
+
+[data-theme="dark"] .reviewList span {
+  color: #a8aab3;
+}
+
+[data-theme="dark"] .creationNote {
+  background: #181232;
+  border: 1px solid #302553;
+  color: #a994ea;
+}
+
+[data-theme="dark"] .errorMessage {
+  background: #311317;
+  border: 1px solid #53252c;
+  color: #e699a6;
+}
+
+[data-theme="dark"] .stepActions {
+  border-top: 1px solid #3a3642;
+}
+
+[data-theme="dark"] .backButton {
+  background: #23242a;
+  border: 1px solid #383246;
+  color: #d3d5de;
+}
+
+[data-theme="dark"] .nextButton {
+  border: 1px solid #7354d4;
+  box-shadow: 0 10px 25px #0d082133;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .nextButton:hover {
+  box-shadow: 0 14px 30px #0d082147;
+}
+
+[data-theme="dark"] .loadingOverlay {
+  background: #23242af0;
+}
+
+[data-theme="dark"] .loadingOverlay>span {
+  box-shadow: 0 18px 40px #0d08213d;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .loadingOverlay p {
+  color: #c1c2cd;
+}
+
+[data-theme="dark"] .previewCard>header {
+  border-bottom: 1px solid #3a3444;
+}
+
+[data-theme="dark"] .previewCard>header>i {
+  color: #a1dec7;
+}
+
+[data-theme="dark"] .storefrontMock {
+  background: #271b11;
+  color: #eeebef;
+}
+
+[data-theme="dark"] .storefrontMock nav {
+  background: #23242acc;
+  border-bottom: 1px solid #65667114;
+}
+
+[data-theme="dark"] .storefrontMock>section {
+  background: linear-gradient(125deg,#29190b,#b9a294);
+}
+
+[data-theme="dark"] .storefrontMock>section p {
+  color: #dcd6d8;
+}
+
+[data-theme="dark"] .storefrontMock>section button {
+  background: #322c35;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .storefrontMock>footer {
+  background: #23242a;
+}
+
+[data-theme="dark"] .previewFacts {
+  border-top: 1px solid #3b3642;
+}
+
+[data-theme="dark"] .previewFacts span {
+  color: #a9aab2;
+}
+
+[data-theme="dark"] .slugStatus {
+  color: #a7a8b4;
+}
+/* dark-mode:generated:end */

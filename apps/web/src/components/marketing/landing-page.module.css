@@ -195,3 +195,842 @@
 .pricingSection{padding-bottom:96px}
 @media(max-width:1000px){.pricingSection{padding-bottom:80px}}
 @media(max-width:720px){.pricingSection{padding-bottom:64px}}
+
+/* dark-mode:generated:start */
+/* Written by npm run theme:dark - edit scripts/dark-mode/, not this. */
+[data-theme="dark"] .site {
+  background: #1f2332;
+}
+
+[data-theme="dark"] .header {
+  background: #1f2332b8;
+  border-bottom: 1px solid #38394014;
+}
+
+[data-theme="dark"] .brandMark {
+  border: 1px solid #403366;
+}
+
+[data-theme="dark"] .nav a {
+  color: #8f9099;
+}
+
+[data-theme="dark"] .loginLink {
+  color: #828288;
+}
+
+[data-theme="dark"] .heroGlow,
+[data-theme="dark"] .finalGlow {
+  background: linear-gradient(100deg,#7c3aed61,#2563eb3d,#59617d0f 72%);
+}
+
+[data-theme="dark"] .heroGrid {
+  background-image: linear-gradient(#23242a09 1px,transparent 1px),linear-gradient(90deg,#23242a09 1px,transparent 1px);
+}
+
+[data-theme="dark"] .eyebrow {
+  color: #bfb1f4;
+}
+
+[data-theme="dark"] .heroCopy>p {
+  color: #8f9099;
+}
+
+[data-theme="dark"] .secondaryButton {
+  border: 1px solid #38394029;
+}
+
+[data-theme="dark"] .heroProof {
+  color: #a7a9b3;
+}
+
+[data-theme="dark"] .heroProof svg {
+  color: #9fe0bf;
+}
+
+[data-theme="dark"] .stageLight {
+  background: linear-gradient(90deg,#5c38d242,#275bdc2e);
+}
+
+[data-theme="dark"] .dashboardMockup {
+  background: #5e6379db;
+  border: 1px solid #38394029;
+  box-shadow: 0 70px 140px #00000094,0 0 90px #0c082133;
+}
+
+[data-theme="dark"] .dashboardMockup>aside {
+  background: #1f2438;
+  border-right: 1px solid #38394012;
+}
+
+[data-theme="dark"] .dashboardMockup>aside span {
+  color: #c1c3cd;
+}
+
+[data-theme="dark"] .dashboardMockup>aside .mockActive {
+  background: #7c3aed2e;
+}
+
+[data-theme="dark"] .mockContent>header small {
+  color: #c0c2ce;
+}
+
+[data-theme="dark"] .mockStats>div {
+  border: 1px solid #38394014;
+}
+
+[data-theme="dark"] .mockStats span {
+  color: #a8a9b3;
+}
+
+[data-theme="dark"] .mockChart,
+[data-theme="dark"] .mockOrders {
+  background: #23242a09;
+  border: 1px solid #38394014;
+}
+
+[data-theme="dark"] .mockChart small,
+[data-theme="dark"] .mockOrders small {
+  color: #a7a9b4;
+}
+
+[data-theme="dark"] .bars {
+  border-bottom: 1px solid #38394014;
+}
+
+[data-theme="dark"] .mockOrders>p {
+  border-top: 1px solid #38394012;
+}
+
+[data-theme="dark"] .mockOrders>p i {
+  background: #17c08821;
+  color: #92edc9;
+}
+
+[data-theme="dark"] .aiFloat {
+  background: #5c627ae0;
+  border: 1px solid #40336659;
+  box-shadow: 0 24px 60px #00000073;
+}
+
+[data-theme="dark"] .aiFloat small {
+  color: #92edc9;
+}
+
+[data-theme="dark"] .floatingMetric {
+  background: #5d637acc;
+  border: 1px solid #38394024;
+  box-shadow: 0 24px 60px #0000005c;
+}
+
+[data-theme="dark"] .floatingMetric span {
+  color: #a6a8b5;
+}
+
+[data-theme="dark"] .floatingMetric small {
+  color: #92edc9;
+}
+
+[data-theme="dark"] .scrollCue {
+  color: #bec1d0;
+}
+
+[data-theme="dark"] .sectionIntro>span {
+  color: #a593ee;
+}
+
+[data-theme="dark"] .sectionIntro p,
+[data-theme="dark"] .aiCopy>p {
+  color: #a8a9b3;
+}
+
+[data-theme="dark"] .painCard,
+[data-theme="dark"] .featureCard,
+[data-theme="dark"] .pricingCard {
+  border: 1px solid #38394017;
+}
+
+[data-theme="dark"] .painCard {
+  background: #23242e;
+}
+
+[data-theme="dark"] .painCard>span,
+[data-theme="dark"] .featureCard>span {
+  background: #7c3aed24;
+  border: 1px solid #40336626;
+  color: #ae99ec;
+}
+
+[data-theme="dark"] .painCard p,
+[data-theme="dark"] .featureCard p {
+  color: #a7a9b3;
+}
+
+[data-theme="dark"] .solutionSection {
+  background: #23242e;
+  border-bottom: 1px solid #3839400f;
+  border-top: 1px solid #3839400f;
+}
+
+[data-theme="dark"] .solutionList span {
+  border-top: 1px solid #38394014;
+}
+
+[data-theme="dark"] .solutionList b {
+  color: #c1c3cd;
+}
+
+[data-theme="dark"] .solutionList svg {
+  color: #ad91ed;
+}
+
+[data-theme="dark"] .operationPanel {
+  background: #23242a09;
+  border: 1px solid #3839401a;
+}
+
+[data-theme="dark"] .operationHeader small {
+  color: #9ce3c5;
+}
+
+[data-theme="dark"] .operationTile {
+  background: #222430;
+  border: 1px solid #38394012;
+}
+
+[data-theme="dark"] .operationTile small,
+[data-theme="dark"] .operationTile p {
+  color: #c0c2ce;
+}
+
+[data-theme="dark"] .activityLine {
+  border-top: 1px solid #38394012;
+}
+
+[data-theme="dark"] .storyStatement>span,
+[data-theme="dark"] .storyTurn>span,
+[data-theme="dark"] .journeyIntro>span,
+[data-theme="dark"] .chapterCopy>span {
+  color: #a593ee;
+}
+
+[data-theme="dark"] .storyStatement p {
+  color: #a6a9b5;
+}
+
+[data-theme="dark"] .painRail .painCard {
+  background: #5e6379a6;
+  border-color: #38394012;
+}
+
+[data-theme="dark"] .painRail .painCard:hover {
+  background: #585e7ed1;
+}
+
+[data-theme="dark"] .storyTurn {
+  border-top: 1px solid #3839401a;
+}
+
+[data-theme="dark"] .storyTurn p {
+  color: #a6a9b5;
+}
+
+[data-theme="dark"] .storyTurn>svg {
+  color: #a593ee;
+}
+
+[data-theme="dark"] .journeySection {
+  background: linear-gradient(180deg,#1d2235,#5d637a 50%,#1d2235);
+  border-bottom: 1px solid #38394012;
+  border-top: 1px solid #38394012;
+}
+
+[data-theme="dark"] .journeyIntro p {
+  color: #a6a8b5;
+}
+
+[data-theme="dark"] .journeyProgress i {
+  background: linear-gradient(90deg,#8b5cf6 35%,#23242a1a 35%);
+}
+
+[data-theme="dark"] .journeyProgress span {
+  color: #bfc2ce;
+}
+
+[data-theme="dark"] .chapterCopy p {
+  color: #a6a9b5;
+}
+
+[data-theme="dark"] .chapterVisual {
+  background: linear-gradient(145deg,#23242a0e,#23242a05);
+  border: 1px solid #3839401a;
+  box-shadow: 0 50px 100px #00000042;
+}
+
+[data-theme="dark"] .builderControls {
+  background: #1e2336f0;
+  border: 1px solid #38394017;
+}
+
+[data-theme="dark"] .builderControls label {
+  color: #bfc2cf;
+}
+
+[data-theme="dark"] .builderControls label b {
+  background: #23242a0b;
+  border: 1px solid #38394014;
+  color: #818288;
+}
+
+[data-theme="dark"] .colorSwatch {
+  border: 5px solid #38394014;
+}
+
+[data-theme="dark"] .storePreview {
+  background: #2a1a08;
+  color: #edebef;
+}
+
+[data-theme="dark"] .storePreview header {
+  border-bottom: 1px solid #6566711a;
+}
+
+[data-theme="dark"] .storePreview>div {
+  background: linear-gradient(120deg,#463322,#a78f7f);
+}
+
+[data-theme="dark"] .storePreview button {
+  background: #2c262f;
+}
+
+[data-theme="dark"] .liveBadge {
+  background: #1e2336e0;
+  border: 1px solid #3839401f;
+}
+
+[data-theme="dark"] .ordersVisual {
+  background: #1e2336cc;
+  border: 1px solid #38394014;
+}
+
+[data-theme="dark"] .ordersVisual>header b {
+  color: #bfc2cf;
+}
+
+[data-theme="dark"] .orderRow {
+  border-top: 1px solid #38394013;
+}
+
+[data-theme="dark"] .orderRow>i {
+  background: linear-gradient(145deg,#6143b9,#3256a4);
+}
+
+[data-theme="dark"] .orderRow small {
+  color: #bfc2cf;
+}
+
+[data-theme="dark"] .orderRow em[data-status=Processing] {
+  background: #3b82f624;
+}
+
+[data-theme="dark"] .orderRow em[data-status=Paid] {
+  background: #17c08824;
+}
+
+[data-theme="dark"] .orderRow em[data-status=Pending] {
+  background: #f59e0b24;
+}
+
+[data-theme="dark"] .orderRow svg {
+  color: #bfc2cf;
+}
+
+[data-theme="dark"] .ordersVisual>footer {
+  color: #bfc2cf;
+}
+
+[data-theme="dark"] .ordersVisual>footer i {
+  background: #23242a24;
+}
+
+[data-theme="dark"] .paymentPhone {
+  background: #1e2336;
+  border: 1px solid #3839401a;
+}
+
+[data-theme="dark"] .paymentPhone header {
+  color: #a6a9b5;
+}
+
+[data-theme="dark"] .paymentPhone header svg {
+  color: #90a7eb;
+}
+
+[data-theme="dark"] .paymentPhone label {
+  background: #23242a08;
+  border: 1px solid #38394012;
+}
+
+[data-theme="dark"] .paymentPhone label>i {
+  border: 1px solid #585e74;
+}
+
+[data-theme="dark"] .paymentPhone label small {
+  color: #bfc2cf;
+}
+
+[data-theme="dark"] .settlementCard {
+  background: linear-gradient(145deg,#7c3aed40,#2563eb1f);
+  border: 1px solid #4033664d;
+  box-shadow: 0 30px 70px #0c08214d;
+}
+
+[data-theme="dark"] .settlementCard>span,
+[data-theme="dark"] .settlementCard>small {
+  color: #a7a9b3;
+}
+
+[data-theme="dark"] .settlementCard>div {
+  border-top: 1px solid #3839401a;
+}
+
+[data-theme="dark"] .routeMap {
+  background: linear-gradient(145deg,#58617e,#5e6479);
+  border: 1px solid #38394017;
+}
+
+[data-theme="dark"] .routeMap:before {
+  background-image: linear-gradient(#23242a08 1px,transparent 1px),linear-gradient(90deg,#23242a08 1px,transparent 1px);
+}
+
+[data-theme="dark"] .routeMap>span {
+  background: #5d637ae6;
+  border: 1px solid #3839401f;
+}
+
+[data-theme="dark"] .routeMap small {
+  color: #a5a8b6;
+}
+
+[data-theme="dark"] .routeMap>i {
+  border-bottom: 2px dashed #3e3366;
+}
+
+[data-theme="dark"] .routePulse {
+  border: 5px solid #8354d333;
+}
+
+[data-theme="dark"] .deliveryPanel {
+  background: #1e2336d1;
+  border: 1px solid #38394014;
+}
+
+[data-theme="dark"] .deliveryPanel header b {
+  background: #3b82f624;
+  color: #90b6ec;
+}
+
+[data-theme="dark"] .deliveryPanel p small {
+  color: #bfc2cf;
+}
+
+[data-theme="dark"] .featureCard {
+  background: linear-gradient(#5c637a,#5c637a) padding-box,linear-gradient(135deg,#8b5cf659,#3b82f60d,#23242a1a) border-box;
+}
+
+[data-theme="dark"] .featureCard:before {
+  background: linear-gradient(135deg,#7c3aed1a,transparent 58%);
+}
+
+[data-theme="dark"] .featureCard:hover {
+  box-shadow: 0 35px 80px #00000047;
+}
+
+[data-theme="dark"] .featureCard small {
+  color: #bec2d0;
+}
+
+[data-theme="dark"] .featureCard>i {
+  color: #bcc1d1;
+}
+
+[data-theme="dark"] .featureCard:hover>i {
+  color: #ae99ec;
+}
+
+[data-theme="dark"] .featuredCard {
+  background: linear-gradient(145deg,#574592e0,#4b5d8bbf) padding-box,linear-gradient(135deg,#8b5cf6,#3b82f666,#23242a1a) border-box;
+}
+
+[data-theme="dark"] .aiSection {
+  background: #1d2235;
+  border-bottom: 1px solid #38394012;
+  border-top: 1px solid #38394012;
+}
+
+[data-theme="dark"] .aiAtmosphere {
+  background: linear-gradient(120deg,#7c3aed3d,#2563eb29,transparent 70%);
+}
+
+[data-theme="dark"] .aiCopy li {
+  color: #909198;
+}
+
+[data-theme="dark"] .aiCopy li svg {
+  color: #ad91ed;
+}
+
+[data-theme="dark"] .chatWindow {
+  background: #5d637adb;
+  border: 1px solid #4033664d;
+  box-shadow: 0 50px 120px #00000075,0 0 80px #0e082124;
+}
+
+[data-theme="dark"] .chatWindow header {
+  border-bottom: 1px solid #38394014;
+}
+
+[data-theme="dark"] .chatWindow header small {
+  color: #c1c3cd;
+}
+
+[data-theme="dark"] .aiBubble {
+  background: #58617f;
+}
+
+[data-theme="dark"] .insightCard {
+  background: #5d6379;
+  border: 1px solid #38394014;
+}
+
+[data-theme="dark"] .insightCard>span {
+  color: #a7a9b4;
+}
+
+[data-theme="dark"] .insightCard small {
+  color: #c0c2ce;
+}
+
+[data-theme="dark"] .chatWindow footer {
+  background: #5d6379;
+  border-top: 1px solid #38394014;
+  color: #c1c3cd;
+}
+
+[data-theme="dark"] .aiMetricTop,
+[data-theme="dark"] .aiMetricBottom {
+  background: #5b627cd1;
+  border: 1px solid #38394021;
+}
+
+[data-theme="dark"] .aiMetricTop span,
+[data-theme="dark"] .aiMetricBottom span {
+  color: #a5a8b6;
+}
+
+[data-theme="dark"] .pricingCard {
+  background: linear-gradient(160deg,#5a617ceb,#1e2336f0);
+  border-color: #3839401a;
+}
+
+[data-theme="dark"] .pricingCard>p {
+  color: #a7a9b3;
+}
+
+[data-theme="dark"] .pricingCard>div span {
+  color: #c0c2ce;
+}
+
+[data-theme="dark"] .pricingCard ul {
+  border-top: 1px solid #38394014;
+}
+
+[data-theme="dark"] .pricingCard li {
+  color: #909198;
+}
+
+[data-theme="dark"] .pricingCard li svg {
+  color: #ad91ed;
+}
+
+[data-theme="dark"] .pricingCard>a {
+  border: 1px solid #38394026;
+}
+
+[data-theme="dark"] .pricingCard>a:hover {
+  background: #23242a0f;
+}
+
+[data-theme="dark"] .featuredPricing {
+  background: linear-gradient(145deg,#5235a1a6,#465c90b8);
+  border-color: #40336685;
+  box-shadow: 0 45px 100px #0c082157;
+}
+
+[data-theme="dark"] .popular {
+  background: #221355;
+  color: #eaebf0;
+}
+
+[data-theme="dark"] .faqList summary span {
+  color: #a593ee;
+}
+
+[data-theme="dark"] .faqList p {
+  color: #a8aab3;
+}
+
+[data-theme="dark"] .finalCta {
+  border-bottom: 1px solid #38394014;
+  border-top: 1px solid #38394014;
+}
+
+[data-theme="dark"] .finalCta>p {
+  color: #a8a9b3;
+}
+
+[data-theme="dark"] .footer {
+  color: #c0c2ce;
+}
+
+[data-theme="dark"] .storyBridge {
+  background: #1e1a2c;
+  box-shadow: 0 0 0 100vmax #0b0c138c;
+}
+
+[data-theme="dark"] .painRail .painCard {
+  background: #23242a;
+  border-color: #383147;
+}
+
+[data-theme="dark"] .painRail .painCard:hover {
+  background: #23242a;
+}
+
+[data-theme="dark"] .painRail .painCard>span {
+  background: #1c1630;
+  border-color: #302553;
+}
+
+[data-theme="dark"] .featuresSection {
+  background: linear-gradient(180deg,#1e1c2c 0%,#1b172f 100%);
+  box-shadow: 0 0 0 100vmax #0b0c138c;
+}
+
+[data-theme="dark"] .featureCard {
+  background: linear-gradient(#23242a,#23242a) padding-box,linear-gradient(135deg,#0e0032,#1a122a,#001037) border-box;
+  box-shadow: 0 16px 45px #0d082113;
+}
+
+[data-theme="dark"] .featureCard>span {
+  background: #1c1630;
+  border-color: #302553;
+}
+
+[data-theme="dark"] .featuredCard {
+  background: linear-gradient(145deg,#23242a,#211d2b) padding-box,linear-gradient(135deg,#231355,#132755,#0e0036) border-box;
+}
+
+[data-theme="dark"] .pricingSection {
+  background: #1b172f;
+  box-shadow: 0 0 0 100vmax #0b0c138c;
+}
+
+[data-theme="dark"] .pricingCard {
+  background: #23242a;
+  border-color: #383147;
+  box-shadow: 0 18px 50px #0d082114;
+}
+
+[data-theme="dark"] .pricingCard>a {
+  border-color: #382f49;
+}
+
+[data-theme="dark"] .pricingCard>a:hover {
+  background: #1c182e;
+}
+
+[data-theme="dark"] .featuredPricing {
+  background: linear-gradient(145deg,#23242a,#211d2b);
+  border-color: #423366;
+  box-shadow: 0 38px 90px #0d082133,inset 0 1px 0 #0b0c13e6;
+}
+
+[data-theme="dark"] .faqSection {
+  background: #1e1c2c;
+  box-shadow: 0 0 0 100vmax #0b0c138c;
+}
+
+[data-theme="dark"] .offerPill {
+  background: linear-gradient(90deg,#7c3aed57,#3b59e533);
+  border: 1px solid #40336680;
+  box-shadow: 0 12px 34px #0e082147;
+}
+
+[data-theme="dark"] .offerPill svg {
+  color: #c9bcf5;
+}
+
+[data-theme="dark"] .offerSection {
+  background: radial-gradient(120% 130% at 50% 0%,#595185 0%,#1f2134 46%,#24252d 100%);
+}
+
+[data-theme="dark"] .offerGlow {
+  background: radial-gradient(closest-side,#7c3aed80,#3b59e526,transparent);
+}
+
+[data-theme="dark"] .offerEyebrow {
+  background: #7c3aed29;
+  border: 1px solid #40336666;
+  color: #d0c4f7;
+}
+
+[data-theme="dark"] .offerInner>p {
+  color: #8c8e9c;
+}
+
+[data-theme="dark"] .offerCount b {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .offerCount small {
+  color: #a5a7b6;
+}
+
+[data-theme="dark"] .offerPoints li {
+  color: #8e909a;
+}
+
+[data-theme="dark"] .offerPoints svg {
+  color: #9fe0bf;
+}
+
+[data-theme="dark"] .offerCta:hover {
+  box-shadow: 0 22px 50px #1108216b;
+}
+
+[data-theme="dark"] .offerFinePrint {
+  color: #bfc2cf;
+}
+
+@supports ((background-clip:text) or (-webkit-background-clip:text)) {
+  [data-theme="dark"] .offerCount b {
+    background: linear-gradient(180deg,#23242a,#221355);
+  }
+}
+
+[data-theme="dark"] .freePricing {
+  border-color: #3f3366;
+}
+
+[data-theme="dark"] .freeRibbon {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .compareLink {
+  color: #a991ed;
+}
+
+[data-theme="dark"] .compareLink:hover {
+  color: #a991ed;
+}
+
+[data-theme="dark"] .comparisonSection {
+  background: #1b172f;
+  box-shadow: 0 0 0 100vmax #0b0c138c;
+  color: #e7e8f3;
+}
+
+[data-theme="dark"] .comparisonCard {
+  background: #23242a;
+  border: 1px solid #362e4a;
+  box-shadow: 0 24px 70px #0d08211a;
+}
+
+[data-theme="dark"] .comparisonTable thead th {
+  background: #23242a;
+}
+
+[data-theme="dark"] .comparisonTable thead th:after {
+  background: #160c2e;
+}
+
+[data-theme="dark"] .comparisonCorner {
+  color: #a8aab3;
+}
+
+[data-theme="dark"] .planHead>span {
+  color: #d2d4df;
+}
+
+[data-theme="dark"] .planHead b {
+  color: #e7e8f3;
+}
+
+[data-theme="dark"] .planHead small {
+  color: #a7a9b4;
+}
+
+[data-theme="dark"] .planHead em {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .comparisonGroup th {
+  background: #1e1a2e;
+  color: #a591ed;
+}
+
+[data-theme="dark"] .comparisonTable tbody tr:not(.comparisonGroup) th {
+  border-top: 1px solid #383444;
+}
+
+[data-theme="dark"] .comparisonTable tbody td {
+  border-top: 1px solid #383444;
+}
+
+[data-theme="dark"] .rowLabel {
+  color: #e7e8f4;
+}
+
+[data-theme="dark"] .rowHint {
+  color: #a7a9b3;
+}
+
+[data-theme="dark"] .soonTag {
+  background: #1a1230;
+  border: 1px solid #322553;
+  color: #a991ed;
+}
+
+[data-theme="dark"] .cellYes {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .cellNo {
+  color: #8f9198;
+}
+
+[data-theme="dark"] .cellText {
+  color: #e7e8f4;
+}
+
+[data-theme="dark"] .comparisonFoot p {
+  color: #c0c3ce;
+}
+
+[data-theme="dark"] .comparisonCta {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .comparisonCta:hover {
+  box-shadow: 0 18px 40px #0e082152;
+}
+
+@media (max-width:1000px) {
+  [data-theme="dark"] .comparisonTable thead th:first-child,
+  [data-theme="dark"] .comparisonTable tbody tr:not(.comparisonGroup) th {
+    background: #23242a;
+    box-shadow: 7px 0 14px -10px #0d082147;
+  }
+}
+/* dark-mode:generated:end */

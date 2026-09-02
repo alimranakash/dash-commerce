@@ -398,3 +398,69 @@
   text-decoration: none;
   width: fit-content;
 }
+
+/* dark-mode:generated:start */
+/* Written by npm run theme:dark - edit scripts/dark-mode/, not this. */
+[data-theme="dark"] .section {
+  background: #1f2026;
+  color: #ebedef;
+}
+
+[data-theme="dark"] .card {
+  background: #0e1a30;
+  color: #ebecef;
+}
+
+[data-theme="dark"] .middleCard {
+  background: #000f3c;
+}
+
+[data-theme="dark"] .headphoneCard {
+  background: #2d170b;
+}
+
+[data-theme="dark"] .watchCard {
+  background: #272d05;
+}
+
+[data-theme="dark"] .status {
+  color: #91aaed;
+}
+
+[data-theme="dark"] .mainCopy p {
+  color: #c4c6ca;
+}
+
+[data-theme="dark"] .mainMedia::after {
+  background: linear-gradient(
+    100deg,
+    #0e1a30f7 0%,
+    #0e1a30eb 32%,
+    #0e1a3094 52%,
+    #e8eef900 74%
+  );
+}
+
+[data-theme="dark"] .promoMedia :global(span) {
+  color: #ebecef38;
+}
+
+[data-theme="dark"] .promoText::before {
+  background: linear-gradient(to top, #23242aeb 0%, #23242ab8 38%, transparent 100%);
+}
+
+[data-theme="dark"] .badge {
+  background: #23242a;
+  color: #ebecef;
+}
+
+[data-theme="dark"] .deviceFallback {
+  background: radial-gradient(circle at 70% 24%, #23242af2 0 12%, transparent 13%),
+    radial-gradient(circle at 50% 52%, #3767ea1f, transparent 38%),
+    linear-gradient(145deg, #23242a61, transparent);
+}
+
+[data-theme="dark"] .ctaSecondary {
+  border: 1px solid #65667138;
+}
+/* dark-mode:generated:end */

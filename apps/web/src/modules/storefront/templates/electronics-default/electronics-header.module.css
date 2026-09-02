@@ -602,3 +602,140 @@
     animation: none;
   }
 }
+
+/* dark-mode:generated:start */
+/* Written by npm run theme:dark - edit scripts/dark-mode/, not this. */
+[data-theme="dark"] .shell {
+  background: var(--electronics-header-bg, #1f2026);
+  color: var(--electronics-header-color, #ebecef);
+}
+
+[data-theme="dark"] .announcement {
+  background: var(--electronics-announcement-bg, #3551a1);
+}
+
+[data-theme="dark"] .brand {
+  color: #ebecef;
+}
+
+[data-theme="dark"] .categoryButton {
+  background: #23242a;
+  border: 2px solid #5475d4;
+  color: #91aaed;
+}
+
+[data-theme="dark"] .categoryDropdown {
+  background: #23242a;
+  border: 1px solid #2f3949;
+  box-shadow: 0 18px 46px #080f2121;
+}
+
+[data-theme="dark"] .dropdownHeading {
+  border-bottom: 1px solid #363b42;
+}
+
+[data-theme="dark"] .dropdownHeading span {
+  color: #c0c5ce;
+}
+
+[data-theme="dark"] .categoryList a {
+  color: #e7ebf4;
+}
+
+[data-theme="dark"] .categoryList a:hover,
+[data-theme="dark"] .categoryList a:focus-visible {
+  background: #151d31;
+  color: #91aaed;
+}
+
+[data-theme="dark"] .categoryVisual {
+  background: #141e2e;
+  color: #91aaed;
+}
+
+[data-theme="dark"] .viewAllLink {
+  border-top: 1px solid #363b42;
+  color: #91aaed;
+}
+
+[data-theme="dark"] .menuEmpty {
+  color: #c0c5ce;
+}
+
+[data-theme="dark"] .searchSlot :global(.sf-predictive-form) {
+  border-color: #404a59;
+}
+
+[data-theme="dark"] .searchSlot :global(.sf-predictive-form):focus-within {
+  border-color: #4e70ce;
+  box-shadow: 0 0 0 3px #080e2124;
+}
+
+[data-theme="dark"] .searchSlot :global(.sf-predictive-product-price),
+[data-theme="dark"] .searchSlot :global(.sf-predictive-all) {
+  color: #91aaed;
+}
+
+[data-theme="dark"] .cartDivider {
+  border-left: 1px solid #313947;
+}
+
+[data-theme="dark"] .actions :global(.sf-icon-action) {
+  color: #ebecef;
+}
+
+[data-theme="dark"] .actions :global(.sf-cart-icon-action span) {
+  background: #24272d;
+}
+
+[data-theme="dark"] .divider {
+  border-top: 1px solid #2f3849;
+}
+
+[data-theme="dark"] .nav > a:hover,
+[data-theme="dark"] .navMenu > button:hover,
+[data-theme="dark"] .navMenu > button:focus-visible {
+  color: #91aaed;
+}
+
+[data-theme="dark"] .navDropdown {
+  background: #23242a;
+  border: 1px solid #2f3949;
+  box-shadow: 0 16px 38px #080f211f;
+}
+
+[data-theme="dark"] .navDropdownLabel {
+  color: #c0c5ce;
+}
+
+[data-theme="dark"] .navDropdown a:hover,
+[data-theme="dark"] .navDropdown a:focus-visible {
+  background: #151d31;
+  color: #91aaed;
+}
+
+[data-theme="dark"] .support {
+  color: #e7ebf4;
+}
+
+[data-theme="dark"] .mobileNav {
+  background: #23242a;
+  border-top: 1px solid #383b40;
+}
+
+[data-theme="dark"] .mobileNav > a {
+  color: #e7ebf4;
+}
+
+[data-theme="dark"] .mobileSection {
+  border-bottom: 1px solid #363b42;
+}
+
+[data-theme="dark"] .mobileSection > button {
+  color: #e7ebf4;
+}
+
+[data-theme="dark"] .mobileSubmenu a {
+  color: #d1d6e1;
+}
+/* dark-mode:generated:end */

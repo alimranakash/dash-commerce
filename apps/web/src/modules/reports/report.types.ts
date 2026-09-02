@@ -190,6 +190,30 @@ export type MerchandisingReportData = {
 };
 
 /**
+ * What shoppers saved but have not bought.
+ *
+ * The one demand signal a store gets from people who never reached checkout, so
+ * it is deliberately read as intent rather than as sales: `saves` counts lists,
+ * not units, and `outOfStockSaves` is the figure the report exists for — a
+ * product fifty shoppers are waiting on is a restock decision, not a marketing
+ * one.
+ */
+export type WishlistReportData = {
+  daily: ReportSeriesPoint[];
+  metrics: {
+    outOfStockSaves: number;
+    products: number;
+    saves: number;
+    shoppers: number;
+  };
+  topProducts: Array<{
+    saves: number;
+    stockQuantity: number;
+    title: string;
+  }>;
+};
+
+/**
  * Which reports are sold, and under what.
  *
  * Only three of the seven are entitled, and each one rides the *same* key as

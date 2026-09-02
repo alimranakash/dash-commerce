@@ -13,6 +13,7 @@
     "lint": "turbo lint --env-mode=loose",
     "typecheck": "turbo typecheck --env-mode=loose",
     "format": "prettier --write .",
+    "theme:dark": "node scripts/generate-dark-mode-css.mjs",
     "verify:demo-packs": "node scripts/verify-demo-packs.mjs",
     "verify:courier-webhook": "tsx scripts/verify-courier-webhook.mts",
     "verify:ai-api": "tsx scripts/verify-ai-api.mts",
@@ -23,6 +24,7 @@
     "verify:store-copilot": "tsx scripts/verify-store-copilot.mts",
     "verify:shopping-agent": "tsx scripts/verify-shopping-agent.mts",
     "verify:sitemap": "tsx scripts/verify-sitemap.mts",
+    "verify:wishlist": "tsx scripts/verify-wishlist.mts",
     "verify:staff-permissions": "tsx scripts/verify-staff-permissions.mts",
     "verify:free-year": "tsx scripts/verify-free-year.mts",
     "db:backfill-plans": "tsx scripts/backfill-plans.mts",
@@ -30,7 +32,8 @@
     "db:generate": "npm run db:generate -w @dash/db",
     "db:push": "npm run db:push -w @dash/db",
     "db:migrate": "npm run db:migrate -w @dash/db",
-    "db:studio": "npm run db:studio -w @dash/db"
+    "db:studio": "npm run db:studio -w @dash/db",
+    "verify:dark-mode": "tsx scripts/verify-dark-mode.mts"
   },
   "devDependencies": {
     "@dash/config": "0.0.0",

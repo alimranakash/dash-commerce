@@ -20,6 +20,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useState, type ComponentType, type ReactNode } from "react";
+import { ThemeModeProvider } from "../../modules/theme-mode/components/theme-mode-provider";
+import { ThemeModeToggle } from "../../modules/theme-mode/components/theme-mode-toggle";
 
 type AdminShellProps = {
   admin: {
@@ -52,7 +54,8 @@ export function AdminShell({ admin, children }: AdminShellProps) {
   const [open, setOpen] = useState(false);
 
   return (
-    <main className="min-h-screen bg-[#f5f6ff] text-[#20212a]">
+    <ThemeModeProvider>
+    <main className="admin-console min-h-screen bg-[#f5f6ff] text-[#20212a]">
       <aside className={`fixed inset-y-0 left-0 z-50 flex w-[260px] max-w-[85vw] flex-col border-r border-[#ececf7] bg-white transition-transform duration-200 lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex h-16 items-center justify-between border-b border-[#f0f0f7] px-5">
           <Link className="flex items-center gap-2" href="/admin" onClick={() => setOpen(false)}>
@@ -103,6 +106,7 @@ export function AdminShell({ admin, children }: AdminShellProps) {
           </div>
 
           <div className="flex shrink-0 items-center gap-2 text-xs sm:gap-3">
+            <ThemeModeToggle />
             <Link className="hidden rounded-lg border border-[#ddd6fe] px-3 py-2 font-semibold text-[#6d3cf5] hover:bg-[#f7f3ff] sm:inline-flex" href="/dashboard">
               Back to Dashboard
             </Link>
@@ -125,5 +129,6 @@ export function AdminShell({ admin, children }: AdminShellProps) {
         <section className="min-w-0 px-4 py-5 sm:px-6 lg:px-7 lg:py-6">{children}</section>
       </div>
     </main>
+    </ThemeModeProvider>
   );
 }

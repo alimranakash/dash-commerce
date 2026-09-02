@@ -6,6 +6,7 @@ import type { ProductCardProduct } from "../../product-card-data";
 import { StorefrontImage } from "../../components/storefront-image";
 import type { StorefrontProductSectionSettings } from "../../customization";
 import { formatStorefrontMoney } from "../../format";
+import { WishlistButton } from "../../../wishlist/components/wishlist-button";
 import { BeautyQuickAdd } from "./beauty-quick-add";
 
 // Every template already declares a `productCardVariant`; the shared product grid
@@ -65,6 +66,7 @@ export function BeautyListingCard({
           ) : null}
         </Link>
         {flag ? <span className="beauty-product-tile-flag">{flag}</span> : null}
+        <WishlistButton productId={product.id} productSlug={product.slug} />
         {storeId && !isSoldOut ? (
           <BeautyQuickAdd
             productId={product.id}

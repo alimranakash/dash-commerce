@@ -5,8 +5,13 @@ import {
 import { getAbandonedCartCutoff } from "../abandoned-carts/abandoned-cart.service";
 import { incompleteOrderFailureLabels } from "../abandoned-carts/incomplete-order-labels";
 import type { IncompleteOrderFailureCode } from "../abandoned-carts/abandoned-cart.types";
+import {
+  findWishlistDemand,
+  findWishlistSaveDates,
+  getWishlistTotals
+} from "../wishlist/wishlist.repository";
 import { getBundleReportRecords, getCustomersReportRecords, getMerchandisingReportRecords, getOrdersReportRecords, getProductsReportRecords, getReportOverviewRecords, getRevenueReportRecords } from "./report.repository";
-import { MERCHANDISING_SOURCE_LABELS, type AbandonedCartsReportData, type CustomersReportData, type IncompleteOrdersReportData, type MerchandisingReportData, type MerchandisingSourceKey, type OrdersReportData, type ProductsReportData, type ReportOverviewData, type ReportRangeKey, type ReportSeriesPoint, type ReportTopCustomer, type ReportTopProduct, type RevenuesReportData } from "./report.types";
+import { MERCHANDISING_SOURCE_LABELS, type AbandonedCartsReportData, type CustomersReportData, type IncompleteOrdersReportData, type MerchandisingReportData, type MerchandisingSourceKey, type OrdersReportData, type ProductsReportData, type ReportOverviewData, type ReportRangeKey, type ReportSeriesPoint, type ReportTopCustomer, type ReportTopProduct, type RevenuesReportData, type WishlistReportData } from "./report.types";
 
 type ReportWindow = {
   length: number;
@@ -292,6 +297,39 @@ export async function getAbandonedCartsReport(storeId: string, fallbackCurrency:
 
 function sumCartValue(carts: Array<{ subtotalAmount: unknown }>) {
   return carts.reduce((total, cart) => total + Number(cart.subtotalAmount), 0);
+}
+
+/**
+ * What shoppers saved and have not bought.
+ *
+ * The only demand signal a store gets from people who never reached checkout,
+ * which is why it is reported next to stock rather than next to revenue: the
+ * question it answers is what to restock and what to promote, not what sold.
+ *
+ * `shoppers` counts wishlist cookies, not people — one shopper on a phone and a
+ * laptop is two, and there is no shopper login that could make it otherwise. It
+ * is here because the ratio of saves to shoppers is what separates one
+ * enthusiast from a queue.
+ */
+export async function getWishlistReport(storeId: string, range: ReportRangeKey = "30d"): Promise<WishlistReportData> {
+  const window = reportWindow(range);
+  const [saves, totals, demand] = await Promise.all([
+    findWishlistSaveDates({ since: window.start, storeId }),
+    getWishlistTotals({ since: window.start, storeId }),
+    findWishlistDemand({ limit: 20, since: window.start, storeId })
+  ]);
+
+  return {
+    daily: timeSeries(window.length, window.unit, window.start, saves, () => 1),
+    metrics: {
+      // The line the report exists for: demand the shop currently cannot meet.
+      outOfStockSaves: sum(demand.filter((row) => row.stockQuantity <= 0).map((row) => row.saves)),
+      products: totals.products,
+      saves: totals.saves,
+      shoppers: totals.shoppers
+    },
+    topProducts: demand.map((row) => ({ saves: row.saves, stockQuantity: row.stockQuantity, title: row.title }))
+  };
 }
 
 function timeSeries<T extends { createdAt: Date }>(

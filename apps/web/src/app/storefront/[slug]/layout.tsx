@@ -10,12 +10,15 @@ import { ShoppingAgentDock } from "../../../modules/shopping-agent/components/sh
 import { storefrontBasePath } from "../../../modules/storefront/base-path";
 import { StorefrontBasePathProvider } from "../../../modules/storefront/base-path-provider";
 import { ScrollToTopButton } from "../../../modules/storefront/components/scroll-to-top-button";
+import { ThemeModeProvider } from "../../../modules/theme-mode/components/theme-mode-provider";
 import { StorefrontThemeProvider } from "../../../modules/storefront/themes/storefront-theme-provider";
 import {
   createStorefrontThemeContext,
   getStorefrontThemeSettings
 } from "../../../modules/storefront/themes/theme.service";
 import { getStorefrontBySlug } from "../../../modules/storefront/resolver";
+import { WishlistProvider } from "../../../modules/wishlist/components/wishlist-provider";
+import { getWishlistState } from "../../../modules/wishlist/wishlist.service";
 
 type StorefrontLayoutProps = {
   children: ReactNode;
@@ -78,9 +81,13 @@ export default async function StorefrontLayout({ children, params }: StorefrontL
     return <div data-storefront-layout="true">{children}</div>;
   }
 
-  const [settings, marketing] = await Promise.all([
+  const [settings, marketing, wishlist] = await Promise.all([
     getStorefrontThemeSettings(store.id),
-    getMarketingTagPlan(store.id)
+    getMarketingTagPlan(store.id),
+    // One read for every heart on the page. It costs a shopper who has saved
+    // nothing nothing at all: with no wishlist cookie it never reaches the
+    // database.
+    getWishlistState(store.id)
   ]);
   const basePath = await storefrontBasePath(store.slug);
   const themeContext = createStorefrontThemeContext({
@@ -89,22 +96,31 @@ export default async function StorefrontLayout({ children, params }: StorefrontL
   });
 
   return (
+    // A shopper's display preference, not a seller setting: it is read from this
+    // browser and never from the store, so switching it changes nothing for the
+    // next visitor and nothing about the shop's own colours.
+    <ThemeModeProvider>
     <StorefrontThemeProvider value={themeContext}>
       <StorefrontBasePathProvider value={basePath}>
-        {/* Analytics only ever mounts on a storefront surface — never on /dashboard
-          or /admin, which render outside this layout entirely. */}
-        <MarketingTags tags={marketing.head} />
-        <MarketingTags tags={marketing.bodyStart} />
-        {children}
-        {/* Inside the theme scope so the fixed button inherits this store's colour
-          tokens and template attribute; mounted here, once, instead of per footer. */}
-        <ScrollToTopButton />
-        {/* Once for the whole storefront, so the conversation survives a shopper
-          moving from a category to a product to the cart. Renders nothing unless
-          the seller switched the assistant on and the store is entitled to it. */}
-        <ShoppingAgentDock store={store} />
-        <MarketingTags tags={marketing.bodyEnd} />
+        {/* Every heart on every card and the header count read one list from
+          here, so a grid of thirty products is one query rather than thirty. */}
+        <WishlistProvider state={wishlist} storeSlug={store.slug}>
+          {/* Analytics only ever mounts on a storefront surface — never on /dashboard
+            or /admin, which render outside this layout entirely. */}
+          <MarketingTags tags={marketing.head} />
+          <MarketingTags tags={marketing.bodyStart} />
+          {children}
+          {/* Inside the theme scope so the fixed button inherits this store's colour
+            tokens and template attribute; mounted here, once, instead of per footer. */}
+          <ScrollToTopButton />
+          {/* Once for the whole storefront, so the conversation survives a shopper
+            moving from a category to a product to the cart. Renders nothing unless
+            the seller switched the assistant on and the store is entitled to it. */}
+          <ShoppingAgentDock store={store} />
+          <MarketingTags tags={marketing.bodyEnd} />
+        </WishlistProvider>
       </StorefrontBasePathProvider>
     </StorefrontThemeProvider>
+    </ThemeModeProvider>
   );
 }

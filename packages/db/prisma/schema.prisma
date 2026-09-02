@@ -612,6 +612,7 @@ model Store {
   campaignAudiences          CampaignAudience[]
   campaignTemplates          CampaignTemplate[]
   blockedIps                 BlockedIp[]
+  wishlistItems              WishlistItem[]
   createdAt                  DateTime                    @default(now())
   updatedAt                  DateTime                    @default(now()) @updatedAt
 
@@ -1031,6 +1032,7 @@ model Product {
   content             ProductContent?
   orderBumps          OrderBump[]
   bundleItems         BundleItem[]
+  wishlistItems       WishlistItem[]
   createdAt           DateTime                    @default(now())
   updatedAt           DateTime                    @default(now()) @updatedAt
 
@@ -2518,4 +2520,36 @@ model CampaignRecipient {
   @@index([campaignId, status])
   @@index([claimToken])
   @@index([customerId])
+}
+
+/// One product a shopper saved, on one store.
+///
+/// Keyed by `token` rather than by a customer because a storefront has no
+/// shopper login to key it by: the only identity available is the signed cookie
+/// `wishlist-token.ts` mints, which is the same shape the cart's snapshot token
+/// already uses. The token is per store, so one shopper's list on two shops on
+/// this platform are two unrelated lists and neither is reachable from the
+/// other's cookie.
+///
+/// The row stores an id and nothing else — no title, no price, no image. A
+/// wishlist is looked at weeks after it is filled, which is exactly long enough
+/// for a copied price to be wrong, so the products are re-read through
+/// `publicProductWhere` on every render: a product that went DRAFT, HIDDEN or
+/// away simply stops appearing, the same way it stops being linkable.
+model WishlistItem {
+  id        String   @id @default(cuid())
+  storeId   String
+  token     String
+  productId String
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  /// Saving twice is saving once. The toggle relies on this.
+  @@unique([storeId, token, productId])
+  /// One shopper's list, newest first.
+  @@index([storeId, token])
+  /// The seller's demand report: how many shoppers saved each product.
+  @@index([storeId, productId])
+  @@index([productId])
 }

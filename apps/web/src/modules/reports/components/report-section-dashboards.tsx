@@ -1,6 +1,6 @@
-import { BadgeDollarSign, Ban, Box, CheckCircle2, CircleAlert, CircleDollarSign, ClipboardList, Clock3, PackageCheck, PackageOpen, Percent, ReceiptText, RefreshCcw, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, UserPlus, Users } from "lucide-react";
+import { BadgeDollarSign, Ban, Box, CheckCircle2, CircleAlert, CircleDollarSign, ClipboardList, Clock3, Heart, PackageCheck, PackageOpen, Percent, ReceiptText, RefreshCcw, ShoppingBag, ShoppingCart, TrendingDown, TrendingUp, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
-import type { AbandonedCartsReportData, CustomersReportData, IncompleteOrdersReportData, MerchandisingReportData, OrdersReportData, ProductsReportData, RevenuesReportData } from "../report.types";
+import type { AbandonedCartsReportData, CustomersReportData, IncompleteOrdersReportData, MerchandisingReportData, OrdersReportData, ProductsReportData, RevenuesReportData, WishlistReportData } from "../report.types";
 import { ReportCard } from "./report-card";
 import { ReportLineChart } from "./report-line-chart";
 import { ReportBarList, ReportEmptyState, ReportMetricCard, ReportTable, formatMoney, formatNumber } from "./report-section-components";
@@ -154,6 +154,35 @@ export function MerchandisingReportDashboard({ data }: { data: MerchandisingRepo
         emptyMessage="Products appear here once a shopper takes one of your suggestions."
         headers={["Product", "Surface", "Units", "Revenue"]}
         rows={data.topSuggested.map((entry) => [entry.title, entry.source, formatNumber(entry.quantity), formatMoney(entry.revenue, data.currency)])}
+      />
+    </ReportCard>
+  </div>;
+}
+
+export function WishlistReportDashboard({ data }: { data: WishlistReportData }) {
+  const hasSaves = data.metrics.saves > 0;
+  // Saves per shopper, which is what separates one enthusiast filling a list
+  // from a queue of people waiting on the same thing.
+  const savesPerShopper = data.metrics.shoppers ? data.metrics.saves / data.metrics.shoppers : 0;
+
+  return <div className="grid gap-4">
+    <MetricGrid metrics={[
+      { icon: Heart, label: "Products Saved", value: formatNumber(data.metrics.saves) },
+      { icon: Users, label: "Shoppers Saving", value: formatNumber(data.metrics.shoppers) },
+      { icon: Box, label: "Distinct Products", value: formatNumber(data.metrics.products) },
+      { icon: Percent, label: "Saves Per Shopper", value: savesPerShopper.toFixed(1) },
+      { icon: CircleAlert, label: "Saves On Out-Of-Stock", value: formatNumber(data.metrics.outOfStockSaves) }
+    ]} />
+    <ReportCard title="Saves Over Time">
+      {hasSaves ? <ReportLineChart labels={data.daily.map((point) => point.label)} series={[
+        { color: "#e8508d", label: "Products Saved", values: data.daily.map((point) => point.value) }
+      ]} /> : <ReportEmptyState message="Nothing has been saved in this period yet. The heart appears on every product card and product page." />}
+    </ReportCard>
+    <ReportCard title="Most Wanted">
+      <ReportTable
+        emptyMessage="Products appear here once a shopper saves one."
+        headers={["Product", "Shoppers Waiting", "In Stock"]}
+        rows={data.topProducts.map((entry) => [entry.title, formatNumber(entry.saves), entry.stockQuantity > 0 ? formatNumber(entry.stockQuantity) : "Out of stock"])}
       />
     </ReportCard>
   </div>;

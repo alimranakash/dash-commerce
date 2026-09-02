@@ -14,6 +14,8 @@ import {
 import { PredictiveSearch } from "../../../search/components/predictive-search";
 import { MiniCartDrawer } from "../../../cart/components/mini-cart-drawer";
 import type { Cart } from "../../../cart/cart.types";
+import { ThemeModeToggle } from "../../../theme-mode/components/theme-mode-toggle";
+import { WishlistHeaderLink } from "../../../wishlist/components/wishlist-header-link";
 import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
   normalizeAdvancedSettings,
@@ -253,6 +255,8 @@ export function ElectronicsStorefrontHeader({
                   <UserRound size={21} strokeWidth={2} />
                 </Link>
               ) : null}
+              <WishlistHeaderLink className={styles.iconLink} iconSize={21} />
+              <ThemeModeToggle className={styles.iconLink} iconSize={21} />
               {settings.header.showCart ? (
                 <span className={styles.cartDivider}>
                   <MiniCartDrawer
@@ -377,6 +381,11 @@ export function ElectronicsStorefrontHeader({
               </Link>
             );
           })}
+          {/* The icon row collapses on a phone, so this is the wishlist's only
+            way in below the header's mobile breakpoint. */}
+          <Link href={`${homeHref}/wishlist`} onClick={() => setMobileOpen(false)}>
+            Wishlist
+          </Link>
         </nav>
       ) : null}
     </div>

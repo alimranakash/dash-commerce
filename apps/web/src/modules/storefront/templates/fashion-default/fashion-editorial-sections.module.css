@@ -470,3 +470,65 @@
     transition: none;
   }
 }
+
+/* dark-mode:generated:start */
+/* Written by npm run theme:dark - edit scripts/dark-mode/, not this. */
+[data-theme="dark"] .collectionMedia > span {
+  background: linear-gradient(145deg, #483220, #7a675d);
+  color: #ffffffb3;
+}
+
+[data-theme="dark"] .collectionOverlay {
+  background: linear-gradient(180deg, transparent 42%, #24262dad);
+}
+
+[data-theme="dark"] .campaign {
+  background: #272830;
+}
+
+[data-theme="dark"] .campaignMedia > span,
+[data-theme="dark"] .lookbookMedia > span,
+[data-theme="dark"] .newsletterMedia > span {
+  background: linear-gradient(145deg, #aa9a8d, #504742);
+  color: #ffffffad;
+}
+
+[data-theme="dark"] .lookbook {
+  background: #261e14;
+  color: #efedeb;
+}
+
+[data-theme="dark"] .lookbookProducts > a > div {
+  background: #3e342b;
+}
+
+[data-theme="dark"] .communityHeading > span {
+  color: #cac7c4;
+}
+
+[data-theme="dark"] .communityGrid figure {
+  background: #3e342b;
+}
+
+[data-theme="dark"] .communityGrid figure > span {
+  background: linear-gradient(145deg, #443325, #464853);
+}
+
+[data-theme="dark"] .communityGrid figcaption {
+  background: linear-gradient(transparent, #24262d94);
+}
+
+[data-theme="dark"] .newsletter {
+  background: #292b32;
+}
+
+[data-theme="dark"] .newsletterContent input {
+  border-bottom: 1px solid #383940b3;
+}
+
+[data-theme="dark"] .newsletterContent button {
+  background: #23242a;
+  border: 1px solid #383940;
+  color: #ebecef;
+}
+/* dark-mode:generated:end */
