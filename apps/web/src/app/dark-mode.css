@@ -194,3 +194,15 @@
 [data-theme="dark"] .nb-close:hover {
   background: rgba(255, 255, 255, 0.16);
 }
+
+/* --- Pagination hover: a wash, not a surface ---------------------------------
+   The pager's hover state is `rgba(23, 23, 23, 0.06)` — dark ink at 6% over a
+   white shell. Mapped literally that becomes dark ink at 6% over a *dark* shell,
+   which is a hover nobody can see. It is a wash over whatever the control sits
+   on rather than a surface of its own, so it flips to white at the same weight,
+   the same judgement the notification bar's close button gets above. */
+
+[data-theme="dark"] .sf-pagination-page:hover,
+[data-theme="dark"] .sf-pagination-step:not([aria-disabled="true"]):hover {
+  background: rgba(255, 255, 255, 0.08);
+}

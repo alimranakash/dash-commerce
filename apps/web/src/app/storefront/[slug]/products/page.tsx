@@ -8,6 +8,7 @@ import { resolveNotificationBar } from "../../../../modules/notification-bar/not
 import { getPublicProductTaxonomyItems } from "../../../../modules/products/product-taxonomy.service";
 import { ProductGrid } from "../../../../modules/storefront/components/product-listing";
 import { ShopToolbar } from "../../../../modules/storefront/components/shop-toolbar";
+import { StorefrontPagination } from "../../../../modules/storefront/components/storefront-pagination";
 import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../../../modules/storefront/customization";
 import { storefrontSectionHref } from "../../../../modules/storefront/product-sections";
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
@@ -208,21 +209,15 @@ export default async function StorefrontProductsPage({
               storeId={store.id}
               storeSlug={store.slug}
             />
-            <div className="sf-pagination" aria-label="Product pagination">
-              <PaginationLink
-                disabled={currentPage <= 1}
-                href={buildProductsHref(basePath, filters, currentPage - 1)}
-                label="Previous"
-              />
-              <span>
-                Page {currentPage} of {totalPages}
-              </span>
-              <PaginationLink
-                disabled={currentPage >= totalPages}
-                href={buildProductsHref(basePath, filters, currentPage + 1)}
-                label={shopSettings.paginationMode === "load-more" ? "Load More" : "Next"}
-              />
-            </div>
+            <StorefrontPagination
+              buildHref={(page) => buildProductsHref(basePath, filters, page)}
+              currentPage={currentPage}
+              label="Product pagination"
+              mode={shopSettings.paginationMode}
+              perPage={productsPerPage}
+              totalItems={totalProducts}
+              totalPages={totalPages}
+            />
           </>
         )}
       </section>
@@ -315,20 +310,4 @@ function buildProductsHref(
   const query = params.toString();
 
   return `${basePath}/products${query ? `?${query}` : ""}`;
-}
-
-function PaginationLink({
-  disabled,
-  href,
-  label
-}: {
-  disabled: boolean;
-  href: string;
-  label: string;
-}) {
-  if (disabled) {
-    return <span aria-disabled="true">{label}</span>;
-  }
-
-  return <Link href={href}>{label}</Link>;
 }

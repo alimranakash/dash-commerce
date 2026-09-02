@@ -17,6 +17,7 @@ import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../../../modules/storef
 import type { StorefrontShopPageSettings } from "../../../../modules/storefront/customization";
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../modules/storefront/components/storefront-header";
+import { StorefrontPagination } from "../../../../modules/storefront/components/storefront-pagination";
 import {
   getStorefrontCategories,
   getStorefrontProductCount,
@@ -205,23 +206,15 @@ export default async function StorefrontSearchPage({
               storeId={store.id}
               storeSlug={store.slug}
             />
-            {totalPages > 1 ? (
-              <div className="sf-pagination" aria-label="Search result pagination">
-                <PaginationLink
-                  disabled={currentPage <= 1}
-                  href={buildSearchHref(basePath, filters, currentPage - 1)}
-                  label="Previous"
-                />
-                <span>
-                  Page {currentPage} of {totalPages}
-                </span>
-                <PaginationLink
-                  disabled={currentPage >= totalPages}
-                  href={buildSearchHref(basePath, filters, currentPage + 1)}
-                  label="Next"
-                />
-              </div>
-            ) : null}
+            <StorefrontPagination
+              buildHref={(page) => buildSearchHref(basePath, filters, page)}
+              currentPage={currentPage}
+              itemNoun="results"
+              label="Search result pagination"
+              perPage={productsPerPage}
+              totalItems={totalProducts}
+              totalPages={totalPages}
+            />
           </>
         )}
       </section>
@@ -280,22 +273,6 @@ function resultSummary(query: string, totalProducts: number, hasActiveFilters: b
   return hasActiveFilters
     ? `No result for "${query}" with these filters`
     : `Nothing matched "${query}"`;
-}
-
-function PaginationLink({
-  disabled,
-  href,
-  label
-}: {
-  disabled: boolean;
-  href: string;
-  label: string;
-}) {
-  if (disabled) {
-    return <span aria-disabled="true">{label}</span>;
-  }
-
-  return <Link href={href}>{label}</Link>;
 }
 
 /**

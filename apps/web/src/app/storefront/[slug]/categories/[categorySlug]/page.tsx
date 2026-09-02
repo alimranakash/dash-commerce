@@ -11,6 +11,7 @@ import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../../../../modules/sto
 import { storefrontSectionHref } from "../../../../../modules/storefront/product-sections";
 import { StorefrontFooter } from "../../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../../modules/storefront/components/storefront-header";
+import { StorefrontPagination } from "../../../../../modules/storefront/components/storefront-pagination";
 import {
   storefrontCanonicalUrl,
   toMetaDescription
@@ -219,21 +220,15 @@ export default async function StorefrontCategoryProductsPage({
               storeId={store.id}
               storeSlug={store.slug}
             />
-            <div className="sf-pagination" aria-label="Product pagination">
-              <PaginationLink
-                disabled={currentPage <= 1}
-                href={buildCategoryHref(basePath, category.slug, filters, currentPage - 1)}
-                label="Previous"
-              />
-              <span>
-                Page {currentPage} of {totalPages}
-              </span>
-              <PaginationLink
-                disabled={currentPage >= totalPages}
-                href={buildCategoryHref(basePath, category.slug, filters, currentPage + 1)}
-                label={shopSettings.paginationMode === "load-more" ? "Load More" : "Next"}
-              />
-            </div>
+            <StorefrontPagination
+              buildHref={(page) => buildCategoryHref(basePath, category.slug, filters, page)}
+              currentPage={currentPage}
+              label="Product pagination"
+              mode={shopSettings.paginationMode}
+              perPage={productsPerPage}
+              totalItems={totalProducts}
+              totalPages={totalPages}
+            />
           </>
         )}
       </section>
@@ -321,20 +316,4 @@ function buildCategoryHref(
   const query = params.toString();
 
   return `${basePath}/categories/${categorySlug}${query ? `?${query}` : ""}`;
-}
-
-function PaginationLink({
-  disabled,
-  href,
-  label
-}: {
-  disabled: boolean;
-  href: string;
-  label: string;
-}) {
-  if (disabled) {
-    return <span aria-disabled="true">{label}</span>;
-  }
-
-  return <Link href={href}>{label}</Link>;
 }

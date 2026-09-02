@@ -12,7 +12,7 @@
 
 /* ---- Tailwind utilities ----------------------------------------------
    461 overrides derived from 474 colour utilities
-   found across 988 source files. */
+   found across 989 source files. */
 
 [data-theme="dark"] .divide-\[\#ececf5\] > :where(:not(:last-child)),
 [data-theme="dark"] .border-\[\#ececf5\] {
@@ -1373,7 +1373,7 @@
 }
 
 /* ---- globals.css ------------------------------------------------------
-   1394 declarations across 937 rules. These come
+   1403 declarations across 945 rules. These come
    last so that, exactly as in light mode, a component stylesheet beats a
    utility class at the same specificity. */
 
@@ -2740,19 +2740,52 @@
   color: #ebecef;
 }
 
-[data-theme="dark"] .sf-pagination a,
-[data-theme="dark"] .sf-pagination span {
+[data-theme="dark"] .sf-pagination-controls {
   background: #23242a;
-  border: 1px solid #6566711a;
+  border: 1px solid #65667114;
+  box-shadow: 0 10px 30px #080f210f;
+}
+
+[data-theme="dark"] .sf-pagination-page {
   color: #ebecef;
 }
 
-[data-theme="dark"] .sf-pagination a {
+[data-theme="dark"] .sf-pagination-page:hover {
+  background: #2728300f;
+}
+
+[data-theme="dark"] .sf-pagination-page.is-current {
+  background: var(--store-primary, #428c95);
+}
+
+[data-theme="dark"] .sf-pagination-step {
+  color: #ebecef;
+}
+
+[data-theme="dark"] .sf-pagination-step:not([aria-disabled="true"]):hover {
+  background: #2728300f;
   color: var(--store-primary, #a0d8de);
 }
 
-[data-theme="dark"] .sf-pagination span[aria-disabled="true"] {
+[data-theme="dark"] .sf-pagination-step[aria-disabled="true"] {
+  color: #909398;
+}
+
+[data-theme="dark"] .sf-pagination-gap {
   color: #aaadb1;
+}
+
+[data-theme="dark"] .sf-pagination-status {
+  color: #d2d8e0;
+}
+
+[data-theme="dark"] .sf-pagination-summary {
+  color: #c1c5cd;
+}
+
+[data-theme="dark"] .sf-pagination-page:focus-visible,
+[data-theme="dark"] .sf-pagination-step:focus-visible {
+  outline: 2px solid var(--store-primary, #3d8790);
 }
 
 [data-theme="dark"] .sf-account-card {

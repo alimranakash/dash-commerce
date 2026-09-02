@@ -4798,36 +4798,148 @@ textarea {
   }
 }
 
+/* The pager is one rounded bar: steps and numbers sit inside a single shell so
+   the control reads as one object instead of three floating pills. */
 .sf-pagination {
   align-items: center;
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
   margin-top: 34px;
 }
 
-.sf-pagination a,
-.sf-pagination span {
+.sf-pagination-controls {
   align-items: center;
   background: #ffffff;
-  border: 1px solid rgba(23, 23, 23, 0.1);
+  border: 1px solid rgba(23, 23, 23, 0.08);
   border-radius: 999px;
-  color: #171717;
-  display: inline-flex;
-  font-size: 0.9rem;
-  font-weight: 900;
-  min-height: 42px;
-  padding: 0 16px;
-  text-decoration: none;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+  max-width: 100%;
+  padding: 5px;
 }
 
-.sf-pagination a {
+.sf-pagination-pages {
+  align-items: center;
+  display: flex;
+  gap: 2px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sf-pagination-gap,
+.sf-pagination-page,
+.sf-pagination-status,
+.sf-pagination-step {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.9rem;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.sf-pagination-page {
+  color: #171717;
+  min-width: 40px;
+  padding: 0 10px;
+  text-decoration: none;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.sf-pagination-page:hover {
+  background: rgba(23, 23, 23, 0.06);
+}
+
+/* The one filled element in the row, so the shopper's place is legible at a
+   glance rather than read off a sentence. */
+.sf-pagination-page.is-current {
+  background: var(--store-primary, #135d66);
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.sf-pagination-step {
+  color: #171717;
+  gap: 6px;
+  padding: 0 14px;
+  text-decoration: none;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.sf-pagination-step:not([aria-disabled="true"]):hover {
+  background: rgba(23, 23, 23, 0.06);
   color: var(--store-primary, #135d66);
 }
 
-.sf-pagination span[aria-disabled="true"] {
+/* Either end of the range is a span, not a dimmed link: nothing to focus and
+   nothing to follow. */
+.sf-pagination-step[aria-disabled="true"] {
+  color: #b3b8bf;
+  cursor: not-allowed;
+}
+
+.sf-pagination-gap {
   color: #9ba1a8;
+  min-width: 26px;
+}
+
+.sf-pagination-status {
+  color: #4b5563;
+  padding: 0 12px;
+}
+
+/* Numbers make the sentence redundant, so it only speaks when they cannot. */
+.sf-pagination[data-mode="pagination"] .sf-pagination-status {
+  display: none;
+}
+
+.sf-pagination-summary {
+  color: #6b7280;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+}
+
+.sf-pagination-page:focus-visible,
+.sf-pagination-step:focus-visible {
+  outline: 2px solid var(--store-primary, #135d66);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .sf-pagination[data-mode="pagination"] .sf-pagination-pages {
+    display: none;
+  }
+
+  .sf-pagination[data-mode="pagination"] .sf-pagination-status {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 380px) {
+  .sf-pagination-step-label {
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+
+  .sf-pagination-step {
+    padding: 0 12px;
+  }
 }
 
 .sf-account-grid {
@@ -16513,7 +16625,7 @@ textarea {
     min-height: 44px;
   }
 
-  [data-storefront-template="electronics-default"] :is(.sf-pagination a, .sf-pagination span) {
+  [data-storefront-template="electronics-default"] :is(.sf-pagination-page, .sf-pagination-step) {
     min-height: 44px;
   }
 
@@ -16746,7 +16858,7 @@ textarea {
   }
 
   .sf-theme-scope[data-storefront-template="general-default"]
-    :is(.sf-pagination a, .sf-pagination span) {
+    :is(.sf-pagination-page, .sf-pagination-step) {
     min-height: 44px;
   }
 
