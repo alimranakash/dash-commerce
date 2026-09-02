@@ -51,6 +51,7 @@ export const PLAN_FEATURE_KEYS = [
   "marketing_automation",
   "marketing_templates",
   "meta_pixel",
+  "notification_bar",
   "order_bump",
   "order_tracking",
   "order_verification",
@@ -298,6 +299,18 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
   meta_pixel: {
     description: "Meta (Facebook and Instagram) pixel and domain verification.",
     label: "Meta Pixel",
+    status: "available"
+  },
+  /**
+   * The storefront's one announcement, with a deadline that is a real moment
+   * rather than a per-visitor timer. The entitlement buys *publishing* it;
+   * switching the bar off is ungated, so a lapsed store can always take down
+   * something running on its own storefront.
+   */
+  notification_bar: {
+    description:
+      "A floating announcement bar across your storefront, with a countdown and a button.",
+    label: "Notification Bar",
     status: "available"
   },
   order_bump: {

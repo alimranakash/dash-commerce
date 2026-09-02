@@ -2,7 +2,7 @@
 
 import { useStorefrontBasePath } from "../base-path-provider";
 import Link from "next/link";
-import type { CSSProperties, ReactNode } from "react";
+import { Fragment, type CSSProperties, type ReactNode } from "react";
 import type { StorefrontProductSectionSettings } from "../customization";
 import { formatStorefrontMoney } from "../format";
 import type { ProductCardProduct } from "../product-card-data";
@@ -20,6 +20,19 @@ export type ProductGridProps = {
   cardVariant?: string | undefined;
   currency: string;
   gridId?: string | undefined;
+  /**
+   * Something to drop into the grid as a full-width cell — today, a notification
+   * bar the seller placed among the products.
+   *
+   * A rendered node rather than a flag, so this component stays presentational
+   * and knows nothing about announcements: it is handed something to place and
+   * the count to place it after. Both must be set for anything to happen, and
+   * the caller is expected to pass null rather than an element that renders
+   * nothing — an empty cell would still take a column.
+   */
+  inlineSlot?: ReactNode;
+  /** How many cards come before `inlineSlot`. Null leaves the grid untouched. */
+  inlineSlotAfter?: number | null | undefined;
   products: ProductCardProduct[];
   section: StorefrontProductSectionSettings;
   // Only needed by cards that add to the cart from the grid.
@@ -66,11 +79,22 @@ export function ProductGrid({
   cardVariant,
   currency,
   gridId,
+  inlineSlot = null,
+  inlineSlotAfter = null,
   products,
   section,
   storeId,
   storeSlug
 }: ProductGridProps) {
+  const visible = products.slice(0, section.count);
+  // Clamped to the cards actually on screen: a bar set to appear after twelve
+  // products on a page showing eight would otherwise vanish, and "after the last
+  // one" is the honest reading of it. Null when there is nothing to place.
+  const slotIndex =
+    inlineSlot && inlineSlotAfter !== null && inlineSlotAfter !== undefined
+      ? Math.min(Math.max(1, inlineSlotAfter), visible.length)
+      : null;
+
   return (
     <div
       id={gridId}
@@ -80,26 +104,31 @@ export function ProductGrid({
       // Columns setting actually drives now.
       style={{ "--product-grid-columns": section.columns } as CSSProperties}
     >
-      {products.slice(0, section.count).map((product) =>
-        cardVariant === BEAUTY_PRODUCT_CARD_VARIANT ? (
-          <BeautyListingCard
-            currency={currency}
-            key={product.id}
-            product={product}
-            section={section}
-            storeId={storeId}
-            storeSlug={storeSlug}
-          />
-        ) : (
-          <ProductCard
-            currency={currency}
-            key={product.id}
-            product={product}
-            section={section}
-            storeSlug={storeSlug}
-          />
-        )
-      )}
+      {visible.map((product, index) => (
+        <Fragment key={product.id}>
+          {cardVariant === BEAUTY_PRODUCT_CARD_VARIANT ? (
+            <BeautyListingCard
+              currency={currency}
+              product={product}
+              section={section}
+              storeId={storeId}
+              storeSlug={storeSlug}
+            />
+          ) : (
+            <ProductCard
+              currency={currency}
+              product={product}
+              section={section}
+              storeSlug={storeSlug}
+            />
+          )}
+          {/* After the card, not before it, so "after 4 products" means the
+              shopper has seen four. Spans every column via `.sf-grid-slot`, since
+              a card-sized advert in a row of products is how a shopper loses
+              their place. */}
+          {slotIndex === index + 1 ? <div className="sf-grid-slot">{inlineSlot}</div> : null}
+        </Fragment>
+      ))}
     </div>
   );
 }

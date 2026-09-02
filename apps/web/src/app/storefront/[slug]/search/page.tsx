@@ -1,3 +1,4 @@
+import { NotificationBarSlot } from "../../../../modules/notification-bar/components/notification-bar-slot";
 import { storefrontBasePath } from "../../../../modules/storefront/base-path";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -144,6 +145,7 @@ export default async function StorefrontSearchPage({
   return (
     <main className="sf-page" data-storefront-template={template.id}>
       <StorefrontHeader store={store} />
+      <NotificationBarSlot anchor="top" store={store} surface="other" />
       <section className="sf-shop-page-header" aria-labelledby="search-title">
         <p>Search results</p>
         <span>{resultSummary(query, totalProducts, hasActiveFilters)}</span>
@@ -244,6 +246,7 @@ async function EmptySearchPage({ primaryDomain, store, templateId }: EmptySearch
   return (
     <main className="sf-page" data-storefront-template={templateId}>
       <StorefrontHeader store={store} />
+      <NotificationBarSlot anchor="top" store={store} surface="other" />
       <section className="sf-shop-page-header" aria-labelledby="search-title">
         <p>Search</p>
         <span>{primaryDomain ?? storeSubdomain(store.slug)}</span>

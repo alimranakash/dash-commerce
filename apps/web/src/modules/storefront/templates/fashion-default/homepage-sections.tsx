@@ -1,3 +1,4 @@
+import { NotificationBarSlot } from "../../../notification-bar/components/notification-bar-slot";
 import { storefrontBasePath } from "../../base-path";
 import type { StorefrontTemplateHomepageProps } from "../types";
 import { FashionBeforeAfter } from "./fashion-before-after";
@@ -25,9 +26,8 @@ export async function FashionHomepageSections({
   const editorialImages = homeData.featuredProducts
     .flatMap((product) => product.images)
     .map((image) => image.url);
-  const heroSlides = settings?.advancedSettings.hero.slides.filter(
-    (slide) => slide.mediaType === "image"
-  ) ?? [];
+  const heroSlides =
+    settings?.advancedSettings.hero.slides.filter((slide) => slide.mediaType === "image") ?? [];
   const fashion = settings?.advancedSettings.fashion;
   const productSections = settings?.advancedSettings.productSections;
   const comparisonProduct = homeData.featuredProducts[0] ?? null;
@@ -62,14 +62,24 @@ export async function FashionHomepageSections({
         subtitle={store.themeSetting?.heroSubtitle ?? null}
         title={store.themeSetting?.heroTitle ?? null}
       />
+      {/* The two home anchors only a template can place: the storefront page
+        owns the top and the footer edge, and this file is the only one that
+        knows where its own hero ends. Both render nothing unless the seller
+        picked that anchor. */}
+      <NotificationBarSlot anchor="after_hero" store={store} surface="home" />
       <FashionEditorialCollectionGrid
         categories={homeData.categories}
         ctas={fashion?.collectionCtas}
         storeSlug={store.slug}
       />
+      <NotificationBarSlot anchor="after_first_section" store={store} surface="home" />
       <FashionNewArrivals
         currency={store.currency}
-        description={fashion?.newArrivalsDescription ?? productSections?.newArrivals.subtitle ?? "Discover the latest ready-to-wear dresses."}
+        description={
+          fashion?.newArrivalsDescription ??
+          productSections?.newArrivals.subtitle ??
+          "Discover the latest ready-to-wear dresses."
+        }
         products={homeData.newArrivals.map((product) => ({
           category: product.category
             ? {
@@ -97,16 +107,44 @@ export async function FashionHomepageSections({
         ctaLink={resolveStorefrontHref(basePath, fashion?.editorialSplitCtaLink ?? "/products")}
         ctaText={fashion?.editorialSplitCtaText ?? "Explore"}
         heading={fashion?.editorialSplitHeading ?? "Timeless classics"}
-        height={fashion?.editorialSplitHeight ?? settings?.advancedSettings.hero.customHeight ?? 720}
-        leftImageUrl={fashion?.editorialSplitLeftImageUrl || heroSlides[1]?.url || editorialImages[0] || settings?.heroImageUrl}
-        overlayOpacity={fashion?.editorialSplitOverlayOpacity ?? settings?.advancedSettings.hero.overlayOpacity}
-        rightImageUrl={fashion?.editorialSplitRightImageUrl || heroSlides[2]?.url || editorialImages[1] || editorialImages[0]}
+        height={
+          fashion?.editorialSplitHeight ?? settings?.advancedSettings.hero.customHeight ?? 720
+        }
+        leftImageUrl={
+          fashion?.editorialSplitLeftImageUrl ||
+          heroSlides[1]?.url ||
+          editorialImages[0] ||
+          settings?.heroImageUrl
+        }
+        overlayOpacity={
+          fashion?.editorialSplitOverlayOpacity ?? settings?.advancedSettings.hero.overlayOpacity
+        }
+        rightImageUrl={
+          fashion?.editorialSplitRightImageUrl ||
+          heroSlides[2]?.url ||
+          editorialImages[1] ||
+          editorialImages[0]
+        }
         textPosition="center"
       />
-      <FashionSection actionHref={`${basePath}/products`} eyebrow="Categories" id="fashion-categories" title="Shop by category">
+      <FashionSection
+        actionHref={`${basePath}/products`}
+        eyebrow="Categories"
+        id="fashion-categories"
+        title="Shop by category"
+      >
         <FashionCategoryCards categories={homeData.categories} storeSlug={store.slug} />
       </FashionSection>
-      <FashionSection actionHref={resolveStorefrontHref(basePath, productSections?.trending.ctaLink ?? "/products")} actionLabel={productSections?.trending.ctaText} eyebrow="Trending" id="fashion-trending" title={productSections?.trending.title ?? "Trending products"}>
+      <FashionSection
+        actionHref={resolveStorefrontHref(
+          basePath,
+          productSections?.trending.ctaLink ?? "/products"
+        )}
+        actionLabel={productSections?.trending.ctaText}
+        eyebrow="Trending"
+        id="fashion-trending"
+        title={productSections?.trending.title ?? "Trending products"}
+      >
         <FashionProductGrid
           currency={store.currency}
           products={homeData.featuredProducts.slice(0, productSections?.trending.count ?? 4)}
@@ -114,9 +152,19 @@ export async function FashionHomepageSections({
         />
       </FashionSection>
       <FashionBeforeAfter
-        afterImageUrl={fashion?.beforeAfterAfterImageUrl || comparisonImages[1] || heroSlides[1]?.url || comparisonImages[0]}
+        afterImageUrl={
+          fashion?.beforeAfterAfterImageUrl ||
+          comparisonImages[1] ||
+          heroSlides[1]?.url ||
+          comparisonImages[0]
+        }
         afterLabel={fashion?.beforeAfterAfterLabel}
-        beforeImageUrl={fashion?.beforeAfterBeforeImageUrl || comparisonImages[0] || heroSlides[0]?.url || settings?.heroImageUrl}
+        beforeImageUrl={
+          fashion?.beforeAfterBeforeImageUrl ||
+          comparisonImages[0] ||
+          heroSlides[0]?.url ||
+          settings?.heroImageUrl
+        }
         beforeLabel={fashion?.beforeAfterBeforeLabel}
         currency={store.currency}
         initialPosition={fashion?.beforeAfterInitialPosition ?? 50}
@@ -124,12 +172,22 @@ export async function FashionHomepageSections({
         storeSlug={store.slug}
       />
       <FashionEditorialBanner
-        ctaLabel={fashion?.editorialBannerCtaText ?? settings?.advancedSettings.productSections.featured.ctaText}
+        ctaLabel={
+          fashion?.editorialBannerCtaText ??
+          settings?.advancedSettings.productSections.featured.ctaText
+        }
         ctaLink={fashion?.editorialBannerCtaLink}
-        imageUrl={fashion?.editorialBannerImageUrl || sectionMedia[0]?.url || settings?.heroImageUrl}
+        imageUrl={
+          fashion?.editorialBannerImageUrl || sectionMedia[0]?.url || settings?.heroImageUrl
+        }
         storeSlug={store.slug}
-        subtitle={fashion?.editorialBannerSubtitle ?? settings?.advancedSettings.productSections.featured.subtitle}
-        title={fashion?.editorialBannerTitle ?? settings?.advancedSettings.productSections.featured.title}
+        subtitle={
+          fashion?.editorialBannerSubtitle ??
+          settings?.advancedSettings.productSections.featured.subtitle
+        }
+        title={
+          fashion?.editorialBannerTitle ?? settings?.advancedSettings.productSections.featured.title
+        }
       />
       <FashionFeaturedLook
         ctaLink={fashion?.featuredLookCtaLink}
@@ -143,7 +201,10 @@ export async function FashionHomepageSections({
       <FashionCommunityGallery
         description={fashion?.communityDescription}
         images={[
-          ...(fashion?.communityImages ?? []).map((url, index) => ({ alt: `Community style ${index + 1}`, url })),
+          ...(fashion?.communityImages ?? []).map((url, index) => ({
+            alt: `Community style ${index + 1}`,
+            url
+          })),
           ...sectionMedia.slice(2, 8)
         ]}
         title={fashion?.communityTitle}
@@ -160,7 +221,12 @@ export async function FashionHomepageSections({
 }
 
 function resolveStorefrontHref(basePath: string, href: string) {
-  if (href.startsWith("http") || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("#")) {
+  if (
+    href.startsWith("http") ||
+    href.startsWith("mailto:") ||
+    href.startsWith("tel:") ||
+    href.startsWith("#")
+  ) {
     return href;
   }
 

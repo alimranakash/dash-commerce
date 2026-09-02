@@ -16163,32 +16163,12 @@ textarea {
   }
 }
 
-/* Purchase controls ---------------------------------------------------------
-   The product page overrides the shared pill stepper with a flat 38px block
-   (`.general-product-info .sf-quantity-control`), which put the −/+ at 30x38,
-   the quantity field at 34x38 and Add to Cart — the primary action on the page
-   — at 38px tall. The stepper's track is a three-column grid, so the columns
-   have to grow with the buttons or the wider button just overflows its cell. */
+/* Touch targets ------------------------------------------------------------
+   What is left here after the buy box got its own `--sf-buy-h` token: the cart
+   line stepper and the remove button, which were 34px squares. The product
+   page's own controls size themselves now and no longer need patching per
+   template. */
 @media (max-width: 768px) {
-  [data-storefront-template="fashion-default"] .general-product-info .sf-quantity-control {
-    grid-template-columns: 44px 46px 44px;
-    min-height: 44px;
-  }
-
-  [data-storefront-template="fashion-default"] .general-product-info .sf-quantity-control button {
-    height: 44px;
-    width: 44px;
-  }
-
-  [data-storefront-template="fashion-default"] .general-product-info .sf-purchase-box input {
-    min-height: 44px;
-    width: 46px;
-  }
-
-  [data-storefront-template="fashion-default"] .general-product-info .sf-purchase-actions button {
-    min-height: 48px;
-  }
-
   /* Cart line steppers and the row's remove button were all 34px squares. */
   [data-storefront-template="fashion-default"]
     :is(.general-cart-quantity button, .general-cart-remove) {
@@ -16815,39 +16795,15 @@ textarea {
 
 /* --- Purchase controls ----------------------------------------------------- */
 
-/* The product page overrides the shared pill stepper with a flat 38px block,
-   which put the −/+ at 30x38 and Add to Cart — the primary action on the page —
-   at 38px tall. The stepper's track is a three-column grid, so the columns have
-   to grow with the buttons or the wider button just overflows its cell. */
+/* What is left here after the buy box got its own `--sf-buy-h` token: variant
+   swatches, the variant dropdown, and the cart line stepper. The product page's
+   own controls size themselves now and no longer need patching per template. */
 @media (max-width: 768px) {
   .sf-theme-scope[data-storefront-template="general-default"]
     .general-product-info
     .sf-quantity-control {
     grid-template-columns: 44px 46px 44px;
     min-height: 44px;
-  }
-
-  .sf-theme-scope[data-storefront-template="general-default"]
-    .general-product-info
-    .sf-quantity-control
-    button {
-    height: 44px;
-    width: 44px;
-  }
-
-  .sf-theme-scope[data-storefront-template="general-default"]
-    .general-product-info
-    .sf-purchase-box
-    input {
-    min-height: 44px;
-    width: 46px;
-  }
-
-  .sf-theme-scope[data-storefront-template="general-default"]
-    .general-product-info
-    .sf-purchase-actions
-    button {
-    min-height: 48px;
   }
 
   /* Variant swatches and the variant dropdown. */
@@ -20363,5 +20319,959 @@ textarea {
 @media (max-width: 620px) {
   .snc-seg {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* --- Floating Notification Bar: the storefront bar ---------------------------
+   One announcement across the shop, with a countdown that runs to a real
+   moment and takes the bar down when it reaches zero.
+
+   Every colour on it is the seller's, and every one arrives as an inline custom
+   property on `.nb-dock` — which is what keeps dark mode's hands off it: the
+   generated stylesheet cannot re-declare a property set on the element, and the
+   hue on a promotion belongs to the shop rather than to the viewer's theme. The
+   four `--nb-*` values below resolve those inline properties once, so the rest
+   of the file names a role instead of repeating a `var()` chain, and an unset
+   colour falls through to `--sf-primary` — the shop's own — rather than to a
+   blue belonging to no storefront.
+
+   `z-index: 68` puts the bar above the sticky header (50), the scroll-to-top
+   button (60) and the sales-notification card (65), and below the shopping
+   assistant (70/75): a shopper mid-conversation is doing something more
+   deliberate than reading an advert, so the advert never covers it. A bar at
+   the bottom would still sit on top of those two round buttons, so the rules
+   at the end of this block lift them clear of it.
+   ------------------------------------------------------------------------- */
+
+.nb-dock {
+  --nb-surface: var(--nb-bg, var(--sf-primary, var(--store-primary, #135d66)));
+  --nb-ink: var(--nb-fg, #ffffff);
+  --nb-button-surface: var(--nb-button-bg, #ffffff);
+  --nb-button-ink: var(--nb-button-fg, var(--nb-surface));
+  display: flex;
+  justify-content: center;
+  left: 0;
+  /* The dock catches nothing; only the bar and its controls do. */
+  pointer-events: none;
+  position: fixed;
+  right: 0;
+  z-index: 68;
+}
+
+.nb-dock[data-position="top"] {
+  top: 0;
+}
+
+.nb-dock[data-position="bottom"] {
+  bottom: 0;
+}
+
+/* Floating: a card laid over the page, held off every edge. */
+.nb-dock[data-layout="floating"] {
+  padding: clamp(12px, 1.8vw, 22px);
+}
+
+.nb-dock[data-layout="floating"][data-position="bottom"] {
+  padding-bottom: calc(clamp(12px, 1.8vw, 22px) + env(safe-area-inset-bottom, 0px));
+}
+
+.nb-dock[data-layout="floating"][data-position="top"] {
+  padding-top: calc(clamp(12px, 1.8vw, 22px) + env(safe-area-inset-top, 0px));
+}
+
+.nb-bar {
+  align-items: center;
+  background: var(--nb-surface);
+  color: var(--nb-ink);
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(14px, 2.6vw, 40px);
+  justify-content: center;
+  /* Room for the close button, which is pinned to the right rather than laid
+     out with the content — content centred against a control on one side only
+     is content that looks off-centre. */
+  padding: 14px clamp(46px, 5vw, 64px) 14px clamp(20px, 3vw, 34px);
+  pointer-events: auto;
+  position: relative;
+  width: 100%;
+}
+
+.nb-dock[data-layout="floating"] .nb-bar {
+  border-radius: 18px;
+  /* Two shadows: a tight contact shadow that keeps the bar attached to the
+     page, and a wide soft one that lifts it off. One blurred drop shadow is
+     what makes a floating element look pasted on. */
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.16),
+    0 22px 48px -14px rgba(15, 23, 42, 0.42);
+  max-width: min(1180px, 100%);
+}
+
+.nb-dock[data-layout="edge"] .nb-bar {
+  border-radius: 0;
+}
+
+.nb-dock[data-layout="edge"][data-position="bottom"] .nb-bar {
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+}
+
+.nb-dock[data-layout="edge"][data-position="top"] .nb-bar {
+  padding-top: calc(14px + env(safe-area-inset-top, 0px));
+}
+
+.nb-dock[data-position="top"] .nb-bar {
+  animation: nb-in-top 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nb-dock[data-position="bottom"] .nb-bar {
+  animation: nb-in-bottom 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes nb-in-top {
+  from {
+    opacity: 0;
+    transform: translateY(-110%);
+  }
+}
+
+@keyframes nb-in-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(110%);
+  }
+}
+
+.nb-lede {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nb-headline {
+  font-size: clamp(19px, 2.5vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.nb-message {
+  font-size: 0.8rem;
+  line-height: 1.35;
+  margin: 0;
+  opacity: 0.86;
+}
+
+/* The countdown reads as a clock: tabular figures so the digits do not shuffle
+   sideways once a second, and the colons aligned with the numbers rather than
+   centred against the number-and-label pair. */
+.nb-countdown {
+  align-items: flex-start;
+  display: flex;
+  gap: clamp(6px, 0.9vw, 12px);
+}
+
+.nb-unit {
+  display: grid;
+  gap: 3px;
+  justify-items: center;
+  min-width: 2.1em;
+}
+
+.nb-unit-value {
+  font-size: clamp(18px, 2.1vw, 26px);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.nb-unit-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  opacity: 0.72;
+  text-transform: uppercase;
+}
+
+.nb-unit-sep {
+  font-size: clamp(18px, 2.1vw, 26px);
+  font-weight: 600;
+  line-height: 1;
+  opacity: 0.45;
+}
+
+.nb-cta {
+  background: var(--nb-button-surface);
+  border-radius: 999px;
+  color: var(--nb-button-ink);
+  font-size: 0.86rem;
+  font-weight: 700;
+  padding: 12px 26px;
+  text-decoration: none;
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+  white-space: nowrap;
+}
+
+.nb-cta:hover {
+  box-shadow: 0 10px 24px -8px rgba(15, 23, 42, 0.5);
+  transform: translateY(-1px);
+}
+
+.nb-cta:focus-visible {
+  outline: 2px solid var(--nb-ink);
+  outline-offset: 3px;
+}
+
+.nb-close {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  height: 30px;
+  justify-content: center;
+  opacity: 0.72;
+  padding: 0;
+  position: absolute;
+  right: clamp(10px, 1.4vw, 18px);
+  top: 50%;
+  transform: translateY(-50%);
+  transition:
+    background 0.16s ease,
+    opacity 0.16s ease;
+  width: 30px;
+}
+
+.nb-close:hover {
+  background: rgba(255, 255, 255, 0.16);
+  opacity: 1;
+}
+
+.nb-close:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--nb-ink);
+  outline-offset: 2px;
+}
+
+.nb-close svg {
+  height: 17px;
+  width: 17px;
+}
+
+/* A bottom bar owns the bottom of the viewport, so the two round buttons that
+   already live there move up rather than being covered. `:has()` keeps that
+   knowledge in the stylesheet: neither button knows the bar exists, and neither
+   needs a prop threaded through a layout to find out. */
+body:has(.nb-dock[data-display="overlay"][data-position="bottom"]) .sf-scroll-top {
+  bottom: calc(clamp(16px, 2.2vw, 28px) + 82px + env(safe-area-inset-bottom, 0px));
+}
+
+body:has(.nb-dock[data-display="overlay"][data-position="bottom"]) .sfagent-launcher {
+  bottom: calc(clamp(16px, 2.2vw, 28px) + 82px + env(safe-area-inset-bottom, 0px));
+}
+
+body:has(.nb-dock[data-display="overlay"][data-position="bottom"])
+  .sn-dock[data-position="bottom-left"],
+body:has(.nb-dock[data-display="overlay"][data-position="bottom"])
+  .sn-dock[data-position="bottom-right"] {
+  bottom: calc(clamp(16px, 2.2vw, 28px) + 142px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 720px) {
+  .nb-bar {
+    gap: 12px;
+    padding-left: clamp(14px, 4vw, 20px);
+    padding-right: 44px;
+  }
+
+  .nb-lede {
+    flex: 1 1 auto;
+  }
+
+  /* Full width on its own row, so the button is a thumb target rather than a
+     sliver squeezed between the headline and the timer. */
+  .nb-cta {
+    flex: 1 0 100%;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nb-dock[data-position="top"] .nb-bar,
+  .nb-dock[data-position="bottom"] .nb-bar {
+    animation: none;
+  }
+
+  .nb-cta:hover {
+    transform: none;
+  }
+}
+
+/* --- Notification Bar: the dashboard console --------------------------------
+   Shares the Sales Notifications panel furniture (`.snc-*`) on purpose — the
+   two pages are the same errand and read as one section — and adds only what
+   this feature needs: text rows with a character count, a date pair, colour
+   rows with a way back to the shop's own colour, and a preview that mounts the
+   real storefront component instead of a drawing of it.
+   ------------------------------------------------------------------------- */
+
+.nbc-text {
+  display: grid;
+  gap: 6px;
+}
+
+.nbc-text-head {
+  align-items: baseline;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.nbc-text-head strong {
+  font-size: 0.86rem;
+  letter-spacing: -0.01em;
+}
+
+.nbc-text-head small {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.nbc-text input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.86rem;
+  padding: 9px 12px;
+  width: 100%;
+}
+
+.nbc-text input:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  outline: none;
+}
+
+.nbc-text > small {
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.nbc-text-error {
+  color: #b4232d;
+}
+
+.nbc-dates {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.nbc-warning {
+  background: #fdf3f3;
+  border: 1px solid #f2d4d6;
+  border-radius: 10px;
+  color: #8f2029;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  margin: 0;
+  padding: 9px 12px;
+}
+
+.nbc-colors {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.nbc-color {
+  display: grid;
+  gap: 7px;
+}
+
+.nbc-color-head {
+  display: grid;
+  gap: 1px;
+}
+
+.nbc-color-head strong {
+  font-size: 0.86rem;
+  letter-spacing: -0.01em;
+}
+
+.nbc-color-head small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.nbc-color-controls {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.nbc-color-controls input[type="color"] {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+  height: 34px;
+  padding: 3px;
+  width: 46px;
+}
+
+/* The bar is a wide element and the preview frame is a narrow column, so the
+   mock page is given a little more room than the corner-card preview needs. */
+.nbc-preview {
+  min-height: 300px;
+}
+
+.nbc-preview-slot {
+  left: 0;
+  position: absolute;
+  right: 0;
+}
+
+.nbc-preview[data-position="top"] .nbc-preview-slot {
+  top: 38px;
+}
+
+.nbc-preview[data-position="bottom"] .nbc-preview-slot {
+  bottom: 0;
+}
+
+/* In the preview the bar is laid out inside the mock browser rather than fixed
+   to the seller's own viewport — the one behaviour the storefront component is
+   allowed to differ on, and the reason it takes a `preview` prop at all. */
+.nb-dock[data-preview="true"] {
+  left: auto;
+  position: static;
+  right: auto;
+}
+
+.nb-dock[data-preview="true"][data-layout="floating"] {
+  padding: 10px;
+}
+
+.nb-dock[data-preview="true"] .nb-bar {
+  gap: 12px;
+  padding: 11px 16px;
+}
+
+.nb-dock[data-preview="true"] .nb-headline {
+  font-size: 17px;
+}
+
+.nb-dock[data-preview="true"] .nb-unit-value,
+.nb-dock[data-preview="true"] .nb-unit-sep {
+  font-size: 16px;
+}
+
+.nb-dock[data-preview="true"] .nb-cta {
+  font-size: 0.76rem;
+  padding: 8px 16px;
+}
+
+@media (max-width: 1080px) {
+  .nbc-dates,
+  .nbc-colors {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .nbc-dates,
+  .nbc-colors {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* --- Notification Bar: inline placement -------------------------------------
+   The same bar, in the page's flow instead of pinned to the viewport. It
+   scrolls with the content and takes real layout space rather than covering
+   anything, which is what makes it usable inside a buy box or between two
+   homepage sections.
+
+   Only the positioning changes. Colours, countdown, button and close all come
+   from the overlay rules above, so a seller who switches display mode gets the
+   bar they were previewing rather than a second design.
+   ------------------------------------------------------------------------- */
+
+.nb-dock[data-display="inline"] {
+  left: auto;
+  margin-inline: auto;
+  /* Back in the flow: the shopper can reach the bar and everything under it. */
+  pointer-events: auto;
+  position: static;
+  right: auto;
+  width: 100%;
+  z-index: auto;
+}
+
+.nb-dock[data-display="inline"][data-layout="floating"] {
+  padding: clamp(10px, 1.4vw, 18px) 0;
+}
+
+.nb-dock[data-display="inline"][data-layout="edge"] {
+  padding: 0;
+}
+
+/* No entrance animation inline. A bar that slides in from the edge of the
+   screen while sitting in the middle of a product page reads as a rendering
+   fault, and the overlay's animation exists to announce something arriving
+   over the page — which this is not. */
+.nb-dock[data-display="inline"] .nb-bar {
+  animation: none;
+}
+
+.nb-dock[data-display="inline"][data-layout="edge"] .nb-bar {
+  border-radius: 0;
+}
+
+/* Inside the product page's buy box the bar is one control among several, so it
+   takes the column's own width and drops to the smaller type the panel uses.
+   Left at the storefront size it would outshout the add-to-cart button, which
+   is the one thing on that page it must not do. */
+.general-product-info .nb-dock[data-display="inline"] .nb-bar {
+  gap: 12px;
+  padding: 12px 16px;
+}
+
+.general-product-info .nb-dock[data-display="inline"] .nb-headline {
+  font-size: 18px;
+}
+
+.general-product-info .nb-dock[data-display="inline"] .nb-unit-value,
+.general-product-info .nb-dock[data-display="inline"] .nb-unit-sep {
+  font-size: 16px;
+}
+
+.general-product-info .nb-dock[data-display="inline"] .nb-cta {
+  font-size: 0.78rem;
+  padding: 9px 18px;
+}
+
+/* A bar placed among the products spans every column rather than standing in
+   for a card: an advert the size of a product, in a row of products, is how a
+   shopper loses their place in the grid. */
+.sf-grid-slot {
+  grid-column: 1 / -1;
+}
+
+/* --- The product page's buy box, as one set of controls ---------------------
+   Three controls sat here in three different design languages: a borderless
+   grey stepper 38px tall, a square Add to Cart 38px tall, and a fully-rounded
+   Wishlist pill 48px tall underneath. Nothing lined up, the secondary action
+   was the tallest thing in the block, and the stepper — flat fill, no border,
+   no hover — read as a disabled field rather than as a control.
+
+   Fixed by giving the whole block one height and one radius, both as tokens:
+
+   - `--sf-buy-h` is the single control height. 46px rather than the old 38,
+     because 38 is under the 44px touch target every mobile guideline asks for
+     and this is the one control on the page that has to be hit first time.
+   - `--sf-buy-radius` follows the seller's own Add to Cart radius setting, so
+     a shop that chose square corners gets a square stepper and a square
+     Wishlist too. That setting used to style one of the three and leave the
+     other two to disagree with it, which is what produced a pill under a
+     rectangle.
+
+   Hierarchy is restored by weight rather than by size: Add to Cart keeps the
+   solid fill, the stepper is a bordered white field, and Wishlist is a hairline
+   ghost button that only picks up colour on hover. All three are the same
+   height, so the block reads as one component.
+   ------------------------------------------------------------------------- */
+
+.general-product-info .sf-purchase-panel {
+  --sf-buy-h: 46px;
+  --sf-buy-radius: var(--product-add-button-radius, 0px);
+  gap: 10px;
+}
+
+.general-product-info .sf-purchase-box {
+  /* `max-content` so the stepper is exactly as wide as its three cells rather
+     than a fraction that squeezed the digits. */
+  grid-template-columns: max-content minmax(0, 1fr);
+}
+
+/* The stepper: a field, not a fill. White ground and a hairline that matches
+   the Wishlist button's, so the two quiet controls agree with each other. */
+.general-product-info .sf-quantity-control {
+  background: #ffffff;
+  border: 1px solid rgba(23, 23, 23, 0.14);
+  border-radius: var(--sf-buy-radius);
+  grid-template-columns: 40px 44px 40px;
+  min-height: var(--sf-buy-h);
+  overflow: hidden;
+}
+
+.general-product-info .sf-quantity-control:focus-within {
+  border-color: rgba(23, 23, 23, 0.4);
+}
+
+.general-product-info .sf-quantity-control button {
+  align-items: center;
+  border-radius: 0;
+  color: #171717;
+  display: inline-flex;
+  height: var(--sf-buy-h);
+  justify-content: center;
+  transition:
+    background 160ms ease,
+    color 160ms ease;
+  width: 40px;
+}
+
+.general-product-info .sf-quantity-control button svg {
+  height: 15px;
+  width: 15px;
+}
+
+.general-product-info .sf-quantity-control button:hover:not(:disabled) {
+  background: #f4f4f4;
+}
+
+/* At 1 the minus is genuinely unavailable, so it says so quietly instead of
+   looking like a rendering fault next to a live plus. */
+.general-product-info .sf-quantity-control button:disabled {
+  color: #b4b4b4;
+  cursor: default;
+  opacity: 1;
+}
+
+.general-product-info .sf-purchase-box input {
+  font-size: 0.9rem;
+  font-weight: 700;
+  min-height: var(--sf-buy-h);
+  width: 44px;
+}
+
+/* The browser's own spinner arrows are redundant beside two buttons, and on
+   Chrome they crowd the digit off centre. */
+.general-product-info .sf-purchase-box input::-webkit-outer-spin-button,
+.general-product-info .sf-purchase-box input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.general-product-info .sf-purchase-box input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.general-product-info .sf-purchase-actions button {
+  border-radius: var(--sf-buy-radius);
+  min-height: var(--sf-buy-h);
+  transition:
+    filter 160ms ease,
+    transform 160ms ease;
+}
+
+.general-product-info .sf-purchase-actions button:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.general-product-info .sf-purchase-actions button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* Wishlist is a secondary action and now looks like one: the same height and
+   radius as the primary button so the block lines up, but a hairline ghost
+   rather than a second filled bar competing with Add to Cart. */
+.general-product-info .sf-secondary-actions button,
+.general-product-info .sf-wishlist-button-inline button {
+  background: #ffffff;
+  border: 1px solid rgba(23, 23, 23, 0.14);
+  border-radius: var(--sf-buy-radius);
+  color: #4a4a4a;
+  font-size: 0.72rem;
+  font-weight: 820;
+  letter-spacing: 0.08em;
+  min-height: var(--sf-buy-h);
+  text-transform: uppercase;
+}
+
+.general-product-info .sf-secondary-actions button:hover:not(:disabled),
+.general-product-info .sf-wishlist-button-inline button:hover:not(:disabled) {
+  background: #fafafa;
+  border-color: rgba(23, 23, 23, 0.32);
+  color: #171717;
+}
+
+/* Saved keeps the shop's own colour, which the shared rule already sets — only
+   the ghost's muted grey has to get out of its way. */
+.general-product-info .sf-wishlist-button.is-saved button {
+  color: var(--store-primary, #135d66);
+}
+
+.general-product-info .sf-wishlist-heart {
+  height: 16px;
+  width: 16px;
+}
+
+/* Buy Now sits under Add to Cart in the same column, so it needs the row gap
+   the grid does not give it — matched to the panel's own 10px rhythm. */
+.general-product-info .sf-buy-now {
+  margin-top: 10px;
+}
+
+/* Keyboard users get the same ring on every control in the block. */
+.general-product-info
+  :is(
+    .sf-quantity-control button,
+    .sf-purchase-actions button,
+    .sf-secondary-actions button,
+    .sf-wishlist-button-inline button
+  ):focus-visible {
+  outline: 2px solid var(--store-primary, #135d66);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .general-product-info .sf-purchase-panel {
+    /* A thumb, not a mouse pointer. */
+    --sf-buy-h: 50px;
+  }
+
+  .general-product-info .sf-quantity-control {
+    grid-template-columns: 46px 52px 46px;
+  }
+
+  .general-product-info .sf-quantity-control button {
+    width: 46px;
+  }
+
+  .general-product-info .sf-purchase-box input {
+    width: 52px;
+  }
+}
+
+/* --- Free shipping: earned, and the product-page slot -----------------------
+   The cart's progress bar keeps its own quiet styling above. Two things are
+   added here.
+
+   The moment the shopper crosses the threshold is the only moment this widget
+   has, and a 1px grey rule sliding to 100% does not mark it. Qualified turns the
+   track into the shop's own colour and gives the sentence its weight, so the
+   thing the seller is paying for actually reads as a win.
+
+   The product-page slot is a card rather than a bare line, because there it sits
+   under the Add to Cart button among other controls instead of alone at the top
+   of a cart.
+   ------------------------------------------------------------------------- */
+
+/* On the product page the bar is one control among several, so it takes the
+   buy box's measure and the smaller type the panel uses — left at cart size it
+   would outshout the Add to Cart button beside it. */
+.sf-free-shipping-slot {
+  background: #f7f7f8;
+  border: 1px solid rgba(23, 23, 23, 0.08);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.sf-free-shipping-slot .general-cart-shipping {
+  margin-bottom: 0;
+  max-width: none;
+}
+
+.sf-free-shipping-slot .general-cart-shipping p {
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.sf-free-shipping-slot .general-cart-shipping-track {
+  margin-top: 9px;
+}
+
+.sf-free-shipping-slot[data-qualified="true"],
+.sf-free-shipping-slot:has([data-qualified="true"]) {
+  background: color-mix(in srgb, var(--sf-primary, var(--store-primary, #135d66)) 7%, #ffffff);
+  border-color: color-mix(in srgb, var(--sf-primary, var(--store-primary, #135d66)) 28%, #ffffff);
+}
+
+/* The dashboard preview frame, so the seller sees the bar on a surface rather
+   than floating on the panel background. */
+.fsc-preview {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.fsc-preview .general-cart-shipping {
+  margin-bottom: 0;
+  max-width: none;
+}
+
+/* --- Free shipping bar: two states, drawn as two different things -----------
+   The earned state used to be the short state with a different sentence in it:
+   a pale box, plain text, and a 1px rule sitting at 100%. It read as a form
+   field, and a finished progress bar that still looks like a progress bar
+   leaves people checking whether they actually got the thing.
+
+   So the states diverge. **Short** is a task — a van, the shortfall, and a
+   visibly part-filled track with the shop's own colour in it. **Earned** is a
+   receipt — a tick in a filled disc, the sentence in the shop's colour, and no
+   track at all, because there is nothing left to measure.
+
+   Both are one row on a card rather than loose text on the page, so the bar
+   holds together at cart width and inside a 320px drawer.
+   ------------------------------------------------------------------------- */
+
+.general-cart-shipping {
+  background: #f7f8f9;
+  border: 1px solid rgba(23, 23, 23, 0.08);
+  border-radius: 14px;
+  margin-bottom: 34px;
+  max-width: 640px;
+  padding: 14px 16px;
+}
+
+.general-cart-shipping-row {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-start;
+}
+
+.general-cart-shipping-icon {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid rgba(23, 23, 23, 0.1);
+  border-radius: 999px;
+  color: #4a4a4a;
+  display: inline-flex;
+  flex: none;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.general-cart-shipping-icon svg {
+  height: 17px;
+  width: 17px;
+}
+
+.general-cart-shipping p {
+  flex: 1 1 auto;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.general-cart-shipping-cta {
+  color: #111827;
+  flex: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  white-space: nowrap;
+}
+
+/* The track: a real bar rather than a hairline, so a third of the way along
+   reads as a third of the way along. */
+.general-cart-shipping-track {
+  background: rgba(23, 23, 23, 0.09);
+  border-radius: 999px;
+  height: 6px;
+  margin-top: 12px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.general-cart-shipping-track span {
+  background: var(--sf-primary, var(--store-primary, #135d66));
+  border-radius: 999px;
+  display: block;
+  height: 100%;
+  /* The width changes when the cart does, and a bar that jumps looks broken. */
+  transition: width 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Earned. The shop's own colour, so the reward reads as the shop's rather than
+   as a generic green that belongs to no storefront. */
+.general-cart-shipping[data-qualified="true"] {
+  background: color-mix(in srgb, var(--sf-primary, var(--store-primary, #135d66)) 8%, #ffffff);
+  border-color: color-mix(in srgb, var(--sf-primary, var(--store-primary, #135d66)) 26%, #ffffff);
+}
+
+.general-cart-shipping[data-qualified="true"] .general-cart-shipping-icon {
+  background: var(--sf-primary, var(--store-primary, #135d66));
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.general-cart-shipping[data-qualified="true"] p {
+  color: color-mix(in srgb, var(--sf-primary, var(--store-primary, #135d66)) 82%, #171717);
+  font-weight: 700;
+}
+
+/* In the drawer the bar sits between a header and a scrolling list, so it loses
+   the outer margin and tightens up. */
+.mini-cart-drawer .general-cart-shipping {
+  margin-bottom: 0;
+  padding: 12px 14px;
+}
+
+.mini-cart-drawer .general-cart-shipping p {
+  font-size: 0.84rem;
+}
+
+.mini-cart-drawer .general-cart-shipping-icon {
+  height: 30px;
+  width: 30px;
+}
+
+/* On the product page it is one control among several in the buy box, so it
+   drops to the panel's type size and loses the card inside a card. */
+.sf-free-shipping-slot .general-cart-shipping {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  margin-bottom: 0;
+  max-width: none;
+  padding: 0;
+}
+
+.sf-free-shipping-slot .general-cart-shipping p {
+  font-size: 0.82rem;
+}
+
+.sf-free-shipping-slot .general-cart-shipping-icon {
+  height: 30px;
+  width: 30px;
+}
+
+.sf-free-shipping-slot .general-cart-shipping-icon svg {
+  height: 15px;
+  width: 15px;
+}
+
+@media (max-width: 560px) {
+  /* The call to action wraps under the sentence rather than squeezing it to
+     two words. */
+  .general-cart-shipping-row {
+    flex-wrap: wrap;
+  }
+
+  .general-cart-shipping p {
+    flex: 1 1 60%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .general-cart-shipping-track span {
+    transition: none;
   }
 }

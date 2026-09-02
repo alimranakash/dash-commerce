@@ -14,11 +14,14 @@ import { submitCartAction } from "./cart-client-actions";
 import { CartCrossSell } from "./cart-cross-sell";
 import { CartNoteField } from "./cart-note-field";
 import { QuantitySelector } from "./quantity-selector";
+import type { FreeShippingBarView } from "../../free-shipping/free-shipping.schema";
 import { ShippingProgress } from "./shipping-progress";
 
 type MiniCartDrawerProps = {
   cart: Cart;
   currency: string;
+  /** Resolved by the server header from the store's real rule. Null = no offer. */
+  freeShippingBar: FreeShippingBarView | null;
   homeHref: string;
   settings: StorefrontMiniCartSettings;
   store: {
@@ -31,6 +34,7 @@ type MiniCartDrawerProps = {
 export function MiniCartDrawer({
   cart,
   currency,
+  freeShippingBar,
   homeHref,
   settings,
   store
@@ -143,14 +147,15 @@ export function MiniCartDrawer({
           </div>
         </header>
 
-        {settings.freeShippingEnabled && cart.items.length > 0 ? (
+        {/* Resolved on the server from the store's real threshold and handed
+          down, because this drawer is a client component and the rule that
+          decides it is the same one checkout charges by. Null for a shop that
+          has not configured free shipping, so nothing is promised. */}
+        {freeShippingBar && cart.items.length > 0 ? (
           <ShippingProgress
-            amount={settings.freeShippingAmount}
+            bar={freeShippingBar}
             ctaHref={shopHref}
             ctaText={settings.freeShippingCtaText}
-            currency={currency}
-            subtotal={cart.totals.subtotal}
-            text={settings.freeShippingText}
           />
         ) : null}
 

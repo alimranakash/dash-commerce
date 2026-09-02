@@ -160,3 +160,37 @@
     transition: none;
   }
 }
+
+/* --- Floating Notification Bar: a coloured island the theme does not own -----
+   The bar is a merchant-coloured surface with white sitting on it, which is the
+   one shape the mapper is documented not to touch — and the only reason it
+   reaches these three declarations at all is that they are written as `var()`
+   *fallbacks* rather than as the inline custom properties a shop actually sets.
+   So the generated rules repaint what an unconfigured shop gets while leaving a
+   configured one alone, which is worse than either: two shops, the same
+   settings, different bars.
+
+   Restored here rather than fixed in the generator because that is what this
+   file is for, and because each one is a judgement about this widget:
+
+   - **The button stays white.** Its text colour is `--nb-surface` — the bar's
+     own fill — so darkening the button while the fill keeps the shop's hue
+     produces a near-black button with bright blue letters on a bright blue bar.
+     White on the shop's colour is the pairing the seller chose in the console
+     and watched in the preview.
+   - **The bar's last-resort fill keeps its lightness.** A shop with no primary
+     colour set must not get a different bar from one that set the same colour
+     explicitly.
+   - **The close button's hover scrim stays white.** It is a wash over the
+     merchant's fill, not a surface of its own; a dark wash on a dark blue bar
+     is invisible and on a light one is a smudge.
+   ------------------------------------------------------------------------- */
+
+[data-theme="dark"] .nb-dock {
+  --nb-surface: var(--nb-bg, var(--sf-primary, var(--store-primary, #135d66)));
+  --nb-button-surface: var(--nb-button-bg, #ffffff);
+}
+
+[data-theme="dark"] .nb-close:hover {
+  background: rgba(255, 255, 255, 0.16);
+}

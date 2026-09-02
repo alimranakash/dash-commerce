@@ -1,5 +1,9 @@
 import type { StorefrontStore } from "../storefront.types";
 import { getCart } from "../../cart/cart.service";
+import {
+  cartEarnsFreeShipping,
+  getFreeShippingBar
+} from "../../free-shipping/free-shipping.service";
 import { BeautyStorefrontHeader } from "../templates/beauty-default/beauty-header";
 import { ElectronicsStorefrontHeader } from "../templates/electronics-default/electronics-header";
 import { getElectronicsHeaderData } from "../templates/electronics-default/electronics-header-data";
@@ -19,6 +23,18 @@ export async function StorefrontHeader({ store }: StorefrontHeaderProps) {
       ? getElectronicsHeaderData(store.id)
       : Promise.resolve({ brands: [], categories: [] })
   ]);
+  // One read for whichever header renders, from the store's real rule. The
+  // mini cart is a client component, so this is the only place that can ask.
+  const freeShippingBar = await getFreeShippingBar({
+    currency: store.currency,
+    hasFreeShippingProduct: await cartEarnsFreeShipping(
+      store.id,
+      cart.items.map((item) => item.productId)
+    ),
+    storeId: store.id,
+    subtotal: cart.totals.subtotal,
+    surface: "mini_cart"
+  });
 
   if (store.activeTemplate === "fashion-default") {
     return (
@@ -27,6 +43,7 @@ export async function StorefrontHeader({ store }: StorefrontHeaderProps) {
         advancedSettings={settings.advancedSettings}
         cart={cart}
         currency={store.currency}
+        freeShippingBar={freeShippingBar}
         logoUrl={settings.logoUrl}
         storeId={store.id}
         storeName={store.name}
@@ -43,6 +60,7 @@ export async function StorefrontHeader({ store }: StorefrontHeaderProps) {
         advancedSettings={settings.advancedSettings}
         cart={cart}
         currency={store.currency}
+        freeShippingBar={freeShippingBar}
         logoUrl={settings.logoUrl}
         storeId={store.id}
         storeName={store.name}
@@ -60,6 +78,7 @@ export async function StorefrontHeader({ store }: StorefrontHeaderProps) {
         cart={cart}
         categories={electronicsHeaderData.categories}
         currency={store.currency}
+        freeShippingBar={freeShippingBar}
         logoUrl={settings.logoUrl}
         storeId={store.id}
         storeName={store.name}
@@ -75,6 +94,7 @@ export async function StorefrontHeader({ store }: StorefrontHeaderProps) {
       advancedSettings={settings.advancedSettings}
       cart={cart}
       currency={store.currency}
+      freeShippingBar={freeShippingBar}
       logoUrl={settings.logoUrl}
       storeId={store.id}
       storeName={store.name}

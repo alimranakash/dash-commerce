@@ -9,6 +9,7 @@ type ProductWriteData = {
   stockQuantity: number;
   lowStockThreshold: number;
   allowPreorder?: boolean;
+  freeShipping?: boolean;
   preorderReleaseAt?: Date | null;
   status: ProductStatus;
   visibility: ProductVisibility;
@@ -135,6 +136,7 @@ export async function getInventoryPageForStore(query: InventoryPageQuery) {
     ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
     select: {
       allowPreorder: true,
+      freeShipping: true,
       id: true,
       lowStockThreshold: true,
       sku: true,
@@ -384,6 +386,7 @@ function buildProductCreateData(
     stockQuantity: data.stockQuantity,
     lowStockThreshold: data.lowStockThreshold,
     ...(data.allowPreorder === undefined ? {} : { allowPreorder: data.allowPreorder }),
+    ...(data.freeShipping === undefined ? {} : { freeShipping: data.freeShipping }),
     ...(data.preorderReleaseAt === undefined ? {} : { preorderReleaseAt: data.preorderReleaseAt }),
     status: data.status,
     visibility: data.visibility,
@@ -435,6 +438,7 @@ function buildProductUpdateData(
   if (data.costPrice !== undefined) productData.costPrice = data.costPrice;
   if (data.stockQuantity !== undefined) productData.stockQuantity = data.stockQuantity;
   if (data.allowPreorder !== undefined) productData.allowPreorder = data.allowPreorder;
+  if (data.freeShipping !== undefined) productData.freeShipping = data.freeShipping;
   if (data.preorderReleaseAt !== undefined) productData.preorderReleaseAt = data.preorderReleaseAt;
   if (data.lowStockThreshold !== undefined) {
     productData.lowStockThreshold = data.lowStockThreshold;

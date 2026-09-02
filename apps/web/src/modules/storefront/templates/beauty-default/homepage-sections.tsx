@@ -1,10 +1,8 @@
+import { NotificationBarSlot } from "../../../notification-bar/components/notification-bar-slot";
 import { storefrontBasePath } from "../../base-path";
 import type { StorefrontTemplateHomepageProps } from "../types";
 import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../customization";
-import {
-  resolveProductSectionProducts,
-  type StorefrontProductPools
-} from "../../product-sections";
+import { resolveProductSectionProducts, type StorefrontProductPools } from "../../product-sections";
 import { BeautyBeforeAfterSection } from "./beauty-before-after";
 import { toBeautyComparisonProduct } from "./beauty-comparison-product";
 import { BeautyCuratedSection } from "./beauty-curated";
@@ -25,7 +23,9 @@ export async function BeautyHomepageSections({
   store
 }: StorefrontTemplateHomepageProps) {
   const basePath = await storefrontBasePath(store.slug);
-  const productSections = settings?.advancedSettings.productSections ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections;
+  const productSections =
+    settings?.advancedSettings.productSections ??
+    DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections;
   const bestSellerSection = {
     ...productSections.bestSellers,
     title: productSections.bestSellers.title || "Most loved beauty picks"
@@ -39,7 +39,8 @@ export async function BeautyHomepageSections({
   const comparisonProduct =
     homeData.bestSellers[0] ?? homeData.featuredProducts[0] ?? homeData.newArrivals[0] ?? null;
   const pools: StorefrontProductPools = {
-    "best-sellers": homeData.bestSellers.length > 0 ? homeData.bestSellers : homeData.featuredProducts,
+    "best-sellers":
+      homeData.bestSellers.length > 0 ? homeData.bestSellers : homeData.featuredProducts,
     featured: homeData.featuredProducts,
     "new-arrivals": homeData.newArrivals,
     trending: homeData.trending
@@ -54,9 +55,20 @@ export async function BeautyHomepageSections({
         storeSlug={store.slug}
         title={store.themeSetting?.heroTitle ?? null}
       />
-      <BeautySection actionHref={`${basePath}/products`} eyebrow="Categories" id="beauty-categories" title="Shop by category">
+      {/* The two home anchors only a template can place: the storefront page
+        owns the top and the footer edge, and this file is the only one that
+        knows where its own hero ends. Both render nothing unless the seller
+        picked that anchor. */}
+      <NotificationBarSlot anchor="after_hero" store={store} surface="home" />
+      <BeautySection
+        actionHref={`${basePath}/products`}
+        eyebrow="Categories"
+        id="beauty-categories"
+        title="Shop by category"
+      >
         <BeautyCategoryGrid categories={homeData.categories} storeSlug={store.slug} />
       </BeautySection>
+      <NotificationBarSlot anchor="after_first_section" store={store} surface="home" />
       <BeautyProductSection
         currency={store.currency}
         id="beauty-best-sellers"
@@ -95,7 +107,12 @@ export async function BeautyHomepageSections({
         advancedSettings={settings?.advancedSettings}
         categories={homeData.categories}
         currency={store.currency}
-        productPools={[homeData.bestSellers, homeData.featuredProducts, homeData.newArrivals, homeData.trending]}
+        productPools={[
+          homeData.bestSellers,
+          homeData.featuredProducts,
+          homeData.newArrivals,
+          homeData.trending
+        ]}
         storeId={store.id}
         storeSlug={store.slug}
       />

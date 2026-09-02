@@ -60,6 +60,7 @@ export type ProductFormValue = {
   stockQuantity?: number;
   lowStockThreshold?: number;
   allowPreorder?: boolean;
+  freeShipping?: boolean;
   preorderReleaseAt?: Date | string | null;
   categoryId?: string | undefined;
   categoryIds?: string[] | undefined;
@@ -477,6 +478,22 @@ export function ProductForm({
                   <small>
                     Customers can keep buying past zero and the stock goes negative, which is what
                     you still owe them. Say when it ships below.
+                  </small>
+                </label>
+              </FieldError>
+              <FieldError errors={state.fieldErrors} name="freeShipping">
+                <label className="field-check">
+                  <input
+                    defaultChecked={Boolean(product?.freeShipping)}
+                    name="freeShipping"
+                    type="checkbox"
+                  />
+                  Buying this earns free delivery
+                  <small>
+                    Any cart containing this product ships free, whatever it comes to. It is the
+                    whole order that stops being charged, because delivery is one flat rate per
+                    order — so it is worth reserving for products that can carry it. The zones you
+                    picked under Shipping still apply.
                   </small>
                 </label>
               </FieldError>

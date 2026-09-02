@@ -1,6 +1,7 @@
 "use client";
 
 import { useStorefrontBasePath } from "../../../base-path-provider";
+import type { FreeShippingBarView } from "../../../../free-shipping/free-shipping.schema";
 import { Menu, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { useState, type CSSProperties } from "react";
@@ -20,6 +21,7 @@ export type DefaultStorefrontHeaderProps = {
   announcementText: string | null;
   cart: Cart;
   currency: string;
+  freeShippingBar: FreeShippingBarView | null;
   logoUrl: string | null;
   storeId: string;
   storeName: string;
@@ -32,6 +34,7 @@ export function DefaultStorefrontHeader({
   announcementText,
   cart,
   currency,
+  freeShippingBar,
   logoUrl,
   storeId,
   storeName,
@@ -109,6 +112,7 @@ export function DefaultStorefrontHeader({
           {settings.header.showCart ? (
             <MiniCartDrawer
               cart={cart}
+              freeShippingBar={freeShippingBar}
               currency={currency}
               homeHref={homeHref}
               settings={settings.miniCart}

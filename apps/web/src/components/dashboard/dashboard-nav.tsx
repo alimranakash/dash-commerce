@@ -71,6 +71,7 @@ const NAV_FEATURE_BY_HREF: Record<string, PlanFeatureKey> = {
   "/dashboard/marketing/bundles": "bundles",
   "/dashboard/marketing/campaigns": "campaigns",
   "/dashboard/marketing/campaigns/new": "campaigns",
+  "/dashboard/marketing/notification-bar": "notification_bar",
   "/dashboard/marketing/order-bump": "order_bump",
   "/dashboard/marketing/sales-notifications": "sales_notifications",
   "/dashboard/marketing/templates": "marketing_templates",
@@ -265,6 +266,7 @@ const marketingLinks: Array<{ href: string; label: string }> = [
   { href: "/dashboard/marketing/order-bump", label: "Order Bump" },
   { href: "/dashboard/marketing/bundles", label: "Bundles" },
   { href: "/dashboard/marketing/sales-notifications", label: "Sales Notifications" },
+  { href: "/dashboard/marketing/notification-bar", label: "Notification Bar" },
   { href: "/dashboard/abandoned-cart", label: "Abandoned Cart" }
 ];
 

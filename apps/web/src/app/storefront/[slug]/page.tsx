@@ -1,3 +1,4 @@
+import { NotificationBarSlot } from "../../../modules/notification-bar/components/notification-bar-slot";
 import { StorefrontFooter } from "../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../modules/storefront/components/storefront-header";
 import type { StorefrontAdvancedSettings } from "../../../modules/storefront/customization";
@@ -33,14 +34,27 @@ export default async function StorefrontPage({ params, searchParams }: Storefron
   const settings = await getStorefrontThemeSettings(store.id);
   // Each homepage row shows its own "Products shown" count, so the pools have
   // to be fetched deep enough for the largest of them.
-  const homeData = await getStorefrontHomeData(store.id, homeProductsTake(settings.advancedSettings));
+  const homeData = await getStorefrontHomeData(
+    store.id,
+    homeProductsTake(settings.advancedSettings)
+  );
   const template = getStorefrontTemplateForStore(store);
   const HomepageSections = template.components.HomepageSections;
 
   return (
     <main className="sf-page" data-storefront-template={template.id}>
       <StorefrontHeader store={store} />
-      <HomepageSections homeData={homeData} primaryDomain={primaryDomain?.domain} settings={settings} store={store} />
+      {/* The two anchors the page itself owns. The other two — under the hero,
+        and after the first section below it — live inside each template, which
+        is the only place that knows where its own hero ends. */}
+      <NotificationBarSlot anchor="top" store={store} surface="home" />
+      <HomepageSections
+        homeData={homeData}
+        primaryDomain={primaryDomain?.domain}
+        settings={settings}
+        store={store}
+      />
+      <NotificationBarSlot anchor="before_footer" store={store} surface="home" />
       <StorefrontFooter primaryDomain={primaryDomain?.domain} store={store} />
     </main>
   );

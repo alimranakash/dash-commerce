@@ -208,6 +208,7 @@ function productPayloadFromFormData(formData: FormData): ProductFormPayload {
       // "off" and "leave it alone" everywhere else in this form — here it can
       // only mean off, because the box is always rendered.
       allowPreorder: formData.get("allowPreorder") === "on",
+      freeShipping: formData.get("freeShipping") === "on",
       preorderReleaseAt: dateValue(formData, "preorderReleaseAt"),
       categoryId: categoryIds[0] ?? null,
       status: getValue(formData, "status") as CreateProductInput["status"],

@@ -1,3 +1,4 @@
+import { NotificationBarSlot } from "../../../../../modules/notification-bar/components/notification-bar-slot";
 import { storefrontBasePath } from "../../../../../modules/storefront/base-path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -48,6 +49,7 @@ export default async function ThankYouPage({ params }: ThankYouPageProps) {
         value={Number(order.totalAmount)}
       />
       <StorefrontHeader store={store} />
+      <NotificationBarSlot anchor="top" store={store} surface="other" />
       <section className="sf-thank-you" aria-labelledby="thank-you-title">
         <p>Order received</p>
         <h1 id="thank-you-title">Thank you, {order.customerName}.</h1>

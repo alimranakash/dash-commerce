@@ -1,3 +1,4 @@
+import { NotificationBarSlot } from "../../../../modules/notification-bar/components/notification-bar-slot";
 import type { Metadata } from "next";
 import { storefrontBasePath } from "../../../../modules/storefront/base-path";
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
@@ -70,6 +71,7 @@ export default async function StorefrontWishlistPage({
   return (
     <main className="sf-page" data-storefront-template={template.id}>
       <StorefrontHeader store={store} />
+      <NotificationBarSlot anchor="top" store={store} surface="other" />
       <WishlistPage
         basePath={basePath}
         cardVariant={template.productCardVariant}

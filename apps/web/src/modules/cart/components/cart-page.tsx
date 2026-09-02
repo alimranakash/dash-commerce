@@ -8,6 +8,10 @@ import { CartCrossSell } from "./cart-cross-sell";
 import { CartSummary } from "./cart-summary";
 import { CartTable } from "./cart-table";
 import { EmptyCart } from "./empty-cart";
+import {
+  cartEarnsFreeShipping,
+  getFreeShippingBar
+} from "../../free-shipping/free-shipping.service";
 import { ShippingProgress } from "./shipping-progress";
 
 type CartPageFeedback = {
@@ -49,6 +53,19 @@ export async function CartPage({
   const checkoutHref = `${basePath}/checkout`;
   const shopHref = storefrontHref(basePath, settings.freeShippingCtaLink);
   const isEmpty = cart.items.length === 0;
+  // Resolved from the store's real rule — the same one checkout charges by —
+  // rather than from a display amount that lived in the cart page settings and
+  // agreed with nothing.
+  const freeShippingBar = await getFreeShippingBar({
+    currency,
+    hasFreeShippingProduct: await cartEarnsFreeShipping(
+      store.id,
+      cart.items.map((item) => item.productId)
+    ),
+    storeId: store.id,
+    subtotal: cart.totals.subtotal,
+    surface: "cart"
+  });
 
   return (
     <section className={`general-cart-page general-cart-page-${settings.widthMode}`} aria-labelledby="cart-title">
@@ -72,14 +89,14 @@ export async function CartPage({
         {feedback.removed ? <p className="sf-success">Product removed from cart.</p> : null}
         {feedback.cleared ? <p className="sf-success">Cart cleared.</p> : null}
 
-        {settings.freeShippingEnabled && !isEmpty ? (
+        {/* Null unless the shop has a real threshold that checkout enforces, so
+          the bar cannot promise a discount the last screen will not give. The
+          seller's own call-to-action still comes from the cart page settings. */}
+        {freeShippingBar && !isEmpty ? (
           <ShippingProgress
-            amount={settings.freeShippingAmount}
+            bar={freeShippingBar}
             ctaHref={shopHref}
             ctaText={settings.freeShippingCtaText}
-            currency={currency}
-            subtotal={cart.totals.subtotal}
-            text={settings.freeShippingText}
           />
         ) : null}
 

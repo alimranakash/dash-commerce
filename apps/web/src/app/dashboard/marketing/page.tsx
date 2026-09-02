@@ -57,6 +57,12 @@ export default async function MarketingOverviewPage() {
             icon={BellRing}
             title="Sales Notifications"
           />
+          <ActionCard
+            description="One announcement across your shop, with a countdown that takes it down on time."
+            href="/dashboard/marketing/notification-bar"
+            icon={Megaphone}
+            title="Notification Bar"
+          />
         </div>
       </section>
     </DashboardShell>

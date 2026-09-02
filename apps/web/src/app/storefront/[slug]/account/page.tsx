@@ -1,3 +1,4 @@
+import { NotificationBarSlot } from "../../../../modules/notification-bar/components/notification-bar-slot";
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../modules/storefront/components/storefront-header";
 import { requireStorefrontBySlug } from "../../../../modules/storefront/resolver";
@@ -17,10 +18,13 @@ export default async function StorefrontAccountPage({ params }: StorefrontAccoun
   return (
     <main className="sf-page">
       <StorefrontHeader store={store} />
+      <NotificationBarSlot anchor="top" store={store} surface="other" />
       <section className="sf-shop-hero" aria-labelledby="account-title">
         <p>{primaryDomain?.domain ?? storeSubdomain(store.slug)}</p>
         <h1 id="account-title">Customer account</h1>
-        <span>Profile, orders, and saved addresses will be managed from this customer account area.</span>
+        <span>
+          Profile, orders, and saved addresses will be managed from this customer account area.
+        </span>
       </section>
       <section className="sf-section sf-account-grid" aria-label="Customer account sections">
         <AccountCard

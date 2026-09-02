@@ -2,6 +2,9 @@ import { storefrontBasePath } from "../../../../modules/storefront/base-path";
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { CSSProperties } from "react";
+import { NotificationBarSlot } from "../../../../modules/notification-bar/components/notification-bar-slot";
+import { barAppearsAt } from "../../../../modules/notification-bar/notification-bar.render";
+import { resolveNotificationBar } from "../../../../modules/notification-bar/notification-bar.service";
 import { getPublicProductTaxonomyItems } from "../../../../modules/products/product-taxonomy.service";
 import { ProductGrid } from "../../../../modules/storefront/components/product-listing";
 import { ShopToolbar } from "../../../../modules/storefront/components/shop-toolbar";
@@ -39,9 +42,7 @@ type StorefrontProductsPageProps = {
 };
 
 /** Every sort, filter and page of the shop canonicalises to the bare list. */
-export async function generateMetadata({
-  params
-}: StorefrontProductsPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: StorefrontProductsPageProps): Promise<Metadata> {
   const { slug } = await params;
   const store = await getStorefrontBySlug(slug);
 
@@ -50,7 +51,10 @@ export async function generateMetadata({
   }
 
   const canonical = storefrontCanonicalUrl(store, "/products");
-  const description = toMetaDescription(store.setting?.tagline, `Browse every product available from ${store.name}.`);
+  const description = toMetaDescription(
+    store.setting?.tagline,
+    `Browse every product available from ${store.name}.`
+  );
   const title = `All products | ${store.name}`;
 
   return {
@@ -80,7 +84,8 @@ export default async function StorefrontProductsPage({
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
   const template = getStorefrontTemplateForStore(store);
   const settings = await getStorefrontThemeSettings(store.id);
-  const shopSettings = settings.advancedSettings.shopPage ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.shopPage;
+  const shopSettings =
+    settings.advancedSettings.shopPage ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.shopPage;
   const sort = parseSort(filters.sort, shopSettings.defaultSort);
   const currentPage = parsePage(filters.page);
   const productsPerPage = Math.round(shopSettings.productsPerPage);
@@ -95,8 +100,12 @@ export default async function StorefrontProductsPage({
   };
   const [categories, brands, tags, products, totalProducts] = await Promise.all([
     getStorefrontCategories(store.id),
-    shopSettings.enableBrandFilter ? getPublicProductTaxonomyItems(store.id, "BRAND") : Promise.resolve([]),
-    shopSettings.enableTagFilter ? getPublicProductTaxonomyItems(store.id, "TAG") : Promise.resolve([]),
+    shopSettings.enableBrandFilter
+      ? getPublicProductTaxonomyItems(store.id, "BRAND")
+      : Promise.resolve([]),
+    shopSettings.enableTagFilter
+      ? getPublicProductTaxonomyItems(store.id, "TAG")
+      : Promise.resolve([]),
     getStorefrontProducts(store.id, {
       ...query,
       skip: (currentPage - 1) * productsPerPage,
@@ -110,37 +119,54 @@ export default async function StorefrontProductsPage({
   // everything the Pages panel exposes (columns, card flags, page size, header
   // copy) is owned here so those controls are never saved-and-ignored.
   const listingSection = {
-    ...(settings.advancedSettings.productSections?.listing ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.listing),
+    ...(settings.advancedSettings.productSections?.listing ??
+      DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.listing),
     columns: shopSettings.productsPerRow,
     count: productsPerPage,
     enableBadges: shopSettings.enableProductBadges,
     enableComparePrice: shopSettings.enableComparePrice,
     enableHoverImage: shopSettings.enableHoverImage,
-    subtitle: activeCategory ? activeCategory.description ?? "" : shopSettings.description,
+    subtitle: activeCategory ? (activeCategory.description ?? "") : shopSettings.description,
     title: activeCategory ? activeCategory.name : shopSettings.pageTitle
   };
   const gridId = "storefront-shop-product-grid";
   const pageDescription = listingSection.subtitle;
+  // Asked here rather than left to the slot, because an `in_grid` bar is a *cell*
+  // and a slot that renders nothing would still occupy one. Free: the resolver is
+  // request-cached, so this is the same read the anchors above already paid for.
+  const notificationBar = await resolveNotificationBar(store);
+  const barInGrid = notificationBar
+    ? barAppearsAt(notificationBar, "shop", "in_grid")
+      ? notificationBar.gridAfter
+      : null
+    : null;
 
   return (
     <main className="sf-page" data-storefront-template={template.id}>
       <StorefrontHeader store={store} />
+      <NotificationBarSlot anchor="top" store={store} surface="shop" />
       <section className="sf-shop-page-header" aria-labelledby="shop-title">
         <p>{listingSection.title}</p>
         {shopSettings.descriptionEnabled && pageDescription ? <span>{pageDescription}</span> : null}
         {listingSection.ctaText ? (
-          <Link href={storefrontSectionHref(basePath, listingSection.ctaLink)}>{listingSection.ctaText}</Link>
+          <Link href={storefrontSectionHref(basePath, listingSection.ctaLink)}>
+            {listingSection.ctaText}
+          </Link>
         ) : null}
       </section>
       <section
         className={`sf-shop-page sf-shop-page-${shopSettings.widthMode}`}
-        style={{
-          "--shop-grid-gap": `${shopSettings.gridSpacing}px`,
-          "--shop-section-spacing": `${shopSettings.sectionSpacing}px`
-        } as CSSProperties}
+        style={
+          {
+            "--shop-grid-gap": `${shopSettings.gridSpacing}px`,
+            "--shop-section-spacing": `${shopSettings.sectionSpacing}px`
+          } as CSSProperties
+        }
         aria-labelledby="shop-title"
       >
-        <h1 className="sr-only" id="shop-title">{listingSection.title}</h1>
+        <h1 className="sr-only" id="shop-title">
+          {listingSection.title}
+        </h1>
         <ShopToolbar
           brands={brands}
           categories={categories}
@@ -148,6 +174,7 @@ export default async function StorefrontProductsPage({
           settings={shopSettings}
           tags={tags}
         />
+        <NotificationBarSlot anchor="above_grid" store={store} surface="shop" />
         {products.length === 0 ? (
           <div className="sf-shop-empty">
             <div aria-hidden="true" />
@@ -165,6 +192,17 @@ export default async function StorefrontProductsPage({
               cardVariant={template.productCardVariant}
               currency={store.currency}
               gridId={gridId}
+              /* A bar that is a cell in the grid rather than a band above it.
+                 Passed in as a rendered node so `ProductGrid` stays
+                 presentational and knows nothing about announcements: it is
+                 handed something to place and the count to place it after. The
+                 slot itself renders nothing unless the seller chose `in_grid`. */
+              inlineSlot={
+                barInGrid === null ? null : (
+                  <NotificationBarSlot anchor="in_grid" store={store} surface="shop" />
+                )
+              }
+              inlineSlotAfter={barInGrid}
               products={toProductCardProducts(products)}
               section={listingSection}
               storeId={store.id}
@@ -188,6 +226,7 @@ export default async function StorefrontProductsPage({
           </>
         )}
       </section>
+      <NotificationBarSlot anchor="before_footer" store={store} surface="shop" />
       <StorefrontFooter primaryDomain={primaryDomain?.domain} store={store} />
     </main>
   );
@@ -203,8 +242,19 @@ function parsePrice(value: string | undefined) {
   return Number.isFinite(price) && price >= 0 ? price : undefined;
 }
 
-function parseSort(value: string | undefined, fallback: StorefrontProductSort): StorefrontProductSort {
-  return ["alpha-asc", "alpha-desc", "best-selling", "featured", "newest", "price-asc", "price-desc"].includes(value ?? "")
+function parseSort(
+  value: string | undefined,
+  fallback: StorefrontProductSort
+): StorefrontProductSort {
+  return [
+    "alpha-asc",
+    "alpha-desc",
+    "best-selling",
+    "featured",
+    "newest",
+    "price-asc",
+    "price-desc"
+  ].includes(value ?? "")
     ? (value as StorefrontProductSort)
     : fallback;
 }
@@ -267,7 +317,15 @@ function buildProductsHref(
   return `${basePath}/products${query ? `?${query}` : ""}`;
 }
 
-function PaginationLink({ disabled, href, label }: { disabled: boolean; href: string; label: string }) {
+function PaginationLink({
+  disabled,
+  href,
+  label
+}: {
+  disabled: boolean;
+  href: string;
+  label: string;
+}) {
   if (disabled) {
     return <span aria-disabled="true">{label}</span>;
   }

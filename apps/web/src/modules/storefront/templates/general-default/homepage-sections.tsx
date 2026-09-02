@@ -1,10 +1,8 @@
+import { NotificationBarSlot } from "../../../notification-bar/components/notification-bar-slot";
 import { storefrontBasePath } from "../../base-path";
 import type { StorefrontTemplateHomepageProps } from "../types";
 import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../customization";
-import {
-  resolveProductSectionProducts,
-  type StorefrontProductPools
-} from "../../product-sections";
+import { resolveProductSectionProducts, type StorefrontProductPools } from "../../product-sections";
 import { TabbedProductSection } from "../../components/tabbed-product-section";
 import type { StorefrontProduct } from "../../storefront.types";
 import {
@@ -23,21 +21,27 @@ export async function GeneralHomepageSections({
   store
 }: StorefrontTemplateHomepageProps) {
   const basePath = await storefrontBasePath(store.slug);
-  const productSections = settings?.advancedSettings.productSections ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections;
+  const productSections =
+    settings?.advancedSettings.productSections ??
+    DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections;
   const featuredSection = {
     ...productSections.featured,
-    title: store.themeSetting?.featuredSectionTitle || productSections.featured.title || "The Daily Edit"
+    title:
+      store.themeSetting?.featuredSectionTitle || productSections.featured.title || "The Daily Edit"
   };
   const bestSellerSection = productSections.bestSellers;
   const newArrivalsSection = productSections.newArrivals;
   const trendingSection = productSections.trending;
-  const tabbedProductShowcase = settings?.advancedSettings.tabbedProductShowcase ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.tabbedProductShowcase;
+  const tabbedProductShowcase =
+    settings?.advancedSettings.tabbedProductShowcase ??
+    DEFAULT_STOREFRONT_ADVANCED_SETTINGS.tabbedProductShowcase;
   const allProducts = uniqueProducts([
     ...homeData.featuredProducts,
     ...homeData.bestSellers,
     ...homeData.newArrivals
   ]);
-  const bestSellers = homeData.bestSellers.length > 0 ? homeData.bestSellers : homeData.featuredProducts;
+  const bestSellers =
+    homeData.bestSellers.length > 0 ? homeData.bestSellers : homeData.featuredProducts;
   const onSaleProducts = allProducts.filter((product) => Boolean(product.compareAtPrice));
   // The promo banner borrows real catalogue art rather than shipping its own
   // image, so it stays truthful for any store rather than only a demo one.
@@ -62,9 +66,19 @@ export async function GeneralHomepageSections({
         subtitle={store.themeSetting?.heroSubtitle}
         title={store.themeSetting?.heroTitle}
       />
-      <GeneralSectionWrapper actionHref={`${basePath}/products`} id="general-categories" title="Shop by Category">
+      {/* The two home anchors only a template can place: the storefront page
+        owns the top and the footer edge, and this file is the only one that
+        knows where its own hero ends. Both render nothing unless the seller
+        picked that anchor. */}
+      <NotificationBarSlot anchor="after_hero" store={store} surface="home" />
+      <GeneralSectionWrapper
+        actionHref={`${basePath}/products`}
+        id="general-categories"
+        title="Shop by Category"
+      >
         <GeneralCategoryStrip categories={homeData.categories} storeSlug={store.slug} />
       </GeneralSectionWrapper>
+      <NotificationBarSlot anchor="after_first_section" store={store} surface="home" />
       <TabbedProductSection
         currency={store.currency}
         productsBySource={{
@@ -91,7 +105,10 @@ export async function GeneralHomepageSections({
       <GeneralProductSection
         currency={store.currency}
         id="general-best-sellers"
-        products={resolveProductSectionProducts(bestSellerSection, { ...pools, "best-sellers": bestSellers })}
+        products={resolveProductSectionProducts(bestSellerSection, {
+          ...pools,
+          "best-sellers": bestSellers
+        })}
         section={bestSellerSection}
         storeSlug={store.slug}
       />

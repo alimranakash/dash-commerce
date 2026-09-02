@@ -5,6 +5,7 @@ import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
   type StorefrontProductSectionSettings
 } from "../../../../../modules/storefront/customization";
+import { NotificationBarSlot } from "../../../../../modules/notification-bar/components/notification-bar-slot";
 import { StorefrontFooter } from "../../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../../modules/storefront/components/storefront-header";
 import { GeneralProductPage } from "../../../../../modules/storefront/templates/general-default/product-page";
@@ -126,7 +127,9 @@ export default async function StorefrontProductPage({
     );
   }
 
-  const productSections = settings.advancedSettings.productSections ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections;
+  const productSections =
+    settings.advancedSettings.productSections ??
+    DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections;
   const relatedSection = productSections.related;
   const recentlyViewedSection = productSections.recentlyViewed;
   const relatedProducts = await getProductSectionProducts({
@@ -139,17 +142,24 @@ export default async function StorefrontProductPage({
   return (
     <main className="sf-page" data-storefront-template={template.id}>
       <StorefrontHeader store={store} />
+      {/* The two anchors the page itself owns. The other two — either side of
+        the add-to-cart button — live inside the template, which is the only
+        place that knows where its own buy box is. */}
+      <NotificationBarSlot anchor="top" store={store} surface="product" />
       <GeneralProductPage
         cardVariant={template.productCardVariant}
         cartError={cartError}
         product={product}
         ProductDetailExtras={ProductDetailExtras}
-        productPage={settings.advancedSettings.productPage ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productPage}
+        productPage={
+          settings.advancedSettings.productPage ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productPage
+        }
         recentlyViewedSection={recentlyViewedSection}
         relatedProducts={relatedProducts}
         relatedSection={relatedSection}
         store={store}
       />
+      <NotificationBarSlot anchor="below_details" store={store} surface="product" />
       <StorefrontFooter primaryDomain={primaryDomain?.domain} store={store} />
     </main>
   );

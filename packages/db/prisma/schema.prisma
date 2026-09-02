@@ -602,6 +602,8 @@ model Store {
   productContents            ProductContent[]
   aiSetting                  StoreAiSetting?
   salesNotificationSetting   StoreSalesNotificationSetting?
+  notificationBar            StoreNotificationBar?
+  freeShipping               StoreFreeShipping?
   abandonedCarts             AbandonedCart[]
   searchSynonyms             SearchSynonym[]
   searchBoosts               SearchBoost[]
@@ -1010,6 +1012,15 @@ model Product {
   /// shown wherever the pre-order badge is.
   allowPreorder       Boolean                     @default(false)
   preorderReleaseAt   DateTime?
+  /// Whether buying this product earns free delivery on the whole order.
+  ///
+  /// Whole order, not this line: the shop charges one flat rate per order, so
+  /// there is no per-item delivery to waive. It sits beside the store-wide
+  /// threshold as a second way to qualify, and the same zone scope applies to
+  /// both — a shop that cannot absorb Outside Dhaka cannot absorb it for one
+  /// product either. Read by `ensureFreeShippingSchema` through raw SQL so a
+  /// checkout on a client that predates this column still prices correctly.
+  freeShipping        Boolean                     @default(false)
   status              ProductStatus               @default(DRAFT)
   visibility          ProductVisibility           @default(HIDDEN)
   isDemoContent       Boolean                     @default(false)
@@ -1149,6 +1160,116 @@ model StoreSalesNotificationSetting {
   store               Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @default(now()) @updatedAt
+}
+
+/// The Floating Notification Bar — the shop's one announcement.
+///
+/// Created at request time by `ensureNotificationBarSchema()` in
+/// modules/notification-bar/notification-bar.repository.ts, for the reason
+/// `StoreSalesNotificationSetting` above is: it is read on every storefront page
+/// of every shop, so it must exist on a database that has not re-run
+/// `db:generate`. This model mirrors that DDL exactly — including the custom
+/// index name — so `db push` stays a no-op.
+///
+/// `position` and `layout` are TEXT rather than Postgres enums for the same
+/// reason: the runtime DDL has to be idempotent and `CREATE TYPE` is not. The
+/// allowed values live in modules/notification-bar/notification-bar.schema.ts.
+/// The store's free-shipping threshold, and the bar that announces it.
+///
+/// Created at request time by `ensureFreeShippingSchema()` in
+/// modules/free-shipping/free-shipping.repository.ts, for the reason
+/// `StoreSalesNotificationSetting` is: it is read on every cart, every mini cart
+/// and every checkout, so it must exist on a database that has not re-run
+/// `db:generate`. This model mirrors that DDL exactly.
+///
+/// The rule half (`enabled`, `threshold`, `zoneIds`) is what
+/// `createCheckoutOrder` charges by. The bar half is only how it is announced,
+/// and the schema refuses to switch the bar on without the rule — a progress bar
+/// for an offer checkout does not honour is what this model replaced.
+model StoreFreeShipping {
+  id             String   @id @default(cuid())
+  storeId        String   @unique
+  /// Whether checkout actually waives the delivery charge. Off by default: the
+  /// display-only settings this replaced shipped on at 250, so seeding from
+  /// them would have made every shop start absorbing delivery it never agreed
+  /// to. The migration turns the promise off, never the payment on.
+  enabled        Boolean  @default(false)
+  /// The qualifying cart subtotal, as a fixed-2 string so money never
+  /// round-trips through a float. `0` means no offer.
+  threshold      String   @default("0.00")
+  /// Comma-separated `ShippingZone` ids the offer covers. Empty means every
+  /// zone — a shop can afford Inside Dhaka at 70 and not Outside at 130.
+  zoneIds        String   @default("")
+  barEnabled     Boolean  @default(true)
+  /// `{amount}` is replaced with the shortfall in the shop's currency.
+  barText        String   @default("Add {amount} more to get FREE shipping")
+  barSuccessText String   @default("You have earned free shipping.")
+  /// Comma-separated surface names: "cart", "mini_cart", "product".
+  surfaces       String   @default("cart,mini_cart")
+  store          Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+}
+
+model StoreNotificationBar {
+  id              String    @id @default(cuid())
+  storeId         String    @unique
+  /// Off until the seller asks for it. An entitled plan must never publish
+  /// something on a storefront by itself.
+  enabled         Boolean   @default(false)
+  /// The big line — "20% OFF". A bar cannot be switched on without one.
+  headline        String    @default("")
+  /// The optional supporting line under it.
+  message         String    @default("")
+  ctaLabel        String    @default("")
+  /// A storefront path, an in-page anchor, or an absolute http(s)/mailto/tel
+  /// address. Narrowed by `isSafeBarHref` before it is ever stored, because it
+  /// becomes an anchor on a public page.
+  ctaHref         String    @default("")
+  /// One of "top", "bottom". Bottom by default: the top of a storefront already
+  /// carries the announcement strip, the header and the menu.
+  position        String    @default("bottom")
+  /// One of "floating", "edge".
+  layout          String    @default("floating")
+  /// Empty means the shop's own `--sf-primary`, so a new bar is already
+  /// on-brand and follows a re-theme without being edited.
+  backgroundColor String    @default("")
+  textColor       String    @default("#ffffff")
+  buttonColor     String    @default("#ffffff")
+  /// Empty means the bar's own background — a white button with blue text on a
+  /// blue bar.
+  buttonTextColor String    @default("")
+  showCountdown   Boolean   @default(true)
+  showOnMobile    Boolean   @default(true)
+  dismissible     Boolean   @default(true)
+  /// How long an X is honoured for, in days. 0 means the one visit.
+  dismissDays     Int       @default(1)
+  /// One of "overlay", "inline". `overlay` is pinned to the viewport and mounted
+  /// once from the storefront layout, so it follows the shopper across the whole
+  /// shop and the four placement columns below do not apply to it. `inline` sits
+  /// in a page's own flow at the anchor those columns name.
+  display         String    @default("overlay")
+  /// Comma-separated surface names — "home", "shop", "product", "other" — that
+  /// an inline bar appears on. TEXT rather than an enum array so the runtime DDL
+  /// stays idempotent, the same reason the three slot columns below are text.
+  surfaces        String    @default("home,shop,product,other")
+  /// One of "top", "after_hero", "after_first_section", "before_footer".
+  homeSlot        String    @default("after_hero")
+  /// One of "top", "above_grid", "in_grid", "before_footer".
+  shopSlot        String    @default("above_grid")
+  /// One of "top", "above_cart", "below_cart", "below_details".
+  productSlot     String    @default("below_cart")
+  /// How many product cards come before an "in_grid" bar.
+  gridAfter       Int       @default(4)
+  /// Before this, the storefront renders nothing at all — not markup hidden
+  /// with CSS. A sale that opens on Friday is a thing sellers plan around.
+  startsAt        DateTime?
+  /// The countdown's target *and* the moment the bar comes down. One column for
+  /// both, so a shop can never advertise a sale whose timer has run out.
+  endsAt          DateTime?
+  store           Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
 }
 
 /// The product copy that has nowhere to sit on `Product`.

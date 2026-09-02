@@ -1,3 +1,4 @@
+import { NotificationBarSlot } from "../../../../../modules/notification-bar/components/notification-bar-slot";
 import { storefrontBasePath } from "../../../../../modules/storefront/base-path";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -105,7 +106,8 @@ export default async function StorefrontCategoryProductsPage({
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
   const template = getStorefrontTemplateForStore(store);
   const settings = await getStorefrontThemeSettings(store.id);
-  const shopSettings = settings.advancedSettings.shopPage ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.shopPage;
+  const shopSettings =
+    settings.advancedSettings.shopPage ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.shopPage;
   const category = await getStorefrontCategoryBySlug(store.id, categorySlug);
 
   if (!category) {
@@ -126,8 +128,12 @@ export default async function StorefrontCategoryProductsPage({
   };
   const [categories, brands, tags, products, totalProducts] = await Promise.all([
     getStorefrontCategories(store.id),
-    shopSettings.enableBrandFilter ? getPublicProductTaxonomyItems(store.id, "BRAND") : Promise.resolve([]),
-    shopSettings.enableTagFilter ? getPublicProductTaxonomyItems(store.id, "TAG") : Promise.resolve([]),
+    shopSettings.enableBrandFilter
+      ? getPublicProductTaxonomyItems(store.id, "BRAND")
+      : Promise.resolve([]),
+    shopSettings.enableTagFilter
+      ? getPublicProductTaxonomyItems(store.id, "TAG")
+      : Promise.resolve([]),
     getStorefrontProducts(store.id, {
       ...query,
       skip: (currentPage - 1) * productsPerPage,
@@ -136,7 +142,9 @@ export default async function StorefrontCategoryProductsPage({
     getStorefrontProductCount(store.id, query)
   ]);
   const totalPages = Math.max(1, Math.ceil(totalProducts / productsPerPage));
-  const listingDefaults = settings.advancedSettings.productSections?.listing ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.listing;
+  const listingDefaults =
+    settings.advancedSettings.productSections?.listing ??
+    DEFAULT_STOREFRONT_ADVANCED_SETTINGS.productSections.listing;
   // Same split as the shop page: Product Sections -> Shop / Category Listing
   // supplies the CTA defaults, the Pages panel owns columns, card flags, page
   // size, filters, sorting and spacing. Only the copy is category-specific.
@@ -155,25 +163,37 @@ export default async function StorefrontCategoryProductsPage({
   return (
     <main className="sf-page" data-storefront-template={template.id}>
       <StorefrontHeader store={store} />
+      <NotificationBarSlot anchor="top" store={store} surface="other" />
       <section className="sf-shop-page-header" aria-labelledby="category-title">
         {category.imageUrl ? (
-          <img alt="" className="sf-shop-page-header-image" loading="lazy" src={category.imageUrl} />
+          <img
+            alt=""
+            className="sf-shop-page-header-image"
+            loading="lazy"
+            src={category.imageUrl}
+          />
         ) : null}
         <p>Collection</p>
         {shopSettings.descriptionEnabled ? <span>{listingSection.subtitle}</span> : null}
         {listingSection.ctaText ? (
-          <Link href={storefrontSectionHref(basePath, listingSection.ctaLink)}>{listingSection.ctaText}</Link>
+          <Link href={storefrontSectionHref(basePath, listingSection.ctaLink)}>
+            {listingSection.ctaText}
+          </Link>
         ) : null}
       </section>
       <section
         className={`sf-shop-page sf-shop-page-${shopSettings.widthMode}`}
-        style={{
-          "--shop-grid-gap": `${shopSettings.gridSpacing}px`,
-          "--shop-section-spacing": `${shopSettings.sectionSpacing}px`
-        } as CSSProperties}
+        style={
+          {
+            "--shop-grid-gap": `${shopSettings.gridSpacing}px`,
+            "--shop-section-spacing": `${shopSettings.sectionSpacing}px`
+          } as CSSProperties
+        }
         aria-labelledby="category-title"
       >
-        <h1 className="sr-only" id="category-title">{listingSection.title}</h1>
+        <h1 className="sr-only" id="category-title">
+          {listingSection.title}
+        </h1>
         <ShopToolbar
           brands={brands}
           categories={categories}
@@ -238,8 +258,19 @@ function parsePrice(value: string | undefined) {
   return Number.isFinite(price) && price >= 0 ? price : undefined;
 }
 
-function parseSort(value: string | undefined, fallback: StorefrontProductSort): StorefrontProductSort {
-  return ["alpha-asc", "alpha-desc", "best-selling", "featured", "newest", "price-asc", "price-desc"].includes(value ?? "")
+function parseSort(
+  value: string | undefined,
+  fallback: StorefrontProductSort
+): StorefrontProductSort {
+  return [
+    "alpha-asc",
+    "alpha-desc",
+    "best-selling",
+    "featured",
+    "newest",
+    "price-asc",
+    "price-desc"
+  ].includes(value ?? "")
     ? (value as StorefrontProductSort)
     : fallback;
 }
@@ -292,7 +323,15 @@ function buildCategoryHref(
   return `${basePath}/categories/${categorySlug}${query ? `?${query}` : ""}`;
 }
 
-function PaginationLink({ disabled, href, label }: { disabled: boolean; href: string; label: string }) {
+function PaginationLink({
+  disabled,
+  href,
+  label
+}: {
+  disabled: boolean;
+  href: string;
+  label: string;
+}) {
   if (disabled) {
     return <span aria-disabled="true">{label}</span>;
   }

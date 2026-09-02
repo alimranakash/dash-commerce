@@ -45,6 +45,7 @@ const STARTER_FEATURES: PlanFeatureKey[] = [
   "marketing_analytics",
   "marketing_templates",
   "meta_pixel",
+  "notification_bar",
   "order_bump",
   "order_tracking",
   "preorders",

@@ -1,3 +1,9 @@
+import { NotificationBarSlot } from "../../../../modules/notification-bar/components/notification-bar-slot";
+import { resolveShippingCharge } from "../../../../modules/free-shipping/free-shipping.render";
+import {
+  cartEarnsFreeShipping,
+  getFreeShippingRule
+} from "../../../../modules/free-shipping/free-shipping.service";
 import { randomUUID } from "node:crypto";
 import { storefrontBasePath } from "../../../../modules/storefront/base-path";
 import Link from "next/link";
@@ -48,13 +54,26 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
     cartProductIds: cart.items.map((item) => item.productId),
     storeId: store.id
   });
+  // Quoted through the same function that will charge it, so the figure beside
+  // each delivery option is the figure the order is created with. A shop with no
+  // threshold configured gets its rates back untouched.
+  const freeShippingRule = await getFreeShippingRule(store.id);
+  const cartHasFreeShippingProduct = await cartEarnsFreeShipping(
+    store.id,
+    cart.items.map((item) => item.productId)
+  );
   const checkoutShippingRates = shippingRates.map((rate) => ({
     id: rate.id,
     name: rate.name,
     district: rate.district,
     city: rate.city,
     area: rate.area,
-    amount: rate.amount.toString(),
+    amount: resolveShippingCharge(freeShippingRule, {
+      hasFreeShippingProduct: cartHasFreeShippingProduct,
+      rateAmount: rate.amount.toString(),
+      subtotal: cart.totals.subtotal,
+      zoneId: rate.zoneId
+    }),
     zone: {
       name: rate.zone.name
     }
@@ -63,6 +82,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
   return (
     <main className="sf-page">
       <StorefrontHeader store={store} />
+      <NotificationBarSlot anchor="top" store={store} surface="other" />
       {cart.items.length === 0 ? (
         <section className="sf-section">
           <div className="sf-empty">
@@ -75,17 +95,17 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
         </section>
       ) : (
         <CheckoutExperience
-            bundles={bundles.applied}
-            cart={cart}
-            checkoutError={checkoutError}
-            currency={store.currency}
-            orderBump={orderBump}
-            paymentMethods={paymentMethods}
-            phoneOtpRequired={phoneOtpRequired}
-            shippingRates={checkoutShippingRates}
-            storeSlug={store.slug}
-            submissionId={randomUUID()}
-          />
+          bundles={bundles.applied}
+          cart={cart}
+          checkoutError={checkoutError}
+          currency={store.currency}
+          orderBump={orderBump}
+          paymentMethods={paymentMethods}
+          phoneOtpRequired={phoneOtpRequired}
+          shippingRates={checkoutShippingRates}
+          storeSlug={store.slug}
+          submissionId={randomUUID()}
+        />
       )}
       <StorefrontFooter primaryDomain={primaryDomain?.domain} store={store} />
     </main>

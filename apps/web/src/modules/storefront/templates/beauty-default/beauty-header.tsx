@@ -1,4 +1,5 @@
 import type { Cart } from "../../../cart/cart.types";
+import type { FreeShippingBarView } from "../../../free-shipping/free-shipping.schema";
 import {
   DEFAULT_STOREFRONT_ADVANCED_SETTINGS,
   type StorefrontAdvancedSettings
@@ -10,6 +11,8 @@ type BeautyHeaderProps = {
   announcementText: string | null;
   cart: Cart;
   currency: string;
+  /** Forwarded to the shared shell through `...rest`, like every other prop. */
+  freeShippingBar: FreeShippingBarView | null;
   logoUrl: string | null;
   storeId: string;
   storeName: string;

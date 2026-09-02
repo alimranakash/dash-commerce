@@ -1,3 +1,4 @@
+import { NotificationBarSlot } from "../../../../modules/notification-bar/components/notification-bar-slot";
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { CategorySection } from "../../../../modules/storefront/components/category-section";
@@ -30,7 +31,10 @@ export async function generateMetadata({
   }
 
   const canonical = storefrontCanonicalUrl(store, "/categories");
-  const description = toMetaDescription(store.setting?.tagline, `Browse the collections ${store.name} sells.`);
+  const description = toMetaDescription(
+    store.setting?.tagline,
+    `Browse the collections ${store.name} sells.`
+  );
   const title = `Categories | ${store.name}`;
 
   return {
@@ -58,22 +62,26 @@ export default async function StorefrontCategoriesPage({ params }: StorefrontCat
   // Same shell as /products and /categories/[slug]: the Pages -> Shop width,
   // spacing and column settings own this band too, so the three listing pages
   // line up instead of the collection index sitting in its own 1240px column.
-  const shopSettings = settings.advancedSettings.shopPage ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.shopPage;
+  const shopSettings =
+    settings.advancedSettings.shopPage ?? DEFAULT_STOREFRONT_ADVANCED_SETTINGS.shopPage;
   const categories = await getStorefrontCategories(store.id);
 
   return (
     <main className="sf-page" data-storefront-template={template.id}>
       <StorefrontHeader store={store} />
+      <NotificationBarSlot anchor="top" store={store} surface="other" />
       <section className="sf-shop-page-header" aria-labelledby="categories-title">
         <p>Categories</p>
         <span>Browse collections from {store.name}.</span>
       </section>
       <section
         className={`sf-shop-page sf-shop-page-${shopSettings.widthMode}`}
-        style={{
-          "--shop-grid-gap": `${shopSettings.gridSpacing}px`,
-          "--shop-section-spacing": `${shopSettings.sectionSpacing}px`
-        } as CSSProperties}
+        style={
+          {
+            "--shop-grid-gap": `${shopSettings.gridSpacing}px`,
+            "--shop-section-spacing": `${shopSettings.sectionSpacing}px`
+          } as CSSProperties
+        }
         aria-labelledby="categories-title"
       >
         <h1 className="sr-only" id="categories-title">

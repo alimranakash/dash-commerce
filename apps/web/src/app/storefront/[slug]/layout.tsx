@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { MarketingTags } from "../../../modules/marketing/components/marketing-tags";
+import { NotificationBarDock } from "../../../modules/notification-bar/components/notification-bar-dock";
 import {
   getMarketingMetaTags,
   getMarketingTagPlan
@@ -101,32 +102,38 @@ export default async function StorefrontLayout({ children, params }: StorefrontL
     // browser and never from the store, so switching it changes nothing for the
     // next visitor and nothing about the shop's own colours.
     <ThemeModeProvider>
-    <StorefrontThemeProvider value={themeContext}>
-      <StorefrontBasePathProvider value={basePath}>
-        {/* Every heart on every card and the header count read one list from
+      <StorefrontThemeProvider value={themeContext}>
+        <StorefrontBasePathProvider value={basePath}>
+          {/* Every heart on every card and the header count read one list from
           here, so a grid of thirty products is one query rather than thirty. */}
-        <WishlistProvider state={wishlist} storeSlug={store.slug}>
-          {/* Analytics only ever mounts on a storefront surface — never on /dashboard
+          <WishlistProvider state={wishlist} storeSlug={store.slug}>
+            {/* Analytics only ever mounts on a storefront surface — never on /dashboard
             or /admin, which render outside this layout entirely. */}
-          <MarketingTags tags={marketing.head} />
-          <MarketingTags tags={marketing.bodyStart} />
-          {children}
-          {/* Inside the theme scope so the fixed button inherits this store's colour
+            <MarketingTags tags={marketing.head} />
+            <MarketingTags tags={marketing.bodyStart} />
+            {children}
+            {/* Inside the theme scope so the fixed button inherits this store's colour
             tokens and template attribute; mounted here, once, instead of per footer. */}
-          <ScrollToTopButton />
-          {/* Once for the whole storefront, so the conversation survives a shopper
+            <ScrollToTopButton />
+            {/* Once for the whole storefront, so the conversation survives a shopper
             moving from a category to a product to the cart. Renders nothing unless
             the seller switched the assistant on and the store is entitled to it. */}
-          <ShoppingAgentDock store={store} />
-          {/* Mounted once for the same reason: the queue keeps its place as the
+            <ShoppingAgentDock store={store} />
+            {/* Mounted once for the same reason: the queue keeps its place as the
             shopper moves between pages instead of restarting with the first
             card on every navigation. Renders nothing unless the seller switched
             it on, the plan grants it, and the shop has a real order to show. */}
-          <SalesNotificationDock store={store} />
-          <MarketingTags tags={marketing.bodyEnd} />
-        </WishlistProvider>
-      </StorefrontBasePathProvider>
-    </StorefrontThemeProvider>
+            <SalesNotificationDock store={store} />
+            {/* Mounted once so the bar survives a shopper moving between pages —
+            remounted per navigation it would replay its entrance on every click
+            and re-open for someone who had just closed it. Renders nothing
+            unless the seller switched it on, the plan grants it, and its
+            schedule is open right now. */}
+            <NotificationBarDock store={store} />
+            <MarketingTags tags={marketing.bodyEnd} />
+          </WishlistProvider>
+        </StorefrontBasePathProvider>
+      </StorefrontThemeProvider>
     </ThemeModeProvider>
   );
 }

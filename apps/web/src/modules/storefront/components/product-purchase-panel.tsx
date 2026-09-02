@@ -1,5 +1,6 @@
 "use client";
 
+import { Minus, Plus } from "lucide-react";
 import { useStorefrontBasePath } from "../base-path-provider";
 import { useRouter } from "next/navigation";
 import { useState, type CSSProperties, type FormEvent } from "react";
@@ -42,7 +43,8 @@ export function ProductPurchasePanel({
   const safeMax = Math.max(maxQuantity, 1);
   const buttonStyle = {
     "--product-add-button-bg": addToCartButtonColor,
-    "--product-add-button-radius": addToCartButtonRadius !== undefined ? `${addToCartButtonRadius}px` : undefined
+    "--product-add-button-radius":
+      addToCartButtonRadius !== undefined ? `${addToCartButtonRadius}px` : undefined
   } as CSSProperties;
 
   function updateQuantity(nextQuantity: number) {
@@ -100,7 +102,13 @@ export function ProductPurchasePanel({
 
   return (
     <div className="sf-purchase-panel">
-      <form action="/api/cart" className="sf-purchase-box" method="post" onSubmit={handleSubmit} style={buttonStyle}>
+      <form
+        action="/api/cart"
+        className="sf-purchase-box"
+        method="post"
+        onSubmit={handleSubmit}
+        style={buttonStyle}
+      >
         <input name="cartAction" type="hidden" value="add" />
         <input name="storeId" type="hidden" value={storeId} />
         <input name="storeSlug" type="hidden" value={storeSlug} />
@@ -110,17 +118,27 @@ export function ProductPurchasePanel({
 
         <div className="sf-quantity-row">
           <span>Quantity</span>
-          <div className="sf-quantity-control">
+          {/* A labelled group rather than three loose controls: a screen reader
+            lands on "Quantity, 1" instead of on a button called "-". The glyphs
+            are icons for the same reason the rest of the storefront uses them —
+            a hyphen and a plus sign set in the page font are two different
+            optical weights, which is what made the stepper look broken. */}
+          <div aria-label="Quantity" className="sf-quantity-control" role="group">
             <button
+              aria-label="Decrease quantity"
               disabled={isUnavailable || quantity <= 1}
               onClick={() => updateQuantity(quantity - 1)}
               type="button"
             >
-              -
+              <Minus aria-hidden="true" />
             </button>
             <input
               aria-label="Quantity"
               disabled={isUnavailable}
+              // A phone should offer digits, not a full keyboard, and the
+              // browser's own spinner arrows are hidden in CSS — the two
+              // buttons either side are the affordance.
+              inputMode="numeric"
               max={safeMax}
               min="1"
               name="quantity"
@@ -129,11 +147,12 @@ export function ProductPurchasePanel({
               value={quantity}
             />
             <button
+              aria-label="Increase quantity"
               disabled={isUnavailable || quantity >= safeMax}
               onClick={() => updateQuantity(quantity + 1)}
               type="button"
             >
-              +
+              <Plus aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -160,7 +179,9 @@ export function ProductPurchasePanel({
         seller's to switch off and the templates that lay out their own product
         page do switch it off; the wishlist is a real feature, and it would have
         no way in on those pages if it were behind the same flag. */}
-      <div className={`sf-secondary-actions${secondaryActionsEnabled ? "" : " sf-secondary-actions-single"}`}>
+      <div
+        className={`sf-secondary-actions${secondaryActionsEnabled ? "" : " sf-secondary-actions-single"}`}
+      >
         <WishlistButton productId={productId} productSlug={productSlug} variant="inline" />
         {secondaryActionsEnabled ? <button type="button">Share</button> : null}
       </div>

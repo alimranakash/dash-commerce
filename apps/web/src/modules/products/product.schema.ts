@@ -56,6 +56,7 @@ const productBaseSchema = z.object({
    * a delay of unknown length.
    */
   allowPreorder: z.coerce.boolean().default(false),
+  freeShipping: z.coerce.boolean().default(false),
   preorderReleaseAt: z
     .union([z.string().trim(), z.date(), z.null(), z.undefined()])
     .transform((value) => {

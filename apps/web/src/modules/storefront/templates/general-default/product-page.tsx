@@ -1,12 +1,10 @@
+import { NotificationBarSlot } from "../../../notification-bar/components/notification-bar-slot";
+import { FreeShippingBarSlot } from "../../../free-shipping/components/free-shipping-bar-slot";
 import { storefrontBasePath } from "../../base-path";
 import { preorderLabel } from "../../format";
 import type { ComponentType } from "react";
 import Link from "next/link";
-import {
-  ProductGrid,
-  ProductPrice,
-  SectionHeader
-} from "../../components/product-listing";
+import { ProductGrid, ProductPrice, SectionHeader } from "../../components/product-listing";
 import { ProductPurchasePanel } from "../../components/product-purchase-panel";
 import {
   RecentlyViewedSection,
@@ -17,9 +15,7 @@ import type {
   StorefrontProductSectionSettings
 } from "../../customization";
 import { storefrontSectionHref } from "../../product-sections";
-import type {
-  StorefrontTemplateProductDetailExtrasProps
-} from "../types";
+import type { StorefrontTemplateProductDetailExtrasProps } from "../types";
 import type {
   StorefrontProduct,
   StorefrontProductDetails,
@@ -57,8 +53,14 @@ export async function GeneralProductPage({
 }: GeneralProductPageProps) {
   const basePath = await storefrontBasePath(store.slug);
   const badge = productBadge(product);
-  const description = product.description || product.shortDescription || `${product.title} is ready for your everyday shopping routine.`;
-  const descriptionParagraphs = description.split(/\r?\n+/).filter(Boolean).slice(0, 4);
+  const description =
+    product.description ||
+    product.shortDescription ||
+    `${product.title} is ready for your everyday shopping routine.`;
+  const descriptionParagraphs = description
+    .split(/\r?\n+/)
+    .filter(Boolean)
+    .slice(0, 4);
   const galleryImages = product.images.map((image) => ({
     alt: image.alt ?? product.title,
     id: image.id,
@@ -72,10 +74,16 @@ export async function GeneralProductPage({
     // Every band below shares one measure through this wrapper, so the
     // breadcrumb, the detail row and the rails under it line up on one grid.
     <div className="general-product-page">
-      {productPage.breadcrumbEnabled ? <GeneralProductBreadcrumb product={product} store={store} /> : null}
+      {productPage.breadcrumbEnabled ? (
+        <GeneralProductBreadcrumb product={product} store={store} />
+      ) : null}
 
       <article className="general-product-detail" aria-labelledby="product-title">
-        <GeneralProductGallery images={galleryImages} settings={productPage} title={product.title} />
+        <GeneralProductGallery
+          images={galleryImages}
+          settings={productPage}
+          title={product.title}
+        />
 
         <aside className="general-product-info">
           {badge ? <span className="general-product-sale-badge">{badge}</span> : null}
@@ -88,9 +96,17 @@ export async function GeneralProductPage({
             />
           )}
 
-          {product.shortDescription ? <p className="general-product-short-copy">{product.shortDescription}</p> : null}
+          {product.shortDescription ? (
+            <p className="general-product-short-copy">{product.shortDescription}</p>
+          ) : null}
 
           {cartError ? <p className="sf-alert">{cartError}</p> : null}
+
+          {/* Either side of the buy box — the two placements that actually move
+            a shopper, and the reason the product page has its own slot setting
+            rather than only a top and a bottom. Both render nothing unless the
+            seller picked that anchor. */}
+          <NotificationBarSlot anchor="above_cart" store={store} surface="product" />
 
           {hasVariants ? (
             <ProductVariantControls
@@ -135,6 +151,13 @@ export async function GeneralProductPage({
             </>
           )}
 
+          <NotificationBarSlot anchor="below_cart" store={store} surface="product" />
+
+          {/* Under the buy button, where the gap it names can still be closed by
+            the thing the shopper is looking at. Renders nothing unless the shop
+            has a threshold checkout enforces. */}
+          <FreeShippingBarSlot productId={product.id} store={store} surface="product" />
+
           {productPage.shippingEnabled ? (
             <div className="general-product-shipping" aria-label="Shipping information">
               <span>{productPage.shippingNotice}</span>
@@ -146,7 +169,8 @@ export async function GeneralProductPage({
           {ProductDetailExtras ? <ProductDetailExtras product={product} store={store} /> : null}
 
           <p className="general-product-tagline">
-            {product.shortDescription || "Carefully selected for daily use, simple routines, and dependable shopping."}
+            {product.shortDescription ||
+              "Carefully selected for daily use, simple routines, and dependable shopping."}
           </p>
 
           {productPage.accordionEnabled ? (
@@ -155,7 +179,10 @@ export async function GeneralProductPage({
         </aside>
       </article>
 
-      <section className="general-product-description-block" aria-labelledby="product-description-title">
+      <section
+        className="general-product-description-block"
+        aria-labelledby="product-description-title"
+      >
         <h2 id="product-description-title">About {product.title}</h2>
         {descriptionParagraphs.map((paragraph, index) => (
           <p key={`${paragraph}-${index}`}>{paragraph}</p>
@@ -163,7 +190,10 @@ export async function GeneralProductPage({
       </section>
 
       {relatedProducts.length > 0 ? (
-        <section className="general-product-related general-product-section" aria-labelledby="related-products">
+        <section
+          className="general-product-related general-product-section"
+          aria-labelledby="related-products"
+        >
           <SectionHeader
             ctaHref={storefrontSectionHref(basePath, relatedSection.ctaLink)}
             ctaText={relatedSection.ctaText}
@@ -194,7 +224,11 @@ export async function GeneralProductPage({
       />
 
       {productPage.promoBlocksEnabled ? (
-        <GeneralProductPromoBlocks product={product} relatedProducts={relatedProducts} store={store} />
+        <GeneralProductPromoBlocks
+          product={product}
+          relatedProducts={relatedProducts}
+          store={store}
+        />
       ) : null}
     </div>
   );
@@ -227,7 +261,9 @@ async function GeneralProductBreadcrumb({
       <Link href={basePath || "/"}>Home</Link>
       <span>&gt;</span>
       {product.category ? (
-        <Link href={`${basePath}/categories/${product.category.slug}`}>{product.category.name}</Link>
+        <Link href={`${basePath}/categories/${product.category.slug}`}>
+          {product.category.name}
+        </Link>
       ) : (
         <Link href={`${basePath}/products`}>Products</Link>
       )}
@@ -293,7 +329,9 @@ async function GeneralProductPromoBlocks({
             // The rail can carry a product the seller paired from another
             // category, so the card names the neighbour's own category rather
             // than assuming it shares this product's.
-            subtitle={neighbour.shortDescription || `Also in ${neighbour.category?.name ?? store.name}`}
+            subtitle={
+              neighbour.shortDescription || `Also in ${neighbour.category?.name ?? store.name}`
+            }
             title={neighbour.title}
           />
         ))}
@@ -328,16 +366,15 @@ function PromoBlock({
       {content}
     </Link>
   ) : (
-    <div className="general-product-promo-block">
-      {content}
-    </div>
+    <div className="general-product-promo-block">{content}</div>
   );
 }
 
 function accordionItems(product: StorefrontProductDetails, storeName: string) {
   return [
     {
-      content: product.description || product.shortDescription || "Product details will be updated soon.",
+      content:
+        product.description || product.shortDescription || "Product details will be updated soon.",
       title: "Description"
     },
     {
@@ -349,7 +386,9 @@ function accordionItems(product: StorefrontProductDetails, storeName: string) {
       title: "Shipping & Returns"
     },
     {
-      content: product.sku ? `SKU: ${product.sku}` : "Additional product information will appear here when available.",
+      content: product.sku
+        ? `SKU: ${product.sku}`
+        : "Additional product information will appear here when available.",
       title: "Additional Information"
     }
   ];

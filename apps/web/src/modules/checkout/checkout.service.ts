@@ -26,6 +26,8 @@ import {
 } from "../payments/payment.service";
 import { decrementProductVariantStock, type CartVariantRecord } from "../products/product-variants.service";
 import { generateOrderNumber } from "../orders/order-number";
+import { resolveShippingCharge } from "../free-shipping/free-shipping.render";
+import { cartEarnsFreeShipping, getFreeShippingRule } from "../free-shipping/free-shipping.service";
 import { getEnabledShippingRateForCheckout } from "../shipping/shipping.service";
 import { checkoutSchema, type CheckoutInput } from "./checkout.schema";
 import { ensureCheckoutSubmissionSchema } from "./checkout-submission-schema";
@@ -450,7 +452,26 @@ async function placeCheckoutOrder(
     const subtotalAmount = bump
       ? (Number(cart.totals.subtotal) + Number(bump.offerPrice)).toFixed(2)
       : cart.totals.subtotal;
-    const shippingAmount = Number(shippingRate.amount).toFixed(2);
+    // The shop's own free-shipping threshold, applied here and nowhere else.
+    // This is the line that makes the progress bar in the cart a fact rather
+    // than an advert: the bar measures the same cart subtotal against the same
+    // stored threshold, so a shopper who reaches it is not charged. Before this,
+    // the bar promised free delivery and checkout billed the full rate.
+    //
+    // The rate is untouched for a shop that has never configured a threshold,
+    // so this is safe in front of every checkout.
+    const shippingAmount = resolveShippingCharge(await getFreeShippingRule(store.id), {
+      // A product the seller flagged earns it outright, whatever the cart comes
+      // to; the threshold is the other way in. Both are checked here so the two
+      // routes cannot disagree with the bar that advertised them.
+      hasFreeShippingProduct: await cartEarnsFreeShipping(
+        store.id,
+        cart.items.map((item) => item.productId)
+      ),
+      rateAmount: shippingRate.amount.toString(),
+      subtotal: cart.totals.subtotal,
+      zoneId: shippingRate.zoneId
+    });
     // Re-evaluated and claimed here, against the subtotal this transaction just
     // computed. Whatever the browser was shown is a quote; this is the price.
     //

@@ -12,7 +12,7 @@
 
 /* ---- Tailwind utilities ----------------------------------------------
    461 overrides derived from 474 colour utilities
-   found across 971 source files. */
+   found across 988 source files. */
 
 [data-theme="dark"] .divide-\[\#ececf5\] > :where(:not(:last-child)),
 [data-theme="dark"] .border-\[\#ececf5\] {
@@ -1373,7 +1373,7 @@
 }
 
 /* ---- globals.css ------------------------------------------------------
-   1354 declarations across 911 rules. These come
+   1394 declarations across 937 rules. These come
    last so that, exactly as in light mode, a component stylesheet beats a
    utility class at the same specificity. */
 
@@ -5731,4 +5731,132 @@
 
 [data-theme="dark"] .snc-save-error {
   color: #ed9191;
+}
+
+[data-theme="dark"] .nb-dock {
+  --nb-surface: var(--nb-bg, var(--sf-primary, var(--store-primary, #428c95)));
+  --nb-button-surface: var(--nb-button-bg, #23242a);
+}
+
+[data-theme="dark"] .nb-dock[data-layout="floating"] .nb-bar {
+  box-shadow: 0 1px 2px #080f2129,
+    0 22px 48px -14px #080f216b;
+}
+
+[data-theme="dark"] .nb-cta:hover {
+  box-shadow: 0 10px 24px -8px #080f2180;
+}
+
+[data-theme="dark"] .nb-close:hover {
+  background: #23242a29;
+}
+
+[data-theme="dark"] .nbc-text-error {
+  color: #ed9198;
+}
+
+[data-theme="dark"] .nbc-warning {
+  background: #2d1919;
+  border: 1px solid #51272a;
+  color: #e9969c;
+}
+
+[data-theme="dark"] .general-product-info .sf-quantity-control {
+  background: #23242a;
+  border: 1px solid #65667124;
+}
+
+[data-theme="dark"] .general-product-info .sf-quantity-control:focus-within {
+  border-color: #65667166;
+}
+
+[data-theme="dark"] .general-product-info .sf-quantity-control button {
+  color: #ebecef;
+}
+
+[data-theme="dark"] .general-product-info .sf-quantity-control button:hover:not(:disabled) {
+  background: #1d1e24;
+}
+
+[data-theme="dark"] .general-product-info .sf-quantity-control button:disabled {
+  color: #929296;
+}
+
+[data-theme="dark"] .general-product-info .sf-secondary-actions button,
+[data-theme="dark"] .general-product-info .sf-wishlist-button-inline button {
+  background: #23242a;
+  border: 1px solid #65667124;
+  color: #d7d7db;
+}
+
+[data-theme="dark"] .general-product-info .sf-secondary-actions button:hover:not(:disabled),
+[data-theme="dark"] .general-product-info .sf-wishlist-button-inline button:hover:not(:disabled) {
+  background: #202127;
+  border-color: #65667152;
+  color: #ebecef;
+}
+
+[data-theme="dark"] .general-product-info .sf-wishlist-button.is-saved button {
+  color: var(--store-primary, #a0d8de);
+}
+
+[data-theme="dark"] .general-product-info
+  :is(
+    .sf-quantity-control button,
+[data-theme="dark"] .sf-purchase-actions button,
+[data-theme="dark"] .sf-secondary-actions button,
+[data-theme="dark"] .sf-wishlist-button-inline button
+  ):focus-visible {
+  outline: 2px solid var(--store-primary, #3d8790);
+}
+
+[data-theme="dark"] .sf-free-shipping-slot {
+  background: #1f2026;
+  border: 1px solid #65667114;
+}
+
+[data-theme="dark"] .sf-free-shipping-slot[data-qualified="true"],
+[data-theme="dark"] .sf-free-shipping-slot:has([data-qualified="true"]) {
+  background: color-mix(in srgb, var(--sf-primary, var(--store-primary, #428c95)) 7%, #23242a);
+  border-color: color-mix(in srgb, var(--sf-primary, var(--store-primary, #3d8790)) 28%, #383940);
+}
+
+[data-theme="dark"] .fsc-preview {
+  background: #23242a;
+}
+
+[data-theme="dark"] .general-cart-shipping {
+  background: #1f2026;
+  border: 1px solid #65667114;
+}
+
+[data-theme="dark"] .general-cart-shipping-icon {
+  background: #23242a;
+  border: 1px solid #6566711a;
+  color: #d7d7db;
+}
+
+[data-theme="dark"] .general-cart-shipping-cta {
+  color: #e7ebf4;
+}
+
+[data-theme="dark"] .general-cart-shipping-track {
+  background: #27283017;
+}
+
+[data-theme="dark"] .general-cart-shipping-track span {
+  background: var(--sf-primary, var(--store-primary, #428c95));
+}
+
+[data-theme="dark"] .general-cart-shipping[data-qualified="true"] {
+  background: color-mix(in srgb, var(--sf-primary, var(--store-primary, #428c95)) 8%, #23242a);
+  border-color: color-mix(in srgb, var(--sf-primary, var(--store-primary, #3d8790)) 26%, #383940);
+}
+
+[data-theme="dark"] .general-cart-shipping[data-qualified="true"] .general-cart-shipping-icon {
+  background: var(--sf-primary, var(--store-primary, #428c95));
+}
+
+[data-theme="dark"] .general-cart-shipping[data-qualified="true"] p {
+  color: color-mix(in srgb, var(--sf-primary, var(--store-primary, #a0d8de)) 82%, #ebecef);
 }

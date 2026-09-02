@@ -1,3 +1,4 @@
+import { NotificationBarSlot } from "../../../../modules/notification-bar/components/notification-bar-slot";
 import { CartPage } from "../../../../modules/cart/components/cart-page";
 import { getCart } from "../../../../modules/cart/cart.service";
 import { toCartCrossSellProduct } from "../../../../modules/cart/cart-cross-sell";
@@ -58,6 +59,7 @@ export default async function StorefrontCartPage({
   return (
     <main className="sf-page">
       <StorefrontHeader store={store} />
+      <NotificationBarSlot anchor="top" store={store} surface="other" />
       <CartPage
         bundles={bundles.applied}
         cart={cart}
