@@ -23,6 +23,7 @@
     "verify:staff-seats": "tsx scripts/verify-staff-seats.mts",
     "verify:store-copilot": "tsx scripts/verify-store-copilot.mts",
     "verify:shopping-agent": "tsx scripts/verify-shopping-agent.mts",
+    "verify:sales-notifications": "tsx scripts/verify-sales-notifications.mts",
     "verify:sitemap": "tsx scripts/verify-sitemap.mts",
     "verify:wishlist": "tsx scripts/verify-wishlist.mts",
     "verify:staff-permissions": "tsx scripts/verify-staff-permissions.mts",

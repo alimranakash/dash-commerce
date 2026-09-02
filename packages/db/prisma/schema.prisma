@@ -601,6 +601,7 @@ model Store {
   productRelations           ProductRelation[]
   productContents            ProductContent[]
   aiSetting                  StoreAiSetting?
+  salesNotificationSetting   StoreSalesNotificationSetting?
   abandonedCarts             AbandonedCart[]
   searchSynonyms             SearchSynonym[]
   searchBoosts               SearchBoost[]
@@ -1091,6 +1092,63 @@ model StoreAiSetting {
   store              Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @default(now()) @updatedAt
+}
+
+/// How this shop shows recent purchases to its shoppers.
+///
+/// There is no event table beside this one, and that is the design: a card is
+/// rendered from a real `Order` at read time, so there is nothing to seed, keep
+/// in step, or quietly hand-edit into a purchase that never happened. This row
+/// is only the seller's preferences about how much of a real order is repeated
+/// in public and how often.
+///
+/// The table is also created at runtime by `ensureSalesNotificationSchema()`
+/// (modules/sales-notifications/sales-notifications.repository.ts), because it
+/// is read on every storefront page and must not depend on anyone having run
+/// `db:generate`. This model mirrors that DDL exactly — including the custom
+/// index name — so `db push` stays a no-op.
+///
+/// `nameDisplay` and `position` are TEXT rather than Postgres enums for the same
+/// reason `ProductTaxonomy.type` is: the runtime DDL has to be idempotent and
+/// `CREATE TYPE` is not. The allowed values live in
+/// modules/sales-notifications/sales-notifications.schema.ts.
+model StoreSalesNotificationSetting {
+  id                  String   @id @default(cuid())
+  storeId             String   @unique
+  /// Off until the seller asks for it. An entitled plan must never publish
+  /// something on a storefront by itself.
+  enabled             Boolean  @default(false)
+  /// One of "first_name", "initial", "anonymous". Defaults to the middle one:
+  /// the customers on these cards did not agree to appear on a shop's homepage.
+  nameDisplay         String   @default("initial")
+  /// Comma-separated `OrderStatus` values a card may be drawn from — every one
+  /// of them by default, because a shop selling on delivery has most of its
+  /// real sales sitting in PENDING for days. TEXT rather than an enum array so
+  /// the runtime DDL stays idempotent, the same reason the columns either side
+  /// of it are text.
+  orderStatuses       String   @default("PENDING,CONFIRMED,PROCESSING,COMPLETED,CANCELLED")
+  /// Whether a card is limited to products a shopper could still open and buy.
+  /// Off by default: an order for a since-deleted product is still a real
+  /// purchase, and it shows with the name it was sold under and no link.
+  requirePublicProduct Boolean @default(false)
+  /// One of "bottom-left", "bottom-right", "top-left", "top-right".
+  position            String   @default("bottom-left")
+  showLocation        Boolean  @default(true)
+  showOnMobile        Boolean  @default(true)
+  showProductImage    Boolean  @default(true)
+  showTimeAgo         Boolean  @default(true)
+  initialDelaySeconds Int      @default(8)
+  displaySeconds      Int      @default(6)
+  gapSeconds          Int      @default(18)
+  /// Hard ceiling per visitor, after which the widget stops for the visit.
+  maxPerSession       Int      @default(8)
+  /// How old an order may be and still be announced. "Just purchased" over a
+  /// three-month-old order is the same untruth as inventing one.
+  lookbackDays        Int      @default(14)
+  loopFeed            Boolean  @default(true)
+  store               Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @default(now()) @updatedAt
 }
 
 /// The product copy that has nowhere to sit on `Product`.

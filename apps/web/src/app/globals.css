@@ -19346,3 +19346,1022 @@ textarea {
 .sf-secondary-actions-single {
   grid-template-columns: minmax(0, 1fr);
 }
+
+/* --- Sales Notifications: the storefront card -------------------------------
+   A small card in the corner of the shop saying what somebody just bought.
+
+   Every one of these is a real order — the module has no way to render anything
+   else — so the card is allowed to look like a receipt rather than an advert:
+   white, quiet, one product, and a green "Verified order" line that is a claim
+   this codebase can actually stand behind.
+
+   It draws its accent from `--sf-primary`, so the progress bar is the shop's own
+   colour rather than a widget purple belonging to no storefront. `z-index: 65`
+   puts it above the scroll-to-top button (60) and below the shopping assistant
+   (70/75): a shopper mid-conversation is doing something more deliberate than
+   reading a toast, so the toast never covers it. The bottom corners are lifted
+   clear of both of those buttons for the same reason.
+   ------------------------------------------------------------------------- */
+
+.sn-dock {
+  /* The dock catches nothing; only the card and its close button do. */
+  pointer-events: none;
+  position: fixed;
+  width: min(352px, calc(100vw - 32px));
+  z-index: 65;
+}
+
+.sn-dock[data-position="bottom-left"],
+.sn-dock[data-position="bottom-right"] {
+  /* Lifted 60px so the card clears whichever round button owns this corner. */
+  bottom: calc(clamp(16px, 2.2vw, 28px) + 60px + env(safe-area-inset-bottom, 0px));
+}
+
+.sn-dock[data-position="top-left"],
+.sn-dock[data-position="top-right"] {
+  top: calc(clamp(16px, 2.2vw, 28px) + env(safe-area-inset-top, 0px));
+}
+
+.sn-dock[data-position="bottom-left"],
+.sn-dock[data-position="top-left"] {
+  left: clamp(16px, 2.2vw, 28px);
+}
+
+.sn-dock[data-position="bottom-right"],
+.sn-dock[data-position="top-right"] {
+  right: clamp(16px, 2.2vw, 28px);
+}
+
+.sn-card {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  /* Two shadows: a tight contact shadow that keeps the card attached to the
+     page, and a wide soft one that lifts it off. One blurred drop shadow is
+     what makes a floating card look pasted on. */
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.14),
+    0 18px 40px -12px rgba(15, 23, 42, 0.34);
+  color: var(--store-text, #171717);
+  display: grid;
+  overflow: hidden;
+  pointer-events: auto;
+  position: relative;
+}
+
+.sn-dock[data-position$="left"] .sn-card[data-state="entering"] {
+  animation: sn-in-left 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sn-dock[data-position$="right"] .sn-card[data-state="entering"] {
+  animation: sn-in-right 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sn-dock[data-position$="left"] .sn-card[data-state="leaving"] {
+  animation: sn-out-left 0.3s ease forwards;
+}
+
+.sn-dock[data-position$="right"] .sn-card[data-state="leaving"] {
+  animation: sn-out-right 0.3s ease forwards;
+}
+
+@keyframes sn-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-18px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes sn-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(18px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes sn-out-left {
+  to {
+    opacity: 0;
+    transform: translateX(-18px) scale(0.97);
+  }
+}
+
+@keyframes sn-out-right {
+  to {
+    opacity: 0;
+    transform: translateX(18px) scale(0.97);
+  }
+}
+
+.sn-card-link {
+  align-items: center;
+  color: inherit;
+  display: flex;
+  gap: 12px;
+  /* Right padding clears the close button rather than sitting under it. */
+  padding: 13px 42px 4px 13px;
+  text-decoration: none;
+}
+
+.sn-media {
+  align-items: center;
+  background: #f2f3f8;
+  border-radius: 12px;
+  display: flex;
+  flex: none;
+  height: 54px;
+  justify-content: center;
+  overflow: hidden;
+  width: 54px;
+}
+
+.sn-media img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.sn-media-fallback {
+  align-items: center;
+  color: #9aa0ad;
+  display: flex;
+  justify-content: center;
+}
+
+.sn-media-fallback svg {
+  height: 21px;
+  width: 21px;
+}
+
+.sn-body {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.sn-lede {
+  color: #6b7280;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sn-lede strong {
+  color: var(--store-text, #171717);
+  font-weight: 800;
+}
+
+.sn-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sn-meta {
+  align-items: center;
+  color: #8a8f9a;
+  display: flex;
+  font-size: 0.75rem;
+  gap: 4px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sn-meta-icon {
+  flex: none;
+  height: 12px;
+  width: 12px;
+}
+
+/* Aligned under the body rather than under the thumbnail: 13px of padding plus
+   a 54px tile plus the 12px gap. */
+.sn-verified {
+  align-items: center;
+  color: #15803d;
+  display: inline-flex;
+  font-size: 0.68rem;
+  font-weight: 800;
+  gap: 4px;
+  letter-spacing: 0.01em;
+  padding: 0 13px 12px 79px;
+}
+
+/* With no thumbnail there is nothing to indent past. */
+.sn-card[data-media="false"] .sn-verified {
+  padding-left: 13px;
+}
+
+.sn-verified svg {
+  height: 13px;
+  width: 13px;
+}
+
+.sn-close {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  color: #a0a4ae;
+  cursor: pointer;
+  display: inline-flex;
+  height: 26px;
+  justify-content: center;
+  padding: 0;
+  pointer-events: auto;
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  width: 26px;
+}
+
+.sn-close:hover {
+  background: rgba(15, 23, 42, 0.06);
+  color: #4b5563;
+}
+
+.sn-close:focus-visible {
+  outline: 2px solid var(--sf-primary, var(--store-primary, #135d66));
+  outline-offset: 1px;
+}
+
+.sn-close svg {
+  height: 14px;
+  width: 14px;
+}
+
+/* The card's own clock, so a shopper can see how long they have to read it —
+   and see it stop when they hover, which is the only way a pause is worth
+   having. */
+.sn-progress {
+  background: rgba(15, 23, 42, 0.07);
+  bottom: 0;
+  height: 3px;
+  left: 0;
+  overflow: hidden;
+  position: absolute;
+  right: 0;
+}
+
+.sn-progress-fill {
+  animation-fill-mode: forwards;
+  animation-name: sn-progress;
+  animation-timing-function: linear;
+  background: var(--sf-primary, var(--store-primary, #135d66));
+  display: block;
+  height: 100%;
+  transform-origin: left center;
+  width: 100%;
+}
+
+@keyframes sn-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* On a phone the card spans the width. A 352px card floated in a corner of a
+   360px viewport is a card with a 4px margin, which reads as a mistake. */
+@media (max-width: 640px) {
+  .sn-dock {
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sn-dock .sn-card[data-state="entering"],
+  .sn-dock .sn-card[data-state="leaving"] {
+    animation-duration: 0.01ms;
+  }
+
+  /* The bar stays full rather than sweeping. It is a decoration for the timer,
+     not the timer itself — the feed's own clock is unaffected. */
+  .sn-progress-fill {
+    animation: none;
+  }
+}
+
+/* --- Sales Notifications: the dashboard console -----------------------------
+   Marketing > Sales Notifications. Settings on the left, a live preview on the
+   right drawn by the same component the storefront mounts, from this shop's own
+   most recent order.
+
+   The preview is the point of the layout: every control here decides what a
+   stranger reads about a real customer, and a seller cannot be expected to
+   choose between "First name" and "First + initial" from the words alone.
+   ------------------------------------------------------------------------- */
+
+.snc-console {
+  display: grid;
+  gap: 16px;
+}
+
+.snc-hero {
+  align-items: center;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfbff 100%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
+  padding: 20px 22px;
+}
+
+.snc-hero-live {
+  background: linear-gradient(180deg, #ffffff 0%, #f3fbf6 100%);
+  border-color: #cdeadb;
+}
+
+.snc-hero-main {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.snc-hero-state {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  font-size: 0.72rem;
+  font-weight: 800;
+  gap: 7px;
+  letter-spacing: 0.06em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.snc-dot {
+  background: #c9cad6;
+  border-radius: 999px;
+  height: 8px;
+  width: 8px;
+}
+
+.snc-dot-live {
+  animation: snc-pulse 2.4s ease-in-out infinite;
+  background: #16a34a;
+}
+
+@keyframes snc-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(22, 163, 74, 0);
+  }
+}
+
+.snc-hero h2 {
+  font-size: 1.12rem;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+.snc-hero-copy {
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 62ch;
+}
+
+.snc-hero-stats {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 4px;
+}
+
+.snc-stat {
+  align-items: baseline;
+  display: flex;
+  gap: 6px;
+}
+
+.snc-stat strong {
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.snc-stat small {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.snc-hero-link {
+  align-items: center;
+  color: var(--accent);
+  display: inline-flex;
+  font-size: 0.8rem;
+  font-weight: 800;
+  gap: 5px;
+  text-decoration: none;
+}
+
+.snc-hero-link:hover {
+  text-decoration: underline;
+}
+
+.snc-hero-link svg {
+  height: 13px;
+  width: 13px;
+}
+
+/* --- The switch, and the smaller ones inside the panels -------------------- */
+
+.snc-switch,
+.snc-toggle {
+  align-items: flex-start;
+  background: color-mix(in srgb, var(--accent) 3%, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  gap: 13px;
+  padding: 14px 16px;
+  text-align: left;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease;
+  width: 100%;
+}
+
+.snc-switch:hover:not(:disabled),
+.snc-toggle:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+.snc-switch:disabled,
+.snc-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.snc-switch:focus-visible,
+.snc-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.snc-switch-track {
+  background: #c9cad6;
+  border-radius: 999px;
+  display: inline-flex;
+  flex: none;
+  height: 22px;
+  margin-top: 1px;
+  padding: 2px;
+  transition: background 0.18s ease;
+  width: 40px;
+}
+
+.snc-switch[aria-checked="true"] .snc-switch-track,
+.snc-toggle[aria-checked="true"] .snc-switch-track {
+  background: #16a34a;
+}
+
+.snc-switch-knob {
+  background: #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 28%);
+  height: 18px;
+  transition: transform 0.18s ease;
+  width: 18px;
+}
+
+.snc-switch[aria-checked="true"] .snc-switch-knob,
+.snc-toggle[aria-checked="true"] .snc-switch-knob {
+  transform: translateX(18px);
+}
+
+.snc-switch-label {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.snc-switch-label strong {
+  font-size: 0.88rem;
+}
+
+.snc-switch-label small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+/* --- Settings and preview -------------------------------------------------- */
+
+.snc-grid {
+  align-items: start;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+
+.snc-columns {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.snc-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.snc-panel-head {
+  display: flex;
+  gap: 12px;
+}
+
+.snc-panel-head svg {
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  border-radius: 10px;
+  color: var(--accent);
+  flex: none;
+  height: 32px;
+  padding: 7px;
+  width: 32px;
+}
+
+.snc-panel-head h3 {
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  margin: 0 0 3px;
+}
+
+.snc-panel-head p {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 60ch;
+}
+
+.snc-field {
+  border: none;
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.snc-field legend {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 0;
+  text-transform: uppercase;
+}
+
+.snc-field-note {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+.snc-seg {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.snc-seg-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  cursor: pointer;
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  text-align: left;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.snc-seg-item strong {
+  font-size: 0.82rem;
+}
+
+/* The second line is the setting's own answer — what this option would print
+   for this shop's most recent buyer. */
+.snc-seg-item small {
+  color: var(--muted);
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.snc-seg-item:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+.snc-seg-item[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border-color: var(--accent);
+}
+
+.snc-seg-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.snc-toggles {
+  display: grid;
+  gap: 8px;
+}
+
+/* --- The corner picker ----------------------------------------------------- */
+
+.snc-corners {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, 66px);
+}
+
+.snc-corner {
+  background: color-mix(in srgb, var(--accent) 4%, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+  height: 46px;
+  padding: 6px;
+  position: relative;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease;
+  width: 66px;
+}
+
+.snc-corner:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+.snc-corner[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+  border-color: var(--accent);
+}
+
+.snc-corner:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.snc-corner-dot {
+  background: #c9cad6;
+  border-radius: 3px;
+  display: block;
+  height: 12px;
+  position: absolute;
+  width: 26px;
+}
+
+.snc-corner[aria-pressed="true"] .snc-corner-dot {
+  background: var(--accent);
+}
+
+.snc-corner[data-position="bottom-left"] .snc-corner-dot {
+  bottom: 6px;
+  left: 6px;
+}
+
+.snc-corner[data-position="bottom-right"] .snc-corner-dot {
+  bottom: 6px;
+  right: 6px;
+}
+
+.snc-corner[data-position="top-left"] .snc-corner-dot {
+  left: 6px;
+  top: 6px;
+}
+
+.snc-corner[data-position="top-right"] .snc-corner-dot {
+  right: 6px;
+  top: 6px;
+}
+
+/* --- Chips and sliders ----------------------------------------------------- */
+
+.snc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.snc-chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px 13px;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.snc-chip:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+.snc-chip[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.snc-chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.snc-sliders {
+  display: grid;
+  gap: 15px;
+}
+
+.snc-slider {
+  display: grid;
+  gap: 5px;
+}
+
+.snc-slider-head {
+  align-items: baseline;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.snc-slider-head strong {
+  font-size: 0.85rem;
+}
+
+.snc-slider-head output {
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border-radius: 7px;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 800;
+  min-width: 44px;
+  padding: 2px 8px;
+  text-align: center;
+}
+
+.snc-slider input[type="range"] {
+  accent-color: var(--accent);
+  cursor: pointer;
+  width: 100%;
+}
+
+.snc-slider input[type="range"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.snc-slider small {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+/* --- The live preview ------------------------------------------------------ */
+
+.snc-preview-column {
+  display: grid;
+  gap: 10px;
+  position: sticky;
+  top: 16px;
+}
+
+.snc-preview-head {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.snc-preview-head h3 {
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.snc-replay {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: 800;
+  gap: 5px;
+  padding: 5px 11px;
+}
+
+.snc-replay:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  color: var(--accent);
+}
+
+.snc-replay svg {
+  height: 12px;
+  width: 12px;
+}
+
+.snc-preview {
+  background: #eceef7;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  min-height: 330px;
+  overflow: hidden;
+  position: relative;
+}
+
+.snc-preview-chrome {
+  align-items: center;
+  background: #e2e5f2;
+  display: flex;
+  gap: 9px;
+  padding: 8px 11px;
+}
+
+/* Three dots drawn as one repeated gradient rather than one dot plus two box
+   shadows. The dark-mode generator reads `box-shadow` as a shadow and would
+   have repainted the second and third dots as shadow colour — invisible on a
+   dark chrome bar. A background survives the mapping as a fill. */
+.snc-preview-dots {
+  background: radial-gradient(circle 3.5px at 3.5px 3.5px, #c3c7d9 100%, transparent 0) repeat-x;
+  background-size: 9px 7px;
+  height: 7px;
+  width: 25px;
+}
+
+.snc-preview-url {
+  background: #f4f5fb;
+  border-radius: 999px;
+  color: #8b90a4;
+  flex: 1;
+  font-size: 0.68rem;
+  overflow: hidden;
+  padding: 3px 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A silhouette of a shop, not a screenshot of one: enough for the card to have
+   somewhere to sit, nothing that competes with it for attention. */
+.snc-preview-page {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 12px;
+}
+
+.snc-preview-hero {
+  background: #dfe2f0;
+  border-radius: 8px;
+  grid-column: 1 / -1;
+  height: 62px;
+}
+
+.snc-preview-tile {
+  background: #e5e8f4;
+  border-radius: 8px;
+  height: 74px;
+}
+
+.snc-preview-slot {
+  position: absolute;
+  width: min(300px, calc(100% - 24px));
+}
+
+.snc-preview-slot .sn-card {
+  animation: sn-in-left 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.snc-preview[data-position="bottom-left"] .snc-preview-slot,
+.snc-preview[data-position="bottom-right"] .snc-preview-slot {
+  bottom: 12px;
+}
+
+.snc-preview[data-position="top-left"] .snc-preview-slot,
+.snc-preview[data-position="top-right"] .snc-preview-slot {
+  top: 46px;
+}
+
+.snc-preview[data-position="bottom-left"] .snc-preview-slot,
+.snc-preview[data-position="top-left"] .snc-preview-slot {
+  left: 12px;
+}
+
+.snc-preview[data-position="bottom-right"] .snc-preview-slot,
+.snc-preview[data-position="top-right"] .snc-preview-slot {
+  right: 12px;
+}
+
+.snc-preview-note {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* --- Save bar -------------------------------------------------------------- */
+
+.snc-savebar {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  position: sticky;
+}
+
+.snc-save-state {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin: 0 auto 0 0;
+}
+
+.snc-save-error {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.snc-savebar button svg,
+.snc-spin {
+  height: 14px;
+  margin-right: 6px;
+  vertical-align: -2px;
+  width: 14px;
+}
+
+.snc-spin {
+  animation: snc-spin 1s linear infinite;
+}
+
+@keyframes snc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1080px) {
+  .snc-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .snc-preview-column {
+    position: static;
+  }
+}
+
+@media (max-width: 900px) {
+  .snc-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 620px) {
+  .snc-seg {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

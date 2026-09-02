@@ -12,7 +12,7 @@
 
 /* ---- Tailwind utilities ----------------------------------------------
    461 overrides derived from 474 colour utilities
-   found across 961 source files. */
+   found across 971 source files. */
 
 [data-theme="dark"] .divide-\[\#ececf5\] > :where(:not(:last-child)),
 [data-theme="dark"] .border-\[\#ececf5\] {
@@ -1373,7 +1373,7 @@
 }
 
 /* ---- globals.css ------------------------------------------------------
-   1320 declarations across 884 rules. These come
+   1354 declarations across 911 rules. These come
    last so that, exactly as in light mode, a component stylesheet beats a
    utility class at the same specificity. */
 
@@ -5614,4 +5614,121 @@
 [data-theme="dark"] .sf-wishlist-clear button:hover {
   border-color: #6566714d;
   color: #ebecef;
+}
+
+[data-theme="dark"] .sn-card {
+  background: #23242a;
+  border: 1px solid #59617414;
+  box-shadow: 0 1px 2px #080f2124,
+    0 18px 40px -12px #080f2157;
+  color: var(--dm-text);
+}
+
+[data-theme="dark"] .sn-media {
+  background: #1b1d27;
+}
+
+[data-theme="dark"] .sn-media-fallback {
+  color: #a8abb3;
+}
+
+[data-theme="dark"] .sn-lede {
+  color: #c1c5cd;
+}
+
+[data-theme="dark"] .sn-lede strong {
+  color: var(--dm-text);
+}
+
+[data-theme="dark"] .sn-meta {
+  color: #a9acb2;
+}
+
+[data-theme="dark"] .sn-verified {
+  color: #97e7b5;
+}
+
+[data-theme="dark"] .sn-close {
+  color: #a9acb2;
+}
+
+[data-theme="dark"] .sn-close:hover {
+  background: #5e66790f;
+  color: #d2d8e0;
+}
+
+[data-theme="dark"] .sn-close:focus-visible {
+  outline: 2px solid var(--sf-primary, var(--store-primary, #3d8790));
+}
+
+[data-theme="dark"] .sn-progress {
+  background: #5e667912;
+}
+
+[data-theme="dark"] .sn-progress-fill {
+  background: var(--sf-primary, var(--store-primary, #428c95));
+}
+
+[data-theme="dark"] .snc-hero {
+  background: linear-gradient(180deg, #23242a 0%, #212229 100%);
+}
+
+[data-theme="dark"] .snc-hero-live {
+  background: linear-gradient(180deg, #23242a 0%, #1a2a20 100%);
+  border-color: #28503b;
+}
+
+[data-theme="dark"] .snc-dot {
+  background: #2c2e3c;
+}
+
+[data-theme="dark"] .snc-dot-live {
+  background: #25b259;
+}
+
+[data-theme="dark"] .snc-switch-track {
+  background: #2c2e3c;
+}
+
+[data-theme="dark"] .snc-switch[aria-checked="true"] .snc-switch-track,
+[data-theme="dark"] .snc-toggle[aria-checked="true"] .snc-switch-track {
+  background: #25b259;
+}
+
+[data-theme="dark"] .snc-switch-knob {
+  background: #23242a;
+  box-shadow: 0 1px 3px #080f2147;
+}
+
+[data-theme="dark"] .snc-corner-dot {
+  background: #2c2e3c;
+}
+
+[data-theme="dark"] .snc-preview {
+  background: #14182a;
+}
+
+[data-theme="dark"] .snc-preview-chrome {
+  background: #0b112b;
+}
+
+[data-theme="dark"] .snc-preview-dots {
+  background: radial-gradient(circle 3.5px at 3.5px 3.5px, #272c41 100%, transparent 0) repeat-x;
+}
+
+[data-theme="dark"] .snc-preview-url {
+  background: #1b1d29;
+  color: #a6a9b5;
+}
+
+[data-theme="dark"] .snc-preview-hero {
+  background: #090f2b;
+}
+
+[data-theme="dark"] .snc-preview-tile {
+  background: #0e142c;
+}
+
+[data-theme="dark"] .snc-save-error {
+  color: #ed9191;
 }

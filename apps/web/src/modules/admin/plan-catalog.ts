@@ -52,6 +52,7 @@ const STARTER_FEATURES: PlanFeatureKey[] = [
   "refunds",
   "returns",
   "sales",
+  "sales_notifications",
   "sms_notifications",
   "suppliers",
   "team",

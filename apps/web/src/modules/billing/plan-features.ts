@@ -59,6 +59,7 @@ export const PLAN_FEATURE_KEYS = [
   "refunds",
   "returns",
   "sales",
+  "sales_notifications",
   "search_discovery",
   "server_side_tracking",
   "sms_automation",
@@ -340,6 +341,17 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
   sales: {
     description: "Manual sales entry and counter-sale records.",
     label: "Sales",
+    status: "available"
+  },
+  /**
+   * Social proof drawn from the store's own orders, never from anything a
+   * seller could type in. The entitlement buys *publishing* it; switching the
+   * widget off is ungated, so a lapsed store can always stop something that is
+   * running on its storefront.
+   */
+  sales_notifications: {
+    description: "Show recent real purchases to shoppers in the corner of your storefront.",
+    label: "Sales Notifications",
     status: "available"
   },
   search_discovery: {

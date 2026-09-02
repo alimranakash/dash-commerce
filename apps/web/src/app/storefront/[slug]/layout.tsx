@@ -5,6 +5,7 @@ import {
   getMarketingMetaTags,
   getMarketingTagPlan
 } from "../../../modules/marketing/marketing.service";
+import { SalesNotificationDock } from "../../../modules/sales-notifications/components/sales-notification-dock";
 import { storefrontCanonicalUrl } from "../../../modules/seo/page-metadata";
 import { ShoppingAgentDock } from "../../../modules/shopping-agent/components/shopping-agent-dock";
 import { storefrontBasePath } from "../../../modules/storefront/base-path";
@@ -117,6 +118,11 @@ export default async function StorefrontLayout({ children, params }: StorefrontL
             moving from a category to a product to the cart. Renders nothing unless
             the seller switched the assistant on and the store is entitled to it. */}
           <ShoppingAgentDock store={store} />
+          {/* Mounted once for the same reason: the queue keeps its place as the
+            shopper moves between pages instead of restarting with the first
+            card on every navigation. Renders nothing unless the seller switched
+            it on, the plan grants it, and the shop has a real order to show. */}
+          <SalesNotificationDock store={store} />
           <MarketingTags tags={marketing.bodyEnd} />
         </WishlistProvider>
       </StorefrontBasePathProvider>
