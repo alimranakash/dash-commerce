@@ -1,1 +1,1 @@
-export { default } from "../../../storefront/[slug]/account/page";
+export { default, metadata } from "../../../storefront/[slug]/account/page";

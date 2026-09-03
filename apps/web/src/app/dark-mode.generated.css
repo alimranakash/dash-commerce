@@ -12,7 +12,7 @@
 
 /* ---- Tailwind utilities ----------------------------------------------
    461 overrides derived from 474 colour utilities
-   found across 1002 source files. */
+   found across 1008 source files. */
 
 [data-theme="dark"] .divide-\[\#ececf5\] > :where(:not(:last-child)),
 [data-theme="dark"] .border-\[\#ececf5\] {
@@ -1373,7 +1373,7 @@
 }
 
 /* ---- globals.css ------------------------------------------------------
-   1460 declarations across 983 rules. These come
+   1487 declarations across 1000 rules. These come
    last so that, exactly as in light mode, a component stylesheet beats a
    utility class at the same specificity. */
 
@@ -2864,6 +2864,86 @@
   background: color-mix(in srgb, var(--store-primary, #428c95) 10%, #23242a);
   border: 1px solid color-mix(in srgb, var(--store-primary, #3d8790) 18%, #383940);
   color: var(--store-primary, #a0d8de);
+}
+
+[data-theme="dark"] .sf-account-facts {
+  color: #d4d9de;
+}
+
+[data-theme="dark"] .sf-account-cleared {
+  color: #d5d8dd;
+}
+
+[data-theme="dark"] .sf-account-cleared p {
+  background: #1e1f26;
+  border: 1px solid #65667114;
+}
+
+[data-theme="dark"] .sf-account-orders-head p {
+  color: #d5d8dd;
+}
+
+[data-theme="dark"] .sf-account-forget button {
+  border: 1px solid #65667129;
+  color: #d5d8dd;
+}
+
+[data-theme="dark"] .sf-account-forget button:hover {
+  border-color: #6566714d;
+  color: #ebecef;
+}
+
+[data-theme="dark"] .sf-account-order {
+  background: #23242a;
+  border: 1px solid #65667114;
+  box-shadow: 0 18px 52px #080f210f;
+}
+
+[data-theme="dark"] .sf-account-order-head {
+  border-bottom: 1px solid #65667114;
+}
+
+[data-theme="dark"] .sf-account-order-head span {
+  color: #d5d8dd;
+}
+
+[data-theme="dark"] .sf-account-chip {
+  background: #1e1f26;
+  border: 1px solid #65667114;
+  color: #d4d9de;
+}
+
+[data-theme="dark"] .sf-account-chip[data-tone="status"] {
+  background: color-mix(in srgb, var(--store-primary, #428c95) 10%, #23242a);
+  border-color: color-mix(in srgb, var(--store-primary, #3d8790) 18%, #383940);
+  color: var(--store-primary, #a0d8de);
+}
+
+[data-theme="dark"] .sf-account-lines img,
+[data-theme="dark"] .sf-account-thumb {
+  background: #1e1f26;
+  border: 1px solid #65667114;
+}
+
+[data-theme="dark"] .sf-account-lines li span {
+  color: #d5d8dd;
+}
+
+[data-theme="dark"] .sf-account-totals {
+  border-top: 1px solid #65667114;
+}
+
+[data-theme="dark"] .sf-account-totals dt {
+  color: #d5d8dd;
+}
+
+[data-theme="dark"] .sf-account-totals > div[data-total="true"] dt,
+[data-theme="dark"] .sf-account-totals > div[data-total="true"] dd {
+  color: #ebecef;
+}
+
+[data-theme="dark"] .sf-account-order-foot span {
+  color: #d5d8dd;
 }
 
 [data-theme="dark"] [data-storefront-template="fashion-default"],

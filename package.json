@@ -30,6 +30,7 @@
     "verify:quick-view": "tsx scripts/verify-quick-view.mts",
     "verify:sitemap": "tsx scripts/verify-sitemap.mts",
     "verify:wishlist": "tsx scripts/verify-wishlist.mts",
+    "verify:guest-orders": "tsx scripts/verify-guest-orders.mts",
     "verify:staff-permissions": "tsx scripts/verify-staff-permissions.mts",
     "verify:free-year": "tsx scripts/verify-free-year.mts",
     "db:backfill-plans": "tsx scripts/backfill-plans.mts",

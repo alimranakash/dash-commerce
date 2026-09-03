@@ -5211,6 +5211,206 @@ textarea {
   min-height: 44px;
 }
 
+.sf-account-facts {
+  color: #404850;
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sf-account-cleared {
+  color: #626870;
+}
+
+.sf-account-cleared p {
+  background: #f4f6f8;
+  border: 1px solid rgba(23, 23, 23, 0.08);
+  border-radius: 16px;
+  margin: 0;
+  padding: 14px 18px;
+}
+
+.sf-account-orders-head {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.sf-account-orders-head h2 {
+  font-size: 1.5rem;
+  margin: 0 0 6px;
+}
+
+.sf-account-orders-head p {
+  color: #626870;
+  margin: 0;
+  max-width: 52ch;
+}
+
+.sf-account-forget button {
+  background: transparent;
+  border: 1px solid rgba(23, 23, 23, 0.16);
+  border-radius: 999px;
+  color: #626870;
+  cursor: pointer;
+  font-weight: 700;
+  min-height: 40px;
+  padding: 0 18px;
+}
+
+.sf-account-forget button:hover {
+  border-color: rgba(23, 23, 23, 0.3);
+  color: #171717;
+}
+
+.sf-account-order-list {
+  display: grid;
+  gap: 18px;
+}
+
+.sf-account-order {
+  background: #ffffff;
+  border: 1px solid rgba(23, 23, 23, 0.08);
+  border-radius: 24px;
+  box-shadow: 0 18px 52px rgba(15, 23, 42, 0.06);
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+}
+
+.sf-account-order-head {
+  align-items: start;
+  border-bottom: 1px solid rgba(23, 23, 23, 0.08);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: space-between;
+  padding-bottom: 16px;
+}
+
+.sf-account-order-head > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.sf-account-order-head span {
+  color: #626870;
+  font-size: 0.85rem;
+}
+
+.sf-account-order-head strong {
+  font-size: 1.15rem;
+}
+
+.sf-account-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sf-account-chip {
+  background: #f4f6f8;
+  border: 1px solid rgba(23, 23, 23, 0.08);
+  border-radius: 999px;
+  color: #404850;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px 12px;
+}
+
+.sf-account-chip[data-tone="status"] {
+  background: color-mix(in srgb, var(--store-primary, #135d66) 10%, #ffffff);
+  border-color: color-mix(in srgb, var(--store-primary, #135d66) 18%, #ffffff);
+  color: var(--store-primary, #135d66);
+}
+
+.sf-account-lines {
+  display: grid;
+  gap: 14px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sf-account-lines li {
+  align-items: center;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 56px 1fr auto;
+}
+
+.sf-account-lines img,
+.sf-account-thumb {
+  background: #f4f6f8;
+  border: 1px solid rgba(23, 23, 23, 0.08);
+  border-radius: 14px;
+  display: block;
+  height: 56px;
+  object-fit: cover;
+  width: 56px;
+}
+
+.sf-account-lines li > div {
+  display: grid;
+  gap: 4px;
+}
+
+.sf-account-lines li span {
+  color: #626870;
+  font-size: 0.85rem;
+}
+
+.sf-account-totals {
+  border-top: 1px solid rgba(23, 23, 23, 0.08);
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-top: 16px;
+}
+
+.sf-account-totals > div {
+  display: flex;
+  justify-content: space-between;
+}
+
+.sf-account-totals dt {
+  color: #626870;
+}
+
+.sf-account-totals dd {
+  margin: 0;
+}
+
+.sf-account-totals > div[data-total="true"] dt,
+.sf-account-totals > div[data-total="true"] dd {
+  color: #171717;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.sf-account-order-foot {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.sf-account-order-foot > div {
+  display: grid;
+  gap: 4px;
+}
+
+.sf-account-order-foot span {
+  color: #626870;
+  font-size: 0.85rem;
+}
+
 [data-storefront-template="fashion-default"],
 .sf-header-shell[data-storefront-header-template="fashion-default"],
 .sf-footer[data-storefront-footer-template="fashion-default"] {
@@ -13820,6 +14020,22 @@ textarea {
 
   .sf-account-grid {
     grid-template-columns: 1fr;
+  }
+
+  .sf-account-order-head,
+  .sf-account-order-foot {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .sf-account-lines li {
+    grid-template-columns: 48px 1fr auto;
+  }
+
+  .sf-account-lines img,
+  .sf-account-thumb {
+    height: 48px;
+    width: 48px;
   }
 
   [data-storefront-template="fashion-default"] .sf-shop-filters,

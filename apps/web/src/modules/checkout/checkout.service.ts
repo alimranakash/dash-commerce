@@ -20,6 +20,7 @@ import { assertIpNotBlocked } from "../blocked-ips/blocked-ip.enforcement";
 import { normaliseIpAddress } from "../blocked-ips/blocked-ip.schema";
 import { canCreateOrder } from "../billing/subscription-limits";
 import { assessOrderSafely } from "../fake-orders/fake-order.assessment";
+import { rememberGuestOrder } from "../guest-orders/guest-orders.service";
 import {
   getEnabledPaymentMethodForCheckout,
   isManualPaymentType
@@ -81,6 +82,37 @@ export type CheckoutOrderResult = {
 };
 
 /**
+ * Places the order, and leaves the buyer their receipt.
+ *
+ * The receipt is a cookie holding this order's id, which is what lets a shopper
+ * with no account open `/account` tonight and see where their parcel is. It is
+ * written here rather than in the two callers for the same reason
+ * `completeCheckoutOrder` was extracted: `/api/checkout` and the AI Shopping
+ * Agent both place orders, and an order bought in the chat that the shopper
+ * cannot find afterwards looks exactly like an order that was never placed.
+ *
+ * Unlike those side effects it deliberately **does** run for a replay. A second
+ * confirmation SMS is damage; the same id remembered twice is the same id, and a
+ * double-tapped submit must not be the reason a shopper loses their only way
+ * back to the order.
+ *
+ * Nothing here may throw. The order is committed by the time this runs, and a
+ * cookie that could not be written is a lost receipt, not a failed purchase —
+ * the shopper would be shown a checkout error for an order that exists.
+ */
+export async function createCheckoutOrder(
+  store: CheckoutStore,
+  input: CheckoutInput,
+  context: CheckoutContext
+): Promise<CheckoutOrderResult> {
+  const result = await resolveCheckoutOrder(store, input, context);
+
+  await rememberGuestOrder(store.id, result.order).catch(() => undefined);
+
+  return result;
+}
+
+/**
  * Places an order, and leaves the seller a lead behind when it cannot.
  *
  * Everything that decides whether the order happens is in `placeCheckoutOrder`.
@@ -96,7 +128,7 @@ export type CheckoutOrderResult = {
  * because nothing downstream could tell them apart from a customer who really
  * did want two. The submission key can.
  */
-export async function createCheckoutOrder(
+async function resolveCheckoutOrder(
   store: CheckoutStore,
   input: CheckoutInput,
   context: CheckoutContext
@@ -333,6 +365,49 @@ async function placeCheckoutOrder(
     );
   }
 
+  // The shop's own free-shipping threshold, applied here and nowhere else.
+  // This is the line that makes the progress bar in the cart a fact rather than
+  // an advert: the bar measures the same cart subtotal against the same stored
+  // threshold, so a shopper who reaches it is not charged. Before this, the bar
+  // promised free delivery and checkout billed the full rate.
+  //
+  // The rate is untouched for a shop that has never configured a threshold, so
+  // this is safe in front of every checkout.
+  //
+  // Read **outside** the transaction, and this one is not a preference: called
+  // from inside it, the first checkout after every process start deadlocked
+  // until Prisma killed it at 5000ms.
+  //
+  // Both calls go to the base `prisma` client rather than to `tx`, so they were
+  // never part of the transaction's atomicity — they just took a second
+  // connection. On that connection `ensureFreeShippingSchema` runs its
+  // once-per-process DDL, and one of those statements is
+  // `ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "freeShipping"`, which needs
+  // a lock the stock decrements above are already holding on `Product`. The
+  // transaction waits for the DDL, the DDL waits for the transaction, and the
+  // timeout is the only thing that ends it — on the first order after every
+  // deploy, restart or hot reload, and never again until the next one.
+  //
+  // Here they are two ordinary reads of seller configuration and a product flag
+  // that nothing in the transaction writes, so the answer is the same on this
+  // side of it and no lock is held while the DDL runs.
+  const [freeShippingRule, hasFreeShippingProduct] = await Promise.all([
+    getFreeShippingRule(store.id),
+    // A product the seller flagged earns it outright, whatever the cart comes
+    // to; the threshold is the other way in. Both are checked so the two routes
+    // cannot disagree with the bar that advertised them.
+    cartEarnsFreeShipping(
+      store.id,
+      cart.items.map((item) => item.productId)
+    )
+  ]);
+  const shippingAmount = resolveShippingCharge(freeShippingRule, {
+    hasFreeShippingProduct,
+    rateAmount: shippingRate.amount.toString(),
+    subtotal: cart.totals.subtotal,
+    zoneId: shippingRate.zoneId
+  });
+
   const order = await prisma.$transaction(async (tx) => {
     const productIds = lines.map((item) => item.productId);
     const products = await tx.product.findMany({
@@ -365,7 +440,13 @@ async function placeCheckoutOrder(
       }
 
       if (item.variantId) {
-        const variant = await decrementProductVariantStock(tx, store.id, item.productId, item.variantId, item.quantity);
+        const variant = await decrementProductVariantStock(
+          tx,
+          store.id,
+          item.productId,
+          item.variantId,
+          item.quantity
+        );
 
         if (item.quantity > variant.stockQuantity) {
           preorderLineIds.add(item.lineId);
@@ -460,26 +541,6 @@ async function placeCheckoutOrder(
     const subtotalAmount = bump
       ? (Number(cart.totals.subtotal) + Number(bump.offerPrice)).toFixed(2)
       : cart.totals.subtotal;
-    // The shop's own free-shipping threshold, applied here and nowhere else.
-    // This is the line that makes the progress bar in the cart a fact rather
-    // than an advert: the bar measures the same cart subtotal against the same
-    // stored threshold, so a shopper who reaches it is not charged. Before this,
-    // the bar promised free delivery and checkout billed the full rate.
-    //
-    // The rate is untouched for a shop that has never configured a threshold,
-    // so this is safe in front of every checkout.
-    const shippingAmount = resolveShippingCharge(await getFreeShippingRule(store.id), {
-      // A product the seller flagged earns it outright, whatever the cart comes
-      // to; the threshold is the other way in. Both are checked here so the two
-      // routes cannot disagree with the bar that advertised them.
-      hasFreeShippingProduct: await cartEarnsFreeShipping(
-        store.id,
-        cart.items.map((item) => item.productId)
-      ),
-      rateAmount: shippingRate.amount.toString(),
-      subtotal: cart.totals.subtotal,
-      zoneId: shippingRate.zoneId
-    });
     // Re-evaluated and claimed here, against the subtotal this transaction just
     // computed. Whatever the browser was shown is a quote; this is the price.
     //
@@ -548,7 +609,10 @@ async function placeCheckoutOrder(
             isPreorder: preorderLineIds.has(item.lineId),
             source: item.source,
             title: item.variantTitle ? `${item.title} - ${item.variantTitle}` : item.title,
-            sku: variantsByLineId.get(item.lineId)?.sku ?? productsById.get(item.productId)?.sku ?? null,
+            sku:
+              variantsByLineId.get(item.lineId)?.sku ??
+              productsById.get(item.productId)?.sku ??
+              null,
             price: item.price,
             quantity: item.quantity,
             total: item.lineTotal,

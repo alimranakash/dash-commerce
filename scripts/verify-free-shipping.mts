@@ -72,6 +72,15 @@ function stripComments(source: string) {
   return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 }
 
+/** Where checkout reads the rule, and where it opens its transaction. */
+function freeShippingReadPosition() {
+  return stripComments(source.checkoutService).indexOf("getFreeShippingRule(store.id)");
+}
+
+function transactionPosition() {
+  return stripComments(source.checkoutService).indexOf("prisma.$transaction(");
+}
+
 const source = {
   cartPage: read(WEB, "modules", "cart", "components", "cart-page.tsx"),
   checkoutPage: read(WEB, "app", "storefront", "[slug]", "checkout", "page.tsx"),
@@ -320,9 +329,10 @@ check(
 
 check(
   "checkout asks whether the basket earns it outright",
-  /hasFreeShippingProduct: await cartEarnsFreeShipping\(/.test(
-    stripComments(source.checkoutService)
-  )
+  /cartEarnsFreeShipping\(/.test(stripComments(source.checkoutService)) &&
+    /resolveShippingCharge\([\s\S]{0,300}hasFreeShippingProduct/.test(
+      stripComments(source.checkoutService)
+    )
 );
 
 check(
@@ -395,9 +405,24 @@ console.log("\n=== One number, wired to both ends ===");
 check(
   // The line that turns the bar from an advert into a fact.
   "checkout prices delivery through the shared rule",
-  /shippingAmount = resolveShippingCharge\(await getFreeShippingRule\(store\.id\)/.test(
-    stripComments(source.checkoutService)
-  )
+  /getFreeShippingRule\(store\.id\)/.test(stripComments(source.checkoutService)) &&
+    /shippingAmount = resolveShippingCharge\(freeShippingRule/.test(
+      stripComments(source.checkoutService)
+    )
+);
+
+check(
+  // Both reads go to the base client, so they were never inside the
+  // transaction's atomicity — but called from inside it they run on a second
+  // connection, and `ensureFreeShippingSchema`'s once-per-process
+  // `ALTER TABLE "Product"` then waits on the lock the same transaction is
+  // holding from its stock decrements. Nothing breaks that circle except the
+  // 5-second timeout, so the first checkout after every deploy, restart or hot
+  // reload failed.
+  "and it reads the rule before the transaction opens, never from inside it",
+  freeShippingReadPosition() > 0 &&
+    transactionPosition() > 0 &&
+    freeShippingReadPosition() < transactionPosition()
 );
 
 check(
