@@ -12,7 +12,7 @@
 
 /* ---- Tailwind utilities ----------------------------------------------
    461 overrides derived from 474 colour utilities
-   found across 989 source files. */
+   found across 997 source files. */
 
 [data-theme="dark"] .divide-\[\#ececf5\] > :where(:not(:last-child)),
 [data-theme="dark"] .border-\[\#ececf5\] {
@@ -1373,7 +1373,7 @@
 }
 
 /* ---- globals.css ------------------------------------------------------
-   1403 declarations across 945 rules. These come
+   1443 declarations across 970 rules. These come
    last so that, exactly as in light mode, a component stylesheet beats a
    utility class at the same specificity. */
 
@@ -5892,4 +5892,120 @@
 
 [data-theme="dark"] .general-cart-shipping[data-qualified="true"] p {
   color: color-mix(in srgb, var(--sf-primary, var(--store-primary, #a0d8de)) 82%, #ebecef);
+}
+
+[data-theme="dark"] .sf-quick-view-trigger {
+  background: #23242af0;
+  border: 1px solid #65667114;
+  box-shadow: 0 10px 24px #14141424;
+  color: #ebecef;
+}
+
+[data-theme="dark"] .sf-quick-view-trigger:hover,
+[data-theme="dark"] .sf-quick-view-trigger[data-active="true"] {
+  background: var(--store-primary, #428c95);
+  border-color: var(--store-primary, #3d8790);
+}
+
+[data-theme="dark"] .sf-quick-view-trigger:focus-visible {
+  outline: 2px solid var(--store-primary, #3d8790);
+}
+
+[data-theme="dark"] .general-product-listing-image .sf-quick-view-trigger {
+  box-shadow: 0 6px 16px #14141429;
+}
+
+[data-theme="dark"] .sf-quick-view-overlay {
+  background: #24262d85;
+}
+
+[data-theme="dark"] .sf-quick-view-dialog {
+  background: #23242a;
+  box-shadow: 0 32px 80px #0c0c1047;
+  color: #ebecef;
+}
+
+[data-theme="dark"] .sf-quick-view-close {
+  background: #23242aeb;
+  border: 1px solid #6566711a;
+  color: #ebecef;
+}
+
+[data-theme="dark"] .sf-quick-view-close:hover {
+  background: #272830;
+}
+
+[data-theme="dark"] .sf-quick-view-hero {
+  background: color-mix(in srgb, var(--store-secondary, #2b2311) 45%, #23242a);
+}
+
+[data-theme="dark"] .sf-quick-view-savings {
+  background: #b9281d;
+}
+
+[data-theme="dark"] .sf-quick-view-thumb {
+  background: color-mix(in srgb, var(--store-secondary, #2b2311) 45%, #23242a);
+  border: 1px solid #65667114;
+}
+
+[data-theme="dark"] .sf-quick-view-thumb[aria-pressed="true"] {
+  border-color: var(--store-primary, #3d8790);
+  box-shadow: 0 0 0 1px var(--store-primary, #081e21);
+}
+
+[data-theme="dark"] .sf-quick-view-eyebrow {
+  color: #d5d8dd;
+}
+
+[data-theme="dark"] .sf-quick-view-price s {
+  color: #aaadb1;
+}
+
+[data-theme="dark"] .sf-quick-view-stock.in-stock {
+  color: #a1dec7;
+}
+
+[data-theme="dark"] .sf-quick-view-stock.out-stock {
+  color: #ed9891;
+}
+
+[data-theme="dark"] .sf-quick-view-sku {
+  color: #d5d8dd;
+}
+
+[data-theme="dark"] .sf-quick-view-description {
+  color: #d4d8dd;
+}
+
+[data-theme="dark"] .sf-quick-view-variants-label {
+  color: #d5d8dd;
+}
+
+[data-theme="dark"] .sf-quick-view-variant {
+  background: #23242a;
+  border: 1px solid #65667129;
+  color: #ebecef;
+}
+
+[data-theme="dark"] .sf-quick-view-variant[aria-pressed="true"] {
+  background: var(--store-primary, #428c95);
+  border-color: var(--store-primary, #3d8790);
+}
+
+[data-theme="dark"] .sf-quick-view-variant-select {
+  background: #23242a;
+  border: 1px solid #65667129;
+  color: #ebecef;
+}
+
+[data-theme="dark"] .sf-quick-view-full-link {
+  color: var(--store-primary, #a0d8de);
+}
+
+[data-theme="dark"] .sf-quick-view-shimmer {
+  background: linear-gradient(90deg, #1a1b24 25%, #1f2026 37%, #1a1b24 63%);
+}
+
+[data-theme="dark"] .sf-quick-view-empty p {
+  color: #d5d8dd;
 }

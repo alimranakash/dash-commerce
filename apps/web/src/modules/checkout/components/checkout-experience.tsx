@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Cart } from "../../cart/cart.types";
+import type { Cart, CartScope } from "../../cart/cart.types";
 import type { AppliedBundle } from "../../merchandising/bundle-pricing";
 import type { OrderBumpOffer } from "../../merchandising/order-bump.schema";
 import type { PaymentMethodTypeValue } from "../../payments/payment.schema";
@@ -34,6 +34,8 @@ type CheckoutExperienceProps = {
   bundles: AppliedBundle[];
   cart: Cart;
   checkoutError: string | undefined;
+  /** Which basket this page is settling; posted with the form and the quote. */
+  checkoutScope: CartScope;
   currency: string;
   /** Priced by the server, or null when the store has no offer standing. */
   orderBump: OrderBumpOffer | null;
@@ -49,6 +51,7 @@ export function CheckoutExperience({
   bundles,
   cart,
   checkoutError,
+  checkoutScope,
   currency,
   orderBump,
   paymentMethods,
@@ -76,7 +79,7 @@ export function CheckoutExperience({
     async (code: string): Promise<{ coupon?: AppliedCoupon; error?: string }> => {
       try {
         const response = await fetch("/api/checkout/coupon", {
-          body: JSON.stringify({ code, shippingRateId: activeShippingId, storeSlug }),
+          body: JSON.stringify({ checkoutScope, code, shippingRateId: activeShippingId, storeSlug }),
           headers: { "content-type": "application/json" },
           method: "POST"
         });
@@ -103,7 +106,7 @@ export function CheckoutExperience({
         return { error: "Could not check that coupon. Please try again." };
       }
     },
-    [activeShippingId, storeSlug]
+    [activeShippingId, checkoutScope, storeSlug]
   );
 
   const applyCoupon = useCallback(
@@ -155,6 +158,7 @@ export function CheckoutExperience({
     <section className="sf-checkout-layout" aria-label="Checkout form">
       <CheckoutForm
         checkoutError={checkoutError}
+        checkoutScope={checkoutScope}
         couponCode={appliedCoupon?.code ?? ""}
         currency={currency}
         notes={cart.note}

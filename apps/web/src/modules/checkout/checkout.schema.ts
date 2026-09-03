@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { parseCartScope } from "../cart/cart.types";
 import { paymentMethodTypes } from "../payments/payment.schema";
 
 export const checkoutSchema = z.object({
@@ -95,7 +96,22 @@ export const checkoutSchema = z.object({
     .trim()
     .max(64)
     .optional()
-    .transform((value) => value || undefined)
+    .transform((value) => value || undefined),
+  // Which of the shopper's two baskets this form is settling — their cart, or
+  // the one-line basket a Direct Checkout opened. It names a cookie, never a
+  // product and never a price: both baskets are the server's own, signed, and
+  // re-priced from the catalogue at order time, so the worst an invented value
+  // can do is check out the ordinary cart.
+  //
+  // Narrowed rather than rejected, and absent everywhere the ordinary cart is
+  // meant — the AI Shopping Agent posts no scope at all and gets the cart it
+  // has been filling.
+  checkoutScope: z
+    .string()
+    .trim()
+    .max(10)
+    .optional()
+    .transform((value) => (value ? parseCartScope(value) : undefined))
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;

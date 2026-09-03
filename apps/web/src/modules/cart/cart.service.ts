@@ -13,12 +13,23 @@ import {
   parseCartItemSource,
   type Cart,
   type CartItemSource,
+  type CartScope,
   type StoredCart,
   type StoredCartItem
 } from "./cart.types";
 
 const CART_COOKIE_PREFIX = "dash_cart";
+const DIRECT_COOKIE_PREFIX = "dash_direct";
 const CART_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
+/**
+ * A direct basket is one trip through checkout, not a basket to come back to.
+ *
+ * Long enough to fill the form in, look up a transaction id and hesitate;
+ * short enough that a bookmarked `?buy=direct` opened next week is an expired
+ * session rather than a surprise order for whatever the shopper was looking at
+ * that day.
+ */
+const DIRECT_COOKIE_MAX_AGE = 60 * 60 * 2;
 const CART_VERSION = 1;
 const CART_NOTE_MAX_LENGTH = 1000;
 
@@ -28,17 +39,67 @@ type CartCookiePayload = Omit<StoredCart, "token"> & {
   version: number;
 };
 
-export async function getCart(storeId: string): Promise<Cart> {
-  const cart = await readStoredCart(storeId);
+export async function getCart(storeId: string, scope: CartScope = "cart"): Promise<Cart> {
+  const cart = await readStoredCart(storeId, scope);
 
   return buildCart(storeId, cart.items, cart.note);
 }
 
 /** The cart's snapshot key, so checkout can settle the snapshot it belongs to. */
-export async function getCartToken(storeId: string) {
-  const cart = await readStoredCart(storeId);
+export async function getCartToken(storeId: string, scope: CartScope = "cart") {
+  const cart = await readStoredCart(storeId, scope);
 
   return cart.token;
+}
+
+/**
+ * Opens a Direct Checkout: one product, in a basket of its own.
+ *
+ * Validated exactly as an add is — the product has to be public, the variant
+ * active, the stock has to cover it — because this is the only check the line
+ * gets before it becomes an order, and a direct buy skips the cart page where
+ * the shopper would otherwise have seen the problem.
+ *
+ * It **replaces** rather than merges. "Buy just this one" said twice is still
+ * one of whatever was said second, and a merge would quietly resurrect the
+ * product from an abandoned direct buy the shopper never came back to.
+ *
+ * The token is fresh for the same reason: this basket's abandoned-cart snapshot
+ * is its own lead, and settling it must not settle the shopper's real cart.
+ */
+export async function startDirectCheckout(
+  storeId: string,
+  productId: string,
+  quantity: number,
+  variantId?: string | null
+) {
+  const requestedQuantity = normalizeQuantity(quantity);
+  const product = await getPublicProductForCart(storeId, productId);
+  const variant = variantId ? await getActiveCartVariant(storeId, product.id, variantId) : null;
+
+  ensureStockAllows(availableStockFor(product, variant), requestedQuantity);
+
+  const item: StoredCartItem = {
+    lineId: cartLineId(product.id, variant?.id),
+    source: "CART",
+    productId: product.id,
+    sku: variant?.sku ?? product.sku ?? null,
+    title: product.title,
+    variantId: variant?.id ?? null,
+    variantTitle: variant?.title ?? null,
+    price: variant?.price ?? product.price.toString(),
+    image: variant?.imageUrl || product.images[0]?.url || null,
+    quantity: requestedQuantity
+  };
+
+  await writeStoredCart(
+    { items: [], note: "", storeId, token: createCartToken() },
+    [item],
+    "",
+    "direct"
+  );
+
+  return getCart(storeId, "direct");
 }
 
 /**
@@ -54,9 +115,10 @@ export async function getCartToken(storeId: string) {
 export async function recordCheckoutDraft(
   storeId: string,
   draft: AbandonedCartCheckoutDraftInput,
-  context: { ipAddress: string | null }
+  context: { ipAddress: string | null },
+  scope: CartScope = "cart"
 ) {
-  const cart = await readStoredCart(storeId);
+  const cart = await readStoredCart(storeId, scope);
 
   if (cart.items.length === 0) {
     return false;
@@ -75,7 +137,7 @@ export async function recordCheckoutDraft(
 
 /** Order note from the cart page or mini cart drawer; carried into checkout. */
 export async function setCartNote(storeId: string, note: string) {
-  const currentCart = await readStoredCart(storeId);
+  const currentCart = await readStoredCart(storeId, "cart");
 
   await writeStoredCart(currentCart, currentCart.items, note);
 
@@ -117,7 +179,7 @@ export async function addToCart(
 ) {
   const requestedQuantity = normalizeQuantity(quantity);
   const product = await getPublicProductForCart(storeId, productId);
-  const currentCart = await readStoredCart(storeId);
+  const currentCart = await readStoredCart(storeId, "cart");
   const variant = variantId ? await getActiveCartVariant(storeId, product.id, variantId) : null;
   const lineId = cartLineId(product.id, variant?.id);
   const existingItem = currentCart.items.find((item) => item.lineId === lineId);
@@ -150,7 +212,7 @@ export async function updateCartItemQuantity(
   quantity: number
 ) {
   const nextQuantity = normalizeQuantity(quantity);
-  const currentCart = await readStoredCart(storeId);
+  const currentCart = await readStoredCart(storeId, "cart");
   const currentItem = currentCart.items.find((item) => item.lineId === lineId || item.productId === lineId);
 
   if (!currentItem) {
@@ -172,7 +234,7 @@ export async function updateCartItemQuantity(
 }
 
 export async function removeCartItem(storeId: string, lineId: string) {
-  const currentCart = await readStoredCart(storeId);
+  const currentCart = await readStoredCart(storeId, "cart");
   const nextItems = currentCart.items.filter((item) => item.lineId !== lineId && item.productId !== lineId);
 
   await writeStoredCart(currentCart, nextItems, currentCart.note);
@@ -180,11 +242,11 @@ export async function removeCartItem(storeId: string, lineId: string) {
   return getCart(storeId);
 }
 
-export async function clearCart(storeId: string) {
-  const currentCart = await readStoredCart(storeId);
+export async function clearCart(storeId: string, scope: CartScope = "cart") {
+  const currentCart = await readStoredCart(storeId, scope);
   const cookieStore = await cookies();
 
-  cookieStore.delete(cookieName(storeId));
+  cookieStore.delete(cookieName(storeId, scope));
 
   // Only drops a snapshot that is still open — a cart already settled as
   // recovered by checkout stays in the seller's recovery history.
@@ -261,9 +323,9 @@ async function getPublicProductForCart(storeId: string, productId: string) {
   return product;
 }
 
-async function readStoredCart(storeId: string): Promise<StoredCart> {
+async function readStoredCart(storeId: string, scope: CartScope): Promise<StoredCart> {
   const cookieStore = await cookies();
-  const value = cookieStore.get(cookieName(storeId))?.value;
+  const value = cookieStore.get(cookieName(storeId, scope))?.value;
   const payload = value ? decodeCartCookie(value) : null;
 
   if (!payload || payload.storeId !== storeId) {
@@ -287,7 +349,12 @@ async function readStoredCart(storeId: string): Promise<StoredCart> {
   };
 }
 
-async function writeStoredCart(cart: StoredCart, items: StoredCartItem[], note: string) {
+async function writeStoredCart(
+  cart: StoredCart,
+  items: StoredCartItem[],
+  note: string,
+  scope: CartScope = "cart"
+) {
   const cookieStore = await cookies();
   const payload: CartCookiePayload = {
     version: CART_VERSION,
@@ -297,9 +364,9 @@ async function writeStoredCart(cart: StoredCart, items: StoredCartItem[], note: 
     token: cart.token
   };
 
-  cookieStore.set(cookieName(cart.storeId), encodeCartCookie(payload), {
+  cookieStore.set(cookieName(cart.storeId, scope), encodeCartCookie(payload), {
     httpOnly: true,
-    maxAge: CART_COOKIE_MAX_AGE,
+    maxAge: scope === "direct" ? DIRECT_COOKIE_MAX_AGE : CART_COOKIE_MAX_AGE,
     path: "/",
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production"
@@ -424,8 +491,8 @@ function cartSecret() {
   return process.env.NEXTAUTH_SECRET ?? "dash-commerce-local-cart-secret";
 }
 
-function cookieName(storeId: string) {
-  return `${CART_COOKIE_PREFIX}_${storeId}`;
+function cookieName(storeId: string, scope: CartScope) {
+  return `${scope === "direct" ? DIRECT_COOKIE_PREFIX : CART_COOKIE_PREFIX}_${storeId}`;
 }
 
 function moneyString(value: number) {

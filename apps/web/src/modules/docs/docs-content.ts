@@ -1730,6 +1730,42 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
         related: ["Categories", "Product Page", "Search Page"]
       }),
       page({
+        slug: "storefront/quick-view",
+        title: "Quick View",
+        intro:
+          "Product card-এর উপর Quick View button চাপলে shop page ছেড়ে না গিয়েই একটি dialog-এ product-এর ছবি, দাম, stock, option এবং Add to Cart button দেখা যায়। Dialog-এর সব তথ্য catalogue থেকে তখনই আবার পড়া হয়, card থেকে নয় - তাই দাম বা stock বদলালে shopper পুরনো সংখ্যা দেখে না।",
+        useCase: [
+          "Customer-কে প্রতিটি product-এর জন্য আলাদা page-এ না পাঠিয়ে দ্রুত compare করতে দিতে।",
+          "Grid থেকেই size/colour বেছে cart-এ যোগ করতে দিতে।",
+          "Product discovery দ্রুত করে cart abandonment কমাতে।"
+        ],
+        steps: [
+          "Settings > Theme > Quick View খুলুন।",
+          "Enable quick view চালু রাখুন (default চালু)।",
+          "Button text, button কখন দেখাবে (hover/always), description length ঠিক করুন।",
+          "Thumbnails, description, options, quantity, wishlist এবং direct checkout - কোনটি dialog-এ দেখাবে বেছে নিন।",
+          "Save করে storefront-এর shop page-এ গিয়ে একটি product card-এ hover করে button দেখুন।"
+        ],
+        important: [
+          "Add to Cart-এর লেখা, রং এবং Direct Checkout-এর লেখা Settings > Theme > Product Page থেকে আসে - দোকানের buy button একবারই নাম পায়।",
+          "Dialog-এর Direct Checkout switch আলাদা: product page-এ চালু থাকলেও Quick View-তে বন্ধ রাখা যায়।",
+          "Mobile ও tablet-এ hover সম্ভব নয়, তাই সেখানে button সবসময় দেখা যায়।",
+          "Quick View বন্ধ করলে card-এ কোনো button-ই render হয় না এবং dialog-এর API 404 দেয়।",
+          "DRAFT বা HIDDEN product Quick View-তেও খোলে না - product page-এর মতোই একই নিয়ম।"
+        ],
+        tips: [
+          "Description length 150-220 রাখলে dialog এক নজরে পড়া যায়।",
+          "Product-এ একাধিক ছবি থাকলে thumbnails চালু রাখুন - Quick View-তে ছবিই সবচেয়ে বেশি কাজে লাগে।",
+          "Variant থাকা product-এ options চালু রাখলে shopper grid থেকেই size বেছে নিতে পারে।"
+        ],
+        commonMistakes: [
+          "Quick View-কে product page-এর বিকল্প ভাবা - এটি এক নজরের জন্য, বিস্তারিত জন্য View full details link আছে।",
+          "Description length খুব বড় করে dialog-কে scroll-heavy বানানো।",
+          "Product page-এর Add to Cart text বদলে Quick View-তে আলাদা লেখা খোঁজা।"
+        ],
+        related: ["Shop Page", "Product Page", "Cart"]
+      }),
+      page({
         slug: "storefront/category-page",
         title: "Category Page",
         intro:
@@ -1805,12 +1841,12 @@ const docsInput: Array<{ title: string; pages: PageInput[] }> = [
           "Shop page থেকে product খুলুন।",
           "Gallery thumbnail ও main image দেখুন।",
           "Quantity selector দিয়ে quantity নির্বাচন করুন।",
-          "Add to Cart চাপুন।",
+          "Add to Cart চাপুন, অথবা সরাসরি অর্ডার করতে Direct Checkout চাপুন (Settings > Theme > Product Page থেকে চালু করতে হয়)।",
           "Description, Specifications, Reviews, Shipping & Returns tabs দেখুন।"
         ],
         important: [
           "Out of stock হলে purchase buttons disabled হতে পারে।",
-          "Buy Now, Wishlist, Share placeholders UI-only হতে পারে।",
+          "Direct Checkout শুধু এই product নিয়ে checkout খোলে - customer-এর cart-এ যা আছে তা অপরিবর্তিত থাকে; Share placeholder UI-only হতে পারে।",
           "Related products same category/brand ভিত্তিতে আসতে পারে।"
         ],
         tips: [

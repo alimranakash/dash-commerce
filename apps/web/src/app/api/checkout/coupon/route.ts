@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getCart } from "../../../../modules/cart/cart.service";
+import { parseCartScope } from "../../../../modules/cart/cart.types";
 import { evaluateCoupon } from "../../../../modules/coupons/coupon-validation.service";
 import { getEnabledShippingRateForCheckout } from "../../../../modules/shipping/shipping.service";
 import { getStorefrontBySlug } from "../../../../modules/storefront/resolver";
@@ -22,14 +23,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "Invalid request.", ok: false }, { status: 400 });
   }
 
-  const { code, phone, shippingRateId, storeSlug } = body as Record<string, unknown>;
+  const { checkoutScope, code, phone, shippingRateId, storeSlug } = body as Record<string, unknown>;
   const store = await getStorefrontBySlug(String(storeSlug ?? ""));
 
   if (!store) {
     return NextResponse.json({ message: "Storefront not found.", ok: false }, { status: 404 });
   }
 
-  const cart = await getCart(store.id);
+  // The same basket the page is showing. A quote taken against the ordinary
+  // cart while the shopper is in a Direct Checkout would be measured on a
+  // subtotal that is not on screen and is not what the order will charge.
+  const scope = parseCartScope(typeof checkoutScope === "string" ? checkoutScope : null);
+  const cart = await getCart(store.id, scope);
 
   if (cart.items.length === 0) {
     return NextResponse.json({ message: "Your cart is empty.", ok: false });

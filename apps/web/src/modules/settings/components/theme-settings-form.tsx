@@ -936,14 +936,14 @@ export function ThemeSettingsForm({
       <SettingsCard
         id="product-page"
         title="Product Page"
-        description="Control the single product page gallery, purchase area, accordions, shipping copy, and promotional blocks."
+        description="Control the single product page gallery, purchase area, accordions, shipping copy, and promotional blocks. Direct checkout sends the shopper straight to checkout with only this product - their cart is left as it is."
       >
         <div className="theme-settings-grid four compact">
           <ToggleField label="Show breadcrumb" name="productPageBreadcrumbEnabled" value={advanced.productPage.breadcrumbEnabled} />
           <ToggleField label="Enable zoom" name="productPageZoomEnabled" value={advanced.productPage.zoomEnabled} />
           <ToggleField label="Enable lightbox" name="productPageLightboxEnabled" value={advanced.productPage.lightboxEnabled} />
           <ToggleField label="Show variants" name="productPageVariantEnabled" value={advanced.productPage.variantEnabled} />
-          <ToggleField label="Show buy now" name="productPageBuyNowEnabled" value={advanced.productPage.buyNowEnabled} />
+          <ToggleField label="Show direct checkout" name="productPageDirectCheckoutEnabled" value={advanced.productPage.directCheckoutEnabled} />
           <ToggleField label="Show shipping info" name="productPageShippingEnabled" value={advanced.productPage.shippingEnabled} />
           <ToggleField label="Show accordions" name="productPageAccordionEnabled" value={advanced.productPage.accordionEnabled} />
           <ToggleField label="Show promo blocks" name="productPagePromoBlocksEnabled" value={advanced.productPage.promoBlocksEnabled} />
@@ -981,6 +981,10 @@ export function ThemeSettingsForm({
             <input defaultValue={advanced.productPage.addToCartText} name="productPageAddToCartText" type="text" />
           </label>
           <label>
+            Direct checkout text
+            <input defaultValue={advanced.productPage.directCheckoutText} name="productPageDirectCheckoutText" placeholder="Direct Checkout" type="text" />
+          </label>
+          <label>
             Button radius
             <input
               defaultValue={advanced.productPage.addToCartButtonRadius}
@@ -998,6 +1002,46 @@ export function ThemeSettingsForm({
           <label>
             Shipping notice
             <input defaultValue={advanced.productPage.shippingNotice} name="productPageShippingNotice" type="text" />
+          </label>
+        </div>
+      </SettingsCard>
+
+      <SettingsCard
+        id="quick-view"
+        title="Quick View"
+        description="A shopper opens a product from the grid without leaving it - pictures, price, options and the buy button in a dialog over the listing. The button text, the colour and the Direct Checkout wording come from Product Page above, so your shop names its buy button once."
+      >
+        <div className="theme-settings-grid four compact">
+          <ToggleField label="Enable quick view" name="quickViewEnabled" value={advanced.quickView.enabled} />
+          <ToggleField label="Show image thumbnails" name="quickViewGalleryEnabled" value={advanced.quickView.galleryEnabled} />
+          <ToggleField label="Show description" name="quickViewDescriptionEnabled" value={advanced.quickView.descriptionEnabled} />
+          <ToggleField label="Show options" name="quickViewVariantEnabled" value={advanced.quickView.variantEnabled} />
+          <ToggleField label="Show quantity" name="quickViewQuantityEnabled" value={advanced.quickView.quantityEnabled} />
+          <ToggleField label="Show wishlist" name="quickViewWishlistEnabled" value={advanced.quickView.wishlistEnabled} />
+          <ToggleField label="Show direct checkout" name="quickViewDirectCheckoutEnabled" value={advanced.quickView.directCheckoutEnabled} />
+        </div>
+        <div className="theme-settings-grid three compact">
+          <label>
+            Button text
+            <input defaultValue={advanced.quickView.buttonLabel} name="quickViewButtonLabel" placeholder="Quick View" type="text" />
+            <span className="theme-field-helper">Leave empty to use &ldquo;Quick View&rdquo;.</span>
+          </label>
+          <label>
+            Button appears
+            <select defaultValue={advanced.quickView.triggerStyle} name="quickViewTriggerStyle">
+              <option value="hover">On hover</option>
+              <option value="always">Always visible</option>
+            </select>
+            <span className="theme-field-helper">Phones and tablets always show it - they cannot hover.</span>
+          </label>
+          <label>
+            Description length
+            <input defaultValue={advanced.quickView.descriptionLength} max={600} min={60} name="quickViewDescriptionLength" type="number" />
+            <span className="theme-field-helper">Characters before the summary stops on a whole word.</span>
+          </label>
+          <label>
+            Full details link text
+            <input defaultValue={advanced.quickView.fullDetailsText} name="quickViewFullDetailsText" placeholder="View full details" type="text" />
           </label>
         </div>
       </SettingsCard>

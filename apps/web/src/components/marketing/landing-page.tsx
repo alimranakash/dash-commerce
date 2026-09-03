@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { ComponentType, ReactNode } from "react";
+import { FeatureCatalogue } from "./feature-catalogue";
 import { ParallaxStage, TypingText } from "./landing-interactions";
 import styles from "./landing-page.module.css";
 import type { PlanCatalogEntry } from "../../modules/admin/plan-catalog";
@@ -50,7 +51,7 @@ export function LandingPage() {
           <span>Store<b>IM</b></span>
         </Link>
         <nav className={styles.nav} aria-label="Primary navigation">
-          <a href="#story">Platform</a><a href="#journey">Journey</a><a href="#ai">AI</a><a href="#pricing">Pricing</a><a href="#compare">Compare</a><Link href="/docs">Docs</Link>
+          <a href="#story">Platform</a><a href="#journey">Journey</a><a href="#features">Features</a><a href="#ai">AI</a><a href="#pricing">Pricing</a><a href="#compare">Compare</a><Link href="/docs">Docs</Link>
         </nav>
         <div className={styles.headerActions}>
           <Link className={styles.loginLink} href="/login">Login</Link>
@@ -133,6 +134,7 @@ export function LandingPage() {
       <section className={styles.featuresSection} id="features">
         <SectionIntro eyebrow="The system beneath the story" title="Every capability, composed into one operating layer." text="The depth is there when you need it. The interface stays calm when you do not." centered />
         <div className={styles.bentoGrid}>{features.map((feature, index) => <FeatureCard {...feature} featured={index === 0 || index === 8} key={feature.title} />)}</div>
+        <FeatureCatalogue />
       </section>
 
       <section className={styles.aiSection} id="ai">

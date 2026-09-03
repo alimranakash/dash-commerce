@@ -6,6 +6,7 @@ import { Fragment, type CSSProperties, type ReactNode } from "react";
 import type { StorefrontProductSectionSettings } from "../customization";
 import { formatStorefrontMoney } from "../format";
 import type { ProductCardProduct } from "../product-card-data";
+import { QuickViewTrigger } from "../../quick-view/components/quick-view-trigger";
 import {
   BEAUTY_PRODUCT_CARD_VARIANT,
   BeautyListingCard
@@ -167,7 +168,13 @@ export function ProductCard({
         alt={primaryImage?.alt ?? product.title}
         hoverSrc={hoverImage?.url}
         src={primaryImage?.url}
-      />
+      >
+        {/* Inside the picture, not under the title: it is a way of looking at
+          the photograph more closely, and the card is taller than the frame —
+          placed against the card it would land under the price. Renders nothing
+          at all when the seller has Quick View off. */}
+        <QuickViewTrigger productSlug={product.slug} productTitle={product.title} />
+      </ProductImage>
       <WishlistButton productId={product.id} productSlug={product.slug} />
       <div className="general-product-listing-meta">
         <div>
@@ -189,11 +196,21 @@ export function ProductCard({
 
 export function ProductImage({
   alt,
+  children,
   fallback,
   hoverSrc,
   src
 }: {
   alt: string;
+  /**
+   * Anything that belongs over the picture rather than over the card — today,
+   * the Quick View trigger.
+   *
+   * A slot rather than a flag, because only this element is positioned: the
+   * card wraps the picture *and* the title and price, so a button placed
+   * against the card would sit under the price instead of on the photograph.
+   */
+  children?: ReactNode;
   fallback?: ReactNode;
   hoverSrc?: string | null | undefined;
   src?: string | null | undefined;
@@ -206,6 +223,7 @@ export function ProductImage({
     <div className="general-product-listing-image">
       <StorefrontImage alt={alt} fallback={placeholder} src={src} />
       {hoverSrc ? <ProductHoverImage alt={alt} fallback={placeholder} src={hoverSrc} /> : null}
+      {children}
     </div>
   );
 }

@@ -36,7 +36,8 @@ export type StorefrontProductPageSettings = {
   addToCartButtonRadius: number;
   addToCartText: string;
   breadcrumbEnabled: boolean;
-  buyNowEnabled: boolean;
+  directCheckoutEnabled: boolean;
+  directCheckoutText: string;
   galleryLayout: "two-column" | "vertical" | "horizontal";
   gallerySpacing: number;
   imageRatio: "portrait" | "square" | "wide";
@@ -47,6 +48,42 @@ export type StorefrontProductPageSettings = {
   variantEnabled: boolean;
   variantStyle: "buttons" | "dropdown";
   zoomEnabled: boolean;
+};
+
+/**
+ * Quick View: the modal a shopper opens from a product card.
+ *
+ * Every one of these is a layout decision about *this* surface. What the buy
+ * box says and how it is coloured is not among them — the label, the colour,
+ * the radius and the Direct Checkout wording all come from `productPage`, so a
+ * shop names its own Add to Cart button once and both places say it.
+ */
+export type StorefrontQuickViewSettings = {
+  buttonLabel: string;
+  descriptionEnabled: boolean;
+  /** Characters of description the modal shows before it stops on a word. */
+  descriptionLength: number;
+  /**
+   * Whether the modal carries the Direct Checkout button too.
+   *
+   * Its own switch rather than `productPage.directCheckoutEnabled`: a card and
+   * a product page are two different moments, and a seller happy to offer
+   * one-tap buying on the page a shopper has read may well not want it offered
+   * from a grid they are still scanning.
+   */
+  directCheckoutEnabled: boolean;
+  enabled: boolean;
+  fullDetailsText: string;
+  galleryEnabled: boolean;
+  quantityEnabled: boolean;
+  /**
+   * When the card reveals its trigger. `hover` is a desktop refinement and
+   * never a way to lose the button: no touch device can hover, so the
+   * stylesheet shows it unconditionally on a coarse pointer.
+   */
+  triggerStyle: "hover" | "always";
+  variantEnabled: boolean;
+  wishlistEnabled: boolean;
 };
 
 export type StorefrontTabbedProductSource =
@@ -394,6 +431,7 @@ export type StorefrontAdvancedSettings = {
   electronics: StorefrontElectronicsHomepageSettings;
   fashion: StorefrontFashionHomepageSettings;
   productPage: StorefrontProductPageSettings;
+  quickView: StorefrontQuickViewSettings;
   shopPage: StorefrontShopPageSettings;
   tabbedProductShowcase: StorefrontTabbedProductShowcaseSettings;
 };
@@ -827,7 +865,8 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     addToCartButtonRadius: 0,
     addToCartText: "Add to Cart",
     breadcrumbEnabled: true,
-    buyNowEnabled: false,
+    directCheckoutEnabled: false,
+    directCheckoutText: "Direct Checkout",
     galleryLayout: "two-column",
     gallerySpacing: 4,
     imageRatio: "portrait",
@@ -838,6 +877,24 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     variantEnabled: true,
     variantStyle: "buttons",
     zoomEnabled: true
+  },
+  // Quick View ships **on**, unlike the storefront widgets that publish
+  // something new. It publishes nothing: it is a second way to read a product
+  // the shop already lists, drawn from the same catalogue row the product page
+  // draws from, so the shape of every other display toggle here — hover image,
+  // badges, compare-at price — is the one it follows.
+  quickView: {
+    buttonLabel: "Quick View",
+    descriptionEnabled: true,
+    descriptionLength: 180,
+    directCheckoutEnabled: false,
+    enabled: true,
+    fullDetailsText: "View full details",
+    galleryEnabled: true,
+    quantityEnabled: true,
+    triggerStyle: "hover",
+    variantEnabled: true,
+    wishlistEnabled: true
   },
   shopPage: {
     defaultSort: "alpha-asc",
@@ -899,6 +956,7 @@ export function normalizeAdvancedSettings(value: unknown): StorefrontAdvancedSet
   const miniCart = isRecord(input.miniCart) ? input.miniCart : {};
   const layout = isRecord(input.layout) ? input.layout : {};
   const productPage = isRecord(input.productPage) ? input.productPage : {};
+  const quickView = isRecord(input.quickView) ? input.quickView : {};
   const shopPage = isRecord(input.shopPage) ? input.shopPage : {};
   const tabbedProductShowcase = isRecord(input.tabbedProductShowcase) ? input.tabbedProductShowcase : {};
   const beauty = isRecord(input.beauty) ? input.beauty : {};
@@ -982,6 +1040,7 @@ export function normalizeAdvancedSettings(value: unknown): StorefrontAdvancedSet
     electronics: electronicsSettings(electronics),
     fashion: fashionSettings(fashion),
     productPage: productPageSettings(productPage),
+    quickView: quickViewSettings(quickView),
     shopPage: shopPageSettings(shopPage),
     tabbedProductShowcase: tabbedProductShowcaseSettings(tabbedProductShowcase)
   };
@@ -996,7 +1055,16 @@ function productPageSettings(input: Record<string, unknown>): StorefrontProductP
     addToCartButtonRadius: numberInRange(input.addToCartButtonRadius, 0, 32, defaults.addToCartButtonRadius),
     addToCartText: text(input.addToCartText, defaults.addToCartText),
     breadcrumbEnabled: bool(input.breadcrumbEnabled, defaults.breadcrumbEnabled),
-    buyNowEnabled: bool(input.buyNowEnabled, defaults.buyNowEnabled),
+    // Read through the key this setting shipped under before it grew a cart
+    // bypass and a label, so a seller who had already switched the button on
+    // still has it on.
+    directCheckoutEnabled: bool(
+      input.directCheckoutEnabled ?? input.buyNowEnabled,
+      defaults.directCheckoutEnabled
+    ),
+    // Blank means the default rather than a nameless button: text() falls back
+    // on an empty string, so clearing the box restores "Direct Checkout".
+    directCheckoutText: text(input.directCheckoutText, defaults.directCheckoutText),
     galleryLayout: oneOf(input.galleryLayout, ["two-column", "vertical", "horizontal"], defaults.galleryLayout),
     gallerySpacing: numberInRange(input.gallerySpacing, 0, 32, defaults.gallerySpacing),
     imageRatio: oneOf(input.imageRatio, ["portrait", "square", "wide"], defaults.imageRatio),
@@ -1560,6 +1628,28 @@ function tabbedProductTabs(value: unknown): StorefrontTabbedProductTab[] {
     .filter((item): item is StorefrontTabbedProductTab => Boolean(item));
 
   return tabs.length > 0 ? tabs.slice(0, 8) : defaults;
+}
+
+function quickViewSettings(input: Record<string, unknown>): StorefrontQuickViewSettings {
+  const defaults = DEFAULT_STOREFRONT_ADVANCED_SETTINGS.quickView;
+
+  return {
+    // A blank box restores the default rather than shipping a nameless button,
+    // the same call `directCheckoutText` makes.
+    buttonLabel: text(input.buttonLabel, defaults.buttonLabel),
+    descriptionEnabled: bool(input.descriptionEnabled, defaults.descriptionEnabled),
+    // Long enough to say what the thing is, short enough that the modal stays a
+    // glance rather than becoming the product page it exists to defer.
+    descriptionLength: numberInRange(input.descriptionLength, 60, 600, defaults.descriptionLength),
+    directCheckoutEnabled: bool(input.directCheckoutEnabled, defaults.directCheckoutEnabled),
+    enabled: bool(input.enabled, defaults.enabled),
+    fullDetailsText: text(input.fullDetailsText, defaults.fullDetailsText),
+    galleryEnabled: bool(input.galleryEnabled, defaults.galleryEnabled),
+    quantityEnabled: bool(input.quantityEnabled, defaults.quantityEnabled),
+    triggerStyle: oneOf(input.triggerStyle, ["hover", "always"], defaults.triggerStyle),
+    variantEnabled: bool(input.variantEnabled, defaults.variantEnabled),
+    wishlistEnabled: bool(input.wishlistEnabled, defaults.wishlistEnabled)
+  };
 }
 
 function shopPageSettings(input: Record<string, unknown>): StorefrontShopPageSettings {

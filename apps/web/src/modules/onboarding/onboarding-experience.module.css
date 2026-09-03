@@ -50,6 +50,7 @@
 
 [data-theme="dark"] .logout :global(button:hover) {
   border-color: #403366!important;
+  color: #a991ed!important;
 }
 
 [data-theme="dark"] .pageIntro>span {
@@ -64,6 +65,7 @@
 [data-theme="dark"] .previewCard {
   background: #23242a;
   border: 1px solid #383345;
+  box-shadow: 0 22px 65px #0d082114;
 }
 
 [data-theme="dark"] .progressHeader {
@@ -128,10 +130,19 @@
   color: #e8e8f3;
 }
 
+[data-theme="dark"] .inputShell input::placeholder,
+[data-theme="dark"] .slugInput input::placeholder {
+  color: #abaab1;
+}
+
 [data-theme="dark"] .slugInput>span,
 [data-theme="dark"] .slugInput>b {
   background: #211d29;
   color: #c2c3cc;
+}
+
+[data-theme="dark"] .slugInput>span {
+  border-right: 1px solid #3b3543;
 }
 
 [data-theme="dark"] .slugInput>b {
@@ -150,6 +161,7 @@
 
 [data-theme="dark"] .optionGrid button:hover {
   border-color: #403366;
+  background: #211f2b;
 }
 
 [data-theme="dark"] .optionGrid button>span {
@@ -164,6 +176,7 @@
 [data-theme="dark"] .optionGrid .optionActive {
   background: #1d1531;
   border-color: #403366;
+  box-shadow: 0 8px 20px #0e082114;
 }
 
 [data-theme="dark"] .autoConfig>div {
@@ -271,6 +284,10 @@
   background: #23242a;
 }
 
+[data-theme="dark"] .storefrontMock>footer span {
+  color: #a991ed;
+}
+
 [data-theme="dark"] .previewFacts {
   border-top: 1px solid #3b3642;
 }
@@ -281,5 +298,13 @@
 
 [data-theme="dark"] .slugStatus {
   color: #a7a8b4;
+}
+
+[data-theme="dark"] .slugAvailable {
+  color: #9de2cc;
+}
+
+[data-theme="dark"] .slugTaken {
+  color: #e699a6;
 }
 /* dark-mode:generated:end */

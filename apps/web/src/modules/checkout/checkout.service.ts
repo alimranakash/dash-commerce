@@ -11,7 +11,7 @@ import { CheckoutError, classifyCheckoutFailure } from "./checkout-failure";
 import { claimCouponUse, evaluateCoupon } from "../coupons/coupon-validation.service";
 import { createCouponRedemption } from "../coupons/coupon.repository";
 import { clearCart, getCart, getCartToken } from "../cart/cart.service";
-import type { CartItem, CartItemSource } from "../cart/cart.types";
+import { parseCartScope, type CartItem, type CartItemSource, type CartScope } from "../cart/cart.types";
 import { createOrderBundles, priceCartBundles } from "../merchandising/bundle.service";
 import { resolveOrderBumpForCheckout } from "../merchandising/order-bump.service";
 import type { OrderBumpOffer } from "../merchandising/order-bump.schema";
@@ -111,7 +111,12 @@ export async function createCheckoutOrder(
     return { order: placed, replayed: true };
   }
 
-  const cartToken = await getCartToken(store.id);
+  // Resolved once, here, and threaded through everything below. A Direct
+  // Checkout settles its own one-line basket and its own snapshot; the
+  // shopper's real cart is neither read, nor billed, nor cleared, and is still
+  // waiting for them afterwards.
+  const scope = parseCartScope(input.checkoutScope);
+  const cartToken = await getCartToken(store.id, scope);
   const convertedOrderId = await findConvertedOrderIdForCart(store.id, cartToken);
   const converted = convertedOrderId ? await findStoreOrder(store.id, convertedOrderId) : null;
 
@@ -125,7 +130,7 @@ export async function createCheckoutOrder(
   // rang goes with it — worth it against a duplicate parcel, and they can add
   // it again and order normally.
   if (converted) {
-    await clearCart(store.id);
+    await clearCart(store.id, scope);
 
     return { order: converted, replayed: true };
   }
@@ -135,7 +140,10 @@ export async function createCheckoutOrder(
   });
 
   try {
-    return { order: await placeCheckoutOrder(store, input, context, cartToken), replayed: false };
+    return {
+      order: await placeCheckoutOrder(store, input, context, cartToken, scope),
+      replayed: false
+    };
   } catch (error) {
     // Two taps close enough together both got past the read above; the unique
     // index is what broke the tie, and the one that lost it is looking at its
@@ -230,7 +238,8 @@ async function placeCheckoutOrder(
   store: CheckoutStore,
   input: CheckoutInput,
   context: CheckoutContext,
-  cartToken: string
+  cartToken: string,
+  scope: CartScope
 ) {
   const data = checkoutSchema.parse(input);
   const submissionId = data.submissionId ?? null;
@@ -241,10 +250,15 @@ async function placeCheckoutOrder(
   // review page for an address that is blocked. Unparseable becomes null: a value
   // nothing can match on is worse than no value at all.
   const ipAddress = context.ipAddress ? normaliseIpAddress(context.ipAddress) : null;
-  const cart = await getCart(store.id);
+  const cart = await getCart(store.id, scope);
 
   if (cart.items.length === 0) {
-    throw new CheckoutError("EMPTY_CART", "Your cart is empty.");
+    throw new CheckoutError(
+      "EMPTY_CART",
+      scope === "direct"
+        ? "This direct checkout has expired. Please open the product and try again."
+        : "Your cart is empty."
+    );
   }
 
   // The tick box posted an id; everything else about the offer — the discount,
@@ -582,7 +596,7 @@ async function placeCheckoutOrder(
   // Settled before the cookie goes: `clearCart` can no longer find the token,
   // and a cart that converted while still active is not a recovery.
   await resolveCartAfterCheckout(store.id, cartToken, order);
-  await clearCart(store.id);
+  await clearCart(store.id, scope);
 
   // Outside the transaction and non-throwing: the fraud score is a review aid,
   // so it must never be able to fail a checkout the shopper already completed.

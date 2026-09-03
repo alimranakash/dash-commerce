@@ -55,3 +55,32 @@ export type StoredCart = {
    */
   token: string;
 };
+
+/**
+ * Which basket a checkout is settling.
+ *
+ * "cart" is the shopper's own basket — the one the header counts and the cart
+ * page edits. "direct" is the single-line basket a Direct Checkout opens: the
+ * shopper said "just this one", so their real cart must neither be added to nor
+ * billed, and it is still sitting there untouched when they come back.
+ *
+ * Two cookies rather than a flag on one, because the two baskets have to coexist
+ * — a shopper with three things in their cart who buys a fourth directly still
+ * has three things in their cart afterwards. Everything downstream of the read
+ * is identical: a direct basket is a `Cart`, so bundles, coupons, the order
+ * bump, free shipping and stock all price it through the same functions.
+ */
+export type CartScope = "cart" | "direct";
+
+export const CART_SCOPES: readonly CartScope[] = ["cart", "direct"];
+
+/**
+ * Whatever a form or query string asked for, narrowed to a scope that exists.
+ *
+ * A closed enum rather than a trusted string: the scope picks which signed
+ * cookie is read, and both of them are the server's own, so the worst an
+ * invented value can do is settle the ordinary cart.
+ */
+export function parseCartScope(value: string | null | undefined): CartScope {
+  return CART_SCOPES.includes(value as CartScope) ? (value as CartScope) : "cart";
+}

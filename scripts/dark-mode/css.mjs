@@ -105,6 +105,14 @@ export function parseCss(css) {
         index += 1;
 
         if (!atTopLevel) {
+          // The last declaration in a block is usually written without a
+          // trailing semicolon, so the buffer still holds it when the block
+          // closes. Flushing it here is what stops `.a{color:#123456}` -- the
+          // shape every compressed `*.module.css` rule in this repo ends in --
+          // from mapping to nothing at all.
+          flush(buffer);
+          buffer = "";
+
           return { declarations, nodes };
         }
 
@@ -164,17 +172,27 @@ export function parseCss(css) {
       index += 1;
     }
 
-    const trailing = buffer.trim();
+    // Unterminated input: the file ended before this block closed.
+    if (!atTopLevel) {
+      flush(buffer);
+    }
 
-    if (trailing && !atTopLevel) {
+    return { declarations, nodes };
+
+    /** Records whatever is left in the buffer as this block's final declaration. */
+    function flush(text) {
+      const trailing = text.trim();
+
+      if (!trailing) {
+        return;
+      }
+
       const declaration = splitDeclaration(trailing);
 
       if (declaration) {
         declarations.push(declaration);
       }
     }
-
-    return { declarations, nodes };
   }
 
   return readBlock(true).nodes;

@@ -506,7 +506,8 @@ function advancedSettingsFromFormData(formData: FormData, heroImageUrl: string) 
       addToCartButtonRadius: Number(getValue(formData, "productPageAddToCartButtonRadius")),
       addToCartText: getValue(formData, "productPageAddToCartText"),
       breadcrumbEnabled: checkbox(formData, "productPageBreadcrumbEnabled"),
-      buyNowEnabled: checkbox(formData, "productPageBuyNowEnabled"),
+      directCheckoutEnabled: checkbox(formData, "productPageDirectCheckoutEnabled"),
+      directCheckoutText: getValue(formData, "productPageDirectCheckoutText"),
       galleryLayout: getValue(formData, "productPageGalleryLayout"),
       gallerySpacing: Number(getValue(formData, "productPageGallerySpacing")),
       imageRatio: getValue(formData, "productPageImageRatio"),
@@ -517,6 +518,19 @@ function advancedSettingsFromFormData(formData: FormData, heroImageUrl: string) 
       variantEnabled: checkbox(formData, "productPageVariantEnabled"),
       variantStyle: getValue(formData, "productPageVariantStyle"),
       zoomEnabled: checkbox(formData, "productPageZoomEnabled")
+    },
+    quickView: {
+      buttonLabel: getValue(formData, "quickViewButtonLabel"),
+      descriptionEnabled: checkbox(formData, "quickViewDescriptionEnabled"),
+      descriptionLength: Number(getValue(formData, "quickViewDescriptionLength")),
+      directCheckoutEnabled: checkbox(formData, "quickViewDirectCheckoutEnabled"),
+      enabled: checkbox(formData, "quickViewEnabled"),
+      fullDetailsText: getValue(formData, "quickViewFullDetailsText"),
+      galleryEnabled: checkbox(formData, "quickViewGalleryEnabled"),
+      quantityEnabled: checkbox(formData, "quickViewQuantityEnabled"),
+      triggerStyle: getValue(formData, "quickViewTriggerStyle"),
+      variantEnabled: checkbox(formData, "quickViewVariantEnabled"),
+      wishlistEnabled: checkbox(formData, "quickViewWishlistEnabled")
     },
     shopPage: {
       defaultSort: getValue(formData, "shopDefaultSort"),

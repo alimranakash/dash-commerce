@@ -119,8 +119,9 @@
 @media(max-width:720px){.offerSection{padding:88px 18px}.offerInner h2{font-size:36px}.offerInner>p{font-size:15px}.offerCount{gap:12px;margin-top:36px}.offerCount b{font-size:64px}.offerCount span{font-size:17px}.offerPoints li{font-size:13px}.offerCta{width:100%}.offerPill{font-size:11px;padding:9px 14px}}
 @media(prefers-reduced-motion:reduce){.offerCta:hover{transform:none}}
 
-/* Six nav items rather than five, so the row tightens before it wraps. */
-@media(max-width:940px){.nav{gap:20px}}
+/* Seven nav items rather than five, so the row tightens twice before it wraps. */
+@media(max-width:1040px){.nav{gap:20px}}
+@media(max-width:880px){.nav{gap:15px}.nav a{font-size:12px}}
 
 /* Plan comparison table.
    Sits directly under the pricing cards inside the same lavender band, so the
@@ -196,6 +197,67 @@
 @media(max-width:1000px){.pricingSection{padding-bottom:80px}}
 @media(max-width:720px){.pricingSection{padding-bottom:64px}}
 
+
+/* Full capability index, under the feature bento inside the same lavender band.
+   The bento is nine large marketing cards; this is every capability the product
+   has, so the card shrinks to an icon, a title, one line, and the tier it
+   unlocks on. Groups are numbered and separated by a rule rather than a card
+   border, so ten groups read as one document instead of ten panels. */
+.catalogue{border-top:1px solid #e4ddf5;margin-top:104px;padding-top:76px}
+.catalogueHead{align-items:end;display:grid;gap:36px;grid-template-columns:minmax(0,1fr) auto}
+.catalogueHeadCopy{max-width:660px}
+.catalogueEyebrow{color:#7253df;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.catalogueHead h3{color:#17182b;font-size:36px;letter-spacing:-.02em;line-height:1.14;margin:16px 0 0}
+.catalogueHead p{color:#6d7183;font-size:15px;line-height:1.75;margin:16px 0 0;max-width:580px}
+.catalogueLegend{display:grid;gap:11px;list-style:none;margin:0;padding:0}
+.catalogueLegend li{align-items:center;color:#6d7183;display:flex;font-size:12px;font-weight:600;gap:9px;white-space:nowrap}
+.catalogueLegend i{border-radius:99px;flex:0 0 9px;height:9px;width:9px}
+.catalogueLegend i[data-kind="all"]{background:#3f9c6d}
+.catalogueLegend i[data-kind="plan"]{background:#6f48df}
+.catalogueLegend i[data-kind="soon"]{background:#d99b45}
+
+.catalogueGroup{margin-top:58px}
+.catalogueGroupHead{align-items:center;border-bottom:1px solid #e9e4f5;display:grid;gap:18px;grid-template-columns:auto minmax(0,1fr) auto;padding-bottom:18px}
+.catalogueNumber{color:#b3a7de;font-size:12px;font-weight:900;letter-spacing:.1em}
+.catalogueGroupCopy h4{color:#17182b;font-size:20px;letter-spacing:-.01em;margin:0}
+.catalogueGroupCopy p{color:#7a7e91;font-size:13px;line-height:1.6;margin:6px 0 0}
+.catalogueGroupHead small{color:#9094a7;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+
+.catalogueGrid{display:grid;gap:12px;grid-template-columns:repeat(3,1fr);margin-top:26px}
+.catalogueCard{background:#fff;border:1px solid #ece7f8;border-radius:12px;box-shadow:0 10px 28px rgba(57,43,105,.05);display:flex;flex-direction:column;padding:18px;transition:border-color .25s ease,box-shadow .25s ease,transform .25s ease}
+.catalogueCard:hover{border-color:#d6c9f5;box-shadow:0 20px 46px rgba(65,47,132,.12);transform:translateY(-3px)}
+.catalogueCard[data-planned]{background:linear-gradient(180deg,#fffdfa,#fff)}
+.catalogueCard h5{color:#1b1d31;font-size:14px;letter-spacing:-.01em;margin:17px 0 0}
+.catalogueCard p{color:#72768a;font-size:12px;line-height:1.7;margin:8px 0 0}
+.catalogueCardTop{align-items:center;display:flex;gap:10px;justify-content:space-between}
+.catalogueIcon{background:#f5f2ff;border:1px solid #e5dbff;border-radius:9px;color:#7253df;display:grid;flex:0 0 34px;height:34px;place-items:center;width:34px}
+.catalogueIcon svg{height:16px;width:16px}
+.catalogueTags{align-items:center;display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}
+.catalogueTag,.catalogueSoon{border-radius:99px;font-size:9px;font-style:normal;font-weight:800;letter-spacing:.07em;padding:4px 8px;text-transform:uppercase;white-space:nowrap}
+.catalogueTag[data-tier="all"]{background:#e9f6ef;color:#2f7d55}
+.catalogueTag[data-tier="plan"]{background:#f2eefd;color:#6f48df}
+.catalogueSoon{background:#fdf1e2;color:#a3651f}
+
+@media(max-width:1100px){.catalogueGrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:1000px){
+  .catalogue{margin-top:84px;padding-top:60px}
+  .catalogueHead{gap:26px;grid-template-columns:1fr}
+  .catalogueHead h3{font-size:30px}
+  .catalogueLegend{grid-auto-flow:column;grid-auto-columns:max-content;gap:20px}
+}
+@media(max-width:720px){
+  .catalogue{margin-top:64px;padding-top:48px}
+  .catalogueHead h3{font-size:25px}
+  .catalogueHead p{font-size:14px}
+  .catalogueLegend{grid-auto-flow:row;gap:9px}
+  .catalogueGroup{margin-top:42px}
+  .catalogueGroupHead{gap:12px;grid-template-columns:auto minmax(0,1fr)}
+  .catalogueGroupHead small{display:none}
+  .catalogueGroupCopy h4{font-size:18px}
+  .catalogueGrid{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){.catalogueCard:hover{transform:none}}
+
 /* dark-mode:generated:start */
 /* Written by npm run theme:dark - edit scripts/dark-mode/, not this. */
 [data-theme="dark"] .site {
@@ -205,6 +267,10 @@
 [data-theme="dark"] .header {
   background: #1f2332b8;
   border-bottom: 1px solid #38394014;
+}
+
+[data-theme="dark"] .brand b {
+  color: #ad99f1;
 }
 
 [data-theme="dark"] .brandMark {
@@ -232,12 +298,20 @@
   color: #bfb1f4;
 }
 
+[data-theme="dark"] .hero h1 span {
+  color: #a593ee;
+}
+
 [data-theme="dark"] .heroCopy>p {
   color: #8f9099;
 }
 
 [data-theme="dark"] .secondaryButton {
   border: 1px solid #38394029;
+}
+
+[data-theme="dark"] .secondaryButton:hover {
+  background: #23242a12;
 }
 
 [data-theme="dark"] .heroProof {
@@ -269,6 +343,7 @@
 
 [data-theme="dark"] .dashboardMockup>aside .mockActive {
   background: #7c3aed2e;
+  color: #ae99ec;
 }
 
 [data-theme="dark"] .mockContent>header small {
@@ -281,6 +356,22 @@
 
 [data-theme="dark"] .mockStats span {
   color: #a8a9b3;
+}
+
+[data-theme="dark"] .mockStats [data-accent=violet] {
+  background: #7c3aed1f;
+}
+
+[data-theme="dark"] .mockStats [data-accent=blue] {
+  background: #2563eb1a;
+}
+
+[data-theme="dark"] .mockStats [data-accent=green] {
+  background: #17c0881a;
+}
+
+[data-theme="dark"] .mockStats [data-accent=orange] {
+  background: #f59e0b1a;
 }
 
 [data-theme="dark"] .mockChart,
@@ -398,6 +489,10 @@
   border: 1px solid #38394012;
 }
 
+[data-theme="dark"] .operationTile>span {
+  color: #ae99ec;
+}
+
 [data-theme="dark"] .operationTile small,
 [data-theme="dark"] .operationTile p {
   color: #c0c2ce;
@@ -405,6 +500,11 @@
 
 [data-theme="dark"] .activityLine {
   border-top: 1px solid #38394012;
+}
+
+[data-theme="dark"] .activityLine span,
+[data-theme="dark"] .activityLine small {
+  color: #c0c2ce;
 }
 
 [data-theme="dark"] .storyStatement>span,
@@ -531,14 +631,17 @@
 
 [data-theme="dark"] .orderRow em[data-status=Processing] {
   background: #3b82f624;
+  color: #90b6ec;
 }
 
 [data-theme="dark"] .orderRow em[data-status=Paid] {
   background: #17c08824;
+  color: #92edc9;
 }
 
 [data-theme="dark"] .orderRow em[data-status=Pending] {
   background: #f59e0b24;
+  color: #dfbf84;
 }
 
 [data-theme="dark"] .orderRow svg {
@@ -573,6 +676,10 @@
 
 [data-theme="dark"] .paymentPhone label>i {
   border: 1px solid #585e74;
+}
+
+[data-theme="dark"] .paymentPhone label>.radioActive {
+  border: 4px solid #433366;
 }
 
 [data-theme="dark"] .paymentPhone label small {
@@ -628,6 +735,10 @@
 [data-theme="dark"] .deliveryPanel header b {
   background: #3b82f624;
   color: #90b6ec;
+}
+
+[data-theme="dark"] .deliveryPanel p>i[data-complete=true] {
+  border: 3px solid #3e3366;
 }
 
 [data-theme="dark"] .deliveryPanel p small {
@@ -696,6 +807,14 @@
 
 [data-theme="dark"] .aiBubble {
   background: #58617f;
+}
+
+[data-theme="dark"] .aiBubble span {
+  color: #ae99ec;
+}
+
+[data-theme="dark"] .aiBubble p>span:last-child {
+  color: #ae99ec;
 }
 
 [data-theme="dark"] .insightCard {
@@ -767,9 +886,21 @@
   box-shadow: 0 45px 100px #0c082157;
 }
 
+[data-theme="dark"] .featuredPricing>a {
+  border-color: #8354d3;
+}
+
 [data-theme="dark"] .popular {
   background: #221355;
   color: #eaebf0;
+}
+
+[data-theme="dark"] .faqList {
+  border-top: 1px solid #3839401a;
+}
+
+[data-theme="dark"] .faqList details {
+  border-bottom: 1px solid #3839401a;
 }
 
 [data-theme="dark"] .faqList summary span {
@@ -796,69 +927,187 @@
 [data-theme="dark"] .storyBridge {
   background: #1e1a2c;
   box-shadow: 0 0 0 100vmax #0b0c138c;
+  color: #e7e7f3;
+}
+
+[data-theme="dark"] .storyStatement>span,
+[data-theme="dark"] .storyTurn>span {
+  color: #a691ed;
+}
+
+[data-theme="dark"] .storyStatement p {
+  color: #c0c3ce;
+}
+
+[data-theme="dark"] .painRail {
+  box-shadow: 0 28px 75px #0d082117;
 }
 
 [data-theme="dark"] .painRail .painCard {
   background: #23242a;
   border-color: #383147;
+  color: #e7e9f3;
 }
 
 [data-theme="dark"] .painRail .painCard:hover {
   background: #23242a;
+  box-shadow: 0 26px 55px #0d08211f;
 }
 
 [data-theme="dark"] .painRail .painCard>span {
   background: #1c1630;
   border-color: #302553;
+  color: #a691ed;
+}
+
+[data-theme="dark"] .painRail .painCard p {
+  color: #c0c3ce;
+}
+
+[data-theme="dark"] .storyTurn {
+  border-color: #362f49;
+}
+
+[data-theme="dark"] .storyTurn p {
+  color: #c0c3ce;
+}
+
+[data-theme="dark"] .storyTurn>svg {
+  color: #a691ed;
 }
 
 [data-theme="dark"] .featuresSection {
   background: linear-gradient(180deg,#1e1c2c 0%,#1b172f 100%);
   box-shadow: 0 0 0 100vmax #0b0c138c;
+  color: #e7e8f3;
+}
+
+[data-theme="dark"] .featuresSection .sectionIntro>span {
+  color: #a691ed;
+}
+
+[data-theme="dark"] .featuresSection .sectionIntro p {
+  color: #c0c3ce;
 }
 
 [data-theme="dark"] .featureCard {
   background: linear-gradient(#23242a,#23242a) padding-box,linear-gradient(135deg,#0e0032,#1a122a,#001037) border-box;
   box-shadow: 0 16px 45px #0d082113;
+  color: #e7e9f3;
+}
+
+[data-theme="dark"] .featureCard:before {
+  background: linear-gradient(135deg,#7c3aed14,transparent 62%);
+}
+
+[data-theme="dark"] .featureCard:hover {
+  box-shadow: 0 30px 75px #0d082124;
 }
 
 [data-theme="dark"] .featureCard>span {
   background: #1c1630;
   border-color: #302553;
+  color: #a691ed;
+}
+
+[data-theme="dark"] .featureCard small {
+  color: #a7a9b4;
+}
+
+[data-theme="dark"] .featureCard p {
+  color: #c0c3ce;
+}
+
+[data-theme="dark"] .featureCard>i {
+  color: #a7a9b3;
 }
 
 [data-theme="dark"] .featuredCard {
   background: linear-gradient(145deg,#23242a,#211d2b) padding-box,linear-gradient(135deg,#231355,#132755,#0e0036) border-box;
+  box-shadow: 0 26px 75px #0e082124;
 }
 
 [data-theme="dark"] .pricingSection {
   background: #1b172f;
   box-shadow: 0 0 0 100vmax #0b0c138c;
+  color: #e7e8f3;
+}
+
+[data-theme="dark"] .pricingSection .sectionIntro>span {
+  color: #a691ed;
+}
+
+[data-theme="dark"] .pricingSection .sectionIntro p {
+  color: #c0c3ce;
 }
 
 [data-theme="dark"] .pricingCard {
   background: #23242a;
   border-color: #383147;
   box-shadow: 0 18px 50px #0d082114;
+  color: #e7e9f3;
+}
+
+[data-theme="dark"] .pricingCard>p,
+[data-theme="dark"] .pricingCard>div span {
+  color: #c0c3ce;
+}
+
+[data-theme="dark"] .pricingCard ul {
+  border-color: #3a3444;
+}
+
+[data-theme="dark"] .pricingCard li {
+  color: #d2d5e0;
 }
 
 [data-theme="dark"] .pricingCard>a {
   border-color: #382f49;
+  color: #e7e9f3;
 }
 
 [data-theme="dark"] .pricingCard>a:hover {
   background: #1c182e;
+  border-color: #3e3366;
 }
 
 [data-theme="dark"] .featuredPricing {
   background: linear-gradient(145deg,#23242a,#211d2b);
   border-color: #423366;
   box-shadow: 0 38px 90px #0d082133,inset 0 1px 0 #0b0c13e6;
+  color: #e7e7f3;
+}
+
+[data-theme="dark"] .featuredPricing>a {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .popular {
+  color: #ffffff;
 }
 
 [data-theme="dark"] .faqSection {
   background: #1e1c2c;
   box-shadow: 0 0 0 100vmax #0b0c138c;
+  color: #e7e9f3;
+}
+
+[data-theme="dark"] .faqSection .sectionIntro>span {
+  color: #a691ed;
+}
+
+[data-theme="dark"] .faqSection .sectionIntro p,
+[data-theme="dark"] .faqList p {
+  color: #c0c2ce;
+}
+
+[data-theme="dark"] .faqList,
+[data-theme="dark"] .faqList details {
+  border-color: #383147;
+}
+
+[data-theme="dark"] .faqList summary span {
+  color: #a691ed;
 }
 
 [data-theme="dark"] .offerPill {
@@ -921,6 +1170,7 @@
 
 [data-theme="dark"] .freePricing {
   border-color: #3f3366;
+  box-shadow: 0 26px 60px #0d082129;
 }
 
 [data-theme="dark"] .freeRibbon {
@@ -941,6 +1191,14 @@
   color: #e7e8f3;
 }
 
+[data-theme="dark"] .comparisonSection .sectionIntro>span {
+  color: #a691ed;
+}
+
+[data-theme="dark"] .comparisonSection .sectionIntro p {
+  color: #c0c3ce;
+}
+
 [data-theme="dark"] .comparisonCard {
   background: #23242a;
   border: 1px solid #362e4a;
@@ -953,6 +1211,10 @@
 
 [data-theme="dark"] .comparisonTable thead th:after {
   background: #160c2e;
+}
+
+[data-theme="dark"] .comparisonTable thead th[data-featured] {
+  background: linear-gradient(180deg,#1c1232,#201a2e);
 }
 
 [data-theme="dark"] .comparisonCorner {
@@ -986,6 +1248,10 @@
 
 [data-theme="dark"] .comparisonTable tbody td {
   border-top: 1px solid #383444;
+}
+
+[data-theme="dark"] .comparisonTable tbody td[data-featured] {
+  background: #211d2b;
 }
 
 [data-theme="dark"] .rowLabel {
@@ -1032,5 +1298,89 @@
     background: #23242a;
     box-shadow: 7px 0 14px -10px #0d082147;
   }
+}
+
+[data-theme="dark"] .catalogue {
+  border-top: 1px solid #352b4d;
+}
+
+[data-theme="dark"] .catalogueEyebrow {
+  color: #a691ed;
+}
+
+[data-theme="dark"] .catalogueHead h3 {
+  color: #e7e8f3;
+}
+
+[data-theme="dark"] .catalogueHead p {
+  color: #c0c3ce;
+}
+
+[data-theme="dark"] .catalogueLegend li {
+  color: #c0c3ce;
+}
+
+[data-theme="dark"] .catalogueGroupHead {
+  border-bottom: 1px solid #373048;
+}
+
+[data-theme="dark"] .catalogueNumber {
+  color: #8b83a4;
+}
+
+[data-theme="dark"] .catalogueGroupCopy h4 {
+  color: #e7e8f3;
+}
+
+[data-theme="dark"] .catalogueGroupCopy p {
+  color: #c0c2ce;
+}
+
+[data-theme="dark"] .catalogueGroupHead small {
+  color: #a7a9b4;
+}
+
+[data-theme="dark"] .catalogueCard {
+  background: #23242a;
+  border: 1px solid #373048;
+  box-shadow: 0 10px 28px #0d08210d;
+}
+
+[data-theme="dark"] .catalogueCard:hover {
+  border-color: #332553;
+  box-shadow: 0 20px 46px #0d08211f;
+}
+
+[data-theme="dark"] .catalogueCard[data-planned] {
+  background: linear-gradient(180deg,#20212a,#23242a);
+}
+
+[data-theme="dark"] .catalogueCard h5 {
+  color: #e7e8f4;
+}
+
+[data-theme="dark"] .catalogueCard p {
+  color: #c0c2ce;
+}
+
+[data-theme="dark"] .catalogueIcon {
+  background: #1c1630;
+  border: 1px solid #322553;
+  color: #a691ed;
+}
+
+[data-theme="dark"] .catalogueTag[data-tier="all"] {
+  background: #112b1d;
+  color: #a2dcbf;
+}
+
+[data-theme="dark"] .catalogueTag[data-tier="plan"] {
+  background: #1a1230;
+  color: #a991ed;
+}
+
+[data-theme="dark"] .catalogueSoon {
+  background: #392103;
+  color: #edc291;
 }
 /* dark-mode:generated:end */

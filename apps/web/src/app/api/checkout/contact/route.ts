@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { readClientIp } from "../../../../lib/request-ip";
 import { recordCheckoutDraft } from "../../../../modules/cart/cart.service";
+import { parseCartScope } from "../../../../modules/cart/cart.types";
 import { getStorefrontBySlug } from "../../../../modules/storefront/resolver";
 
 /**
@@ -39,7 +40,11 @@ export async function POST(request: NextRequest) {
           postalCode: getValue(formData, "postalCode"),
           shippingRateId: getValue(formData, "shippingRateId")
         },
-        { ipAddress: readClientIp(request.headers) }
+        { ipAddress: readClientIp(request.headers) },
+        // Filed against the basket the shopper is actually in. A direct buy has
+        // a snapshot of its own, and attaching the draft to their untouched
+        // cart would leave the seller ringing about the wrong products.
+        parseCartScope(getValue(formData, "checkoutScope"))
       );
     }
   } catch (error) {

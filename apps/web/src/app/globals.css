@@ -21128,7 +21128,7 @@ body:has(.nb-dock[data-display="overlay"][data-position="bottom"])
   width: 16px;
 }
 
-/* Buy Now sits under Add to Cart in the same column, so it needs the row gap
+/* Direct Checkout sits under Add to Cart in the same column, so it needs the row gap
    the grid does not give it — matched to the panel's own 10px rhythm. */
 .general-product-info .sf-buy-now {
   margin-top: 10px;
@@ -21385,5 +21385,591 @@ body:has(.nb-dock[data-display="overlay"][data-position="bottom"])
 @media (prefers-reduced-motion: reduce) {
   .general-cart-shipping-track span {
     transition: none;
+  }
+}
+
+/* ==========================================================================
+   Quick View
+   --------------------------------------------------------------------------
+   The trigger on a product card, and the dialog it opens.
+
+   The dialog is portalled into `.sf-theme-scope`, not into the body, so every
+   rule below inherits the shop's own `--store-primary`, `--store-bg` and
+   `--store-text` rather than the platform's defaults.
+   ========================================================================== */
+
+/* The card trigger. Sits above `.general-product-listing-card-link`, which
+   covers the card at z-index 1 - a trigger underneath it would be a button the
+   card's own link answers for. */
+.sf-quick-view-trigger {
+  align-items: center;
+  backdrop-filter: blur(6px);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(23, 23, 23, 0.08);
+  border-radius: 999px;
+  bottom: 14px;
+  box-shadow: 0 10px 24px rgba(23, 23, 23, 0.14);
+  color: #171717;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  gap: 7px;
+  justify-content: center;
+  left: 50%;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  /* A seller who names the button something long gets an elided label rather
+     than one clipped by the picture frame on both sides. */
+  max-width: calc(100% - 24px);
+  overflow: hidden;
+  padding: 11px 18px;
+  position: absolute;
+  text-overflow: ellipsis;
+  transition: opacity 180ms ease, transform 220ms cubic-bezier(0.22, 1, 0.36, 1), background 160ms ease, color 160ms ease;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.sf-quick-view-trigger svg {
+  height: 15px;
+  stroke-width: 2.1;
+  width: 15px;
+}
+
+.sf-quick-view-trigger:hover,
+.sf-quick-view-trigger[data-active="true"] {
+  background: var(--store-primary, #135d66);
+  border-color: var(--store-primary, #135d66);
+  color: #ffffff;
+}
+
+/* A visible ring, because the trigger's resting state on a hover card is
+   transparent and a focus outline that only shows on hover is no outline. */
+.sf-quick-view-trigger:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--store-primary, #135d66);
+  outline-offset: 2px;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+.sf-quick-view-trigger-always {
+  transform: translate(-50%, 0);
+}
+
+/* The seller's "on hover" choice. Hidden from the pointer but never from the
+   keyboard: `visibility` would take it out of the tab order, so the resting
+   state is a transparent, un-clickable button that focus brings back. */
+.sf-quick-view-trigger-hover {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 10px);
+}
+
+.general-product-listing-card:hover .sf-quick-view-trigger-hover,
+.general-product-listing-card:focus-within .sf-quick-view-trigger-hover,
+.beauty-product-tile:hover .sf-quick-view-trigger-hover,
+.beauty-product-tile:focus-within .sf-quick-view-trigger-hover,
+.electronics-product-card:hover .sf-quick-view-trigger-hover,
+.electronics-product-card:focus-within .sf-quick-view-trigger-hover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+/* Fashion's card is a CSS-module component, so its own class names are hashed
+   and cannot be named from here. The card marks its media frame with a data
+   attribute instead, which is stable. */
+[data-quick-view-media]:hover .sf-quick-view-trigger-hover,
+[data-quick-view-media]:focus-within .sf-quick-view-trigger-hover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+/* No device with a coarse pointer can hover, so "on hover" would mean "never"
+   on every phone the shop sells to. The seller's choice is a desktop
+   refinement and this is the floor under it. */
+@media (hover: none), (pointer: coarse) {
+  .sf-quick-view-trigger-hover {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Fashion's card has a full-width Add to Cart along the bottom of the picture,
+   so the trigger sits above it rather than on top of it. */
+[data-quick-view-media] .sf-quick-view-trigger {
+  bottom: 68px;
+}
+
+/* Beauty's tile puts its own quick-add at the bottom of the media frame, so the
+   trigger moves up out of its way rather than sitting on top of it. */
+.beauty-product-tile-media .sf-quick-view-trigger {
+  bottom: auto;
+  top: 50%;
+}
+
+.beauty-product-tile-media .sf-quick-view-trigger-always,
+.beauty-product-tile:hover .sf-quick-view-trigger-hover,
+.beauty-product-tile:focus-within .sf-quick-view-trigger-hover {
+  transform: translate(-50%, -50%);
+}
+
+.beauty-product-tile-media .sf-quick-view-trigger-hover {
+  transform: translate(-50%, calc(-50% + 10px));
+}
+
+/* Electronics wraps its media link so the trigger has something the size of the
+   photograph to sit against; the frame is otherwise invisible. */
+.electronics-product-card-frame {
+  position: relative;
+}
+
+/* The shared card's picture clips its own overflow, so the trigger's drop
+   shadow would be cut off against the bottom edge. It sits a little higher
+   there and carries the shadow it can actually cast. */
+.general-product-listing-image .sf-quick-view-trigger {
+  bottom: 16px;
+  box-shadow: 0 6px 16px rgba(23, 23, 23, 0.16);
+}
+
+/* The dialog. */
+.sf-quick-view-shell {
+  align-items: center;
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: clamp(12px, 4vw, 40px);
+  position: fixed;
+  z-index: 10000;
+}
+
+.sf-quick-view-overlay {
+  animation: sf-quick-view-fade 200ms ease both;
+  background: rgba(12, 12, 16, 0.52);
+  border: 0;
+  cursor: pointer;
+  inset: 0;
+  padding: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.sf-quick-view-dialog {
+  animation: sf-quick-view-rise 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 32px 80px rgba(12, 12, 16, 0.28);
+  color: #171717;
+  /* Tall on a phone, capped on a desktop: the dialog scrolls inside itself so
+     the page behind it never has to. */
+  max-height: min(92vh, 780px);
+  max-width: 1000px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.sf-quick-view-dialog,
+.sf-quick-view-dialog * {
+  box-sizing: border-box;
+}
+
+.sf-quick-view-close {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(23, 23, 23, 0.1);
+  border-radius: 999px;
+  color: #171717;
+  cursor: pointer;
+  display: inline-flex;
+  height: 38px;
+  justify-content: center;
+  padding: 0;
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  transition: background 160ms ease, color 160ms ease;
+  width: 38px;
+  z-index: 3;
+}
+
+.sf-quick-view-close:hover {
+  background: #171717;
+  color: #ffffff;
+}
+
+.sf-quick-view-close svg {
+  height: 18px;
+  width: 18px;
+}
+
+.sf-quick-view-body {
+  display: grid;
+  gap: clamp(20px, 3vw, 40px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  max-height: min(92vh, 780px);
+  overflow-y: auto;
+  padding: clamp(20px, 3vw, 34px);
+}
+
+.sf-quick-view-media {
+  align-content: start;
+  display: grid;
+  gap: 12px;
+}
+
+.sf-quick-view-hero {
+  align-items: center;
+  aspect-ratio: 1 / 1;
+  background: color-mix(in srgb, var(--store-secondary, #f5f1e8) 45%, #ffffff);
+  border-radius: 18px;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.sf-quick-view-hero img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.sf-quick-view-savings {
+  background: #b42318;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  left: 14px;
+  letter-spacing: 0.04em;
+  padding: 6px 11px;
+  position: absolute;
+  text-transform: uppercase;
+  top: 14px;
+}
+
+.sf-quick-view-thumbs {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+}
+
+.sf-quick-view-thumb {
+  aspect-ratio: 1 / 1;
+  background: color-mix(in srgb, var(--store-secondary, #f5f1e8) 45%, #ffffff);
+  border: 1px solid rgba(23, 23, 23, 0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  padding: 0;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.sf-quick-view-thumb img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.sf-quick-view-thumb[aria-pressed="true"] {
+  border-color: var(--store-primary, #135d66);
+  box-shadow: 0 0 0 1px var(--store-primary, #135d66);
+}
+
+.sf-quick-view-details {
+  /* Start rather than stretch: with a short product the fields would otherwise
+     spread down a tall dialog and lose their reading order. */
+  align-content: start;
+  display: grid;
+  gap: 14px;
+  /* Room for the close button, which floats over this column. */
+  padding-right: 44px;
+}
+
+.sf-quick-view-eyebrow {
+  color: #626870;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.sf-quick-view-title {
+  font-size: clamp(1.3rem, 2.4vw, 1.75rem);
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.sf-quick-view-price {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sf-quick-view-price strong {
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+
+.sf-quick-view-price s {
+  color: #8b9098;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.sf-quick-view-stock {
+  font-size: 0.86rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.sf-quick-view-stock.in-stock {
+  color: #17694a;
+}
+
+.sf-quick-view-stock.out-stock {
+  color: #b42318;
+}
+
+.sf-quick-view-sku {
+  color: #626870;
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.sf-quick-view-description {
+  color: #4c525b;
+  font-size: 0.94rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.sf-quick-view-variants {
+  display: grid;
+  gap: 8px;
+}
+
+.sf-quick-view-variants-label {
+  color: #626870;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sf-quick-view-variant-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sf-quick-view-variant {
+  background: #ffffff;
+  border: 1px solid rgba(23, 23, 23, 0.16);
+  border-radius: 999px;
+  color: #171717;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 9px 16px;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.sf-quick-view-variant[aria-pressed="true"] {
+  background: var(--store-primary, #135d66);
+  border-color: var(--store-primary, #135d66);
+  color: #ffffff;
+}
+
+.sf-quick-view-variant-select {
+  background: #ffffff;
+  border: 1px solid rgba(23, 23, 23, 0.16);
+  border-radius: 12px;
+  color: #171717;
+  font: inherit;
+  font-weight: 700;
+  min-height: 46px;
+  padding: 0 14px;
+  width: 100%;
+}
+
+/* The product page's own buy box, sitting in a dialog: the panel keeps its
+   markup and this trims the page-sized padding off it. */
+.sf-quick-view-purchase .sf-purchase-box {
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.sf-quick-view-full-link {
+  align-items: center;
+  color: var(--store-primary, #135d66);
+  display: inline-flex;
+  font-size: 0.88rem;
+  font-weight: 800;
+  gap: 6px;
+  justify-self: start;
+  text-decoration: none;
+}
+
+.sf-quick-view-full-link:hover {
+  text-decoration: underline;
+}
+
+.sf-quick-view-full-link svg {
+  height: 15px;
+  width: 15px;
+}
+
+/* Loading. The skeleton is the shape of the answer, so the dialog opens at its
+   final size and the buttons do not move under a finger already reaching for
+   them. */
+.sf-quick-view-shimmer {
+  animation: sf-quick-view-shimmer 1.4s ease infinite;
+  background: linear-gradient(90deg, #eef0f3 25%, #f7f8fa 37%, #eef0f3 63%);
+  background-size: 400% 100%;
+  border-radius: 10px;
+  display: block;
+}
+
+.sf-quick-view-skeleton .sf-quick-view-thumbs span {
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+}
+
+.sf-quick-view-shimmer-line {
+  height: 16px;
+}
+
+.sf-quick-view-shimmer-line.short {
+  width: 35%;
+}
+
+.sf-quick-view-shimmer-line.title {
+  height: 30px;
+  width: 80%;
+}
+
+.sf-quick-view-shimmer-line.price {
+  height: 26px;
+  width: 45%;
+}
+
+.sf-quick-view-shimmer-block {
+  border-radius: 16px;
+  height: 128px;
+}
+
+.sf-quick-view-empty {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  padding: clamp(40px, 7vw, 72px) clamp(20px, 4vw, 40px);
+  text-align: center;
+}
+
+.sf-quick-view-empty h2 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.sf-quick-view-empty p {
+  color: #626870;
+  margin: 0;
+}
+
+@keyframes sf-quick-view-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sf-quick-view-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sf-quick-view-shimmer {
+  from {
+    background-position: 100% 50%;
+  }
+
+  to {
+    background-position: 0 50%;
+  }
+}
+
+@media (max-width: 860px) {
+  /* One column, picture first. The dialog becomes a sheet the shopper scrolls,
+     which is the only shape that fits a buy box on a phone. */
+  .sf-quick-view-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sf-quick-view-hero {
+    aspect-ratio: 4 / 3;
+  }
+
+  .sf-quick-view-details {
+    padding-right: 0;
+  }
+
+  .sf-quick-view-dialog {
+    max-height: 92vh;
+  }
+}
+
+@media (max-width: 560px) {
+  /* A bottom sheet, because a centred dialog on a short screen puts the buy
+     button under the fold and the close button out of thumb reach. */
+  .sf-quick-view-shell {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .sf-quick-view-dialog {
+    border-radius: 22px 22px 0 0;
+    max-height: 90vh;
+  }
+
+  .sf-quick-view-body {
+    max-height: 90vh;
+  }
+
+  .sf-quick-view-purchase .sf-purchase-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-quick-view-dialog,
+  .sf-quick-view-overlay,
+  .sf-quick-view-shimmer {
+    animation: none;
+  }
+
+  .sf-quick-view-trigger {
+    transition: opacity 120ms ease;
   }
 }

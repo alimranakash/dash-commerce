@@ -94,6 +94,12 @@ const GROWTH_FEATURES: PlanFeatureKey[] = [
   "gtm_tracking",
   "order_verification",
   "search_discovery",
+  // Sending purchases to GA4 and Meta from our own server is what keeps a
+  // campaign measurable once a browser blocks the pixel, so it belongs with the
+  // outbound-marketing keys above rather than a tier past them — a Growth store
+  // paying to send traffic is exactly the one whose conversions stop being
+  // counted client-side.
+  "server_side_tracking",
   "upsell_cross_sell"
 ];
 
@@ -104,7 +110,6 @@ const PRO_FEATURES: PlanFeatureKey[] = [
   "email_automation",
   "facebook_automation",
   "marketing_automation",
-  "server_side_tracking",
   "sms_automation",
   "whatsapp_automation"
 ];

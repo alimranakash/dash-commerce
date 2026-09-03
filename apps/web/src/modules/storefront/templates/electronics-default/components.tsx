@@ -1,6 +1,7 @@
 import { storefrontBasePath } from "../../base-path";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
+import { QuickViewTrigger } from "../../../quick-view/components/quick-view-trigger";
 import { ProductPrice } from "../../components/product-card";
 import { ProductHoverImage } from "../../components/product-listing";
 import { StorefrontImage } from "../../components/storefront-image";
@@ -332,13 +333,21 @@ export async function ElectronicsProductCard({
 
   return (
     <article className="electronics-product-card">
-      <Link className="electronics-product-card-media" href={`${basePath}/products/${product.slug}`}>
-        <StorefrontImage alt={image?.alt ?? product.title} fallback={imageFallback} src={image?.url} />
-        {hoverImage ? (
-          <ProductHoverImage alt={hoverImage.alt ?? product.title} fallback={imageFallback} src={hoverImage.url} />
-        ) : null}
-        {isSale || variant === "deal" ? <strong>{variant === "deal" ? "Flash Deal" : "Deal"}</strong> : null}
-      </Link>
+      {/* The frame exists so the Quick View trigger has something the size of
+        the photograph to sit against. It cannot go inside the media link — a
+        button inside an anchor is markup no two browsers agree about, the same
+        reason the shared listing card lays its link behind the card rather than
+        around it — and against the card it would land under the price. */}
+      <div className="electronics-product-card-frame">
+        <Link className="electronics-product-card-media" href={`${basePath}/products/${product.slug}`}>
+          <StorefrontImage alt={image?.alt ?? product.title} fallback={imageFallback} src={image?.url} />
+          {hoverImage ? (
+            <ProductHoverImage alt={hoverImage.alt ?? product.title} fallback={imageFallback} src={hoverImage.url} />
+          ) : null}
+          {isSale || variant === "deal" ? <strong>{variant === "deal" ? "Flash Deal" : "Deal"}</strong> : null}
+        </Link>
+        <QuickViewTrigger productSlug={product.slug} productTitle={product.title} />
+      </div>
       <div className="electronics-product-card-body">
         <p>{product.category?.name ?? "Store Verified"}</p>
         <h3>

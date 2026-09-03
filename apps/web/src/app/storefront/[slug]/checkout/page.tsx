@@ -8,6 +8,7 @@ import { randomUUID } from "node:crypto";
 import { storefrontBasePath } from "../../../../modules/storefront/base-path";
 import Link from "next/link";
 import { getCart } from "../../../../modules/cart/cart.service";
+import { parseCartScope } from "../../../../modules/cart/cart.types";
 import { isCheckoutPhoneOtpRequired } from "../../../../modules/checkout/checkout-verification.service";
 import { CheckoutExperience } from "../../../../modules/checkout/components/checkout-experience";
 import { priceCartBundles } from "../../../../modules/merchandising/bundle.service";
@@ -23,17 +24,24 @@ type CheckoutPageProps = {
     slug: string;
   }>;
   searchParams: Promise<{
+    /** "direct" when a Direct Checkout opened this page; absent for the cart. */
+    buy?: string;
     checkoutError?: string;
   }>;
 };
 
 export default async function CheckoutPage({ params, searchParams }: CheckoutPageProps) {
   const { slug } = await params;
-  const { checkoutError } = await searchParams;
+  const { buy, checkoutError } = await searchParams;
   const store = await requireStorefrontBySlug(slug);
   const basePath = await storefrontBasePath(store.slug);
   const primaryDomain = store.domains.find((domain) => domain.isPrimary) ?? store.domains[0];
-  const cart = await getCart(store.id);
+  // Which basket this page is for, decided by the URL rather than by whichever
+  // cookie happens to exist. A shopper who opened a Direct Checkout, backed out
+  // and came to their cart the ordinary way gets their cart — the direct basket
+  // is only ever read when the address says so.
+  const scope = parseCartScope(buy);
+  const cart = await getCart(store.id, scope);
   const paymentMethods = await getEnabledPaymentMethods(store.id);
   const shippingRates = await getEnabledShippingRates(store.id);
   const phoneOtpRequired = await isCheckoutPhoneOtpRequired(store.id);
@@ -84,10 +92,18 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
       <StorefrontHeader store={store} />
       <NotificationBarSlot anchor="top" store={store} surface="other" />
       {cart.items.length === 0 ? (
+        // A direct basket runs out after a couple of hours, so an empty one is
+        // almost never an empty cart — it is a link the shopper came back to.
+        // Telling them their cart is empty would be wrong twice over: it may
+        // well not be, and it does not say what to do next.
         <section className="sf-section">
           <div className="sf-empty">
-            <h2>Your cart is empty</h2>
-            <p>Add products before placing an order.</p>
+            <h2>{scope === "direct" ? "This direct checkout has expired" : "Your cart is empty"}</h2>
+            <p>
+              {scope === "direct"
+                ? "Open the product again and start a new direct checkout."
+                : "Add products before placing an order."}
+            </p>
             <Link className="sf-button" href={`${basePath}/products`}>
               Continue shopping
             </Link>
@@ -98,6 +114,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
           bundles={bundles.applied}
           cart={cart}
           checkoutError={checkoutError}
+          checkoutScope={scope}
           currency={store.currency}
           orderBump={orderBump}
           paymentMethods={paymentMethods}

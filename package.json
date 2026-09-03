@@ -26,6 +26,8 @@
     "verify:sales-notifications": "tsx scripts/verify-sales-notifications.mts",
     "verify:notification-bar": "tsx scripts/verify-notification-bar.mts",
     "verify:free-shipping": "tsx scripts/verify-free-shipping.mts",
+    "verify:direct-checkout": "tsx scripts/verify-direct-checkout.mts",
+    "verify:quick-view": "tsx scripts/verify-quick-view.mts",
     "verify:sitemap": "tsx scripts/verify-sitemap.mts",
     "verify:wishlist": "tsx scripts/verify-wishlist.mts",
     "verify:staff-permissions": "tsx scripts/verify-staff-permissions.mts",

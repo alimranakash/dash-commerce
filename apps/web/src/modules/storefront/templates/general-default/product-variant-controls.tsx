@@ -13,8 +13,9 @@ type ProductVariantControlsProps = {
   basePrice: string;
   baseSku?: string | null | undefined;
   baseStockQuantity: number;
-  buyNowEnabled: boolean;
   currency: string;
+  directCheckoutEnabled: boolean;
+  directCheckoutText: string;
   productId: string;
   productSlug: string;
   storeId: string;
@@ -32,8 +33,9 @@ export function ProductVariantControls({
   basePrice,
   baseSku,
   baseStockQuantity,
-  buyNowEnabled,
   currency,
+  directCheckoutEnabled,
+  directCheckoutText,
   productId,
   productSlug,
   storeId,
@@ -105,7 +107,8 @@ export function ProductVariantControls({
         addToCartButtonColor={addToCartButtonColor}
         addToCartButtonRadius={addToCartButtonRadius}
         addToCartText={addToCartText}
-        buyNowEnabled={buyNowEnabled}
+        directCheckoutEnabled={directCheckoutEnabled}
+        directCheckoutText={directCheckoutText}
         maxQuantity={canContinueSelling ? 999999 : stockQuantity}
         productId={productId}
         productSlug={productSlug}

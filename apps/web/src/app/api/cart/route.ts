@@ -7,6 +7,7 @@ import {
   clearCart,
   removeCartItem,
   setCartNote,
+  startDirectCheckout,
   updateCartItemQuantity
 } from "../../../modules/cart/cart.service";
 
@@ -40,6 +41,25 @@ export async function POST(request: NextRequest) {
       }
 
       return await redirectTo(request, storeSlug, `/cart?added=1`);
+    }
+
+    // Direct Checkout. Nothing about the shopper's own cart changes here — the
+    // line goes into a basket of its own — so no revalidation and no cart
+    // event: the header still counts what it counted a moment ago, because that
+    // is still what is in the cart.
+    if (cartAction === "direct") {
+      await startDirectCheckout(
+        storeId,
+        productId,
+        Number(getValue(formData, "quantity") || 1),
+        variantId || null
+      );
+
+      if (wantsJson) {
+        return NextResponse.json({ ok: true });
+      }
+
+      return await redirectTo(request, storeSlug, `/checkout?buy=direct`);
     }
 
     if (cartAction === "update") {
@@ -97,7 +117,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: readableMessage, ok: false }, { status: 400 });
     }
 
-    if (cartAction === "add" && productSlug) {
+    // Both of these were asked for from a product page, and that is where the
+    // shopper can act on "not enough stock" — the cart page would be showing
+    // them a basket the failed line never reached.
+    if ((cartAction === "add" || cartAction === "direct") && productSlug) {
       return await redirectTo(request, storeSlug, `/products/${productSlug}?cartError=${message}`);
     }
 

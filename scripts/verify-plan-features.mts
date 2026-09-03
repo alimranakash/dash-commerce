@@ -226,10 +226,10 @@ async function main() {
 
   console.log("\n=== Analytics & Tracking tiering ===");
 
-  // The one place all three tiers meet in a single menu. Every row here is a
-  // page under /dashboard/analytics, and the tier is the whole product story:
-  // connect the storefront pixels on Starter, reach past the storefront on
-  // Growth, send from our own servers on Pro.
+  // Every row here is a page under /dashboard/analytics, and the tier is the
+  // whole product story: connect the storefront pixels on Starter, then on
+  // Growth reach past the storefront — ad platforms, tag manager, and our own
+  // servers sending the purchases a blocked pixel never reports.
   const TRACKING_TIERS: Array<[PlanFeatureKey, string]> = [
     ["meta_pixel", "Starter"],
     ["google_analytics", "Starter"],
@@ -237,7 +237,7 @@ async function main() {
     ["google_ads_tracking", "Growth"],
     ["custom_tracking", "Growth"],
     ["gtm_tracking", "Growth"],
-    ["server_side_tracking", "Pro"]
+    ["server_side_tracking", "Growth"]
   ];
 
   for (const [key, expected] of TRACKING_TIERS) {

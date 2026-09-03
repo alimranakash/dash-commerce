@@ -71,6 +71,7 @@
 
 [data-theme="dark"] .googleButton:hover {
   border-color: #3f3366;
+  box-shadow: 0 12px 28px #0d082117;
 }
 
 [data-theme="dark"] .googleButton>span {
@@ -99,6 +100,7 @@
 [data-theme="dark"] .inputShell:focus-within,
 [data-theme="dark"] .urlInput:focus-within {
   border-color: #3f3366;
+  box-shadow: 0 0 0 3px #0e08211a;
 }
 
 [data-theme="dark"] .inputShell>svg {
@@ -108,6 +110,11 @@
 [data-theme="dark"] .inputShell input,
 [data-theme="dark"] .urlInput input {
   color: #e8e8f3;
+}
+
+[data-theme="dark"] .inputShell input::placeholder,
+[data-theme="dark"] .urlInput input::placeholder {
+  color: #aaa9b2;
 }
 
 [data-theme="dark"] .inputShell>button {
@@ -142,11 +149,13 @@
 [data-theme="dark"] .errorMessage {
   background: #311317;
   border: 1px solid #53252c;
+  color: #e798a5;
 }
 
 [data-theme="dark"] .successMessage {
   background: #132f23;
   border: 1px solid #39604e;
+  color: #9de2cc;
 }
 
 [data-theme="dark"] .switchPrompt {
@@ -170,8 +179,17 @@
   border: 1px solid #383147;
 }
 
+[data-theme="dark"] .progress .progressActive {
+  color: #a791ed;
+}
+
 [data-theme="dark"] .progress .progressActive i {
   border-color: #7a58d7;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .progress .progressActive:not(:last-child):after {
+  background: #241355;
 }
 
 [data-theme="dark"] .stepHeading {
@@ -238,10 +256,12 @@
 
 [data-theme="dark"] .codeInputs input:focus {
   border-color: #3f3366;
+  box-shadow: 0 0 0 3px #0e08211a;
 }
 
 [data-theme="dark"] .codeInputs input:disabled {
   background: #1e1f28;
+  color: #a8a9b3;
 }
 
 [data-theme="dark"] .sentTo {
@@ -301,6 +321,7 @@
 
 [data-theme="dark"] .dashboardPreview>aside span[data-active=true] {
   background: #7c3aed2b;
+  color: #af9de9;
 }
 
 [data-theme="dark"] .previewContent>header small {

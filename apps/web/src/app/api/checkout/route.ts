@@ -1,6 +1,7 @@
 import { storefrontBasePath, storefrontRequestOrigin } from "../../../modules/storefront/base-path";
 import { NextResponse, type NextRequest } from "next/server";
 import { readClientIp } from "../../../lib/request-ip";
+import { parseCartScope } from "../../../modules/cart/cart.types";
 import { ZodError } from "zod";
 import { completeCheckoutOrder } from "../../../modules/checkout/checkout-completion";
 import { createCheckoutOrder } from "../../../modules/checkout/checkout.service";
@@ -36,7 +37,11 @@ export async function POST(request: NextRequest) {
       verificationCode: getValue(formData, "verificationCode"),
       couponCode: getValue(formData, "couponCode"),
       orderBumpProductId: getValue(formData, "orderBumpProductId"),
-      submissionId: getValue(formData, "submissionId")
+      submissionId: getValue(formData, "submissionId"),
+      // Which basket to settle: the form says so because the checkout page was
+      // opened for one of them. Narrowed to a known scope before it reaches a
+      // cookie name, and every price is still read from the catalogue.
+      checkoutScope: parseCartScope(getValue(formData, "checkoutScope"))
     }, {
       ipAddress: readClientIp(request.headers)
     });
@@ -63,7 +68,16 @@ export async function POST(request: NextRequest) {
 
     return await redirectTo(request, store.slug, `/thank-you/${order.orderNumber}`);
   } catch (error) {
-    return await redirectTo(request, store.slug, `/checkout?checkoutError=${encodeURIComponent(errorMessage(error))}`);
+    // Back to the checkout the shopper was actually on. Dropping the scope here
+    // would answer a failed direct order with the shopper's ordinary cart —
+    // a different basket, a different total, and no sign of what went wrong.
+    const scope = getValue(formData, "checkoutScope") === "direct" ? "&buy=direct" : "";
+
+    return await redirectTo(
+      request,
+      store.slug,
+      `/checkout?checkoutError=${encodeURIComponent(errorMessage(error))}${scope}`
+    );
   }
 }
 

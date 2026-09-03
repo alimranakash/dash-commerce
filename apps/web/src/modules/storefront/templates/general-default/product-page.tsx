@@ -117,8 +117,9 @@ export async function GeneralProductPage({
               basePrice={product.price.toString()}
               baseSku={product.sku}
               baseStockQuantity={product.stockQuantity}
-              buyNowEnabled={productPage.buyNowEnabled}
               currency={store.currency}
+              directCheckoutEnabled={productPage.directCheckoutEnabled}
+              directCheckoutText={productPage.directCheckoutText}
               productId={product.id}
               productSlug={product.slug}
               storeId={store.id}
@@ -140,7 +141,8 @@ export async function GeneralProductPage({
                 addToCartButtonColor={productPage.addToCartButtonColor}
                 addToCartButtonRadius={productPage.addToCartButtonRadius}
                 addToCartText={productPage.addToCartText}
-                buyNowEnabled={productPage.buyNowEnabled}
+                directCheckoutEnabled={productPage.directCheckoutEnabled}
+                directCheckoutText={productPage.directCheckoutText}
                 maxQuantity={product.allowPreorder ? 999999 : product.stockQuantity}
                 productId={product.id}
                 productSlug={product.slug}

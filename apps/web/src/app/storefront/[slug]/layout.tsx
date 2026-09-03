@@ -6,6 +6,8 @@ import {
   getMarketingMetaTags,
   getMarketingTagPlan
 } from "../../../modules/marketing/marketing.service";
+import { QuickViewProvider } from "../../../modules/quick-view/components/quick-view-provider";
+import { resolveQuickView } from "../../../modules/quick-view/quick-view.service";
 import { SalesNotificationDock } from "../../../modules/sales-notifications/components/sales-notification-dock";
 import { storefrontCanonicalUrl } from "../../../modules/seo/page-metadata";
 import { ShoppingAgentDock } from "../../../modules/shopping-agent/components/shopping-agent-dock";
@@ -83,9 +85,13 @@ export default async function StorefrontLayout({ children, params }: StorefrontL
     return <div data-storefront-layout="true">{children}</div>;
   }
 
-  const [settings, marketing, wishlist] = await Promise.all([
+  const [settings, marketing, quickView, wishlist] = await Promise.all([
     getStorefrontThemeSettings(store.id),
     getMarketingTagPlan(store.id),
+    // One read for every card on the page, and null when the seller has Quick
+    // View off — the provider then mounts no dialog and every trigger renders
+    // nothing.
+    resolveQuickView(store.id),
     // One read for every heart on the page. It costs a shopper who has saved
     // nothing nothing at all: with no wishlist cookie it never reaches the
     // database.
@@ -107,30 +113,37 @@ export default async function StorefrontLayout({ children, params }: StorefrontL
           {/* Every heart on every card and the header count read one list from
           here, so a grid of thirty products is one query rather than thirty. */}
           <WishlistProvider state={wishlist} storeSlug={store.slug}>
-            {/* Analytics only ever mounts on a storefront surface — never on /dashboard
-            or /admin, which render outside this layout entirely. */}
-            <MarketingTags tags={marketing.head} />
-            <MarketingTags tags={marketing.bodyStart} />
-            {children}
-            {/* Inside the theme scope so the fixed button inherits this store's colour
-            tokens and template attribute; mounted here, once, instead of per footer. */}
-            <ScrollToTopButton />
-            {/* Once for the whole storefront, so the conversation survives a shopper
-            moving from a category to a product to the cart. Renders nothing unless
-            the seller switched the assistant on and the store is entitled to it. */}
-            <ShoppingAgentDock store={store} />
-            {/* Mounted once for the same reason: the queue keeps its place as the
-            shopper moves between pages instead of restarting with the first
-            card on every navigation. Renders nothing unless the seller switched
-            it on, the plan grants it, and the shop has a real order to show. */}
-            <SalesNotificationDock store={store} />
-            {/* Mounted once so the bar survives a shopper moving between pages —
-            remounted per navigation it would replay its entrance on every click
-            and re-open for someone who had just closed it. Renders nothing
-            unless the seller switched it on, the plan grants it, and its
-            schedule is open right now. */}
-            <NotificationBarDock store={store} />
-            <MarketingTags tags={marketing.bodyEnd} />
+            {/* One dialog for the whole storefront rather than one per card, and
+            mounted here so it survives a shopper moving between pages: a grid of
+            forty-eight products otherwise means forty-eight scroll locks and
+            forty-eight escape handlers to show one of them. The cards carry a
+            button and nothing else. */}
+            <QuickViewProvider storeSlug={store.slug} view={quickView}>
+              {/* Analytics only ever mounts on a storefront surface — never on /dashboard
+              or /admin, which render outside this layout entirely. */}
+              <MarketingTags tags={marketing.head} />
+              <MarketingTags tags={marketing.bodyStart} />
+              {children}
+              {/* Inside the theme scope so the fixed button inherits this store's colour
+              tokens and template attribute; mounted here, once, instead of per footer. */}
+              <ScrollToTopButton />
+              {/* Once for the whole storefront, so the conversation survives a shopper
+              moving from a category to a product to the cart. Renders nothing unless
+              the seller switched the assistant on and the store is entitled to it. */}
+              <ShoppingAgentDock store={store} />
+              {/* Mounted once for the same reason: the queue keeps its place as the
+              shopper moves between pages instead of restarting with the first
+              card on every navigation. Renders nothing unless the seller switched
+              it on, the plan grants it, and the shop has a real order to show. */}
+              <SalesNotificationDock store={store} />
+              {/* Mounted once so the bar survives a shopper moving between pages —
+              remounted per navigation it would replay its entrance on every click
+              and re-open for someone who had just closed it. Renders nothing
+              unless the seller switched it on, the plan grants it, and its
+              schedule is open right now. */}
+              <NotificationBarDock store={store} />
+              <MarketingTags tags={marketing.bodyEnd} />
+            </QuickViewProvider>
           </WishlistProvider>
         </StorefrontBasePathProvider>
       </StorefrontThemeProvider>

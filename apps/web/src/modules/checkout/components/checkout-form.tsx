@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
+import type { CartScope } from "../../cart/cart.types";
 import type { OrderBumpOffer } from "../../merchandising/order-bump.schema";
 import type { PaymentMethodTypeValue } from "../../payments/payment.schema";
 import { defaultCheckoutSettings } from "../checkout-settings";
@@ -46,6 +47,8 @@ type CheckoutShippingRate = {
 
 type CheckoutFormProps = {
   checkoutError: string | undefined;
+  /** Which basket the POST settles: the cart, or a Direct Checkout of one item. */
+  checkoutScope: CartScope;
   /** Owned by `CheckoutExperience`; carried here only so the POST includes it. */
   couponCode: string;
   currency: string;
@@ -66,6 +69,7 @@ type CheckoutFormProps = {
 
 export function CheckoutForm({
   checkoutError,
+  checkoutScope,
   couponCode,
   currency,
   notes,
@@ -93,7 +97,7 @@ export function CheckoutForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [isPlacing, setIsPlacing] = useState(false);
 
-  useCheckoutContactCapture(formRef, storeSlug);
+  useCheckoutContactCapture(formRef, storeSlug, checkoutScope);
   useRestoredPageReset(setIsPlacing);
 
   return (
@@ -116,6 +120,7 @@ export function CheckoutForm({
       ref={formRef}
     >
       <input name="storeSlug" type="hidden" value={storeSlug} />
+      <input name="checkoutScope" type="hidden" value={checkoutScope} />
       <input name="submissionId" type="hidden" value={submissionId} />
       <input name="couponCode" type="hidden" value={couponCode} />
       <input name="country" type="hidden" value="Bangladesh" />
@@ -429,7 +434,8 @@ function useRestoredPageReset(setIsPlacing: (value: boolean) => void) {
  */
 function useCheckoutContactCapture(
   formRef: React.RefObject<HTMLFormElement | null>,
-  storeSlug: string
+  storeSlug: string,
+  checkoutScope: CartScope
 ) {
   const lastSent = useRef("");
 
@@ -452,7 +458,9 @@ function useCheckoutContactCapture(
         return;
       }
 
-      const fields = new URLSearchParams({ storeSlug });
+      // Both of these say where the draft goes rather than what is in it, which
+      // is why they are here and not in CAPTURED_FIELDS.
+      const fields = new URLSearchParams({ checkoutScope, storeSlug });
 
       for (const field of CAPTURED_FIELDS) {
         fields.set(field, read(field));
@@ -497,7 +505,7 @@ function useCheckoutContactCapture(
       form.removeEventListener("input", onInput);
       window.removeEventListener("pagehide", onLeave);
     };
-  }, [formRef, storeSlug]);
+  }, [checkoutScope, formRef, storeSlug]);
 }
 
 function isManualCheckoutPayment(type: PaymentMethodTypeValue) {

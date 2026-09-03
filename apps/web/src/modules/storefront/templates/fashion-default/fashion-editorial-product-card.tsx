@@ -4,6 +4,7 @@ import { useStorefrontBasePath } from "../../base-path-provider";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { formatStorefrontMoney } from "../../format";
+import { QuickViewTrigger } from "../../../quick-view/components/quick-view-trigger";
 import type { FashionProductCardData } from "./fashion-product-card-data";
 import styles from "./fashion-product-card.module.css";
 
@@ -39,7 +40,10 @@ export function FashionEditorialProductCard({
 
   return (
     <article className={styles.card}>
-      <div className={styles.media}>
+      {/* The hover reveal for the Quick View button is a global rule, and this
+        module has hashed away every class name it could have targeted. The
+        attribute is what it keys off instead. */}
+      <div className={styles.media} data-quick-view-media="">
         <Link aria-label={`View ${product.title}`} className={styles.mediaLink} href={productHref}>
           <FashionProductImages
             primaryAlt={primaryImage?.alt ?? product.title}
@@ -54,6 +58,9 @@ export function FashionEditorialProductCard({
               <span data-kind={getBadgeKind(badge)} key={badge}>{badge}</span>
             ))}
           </div>
+        ) : null}
+        {product.slug ? (
+          <QuickViewTrigger productSlug={product.slug} productTitle={product.title} />
         ) : null}
         {canAddToCart ? (
           <form action="/api/cart" className={styles.quickAdd} method="post">

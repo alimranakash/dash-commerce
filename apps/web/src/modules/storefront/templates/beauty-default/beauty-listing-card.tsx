@@ -6,6 +6,7 @@ import type { ProductCardProduct } from "../../product-card-data";
 import { StorefrontImage } from "../../components/storefront-image";
 import type { StorefrontProductSectionSettings } from "../../customization";
 import { formatStorefrontMoney } from "../../format";
+import { QuickViewTrigger } from "../../../quick-view/components/quick-view-trigger";
 import { WishlistButton } from "../../../wishlist/components/wishlist-button";
 import { BeautyQuickAdd } from "./beauty-quick-add";
 
@@ -66,6 +67,10 @@ export function BeautyListingCard({
           ) : null}
         </Link>
         {flag ? <span className="beauty-product-tile-flag">{flag}</span> : null}
+        {/* The same trigger the shared card uses, so a shop on this template
+          gets Quick View from the same seller setting rather than from a second
+          one nobody would think to look for. */}
+        <QuickViewTrigger productSlug={product.slug} productTitle={product.title} />
         <WishlistButton productId={product.id} productSlug={product.slug} />
         {storeId && !isSoldOut ? (
           <BeautyQuickAdd

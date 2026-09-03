@@ -40,7 +40,8 @@ const storefrontSections = [
   { href: "#product-sections", label: "Product Sections" },
   { href: "#fashion-homepage", label: "Fashion Homepage" },
   { href: "#electronics-homepage", label: "Electronics Homepage" },
-  { href: "#product-page", label: "Product Page" }
+  { href: "#product-page", label: "Product Page" },
+  { href: "#quick-view", label: "Quick View" }
 ];
 
 function getSearchParamValue(value: string | string[] | undefined) {
