@@ -12,7 +12,7 @@
 
 /* ---- Tailwind utilities ----------------------------------------------
    461 overrides derived from 474 colour utilities
-   found across 1008 source files. */
+   found across 1009 source files. */
 
 [data-theme="dark"] .divide-\[\#ececf5\] > :where(:not(:last-child)),
 [data-theme="dark"] .border-\[\#ececf5\] {
@@ -1373,7 +1373,7 @@
 }
 
 /* ---- globals.css ------------------------------------------------------
-   1487 declarations across 1000 rules. These come
+   1515 declarations across 1016 rules. These come
    last so that, exactly as in light mode, a component stylesheet beats a
    utility class at the same specificity. */
 
@@ -5313,6 +5313,82 @@
   background: #2e1818;
   border: 1px solid #532525;
   color: #ed9191;
+}
+
+[data-theme="dark"] .menu-items-helper {
+  color: #bdc1d1;
+}
+
+[data-theme="dark"] .menu-items-count {
+  background: #1c1630;
+  color: #aa91ed;
+}
+
+[data-theme="dark"] .menu-item-row {
+  background: #212229;
+  border: 1px solid #363642;
+}
+
+[data-theme="dark"] .menu-item-row.is-dragging {
+  border-color: #3e3366;
+  box-shadow: 0 8px 24px #11082124;
+}
+
+[data-theme="dark"] .menu-item-grip {
+  color: #8b8e9d;
+}
+
+[data-theme="dark"] .menu-item-index {
+  background: #170d33;
+  color: #b391ed;
+}
+
+[data-theme="dark"] .menu-item-fields label {
+  color: #e8e9f2;
+}
+
+[data-theme="dark"] .menu-item-quick-link select {
+  color: #c0c1ce;
+}
+
+[data-theme="dark"] .menu-item-actions button {
+  background: #23242a;
+  border: 1px solid #2e344a;
+  color: #d0d3e2;
+}
+
+[data-theme="dark"] .menu-item-actions button:hover:not(:disabled) {
+  background: #1c1630;
+  border-color: #2d2553;
+  color: #b391ed;
+}
+
+[data-theme="dark"] .menu-item-remove {
+  color: #ed9191 !important;
+}
+
+[data-theme="dark"] .menu-item-remove:hover:not(:disabled) {
+  background: #2e1818 !important;
+  border-color: #532525 !important;
+  color: #ed9191 !important;
+}
+
+[data-theme="dark"] .menu-items-preview {
+  background: linear-gradient(180deg, #20212a, #1b172f);
+  border: 1px dashed #2d2553;
+}
+
+[data-theme="dark"] .menu-items-preview-label {
+  color: #b391ed;
+}
+
+[data-theme="dark"] .menu-items-preview-link {
+  border-right: 1px solid #2d2553;
+  color: #e8e9f2;
+}
+
+[data-theme="dark"] .menu-items-preview-empty {
+  color: #a4a7b6;
 }
 
 [data-theme="dark"] .sf-predictive-form {

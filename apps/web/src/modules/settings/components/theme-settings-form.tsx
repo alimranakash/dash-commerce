@@ -14,6 +14,7 @@ import {
   type StorefrontProductSectionSettings
 } from "../../storefront/customization";
 import type { SettingsActionState } from "../settings.actions";
+import { MenuItemsEditor } from "./menu-items-editor";
 import { PromoCardsEditor } from "./promo-cards-editor";
 import { ColorPickerField, SettingsCard, ToggleField } from "./theme-form-fields";
 
@@ -123,11 +124,11 @@ export function ThemeSettingsForm({
           <ColorPickerField label="Header background" name="headerBackgroundColor" value={advanced.header.backgroundColor} />
           <ColorPickerField label="Header text color" name="headerTextColor" value={advanced.header.textColor} />
         </div>
-        <RepeaterTextarea
-          helper="One item per line. Format: Label | /path. Reorder lines to reorder menu."
+        <MenuItemsEditor
+          helper="Drag to reorder, or use the up/down arrows. Pick a page from Quick link, or type your own path."
+          items={advanced.header.menuItems}
           label="Menu items"
           name="headerMenuItems"
-          value={advanced.header.menuItems.map((item) => `${item.label} | ${item.url}`).join("\n")}
         />
       </SettingsCard>
 
