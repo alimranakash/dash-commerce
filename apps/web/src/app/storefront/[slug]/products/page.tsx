@@ -7,10 +7,12 @@ import { barAppearsAt } from "../../../../modules/notification-bar/notification-
 import { resolveNotificationBar } from "../../../../modules/notification-bar/notification-bar.service";
 import { getPublicProductTaxonomyItems } from "../../../../modules/products/product-taxonomy.service";
 import { ProductGrid } from "../../../../modules/storefront/components/product-listing";
+import { ShopFilterSidebar } from "../../../../modules/storefront/components/shop-filter-panel";
 import { ShopToolbar } from "../../../../modules/storefront/components/shop-toolbar";
 import { StorefrontPagination } from "../../../../modules/storefront/components/storefront-pagination";
 import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../../../modules/storefront/customization";
 import { storefrontSectionHref } from "../../../../modules/storefront/product-sections";
+import { resolveShopFilterLayout } from "../../../../modules/storefront/shop-filters";
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../modules/storefront/components/storefront-header";
 import { storefrontCanonicalUrl, toMetaDescription } from "../../../../modules/seo/page-metadata";
@@ -116,6 +118,12 @@ export default async function StorefrontProductsPage({
   ]);
   const activeCategory = categories.find((category) => category.slug === filters.category);
   const totalPages = Math.max(1, Math.ceil(totalProducts / productsPerPage));
+  // Settings -> Shop / Collection Page -> Filter layout, narrowed by what there
+  // is to filter on: a sidebar with no controls in it is still a drawer.
+  const filterLayout = resolveShopFilterLayout(shopSettings, {
+    brands: brands.length,
+    tags: tags.length
+  });
   // Product Sections -> Shop / Category Listing supplies the card CTA defaults;
   // everything the Pages panel exposes (columns, card flags, page size, header
   // copy) is owned here so those controls are never saved-and-ignored.
@@ -168,58 +176,71 @@ export default async function StorefrontProductsPage({
         <h1 className="sr-only" id="shop-title">
           {listingSection.title}
         </h1>
-        <ShopToolbar
-          brands={brands}
-          categories={categories}
-          productCount={totalProducts}
-          settings={shopSettings}
-          tags={tags}
-        />
-        <NotificationBarSlot anchor="above_grid" store={store} surface="shop" />
-        {products.length === 0 ? (
-          <div className="sf-shop-empty">
-            <div aria-hidden="true" />
-            <h3>No products found</h3>
-            <p>
-              {activeCategory
-                ? "No public products are available in this collection yet."
-                : "Try changing filters or sorting to find more products."}
-            </p>
-            <Link href={`${basePath}/products`}>Reset Filters</Link>
+        <div className={`sf-shop-body sf-shop-body-${filterLayout}`}>
+          {filterLayout === "sidebar" ? (
+            <ShopFilterSidebar
+              brands={brands}
+              categories={categories}
+              settings={shopSettings}
+              tags={tags}
+            />
+          ) : null}
+          <div className="sf-shop-results">
+            <ShopToolbar
+              brands={brands}
+              categories={categories}
+              filterLayout={filterLayout}
+              productCount={totalProducts}
+              settings={shopSettings}
+              tags={tags}
+            />
+            <NotificationBarSlot anchor="above_grid" store={store} surface="shop" />
+            {products.length === 0 ? (
+              <div className="sf-shop-empty">
+                <div aria-hidden="true" />
+                <h3>No products found</h3>
+                <p>
+                  {activeCategory
+                    ? "No public products are available in this collection yet."
+                    : "Try changing filters or sorting to find more products."}
+                </p>
+                <Link href={`${basePath}/products`}>Reset Filters</Link>
+              </div>
+            ) : (
+              <>
+                <ProductGrid
+                  cardVariant={template.productCardVariant}
+                  currency={store.currency}
+                  gridId={gridId}
+                  /* A bar that is a cell in the grid rather than a band above it.
+                     Passed in as a rendered node so `ProductGrid` stays
+                     presentational and knows nothing about announcements: it is
+                     handed something to place and the count to place it after. The
+                     slot itself renders nothing unless the seller chose `in_grid`. */
+                  inlineSlot={
+                    barInGrid === null ? null : (
+                      <NotificationBarSlot anchor="in_grid" store={store} surface="shop" />
+                    )
+                  }
+                  inlineSlotAfter={barInGrid}
+                  products={toProductCardProducts(products)}
+                  section={listingSection}
+                  storeId={store.id}
+                  storeSlug={store.slug}
+                />
+                <StorefrontPagination
+                  buildHref={(page) => buildProductsHref(basePath, filters, page)}
+                  currentPage={currentPage}
+                  label="Product pagination"
+                  mode={shopSettings.paginationMode}
+                  perPage={productsPerPage}
+                  totalItems={totalProducts}
+                  totalPages={totalPages}
+                />
+              </>
+            )}
           </div>
-        ) : (
-          <>
-            <ProductGrid
-              cardVariant={template.productCardVariant}
-              currency={store.currency}
-              gridId={gridId}
-              /* A bar that is a cell in the grid rather than a band above it.
-                 Passed in as a rendered node so `ProductGrid` stays
-                 presentational and knows nothing about announcements: it is
-                 handed something to place and the count to place it after. The
-                 slot itself renders nothing unless the seller chose `in_grid`. */
-              inlineSlot={
-                barInGrid === null ? null : (
-                  <NotificationBarSlot anchor="in_grid" store={store} surface="shop" />
-                )
-              }
-              inlineSlotAfter={barInGrid}
-              products={toProductCardProducts(products)}
-              section={listingSection}
-              storeId={store.id}
-              storeSlug={store.slug}
-            />
-            <StorefrontPagination
-              buildHref={(page) => buildProductsHref(basePath, filters, page)}
-              currentPage={currentPage}
-              label="Product pagination"
-              mode={shopSettings.paginationMode}
-              perPage={productsPerPage}
-              totalItems={totalProducts}
-              totalPages={totalPages}
-            />
-          </>
-        )}
+        </div>
       </section>
       <NotificationBarSlot anchor="before_footer" store={store} surface="shop" />
       <StorefrontFooter primaryDomain={primaryDomain?.domain} store={store} />

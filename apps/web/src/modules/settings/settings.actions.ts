@@ -547,6 +547,7 @@ function advancedSettingsFromFormData(formData: FormData, heroImageUrl: string) 
       enableSorting: checkbox(formData, "shopEnableSorting"),
       enableTagFilter: checkbox(formData, "shopEnableTagFilter"),
       enableResultCounter: checkbox(formData, "shopEnableResultCounter"),
+      filterLayout: getValue(formData, "shopFilterLayout"),
       gridSpacing: Number(getValue(formData, "shopGridSpacing")),
       paginationMode: getValue(formData, "shopPaginationMode"),
       pageTitle: getValue(formData, "shopPageTitle"),

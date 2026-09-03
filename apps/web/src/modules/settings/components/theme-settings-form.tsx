@@ -399,6 +399,17 @@ export function ThemeSettingsForm({
             </select>
           </label>
           <label>
+            Filter layout
+            <select defaultValue={advanced.shopPage.filterLayout} name="shopFilterLayout">
+              <option value="drawer">Slide-out drawer</option>
+              <option value="sidebar">Sidebar beside products</option>
+            </select>
+            <span className="theme-field-helper">
+              A sidebar collapses back into the drawer on phones, and on any page where every
+              individual filter below is switched off.
+            </span>
+          </label>
+          <label>
             Default sorting
             <select defaultValue={advanced.shopPage.defaultSort} name="shopDefaultSort">
               <option value="featured">Featured</option>

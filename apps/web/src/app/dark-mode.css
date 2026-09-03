@@ -206,3 +206,36 @@
 [data-theme="dark"] .sf-pagination-step:not([aria-disabled="true"]):hover {
   background: rgba(255, 255, 255, 0.08);
 }
+
+/* --- Filter sidebar: a selected chip is an inversion, not a surface ----------
+   In light mode a picked brand or tag is a black pill with white letters, and
+   "Apply price" fills black on hover. Mapped as surfaces those become #24262d —
+   a panel tone one step off the page, sitting under white text. The result
+   reads as a slightly raised chip rather than a selected one, which is the one
+   thing a filter chip has to say.
+
+   They are inversions of the page rather than surfaces on it, so they flip: the
+   dark theme's own foreground becomes the fill and the page tone becomes the
+   ink, which is the same relationship the light theme has, read the other way.
+   The unselected chip is untouched — the generator's border and text are right.
+
+   The radio's fallback is here for the neighbouring reason. `--store-primary`
+   is the seller's and stays exactly as they set it; only the colour a shop that
+   set nothing falls back to is ours, and a #3a3a3a dot on a dark panel is a
+   radio nobody can see is checked. */
+
+[data-theme="dark"] .sf-filter-sidebar .sf-filter-group-facets button.active {
+  background: #ebecef;
+  border-color: #ebecef;
+  color: #17181c;
+}
+
+[data-theme="dark"] .sf-filter-sidebar .sf-filter-price-row + button:hover {
+  background: #ebecef;
+  border-color: #ebecef;
+  color: #17181c;
+}
+
+[data-theme="dark"] .sf-filter-sidebar .sf-filter-group input[type="radio"] {
+  accent-color: var(--store-primary, #ebecef);
+}

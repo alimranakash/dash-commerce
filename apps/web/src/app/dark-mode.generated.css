@@ -12,7 +12,7 @@
 
 /* ---- Tailwind utilities ----------------------------------------------
    461 overrides derived from 474 colour utilities
-   found across 997 source files. */
+   found across 1002 source files. */
 
 [data-theme="dark"] .divide-\[\#ececf5\] > :where(:not(:last-child)),
 [data-theme="dark"] .border-\[\#ececf5\] {
@@ -1373,7 +1373,7 @@
 }
 
 /* ---- globals.css ------------------------------------------------------
-   1443 declarations across 970 rules. These come
+   1460 declarations across 983 rules. These come
    last so that, exactly as in light mode, a component stylesheet beats a
    utility class at the same specificity. */
 
@@ -2363,6 +2363,64 @@
 
 [data-theme="dark"] .sf-filter-drawer-actions button:last-child {
   background: #24262d;
+}
+
+@media (min-width: 901px) {
+  [data-theme="dark"] .sf-shop-body-sidebar .sf-shop-toolbar {
+    border-bottom: 1px solid #383940;
+  }
+}
+
+[data-theme="dark"] .sf-filter-sidebar-header {
+  border-bottom: 1px solid #383940;
+}
+
+[data-theme="dark"] .sf-filter-sidebar-header h2 {
+  color: #ebecef;
+}
+
+[data-theme="dark"] .sf-filter-sidebar-header button {
+  color: #c5c5c9;
+}
+
+[data-theme="dark"] .sf-filter-sidebar-header button:hover {
+  color: #ebecef;
+}
+
+[data-theme="dark"] .sf-filter-sidebar .sf-filter-group label {
+  color: #d7d7db;
+}
+
+[data-theme="dark"] .sf-filter-sidebar .sf-filter-group label:hover {
+  color: #ebecef;
+}
+
+[data-theme="dark"] .sf-filter-sidebar .sf-filter-group input[type="radio"] {
+  accent-color: var(--store-primary, #3a3a3a);
+}
+
+[data-theme="dark"] .sf-filter-sidebar .sf-filter-group-facets button {
+  border: 1px solid #383940;
+  color: #d7d7db;
+}
+
+[data-theme="dark"] .sf-filter-sidebar .sf-filter-group-facets button:hover {
+  border-color: #484951;
+  color: #ebecef;
+}
+
+[data-theme="dark"] .sf-filter-sidebar .sf-filter-group-facets button.active {
+  background: #24262d;
+  border-color: #656671;
+}
+
+[data-theme="dark"] .sf-filter-sidebar .sf-filter-price-row + button {
+  border: 1px solid #484951;
+}
+
+[data-theme="dark"] .sf-filter-sidebar .sf-filter-price-row + button:hover {
+  background: #24262d;
+  border-color: #656671;
 }
 
 [data-theme="dark"] .sf-shop-empty > div {

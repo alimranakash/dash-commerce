@@ -12,12 +12,14 @@ import {
   getSearchResultsForStore
 } from "../../../../modules/search/search.service";
 import { ProductGrid } from "../../../../modules/storefront/components/product-listing";
+import { ShopFilterSidebar } from "../../../../modules/storefront/components/shop-filter-panel";
 import { ShopToolbar } from "../../../../modules/storefront/components/shop-toolbar";
 import { DEFAULT_STOREFRONT_ADVANCED_SETTINGS } from "../../../../modules/storefront/customization";
 import type { StorefrontShopPageSettings } from "../../../../modules/storefront/customization";
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../modules/storefront/components/storefront-header";
 import { StorefrontPagination } from "../../../../modules/storefront/components/storefront-pagination";
+import { resolveShopFilterLayout } from "../../../../modules/storefront/shop-filters";
 import {
   getStorefrontCategories,
   getStorefrontProductCount,
@@ -142,6 +144,12 @@ export default async function StorefrontSearchPage({
     enableHoverImage: shopSettings.enableHoverImage
   };
   const gridId = "storefront-search-product-grid";
+  // Settings -> Shop / Collection Page -> Filter layout, narrowed by what there
+  // is to filter on: a sidebar with no controls in it is still a drawer.
+  const filterLayout = resolveShopFilterLayout(searchSettings, {
+    brands: brands.length,
+    tags: tags.length
+  });
 
   return (
     <main className="sf-page" data-storefront-template={template.id}>
@@ -176,47 +184,59 @@ export default async function StorefrontSearchPage({
           </p>
         ) : null}
 
-        <ShopToolbar
-          brands={brands}
-          categories={categories}
-          productCount={totalProducts}
-          settings={searchSettings}
-          tags={tags}
-        />
-
-        {products.length === 0 ? (
-          <div className="sf-shop-empty">
-            <div aria-hidden="true" />
-            <h3>No products found</h3>
-            <p>
-              {hasActiveFilters
-                ? `No product matching "${query}" fits the filters you picked.`
-                : `We could not find anything for "${query}". Try a shorter or more general word.`}
-            </p>
-            <Link href={`${basePath}/products`}>Browse all products</Link>
+        <div className={`sf-shop-body sf-shop-body-${filterLayout}`}>
+          {filterLayout === "sidebar" ? (
+            <ShopFilterSidebar
+              brands={brands}
+              categories={categories}
+              settings={searchSettings}
+              tags={tags}
+            />
+          ) : null}
+          <div className="sf-shop-results">
+            <ShopToolbar
+              brands={brands}
+              categories={categories}
+              filterLayout={filterLayout}
+              productCount={totalProducts}
+              settings={searchSettings}
+              tags={tags}
+            />
+            {products.length === 0 ? (
+              <div className="sf-shop-empty">
+                <div aria-hidden="true" />
+                <h3>No products found</h3>
+                <p>
+                  {hasActiveFilters
+                    ? `No product matching "${query}" fits the filters you picked.`
+                    : `We could not find anything for "${query}". Try a shorter or more general word.`}
+                </p>
+                <Link href={`${basePath}/products`}>Browse all products</Link>
+              </div>
+            ) : (
+              <>
+                <ProductGrid
+                  cardVariant={template.productCardVariant}
+                  currency={store.currency}
+                  gridId={gridId}
+                  products={toProductCardProducts(products)}
+                  section={listingSection}
+                  storeId={store.id}
+                  storeSlug={store.slug}
+                />
+                <StorefrontPagination
+                  buildHref={(page) => buildSearchHref(basePath, filters, page)}
+                  currentPage={currentPage}
+                  itemNoun="results"
+                  label="Search result pagination"
+                  perPage={productsPerPage}
+                  totalItems={totalProducts}
+                  totalPages={totalPages}
+                />
+              </>
+            )}
           </div>
-        ) : (
-          <>
-            <ProductGrid
-              cardVariant={template.productCardVariant}
-              currency={store.currency}
-              gridId={gridId}
-              products={toProductCardProducts(products)}
-              section={listingSection}
-              storeId={store.id}
-              storeSlug={store.slug}
-            />
-            <StorefrontPagination
-              buildHref={(page) => buildSearchHref(basePath, filters, page)}
-              currentPage={currentPage}
-              itemNoun="results"
-              label="Search result pagination"
-              perPage={productsPerPage}
-              totalItems={totalProducts}
-              totalPages={totalPages}
-            />
-          </>
-        )}
+        </div>
       </section>
       <StorefrontFooter primaryDomain={primaryDomain?.domain} store={store} />
     </main>

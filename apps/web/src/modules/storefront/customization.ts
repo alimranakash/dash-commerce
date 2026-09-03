@@ -301,6 +301,13 @@ export type StorefrontShopPageSettings = {
   enableSorting: boolean;
   enableTagFilter: boolean;
   enableResultCounter: boolean;
+  /**
+   * Where the filters live on a listing page. `drawer` is what every store has
+   * today and stays the default; `sidebar` puts the same panel in a column
+   * beside the grid. Below the sidebar breakpoint a sidebar collapses back into
+   * the drawer, because a filter rail on a phone is the whole screen.
+   */
+  filterLayout: "drawer" | "sidebar";
   gridSpacing: number;
   paginationMode: "pagination" | "load-more";
   pageTitle: string;
@@ -911,6 +918,7 @@ export const DEFAULT_STOREFRONT_ADVANCED_SETTINGS: StorefrontAdvancedSettings = 
     enableSorting: true,
     enableTagFilter: true,
     enableResultCounter: true,
+    filterLayout: "drawer",
     gridSpacing: 4,
     paginationMode: "pagination",
     pageTitle: "Products",
@@ -1672,6 +1680,7 @@ function shopPageSettings(input: Record<string, unknown>): StorefrontShopPageSet
     enableSorting: bool(input.enableSorting, defaults.enableSorting),
     enableTagFilter: bool(input.enableTagFilter, defaults.enableTagFilter),
     enableResultCounter: bool(input.enableResultCounter, defaults.enableResultCounter),
+    filterLayout: oneOf(input.filterLayout, ["drawer", "sidebar"], defaults.filterLayout),
     gridSpacing: numberInRange(input.gridSpacing, 0, 36, defaults.gridSpacing),
     paginationMode: oneOf(input.paginationMode, ["pagination", "load-more"], defaults.paginationMode),
     pageTitle: text(input.pageTitle, defaults.pageTitle),

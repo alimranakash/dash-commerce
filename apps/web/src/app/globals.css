@@ -3437,14 +3437,19 @@ textarea {
 .sf-filter-price-row {
   display: grid;
   gap: 10px;
-  grid-template-columns: 1fr 1fr;
+  /* `minmax(0, …)` rather than a bare `1fr`: a text input reports an intrinsic
+     min-width wider than a narrow filter column, and an `auto` minimum would let
+     it push the second box out of the panel. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .sf-filter-price-row input {
   border: 1px solid #e0e0e0;
   border-radius: 0;
   min-height: 42px;
+  min-width: 0;
   padding: 0 12px;
+  width: 100%;
 }
 
 .sf-filter-drawer-actions {
@@ -3469,6 +3474,225 @@ textarea {
 .sf-filter-drawer-actions button:last-child {
   background: #111111;
   color: #ffffff;
+}
+
+/* --- Filter sidebar ------------------------------------------------------
+   Settings -> Shop / Collection Page -> Filter layout. The sidebar is the same
+   panel as the drawer in a different container, so everything above this point
+   (.sf-filter-group, .sf-filter-price-row) is shared and only the frame differs.
+   Every rule here is scoped to `.sf-filter-sidebar` or `.sf-shop-body-sidebar`
+   so the default drawer keeps the look it has.
+
+   `sf-shop-body` wraps the toolbar and the results on every listing surface
+   whichever layout is chosen, so the toolbar starts where the grid starts and
+   the filter column's own heading lines up with it. */
+.sf-shop-body {
+  display: grid;
+  gap: clamp(28px, 3vw, 52px);
+}
+
+.sf-shop-body-sidebar {
+  align-items: start;
+  grid-template-columns: minmax(210px, 258px) minmax(0, 1fr);
+}
+
+/* Paired with the `minmax(0, 1fr)` track above: a grid track sizes to its
+   content by default, so without both halves a wide product card pushes the
+   sidebar off the page instead of the grid shrinking. */
+.sf-shop-results {
+  min-width: 0;
+}
+
+/* The toolbar and the filter heading are one row read across two columns, so
+   they share a height and a rule line. Everything below that line — the first
+   filter group and the top of the grid — then starts level. */
+@media (min-width: 901px) {
+  .sf-shop-body-sidebar .sf-shop-toolbar {
+    align-items: center;
+    border-bottom: 1px solid #ececec;
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+    margin-bottom: 26px;
+    min-height: 46px;
+    padding-bottom: 17px;
+  }
+
+  /* The count is the left of its own column here rather than the centre of the
+     page, because the filter button that used to hold that side is gone. */
+  .sf-shop-body-sidebar .sf-shop-toolbar-center {
+    text-align: left;
+  }
+}
+
+.sf-filter-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.sf-filter-sidebar-header {
+  align-items: center;
+  border-bottom: 1px solid #ececec;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  min-height: 46px;
+  padding-bottom: 17px;
+}
+
+.sf-filter-sidebar-header h2 {
+  color: #111111;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.sf-filter-sidebar-header button {
+  background: none;
+  border: 0;
+  color: #777777;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.15s ease;
+}
+
+.sf-filter-sidebar-header button:hover {
+  color: #111111;
+}
+
+/* The header already draws the first rule line, so the group under it must not
+   draw a second one 26px lower. */
+.sf-filter-sidebar .sf-filter-group:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.sf-filter-sidebar .sf-filter-group h3 {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  margin: 0 0 15px;
+  text-transform: uppercase;
+}
+
+.sf-filter-sidebar .sf-filter-group > div {
+  gap: 12px;
+}
+
+.sf-filter-sidebar .sf-filter-group label {
+  color: #4a4a4a;
+  cursor: pointer;
+  line-height: 1.35;
+  transition: color 0.15s ease;
+}
+
+.sf-filter-sidebar .sf-filter-group label:hover {
+  color: #111111;
+}
+
+/* The one place the shop's own colour belongs in this panel: the mark that says
+   which row the shopper picked. */
+.sf-filter-sidebar .sf-filter-group input[type="radio"] {
+  accent-color: var(--store-primary, #111111);
+  flex: none;
+  height: 15px;
+  width: 15px;
+}
+
+/* Brands and tags are a set of choices, not a list of rows, and a column this
+   narrow reads them far better wrapped as chips. */
+.sf-filter-sidebar .sf-filter-group-facets > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sf-filter-sidebar .sf-filter-group-facets button {
+  border: 1px solid #e4e4e4;
+  border-radius: 999px;
+  color: #4a4a4a;
+  font-size: 0.82rem;
+  line-height: 1;
+  padding: 9px 14px;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.sf-filter-sidebar .sf-filter-group-facets button:hover {
+  border-color: #b4b4b4;
+  color: #111111;
+}
+
+.sf-filter-sidebar .sf-filter-group-facets button.active {
+  background: #111111;
+  border-color: #111111;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.sf-filter-sidebar .sf-filter-price-row input {
+  border-radius: 4px;
+  font-size: 0.88rem;
+  min-height: 40px;
+}
+
+.sf-filter-sidebar .sf-filter-price-row + button {
+  border: 1px solid #d8d8d8;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  font-weight: 650;
+  min-height: 38px;
+  padding: 0 16px;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.sf-filter-sidebar .sf-filter-price-row + button:hover {
+  background: #111111;
+  border-color: #111111;
+  color: #ffffff;
+}
+
+/* On `sidebar` the panel is already open beside the grid, so the toolbar button
+   would only open a second copy of it. It stays rendered because it is the
+   drawer the layout falls back to below the breakpoint. */
+.sf-shop-toolbar-left[data-filter-layout="sidebar"] {
+  display: none;
+}
+
+/* Four across in a column narrowed by the sidebar crushes the cards, so the
+   sidebar borrows the next breakpoint down rather than the seller losing a
+   column they did choose at full width. */
+@media (min-width: 901px) and (max-width: 1200px) {
+  .sf-shop-body-sidebar .general-product-listing-grid-4 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* A filter rail on a phone is the whole screen, so below here the sidebar comes
+   down and the drawer button comes back. */
+@media (max-width: 900px) {
+  .sf-shop-body-sidebar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sf-shop-body-sidebar > .sf-filter-sidebar {
+    display: none;
+  }
+
+  .sf-shop-toolbar-left[data-filter-layout="sidebar"] {
+    display: block;
+  }
 }
 
 .sf-shop-empty {
