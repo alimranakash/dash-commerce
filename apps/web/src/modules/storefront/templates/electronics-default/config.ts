@@ -1,3 +1,4 @@
+import { storefrontTemplateNames } from "../template-mapping";
 import type { StorefrontTemplateConfig } from "../types";
 import { ElectronicsCategoryLayoutPlaceholder } from "./category-layout";
 import { ElectronicsHomepageSections } from "./homepage-sections";
@@ -35,7 +36,7 @@ export const electronicsDefaultTemplate: StorefrontTemplateConfig = {
     "newsletter"
   ],
   id: "electronics-default",
-  name: "Electronics Default",
+  name: storefrontTemplateNames["electronics-default"],
   previewImage: "/template-previews/electronics-default.png",
   productCardVariant: "electronics-spec-card",
   productPageVariant: "electronics-product-detail"

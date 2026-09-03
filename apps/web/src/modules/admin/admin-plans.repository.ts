@@ -1,5 +1,6 @@
 import { prisma } from "@dash/db";
 import { DEFAULT_PLAN_SLUG, FREE_PLAN_TRIAL_DAYS, PLAN_CATALOG } from "./plan-catalog";
+import { singleFlight } from "../../lib/single-flight";
 import type { PlanInput } from "./admin-plans.schema";
 
 /**
@@ -10,8 +11,13 @@ import type { PlanInput } from "./admin-plans.schema";
  * Two things are repaired on a populated database, because both are cases where
  * the code and the data disagreeing is always a bug rather than an edit:
  * `repairFreePlanTrialDays()`, and the feature entitlements below.
+ *
+ * Single-flighted for the reason `ensureDefaultSubscriptionsForStores` is: on an
+ * empty table two concurrent callers both read `count === 0` and both seed the
+ * catalog, and the loser takes a duplicate `slug` rather than the plans it
+ * asked for.
  */
-export async function ensureDefaultPlans() {
+export const ensureDefaultPlans = singleFlight(async () => {
   const count = await prisma.plan.count();
 
   if (count > 0) {
@@ -32,7 +38,7 @@ export async function ensureDefaultPlans() {
       }
     });
   }
-}
+});
 
 /**
  * The single value repaired on a populated table.

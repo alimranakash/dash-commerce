@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import ob from "../onboarding/onboarding-experience.module.css";
 import { businessTypes, countryOptions, currencyOptions, slugify, storeSlugPattern, timezoneOptions, type BusinessType, type CountryName } from "../onboarding/options";
+import type { StorePreviewDesigns } from "../onboarding/store-preview";
 import { StepIntro, StorePreview } from "../onboarding/wizard-shell";
 import { AuthExperience } from "./auth-experience";
 import styles from "./auth-experience.module.css";
@@ -61,7 +62,7 @@ async function hasWorkspace() {
   }
 }
 
-export function RegisterForm({ platformDomain }: { platformDomain: string }) {
+export function RegisterForm({ platformDomain, storeDesigns }: { platformDomain: string; storeDesigns: StorePreviewDesigns }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   /**
@@ -413,7 +414,7 @@ export function RegisterForm({ platformDomain }: { platformDomain: string }) {
               </form>
               {isSubmitting && step === lastStep ? <div className={ob.loadingOverlay} role="status"><span><LoaderCircle /></span><h3>Generating your workspace...</h3><p>Preparing your store, domain, payments, shipping, and settings.</p></div> : null}
             </section>
-            <StorePreview country={draft.country} currency={draft.currency} domain={previewDomain} name={draft.storeName} />
+            <StorePreview country={draft.country} currency={draft.currency} design={storeDesigns[draft.businessType]} domain={previewDomain} name={draft.storeName} />
           </div>
         </section>
       </main>
@@ -484,7 +485,7 @@ function WizardStoreStep({ draft, platformDomain, previewDomain, slugCheck, upda
 
 function WizardBusinessStep({ onChange, value }: { onChange: (value: BusinessType) => void; value: BusinessType }) {
   return (
-    <StepIntro eyebrow="Tailor your workspace" icon={BriefcaseBusiness} text="This picks your storefront template and the starter catalog we prepare for you." title="What kind of business are you building?">
+    <StepIntro eyebrow="Tailor your workspace" icon={BriefcaseBusiness} text="This picks your storefront template and the starter catalog. The preview updates as you choose." title="What kind of business are you building?">
       <div className={ob.optionGrid}>{businessTypes.map((type) => <button className={value === type ? ob.optionActive : ""} key={type} onClick={() => onChange(type)} type="button"><span>{type.charAt(0)}</span><b>{type}</b>{value === type ? <Check /> : null}</button>)}</div>
     </StepIntro>
   );

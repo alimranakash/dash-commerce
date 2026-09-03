@@ -26,6 +26,7 @@ import {
 } from "../payments/payment.service";
 import { decrementProductVariantStock, type CartVariantRecord } from "../products/product-variants.service";
 import { generateOrderNumber } from "../orders/order-number";
+import { isUniqueConstraintError } from "../../lib/prisma-errors";
 import { resolveShippingCharge } from "../free-shipping/free-shipping.render";
 import { cartEarnsFreeShipping, getFreeShippingRule } from "../free-shipping/free-shipping.service";
 import { getEnabledShippingRateForCheckout } from "../shipping/shipping.service";
@@ -194,19 +195,12 @@ function findStoreOrder(storeId: string, id: string) {
 /**
  * A unique violation on the submission index, and nothing else.
  *
- * Duck-typed rather than checked with `instanceof`: `@dash/db` exports Prisma
- * as a type only, so the error class is not available here as a value. The
- * target is stringified because the pg adapter reports it as the constraint
- * name where the library reports a field list — both spell the column out.
+ * `checkoutSubmissionId` belongs to `Order` alone, so it stays specific even
+ * though `placeCheckoutOrder` writes several models — no other unique in that
+ * call could answer to the name.
  */
 function isDuplicateSubmissionError(error: unknown) {
-  if (typeof error !== "object" || error === null) {
-    return false;
-  }
-
-  const { code, meta } = error as { code?: unknown; meta?: { target?: unknown } };
-
-  return code === "P2002" && String(meta?.target ?? "").includes("checkoutSubmissionId");
+  return isUniqueConstraintError(error, "checkoutSubmissionId");
 }
 
 /**

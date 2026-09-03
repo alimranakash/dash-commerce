@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import styles from "./onboarding-experience.module.css";
 import { businessTypes, countryOptions, isBusinessType, isCountryName, slugify, type BusinessType, type CountryName } from "./options";
+import type { StorePreviewDesigns } from "./store-preview";
 import { StepIntro, StorePreview } from "./wizard-shell";
 
 type Draft = { businessType: BusinessType; country: CountryName; storeName: string; storeSlug: string };
 const initialDraft: Draft = { businessType: "General Store", country: "Bangladesh", storeName: "", storeSlug: "" };
 
-export function OnboardingForm({ platformDomain }: { platformDomain: string }) {
+export function OnboardingForm({ platformDomain, storeDesigns }: { platformDomain: string; storeDesigns: StorePreviewDesigns }) {
   const router = useRouter();
   const [draft, setDraft] = useState(initialDraft);
   const [step, setStep] = useState(1);
@@ -107,14 +108,14 @@ export function OnboardingForm({ platformDomain }: { platformDomain: string }) {
         </form>
         {isSubmitting ? <div className={styles.loadingOverlay} role="status"><span><LoaderCircle /></span><h3>Creating your workspace...</h3><p>Preparing your store, domain, payments, shipping, and settings.</p></div> : null}
       </section>
-      <StorePreview country={draft.country} currency={country.currency} domain={previewDomain} name={draft.storeName} />
+      <StorePreview country={draft.country} currency={country.currency} design={storeDesigns[draft.businessType]} domain={previewDomain} name={draft.storeName} />
     </div>
   );
 }
 
 function StoreNameStep({ onChange, value }: { onChange: (value: string) => void; value: string }) { return <StepIntro icon={Store} eyebrow="Your store identity" title="What should we call your store?" text="Choose the customer-facing name for your new commerce brand."><label className={styles.fieldLabel}>Store Name<div className={styles.inputShell}><Store /><input autoFocus maxLength={100} onChange={(event) => onChange(event.target.value)} placeholder="Akash Atelier" value={value} /></div><small>You can update this later from store settings.</small></label></StepIntro>; }
 function StoreUrlStep({ domain, onChange, platformDomain, value }: { domain: string; onChange: (value: string) => void; platformDomain: string; value: string }) { return <StepIntro icon={Globe2} eyebrow="Your home on StoreIM" title="Claim your store URL." text="Keep it short, memorable, and easy to share with customers."><label className={styles.fieldLabel}>Store URL<div className={styles.slugInput}><span>https://</span><input autoFocus maxLength={40} onChange={(event) => onChange(event.target.value)} placeholder="yourstore" value={value} /><b>.{platformDomain}</b></div><small>Preview: {domain}</small></label></StepIntro>; }
-function BusinessStep({ onChange, value }: { onChange: (value: BusinessType) => void; value: BusinessType }) { return <StepIntro icon={BriefcaseBusiness} eyebrow="Tailor your workspace" title="What kind of business are you building?" text="This helps StoreIM prepare a more relevant starting experience."><div className={styles.optionGrid}>{businessTypes.map((type) => <button className={value === type ? styles.optionActive : ""} onClick={() => onChange(type)} type="button" key={type}><span>{type.charAt(0)}</span><b>{type}</b>{value === type ? <Check /> : null}</button>)}</div></StepIntro>; }
+function BusinessStep({ onChange, value }: { onChange: (value: BusinessType) => void; value: BusinessType }) { return <StepIntro icon={BriefcaseBusiness} eyebrow="Tailor your workspace" title="What kind of business are you building?" text="This picks your storefront template and the starter catalog. The preview updates as you choose."><div className={styles.optionGrid}>{businessTypes.map((type) => <button className={value === type ? styles.optionActive : ""} onClick={() => onChange(type)} type="button" key={type}><span>{type.charAt(0)}</span><b>{type}</b>{value === type ? <Check /> : null}</button>)}</div></StepIntro>; }
 function CountryStep({ country, onChange }: { country: CountryName; onChange: (value: CountryName) => void }) { const config = countryOptions[country]; return <StepIntro icon={MapPin} eyebrow="Localize your store" title="Where is your business based?" text="We’ll automatically configure the right currency and timezone."><label className={styles.fieldLabel}>Country<select autoFocus onChange={(event) => onChange(event.target.value as CountryName)} value={country}>{Object.keys(countryOptions).map((name) => <option key={name}>{name}</option>)}</select></label><div className={styles.autoConfig}><div><WalletCards /><span><small>Currency</small><b>{config.currency}</b></span></div><div><Globe2 /><span><small>Timezone</small><b>{config.timezone}</b></span></div></div></StepIntro>; }
 function FinishStep({ country, domain, draft }: { country: (typeof countryOptions)[CountryName]; domain: string; draft: Draft }) { return <StepIntro icon={Sparkles} eyebrow="Ready to launch" title="Your workspace is ready to be created." text="Review the essentials. StoreIM will prepare the rest automatically."><div className={styles.reviewList}><Review label="Store" value={draft.storeName} /><Review label="Domain" value={domain} /><Review label="Business" value={draft.businessType} /><Review label="Location" value={`${draft.country} · ${country.currency}`} /></div><p className={styles.creationNote}><Check /> Default payments, shipping zones, theme settings, and StoreOS connection will be prepared.</p></StepIntro>; }
 function Review({ label, value }: { label: string; value: string }) { return <div><span>{label}</span><b>{value}</b></div>; }

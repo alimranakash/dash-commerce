@@ -1,7 +1,8 @@
 import { prisma, type Prisma } from "@dash/db";
 import {
   createDefaultSubscriptionRecord,
-  ensureDefaultSubscriptionsForStores
+  ensureDefaultSubscriptionsForStores,
+  isDuplicateSubscriptionError
 } from "../admin/admin-subscriptions.repository";
 import { ensureDefaultPlans } from "../admin/admin-plans.repository";
 import type { BillingSettingsInput } from "./billing.schema";
@@ -54,9 +55,16 @@ export async function getOrCreateStoreSubscription(input: {
     return existing;
   }
 
-  await prisma.$transaction(async (tx) => {
-    await createDefaultSubscriptionRecord(tx, input);
-  });
+  try {
+    await createDefaultSubscriptionRecord(prisma, input);
+  } catch (error) {
+    // A concurrent caller created it between the read above and this write.
+    // The re-read below returns theirs, which is the same row this would have
+    // produced.
+    if (!isDuplicateSubscriptionError(error)) {
+      throw error;
+    }
+  }
 
   return prisma.subscription.findUniqueOrThrow({
     include: {

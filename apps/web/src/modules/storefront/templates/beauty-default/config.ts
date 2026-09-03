@@ -1,3 +1,4 @@
+import { storefrontTemplateNames } from "../template-mapping";
 import type { StorefrontTemplateConfig } from "../types";
 import { BEAUTY_PRODUCT_CARD_VARIANT } from "./beauty-listing-card";
 import { BeautyCategoryLayoutPlaceholder } from "./category-layout";
@@ -37,7 +38,7 @@ export const beautyDefaultTemplate: StorefrontTemplateConfig = {
     "newsletter"
   ],
   id: "beauty-default",
-  name: "Beauty Default",
+  name: storefrontTemplateNames["beauty-default"],
   previewImage: "/template-previews/beauty-default.png",
   productCardVariant: BEAUTY_PRODUCT_CARD_VARIANT,
   productPageVariant: "beauty-product-detail"

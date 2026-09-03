@@ -1,3 +1,4 @@
+import { storefrontTemplateNames } from "../template-mapping";
 import type { StorefrontTemplateConfig } from "../types";
 import { GeneralCategoryLayoutPlaceholder } from "./category-layout";
 import { GeneralHomepageSections } from "./homepage-sections";
@@ -31,7 +32,7 @@ export const generalDefaultTemplate: StorefrontTemplateConfig = {
     "recommended-for-you"
   ],
   id: "general-default",
-  name: "General Default",
+  name: storefrontTemplateNames["general-default"],
   previewImage: "/template-previews/general-default.png",
   productCardVariant: "general-minimal",
   productPageVariant: "general-product-detail"

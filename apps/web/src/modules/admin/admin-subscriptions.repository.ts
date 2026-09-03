@@ -2,6 +2,8 @@ import { prisma, type Prisma } from "@dash/db";
 import { ensureDefaultPlans } from "./admin-plans.repository";
 import { DEFAULT_PLAN_SLUG, FALLBACK_DEFAULT_PLAN_SLUG, newStoreTrialDays } from "./plan-catalog";
 import { BILLING_CYCLE_DAYS } from "./admin-subscriptions.schema";
+import { isUniqueConstraintError } from "../../lib/prisma-errors";
+import { singleFlight } from "../../lib/single-flight";
 
 export type AdminSubscriptionStatusFilter = "all" | "active" | "cancelled" | "expired" | "past_due" | "trialing";
 export type AdminSubscriptionBillingFilter = "all" | "monthly" | "yearly";
@@ -90,7 +92,14 @@ async function findDefaultPlan(tx: SubscriptionTransaction) {
   );
 }
 
-export async function ensureDefaultSubscriptionsForStores() {
+/**
+ * Hands every non-archived store the default subscription it is missing.
+ *
+ * Single-flighted because it is read-repair reached from several callers at
+ * once — `/admin/subscriptions` runs it twice in one `Promise.all` — and two
+ * concurrent scans find the same gap and then race to fill it.
+ */
+export const ensureDefaultSubscriptionsForStores = singleFlight(async () => {
   await ensureDefaultPlans();
 
   const stores = await prisma.store.findMany({
@@ -116,14 +125,34 @@ export async function ensureDefaultSubscriptionsForStores() {
     return;
   }
 
-  await prisma.$transaction(async (tx) => {
-    for (const store of missingStores) {
-      await createDefaultSubscriptionRecord(tx, {
+  // One store at a time and no shared transaction. Each subscription is a
+  // single independent row, so there is nothing here for a transaction to make
+  // atomic — while a duplicate raised inside one aborts that transaction for
+  // every *other* store too, so a store some concurrent caller happened to seed
+  // first would cost the rest of them theirs.
+  for (const store of missingStores) {
+    try {
+      await createDefaultSubscriptionRecord(prisma, {
         organizationId: store.organizationId,
         storeId: store.id
       });
+    } catch (error) {
+      // Lost the race to a concurrent caller. The row exists, which is the only
+      // thing this function was asked for.
+      if (!isDuplicateSubscriptionError(error)) {
+        throw error;
+      }
     }
-  });
+  }
+});
+
+/**
+ * A unique violation on `Subscription.storeId` — the store already has the
+ * subscription the caller was about to create. Safe to read as narrowly as
+ * that only because every caller wraps a write to `Subscription` alone.
+ */
+export function isDuplicateSubscriptionError(error: unknown) {
+  return isUniqueConstraintError(error, "storeId");
 }
 
 export async function getAdminSubscriptionMetrics() {

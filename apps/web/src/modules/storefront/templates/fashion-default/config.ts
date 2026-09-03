@@ -1,3 +1,4 @@
+import { storefrontTemplateNames } from "../template-mapping";
 import type { StorefrontTemplateConfig } from "../types";
 import { FashionCategoryLayoutPlaceholder } from "./category-layout";
 import { FashionHomepageSections } from "./homepage-sections";
@@ -35,7 +36,7 @@ export const fashionDefaultTemplate: StorefrontTemplateConfig = {
     "newsletter"
   ],
   id: "fashion-default",
-  name: "Fashion Default",
+  name: storefrontTemplateNames["fashion-default"],
   previewImage: "/template-previews/fashion-default.png",
   productCardVariant: "fashion-editorial",
   productPageVariant: "fashion-product-detail"
