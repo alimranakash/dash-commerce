@@ -17,11 +17,16 @@ npm run db:generate  # prisma generate  -> packages/db/src/generated/prisma
 npm run db:push      # prisma db push (primary schema-sync path; see below)
 npm run db:migrate   # prisma migrate dev
 npm run db:studio
+npm run db:backfill-plans         # one-off data backfills (tsx scripts/backfill-*.mts)
+npm run db:backfill-free-trials
+
+npm run theme:dark                # regenerate dark-mode CSS after adding a colour
+npm run verify:<feature>          # one executable check, e.g. verify:free-shipping
 ```
 
 Scope a task to one workspace with `turbo <task> --filter=@dash/web` or `npm run <script> -w @dash/web`.
 
-There is **no test framework configured** in this repo — no test runner, no test files, no `test` script. `lint` + `typecheck` are the only automated checks; run both before declaring work done.
+There is **no test framework** — no test runner, no test files, no `test` script. What stands in for tests is the `verify:*` scripts in [scripts/](scripts/): standalone `tsx` programs (`verify-<feature>.mts`) that import the pure parts of a module and assert its invariants, almost all **without a database**. Run the one for the feature you touched (`npm run verify:shopping-agent`); the full list is in the root `package.json` (demo-packs, courier-webhook, ai-api, storeim-ai, plan-features, product-content, staff-seats, staff-permissions, store-copilot, shopping-agent, sales-notifications, notification-bar, free-shipping, direct-checkout, quick-view, sitemap, wishlist, guest-orders, free-year, dark-mode). A new feature with invariants worth protecting gets its own `verify-<feature>.mts` plus a `verify:<feature>` script, following the existing ones. CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs only `lint` + `typecheck` (+ build) — it does **not** run the verify scripts — so run both of those plus the relevant `verify:*` before declaring work done.
 
 ### Environment
 
