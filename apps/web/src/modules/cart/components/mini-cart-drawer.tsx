@@ -283,33 +283,47 @@ function MiniCartItem({
     });
   }
 
+  // Follows the stepper as it is pressed, so the figure beside it never lags
+  // behind the number in it; a refused change puts both back together.
+  const lineTotal = Number(item.price) * quantity;
+
+  // The name takes the full width of the drawer and the controls sit in a row
+  // beneath it, so a long product name reads as two lines rather than six.
   return (
-    <article className="mini-cart-item">
+    <article aria-busy={isPending} className="mini-cart-item">
       <div className="mini-cart-item-image">
         <StorefrontImage alt={item.title} fallback="Product" src={item.image} />
       </div>
       <div className="mini-cart-item-body">
-        {settings.showBrand ? <p>{storeName}</p> : null}
-        <h3>{item.title}</h3>
-        {settings.showVariant ? <span>{item.variantTitle ?? "Standard"}</span> : null}
-        <strong>{formatStorefrontMoney(item.price, currency)}</strong>
+        <div className="mini-cart-item-head">
+          <div>
+            {settings.showBrand ? <p>{storeName}</p> : null}
+            {/* Clamped at two lines; the full name is the tooltip. */}
+            <h3 title={item.title}>{item.title}</h3>
+          </div>
+          {settings.showRemoveButton ? (
+            <button
+              aria-label={`Remove ${item.title}`}
+              className="mini-cart-remove"
+              disabled={isPending}
+              onClick={removeItem}
+              title="Remove"
+              type="button"
+            >
+              <Trash2 size={15} strokeWidth={1.7} />
+            </button>
+          ) : null}
+        </div>
+        {/* Only a real variant is named; a product without one has nothing to choose. */}
+        {settings.showVariant && item.variantTitle ? <span>{item.variantTitle}</span> : null}
+        {quantity > 1 ? <span>{formatStorefrontMoney(item.price, currency)} each</span> : null}
         {error ? <small className="mini-cart-error">{error}</small> : null}
       </div>
       <div className="mini-cart-item-actions">
         {settings.showQuantity ? (
           <QuantitySelector disabled={isPending} onChange={updateQuantity} quantity={quantity} />
         ) : null}
-        {settings.showRemoveButton ? (
-          <button
-            aria-label={`Remove ${item.title}`}
-            className="mini-cart-remove"
-            disabled={isPending}
-            onClick={removeItem}
-            type="button"
-          >
-            <Trash2 size={15} strokeWidth={1.7} />
-          </button>
-        ) : null}
+        <strong>{formatStorefrontMoney(lineTotal, currency)}</strong>
       </div>
     </article>
   );

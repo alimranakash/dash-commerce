@@ -11328,11 +11328,21 @@ textarea {
   opacity: 1;
 }
 
+/* Picture on the left; on the right the name across the full width, and the
+   quantity and line total in a row beneath it. A third column for the controls
+   squeezed a long product name into six lines. */
 .mini-cart-item {
   align-items: start;
+  column-gap: 16px;
   display: grid;
-  gap: 16px;
-  grid-template-columns: 82px minmax(0, 1fr) auto;
+  grid-template-columns: 82px minmax(0, 1fr);
+  row-gap: 12px;
+  transition: opacity 160ms ease;
+}
+
+/* A quantity change or a removal in flight. */
+.mini-cart-item[aria-busy="true"] {
+  opacity: 0.6;
 }
 
 .mini-cart-item-image {
@@ -11340,6 +11350,7 @@ textarea {
   aspect-ratio: 1;
   background: #eeeeee;
   display: flex;
+  grid-row: span 2;
   justify-content: center;
   overflow: hidden;
   width: 82px;
@@ -11368,26 +11379,51 @@ textarea {
 }
 
 .mini-cart-item-body h3 {
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   color: #020617;
+  display: -webkit-box;
   font-size: 0.98rem;
   font-weight: 600;
   letter-spacing: 0;
+  line-clamp: 2;
   line-height: 1.28;
   margin: 2px 0 7px;
+  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 
-.mini-cart-item-body strong {
-  display: block;
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin-top: 18px;
+/* The name, with the remove button in the corner beside it. */
+.mini-cart-item-head {
+  align-items: flex-start;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.mini-cart-item-head > div {
+  min-width: 0;
+}
+
+.mini-cart-item-head .mini-cart-remove {
+  flex: none;
+  margin: -4px -6px 0 0;
 }
 
 .mini-cart-item-actions {
   align-items: center;
   display: flex;
   gap: 14px;
-  padding-top: 58px;
+  grid-column: 2;
+  justify-content: space-between;
+}
+
+/* The line total: quantity times price, so it moves with the stepper. */
+.mini-cart-item-actions strong {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 .mini-cart-item-actions .general-cart-quantity {
