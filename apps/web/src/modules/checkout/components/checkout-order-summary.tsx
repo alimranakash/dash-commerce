@@ -20,6 +20,8 @@ type CheckoutOrderSummaryProps = {
   onRemoveCoupon: () => void;
   /** Only ever the accepted offer; an unticked one is not part of the order. */
   orderBump: OrderBumpOffer | null;
+  /** Product id to its storefront page; a line whose id is missing is not linked. */
+  productHrefs: Record<string, string>;
   shippingAmount?: unknown;
   shippingLabel?: string;
 };
@@ -32,6 +34,7 @@ export function CheckoutOrderSummary({
   onApplyCoupon,
   onRemoveCoupon,
   orderBump,
+  productHrefs,
   shippingAmount,
   shippingLabel
 }: CheckoutOrderSummaryProps) {
@@ -46,6 +49,7 @@ export function CheckoutOrderSummary({
   const bundleSavings = bundles.reduce((total, bundle) => total + Number(bundle.discountAmount), 0);
   // Never below zero on screen, even if a stale quote briefly outruns the cart.
   const total = Math.max(0, subtotal + shipping - discount - bundleSavings);
+  const itemCount = cart.totals.itemCount + (orderBump ? 1 : 0);
 
   async function applyCoupon() {
     const code = couponCode.trim();
@@ -79,36 +83,37 @@ export function CheckoutOrderSummary({
     <aside className="sf-checkout-summary" aria-labelledby="checkout-summary-title">
       <div className="sf-checkout-summary-panel">
         <div className="sf-checkout-summary-header">
-          <p>Order summary</p>
+          <p>
+            Order summary · {itemCount} {itemCount === 1 ? "item" : "items"}
+          </p>
           <h2 id="checkout-summary-title">{formatMoney(total, currency)}</h2>
         </div>
         <div className="sf-checkout-summary-items">
           {cart.items.map((item) => (
-            <div className="sf-checkout-summary-item" key={item.lineId}>
-              <div className="sf-checkout-summary-image">
-                {item.image ? <img alt="" src={item.image} /> : <div aria-hidden="true" />}
-                <span>{item.quantity}</span>
-              </div>
-              <div className="sf-checkout-summary-meta">
-                <strong>{item.title}</strong>
-                {item.variantTitle ? <small>{item.variantTitle}</small> : null}
-                <small>Qty {item.quantity}</small>
-              </div>
-              <b>{formatMoney(item.lineTotal, currency)}</b>
-            </div>
+            <SummaryItem
+              currency={currency}
+              detail={item.variantTitle}
+              href={productHrefs[item.productId]}
+              image={item.image}
+              key={item.lineId}
+              lineTotal={item.lineTotal}
+              quantity={item.quantity}
+              title={item.title}
+              unitPrice={item.price}
+            />
           ))}
           {orderBump ? (
-            <div className="sf-checkout-summary-item" key="order-bump">
-              <div className="sf-checkout-summary-image">
-                {orderBump.imageUrl ? <img alt="" src={orderBump.imageUrl} /> : <div aria-hidden="true" />}
-                <span>1</span>
-              </div>
-              <div className="sf-checkout-summary-meta">
-                <strong>{orderBump.title}</strong>
-                <small>Added offer</small>
-              </div>
-              <b>{formatMoney(orderBump.offerPrice, currency)}</b>
-            </div>
+            <SummaryItem
+              currency={currency}
+              detail="Added offer"
+              href={productHrefs[orderBump.productId]}
+              image={orderBump.imageUrl}
+              key="order-bump"
+              lineTotal={orderBump.offerPrice}
+              quantity={1}
+              title={orderBump.title}
+              unitPrice={orderBump.offerPrice}
+            />
           ) : null}
         </div>
         {appliedCoupon ? (
@@ -169,6 +174,71 @@ export function CheckoutOrderSummary({
         </div>
       </div>
     </aside>
+  );
+}
+
+/**
+ * One line of the order. The name and the picture open the product in a new tab:
+ * nothing the shopper has typed into the checkout form is kept if they leave the
+ * page, so a second look at a product must not cost them the form.
+ */
+function SummaryItem({
+  currency,
+  detail,
+  href,
+  image,
+  lineTotal,
+  quantity,
+  title,
+  unitPrice
+}: {
+  currency: string;
+  /** The chosen variant, or what kind of line this is. */
+  detail?: string | null | undefined;
+  href: string | undefined;
+  image: string | null;
+  lineTotal: unknown;
+  quantity: number;
+  title: string;
+  unitPrice: unknown;
+}) {
+  const thumbnail = image ? <img alt="" src={image} /> : <div aria-hidden="true" />;
+
+  return (
+    <div className="sf-checkout-summary-item">
+      <div className="sf-checkout-summary-image">
+        {href ? (
+          // The name beside it is the same link, so this one stays out of the
+          // tab order and out of a screen reader's list of links.
+          <a aria-hidden="true" href={href} rel="noopener" tabIndex={-1} target="_blank">
+            {thumbnail}
+          </a>
+        ) : (
+          thumbnail
+        )}
+        <span>{quantity}</span>
+      </div>
+      <div className="sf-checkout-summary-meta">
+        {/* Clamped at two lines; the full name is always the tooltip. */}
+        <strong title={title}>
+          {href ? (
+            <a href={href} rel="noopener" target="_blank">
+              {title}
+              <span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          ) : (
+            title
+          )}
+        </strong>
+        {detail ? <small>{detail}</small> : null}
+        <small>
+          {quantity > 1
+            ? `Qty ${quantity} × ${formatMoney(unitPrice, currency)}`
+            : `Qty ${quantity}`}
+        </small>
+      </div>
+      <b>{formatMoney(lineTotal, currency)}</b>
+    </div>
   );
 }
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { ProductRichText } from "../../components/product-rich-text";
+
 type ProductAccordionItem = {
   content: string;
   title: string;
@@ -16,7 +18,7 @@ export function GeneralProductAccordion({ items }: GeneralProductAccordionProps)
         <details key={item.title} open={index === 0}>
           <summary>{item.title}</summary>
           <div>
-            <p>{item.content}</p>
+            <ProductRichText className="general-product-accordion-copy" text={item.content} />
           </div>
         </details>
       ))}

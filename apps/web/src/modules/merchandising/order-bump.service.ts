@@ -1,3 +1,4 @@
+import { productDescriptionText } from "../products/product-description";
 import { getCrossSellCandidateIds } from "./merchandising.service";
 import {
   getOrderBumpConfig,
@@ -135,7 +136,7 @@ export async function resolveOrderBumpOffer(input: {
   }
 
   return {
-    description: config.description || product.shortDescription || "",
+    description: config.description || productDescriptionText(product.shortDescription),
     headline: config.headline,
     imageUrl: product.images[0]?.url ?? null,
     listPrice: product.price.toString(),

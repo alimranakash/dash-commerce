@@ -6,6 +6,8 @@ import type { ComponentType } from "react";
 import Link from "next/link";
 import { ProductGrid, ProductPrice, SectionHeader } from "../../components/product-listing";
 import { ProductPurchasePanel } from "../../components/product-purchase-panel";
+import { ProductRichText } from "../../components/product-rich-text";
+import { productDescriptionText } from "../../../products/product-description";
 import {
   RecentlyViewedSection,
   type RecentlyViewedProduct
@@ -57,10 +59,6 @@ export async function GeneralProductPage({
     product.description ||
     product.shortDescription ||
     `${product.title} is ready for your everyday shopping routine.`;
-  const descriptionParagraphs = description
-    .split(/\r?\n+/)
-    .filter(Boolean)
-    .slice(0, 4);
   const galleryImages = product.images.map((image) => ({
     alt: image.alt ?? product.title,
     id: image.id,
@@ -97,7 +95,10 @@ export async function GeneralProductPage({
           )}
 
           {product.shortDescription ? (
-            <p className="general-product-short-copy">{product.shortDescription}</p>
+            <ProductRichText
+              className="general-product-short-copy"
+              text={product.shortDescription}
+            />
           ) : null}
 
           {cartError ? <p className="sf-alert">{cartError}</p> : null}
@@ -170,10 +171,13 @@ export async function GeneralProductPage({
 
           {ProductDetailExtras ? <ProductDetailExtras product={product} store={store} /> : null}
 
-          <p className="general-product-tagline">
-            {product.shortDescription ||
-              "Carefully selected for daily use, simple routines, and dependable shopping."}
-          </p>
+          <ProductRichText
+            className="general-product-tagline"
+            text={
+              product.shortDescription ||
+              "Carefully selected for daily use, simple routines, and dependable shopping."
+            }
+          />
 
           {productPage.accordionEnabled ? (
             <GeneralProductAccordion items={accordionItems(product, store.name)} />
@@ -186,9 +190,7 @@ export async function GeneralProductPage({
         aria-labelledby="product-description-title"
       >
         <h2 id="product-description-title">About {product.title}</h2>
-        {descriptionParagraphs.map((paragraph, index) => (
-          <p key={`${paragraph}-${index}`}>{paragraph}</p>
-        ))}
+        <ProductRichText text={description} />
       </section>
 
       {relatedProducts.length > 0 ? (
@@ -332,7 +334,8 @@ async function GeneralProductPromoBlocks({
             // category, so the card names the neighbour's own category rather
             // than assuming it shares this product's.
             subtitle={
-              neighbour.shortDescription || `Also in ${neighbour.category?.name ?? store.name}`
+              productDescriptionText(neighbour.shortDescription) ||
+              `Also in ${neighbour.category?.name ?? store.name}`
             }
             title={neighbour.title}
           />

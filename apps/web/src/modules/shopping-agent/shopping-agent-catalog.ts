@@ -1,6 +1,7 @@
 import { getCart } from "../cart/cart.service";
 import { isCheckoutPhoneOtpRequired } from "../checkout/checkout-verification.service";
 import { getEnabledPaymentMethods, isManualPaymentType } from "../payments/payment.service";
+import { productDescriptionText } from "../products/product-description";
 import { getProductVariantConfiguration } from "../products/product-variants.service";
 import { getEnabledShippingRates } from "../shipping/shipping.service";
 import { preorderLabel } from "../storefront/format";
@@ -72,7 +73,7 @@ export function toProductCard(
     imageUrl: image?.url ?? null,
     price: product.price.toString(),
     requiresVariantChoice: Boolean(context.hasVariants),
-    shortDescription: product.shortDescription?.trim() || null,
+    shortDescription: productDescriptionText(product.shortDescription) || null,
     title: product.title
   };
 }
@@ -131,7 +132,7 @@ function toCatalogueLine(product: StorefrontProduct, basePath: string) {
     compareAtPrice: product.compareAtPrice ? product.compareAtPrice.toString() : null,
     id: product.id,
     price: product.price.toString(),
-    summary: truncate(product.shortDescription ?? product.description, 220),
+    summary: truncate(productDescriptionText(product.shortDescription ?? product.description), 220),
     title: product.title,
     url: productHref(basePath, product.slug)
   };
@@ -156,7 +157,7 @@ export async function readProductDetails(storeId: string, productId: string, bas
 
   return {
     ...toCatalogueLine(product, basePath),
-    description: truncate(product.description, 1200),
+    description: truncate(productDescriptionText(product.description), 1200),
     images: product.images.length,
     options: configuration.attributes.map((attribute) => attribute.name),
     sku: product.sku,

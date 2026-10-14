@@ -41,6 +41,8 @@ type CheckoutExperienceProps = {
   orderBump: OrderBumpOffer | null;
   paymentMethods: CheckoutPaymentMethod[];
   phoneOtpRequired: boolean;
+  /** Product id to its storefront page, for the summary; a missing id is not linked. */
+  productHrefs: Record<string, string>;
   shippingRates: CheckoutShippingRate[];
   storeSlug: string;
   /** Identifies this page load, so one submission cannot become two orders. */
@@ -56,6 +58,7 @@ export function CheckoutExperience({
   orderBump,
   paymentMethods,
   phoneOtpRequired,
+  productHrefs,
   shippingRates,
   storeSlug,
   submissionId
@@ -181,6 +184,7 @@ export function CheckoutExperience({
         onApplyCoupon={applyCoupon}
         onRemoveCoupon={() => setAppliedCoupon(null)}
         orderBump={acceptedBump}
+        productHrefs={productHrefs}
         shippingAmount={selectedShippingRate?.amount}
         {...(selectedShippingRate?.name ? { shippingLabel: selectedShippingRate.name } : {})}
       />

@@ -17,7 +17,10 @@ import { getEnabledPaymentMethods } from "../../../../modules/payments/payment.s
 import { getEnabledShippingRates } from "../../../../modules/shipping/shipping.service";
 import { StorefrontFooter } from "../../../../modules/storefront/components/storefront-footer";
 import { StorefrontHeader } from "../../../../modules/storefront/components/storefront-header";
-import { requireStorefrontBySlug } from "../../../../modules/storefront/resolver";
+import {
+  getStorefrontProductsByIds,
+  requireStorefrontBySlug
+} from "../../../../modules/storefront/resolver";
 
 type CheckoutPageProps = {
   params: Promise<{
@@ -70,6 +73,19 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
     store.id,
     cart.items.map((item) => item.productId)
   );
+  // Each summary line's product page. Read through the storefront's own public
+  // filter, so a product hidden or drafted since it was added keeps its line in
+  // the summary but gets no link to a page that would not open.
+  const linkedProducts = await getStorefrontProductsByIds(store.id, [
+    ...cart.items.map((item) => item.productId),
+    ...(orderBump ? [orderBump.productId] : [])
+  ]);
+  const productHrefs = Object.fromEntries(
+    linkedProducts.map((product) => [
+      product.id,
+      `${basePath}/products/${encodeURIComponent(product.slug)}`
+    ])
+  );
   const checkoutShippingRates = shippingRates.map((rate) => ({
     id: rate.id,
     name: rate.name,
@@ -119,6 +135,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
           orderBump={orderBump}
           paymentMethods={paymentMethods}
           phoneOtpRequired={phoneOtpRequired}
+          productHrefs={productHrefs}
           shippingRates={checkoutShippingRates}
           storeSlug={store.slug}
           submissionId={randomUUID()}

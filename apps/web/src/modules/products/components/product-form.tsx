@@ -24,6 +24,7 @@ import {
   type ProductActionState
 } from "../product.actions";
 import type { ProductVariantConfiguration } from "../product-variants.service";
+import { ProductDescriptionEditor } from "./product-description-editor";
 import { ProductImageSlots } from "./product-image-slots";
 import { ProductVariantsEditor } from "./product-variants-editor";
 import { TaxonomyMultiSelect, type TaxonomyOption } from "./taxonomy-multi-select";
@@ -321,6 +322,7 @@ export function ProductForm({
               name="shortDescription"
               onChange={setShortDescription}
               placeholder="A short product summary for cards and product pages."
+              richText="minimal"
               value={shortDescription}
             />
             <AiField
@@ -331,7 +333,7 @@ export function ProductForm({
               name="description"
               onChange={setDescription}
               placeholder="Describe the product, materials, and benefits."
-              rows={6}
+              richText="full"
               value={description}
             />
           </ProductEditorCard>
@@ -682,6 +684,7 @@ function AiField({
   name,
   onChange,
   placeholder,
+  richText,
   rows,
   showLimit,
   value
@@ -693,6 +696,8 @@ function AiField({
   name: string;
   onChange: (value: string) => void;
   placeholder: string;
+  /** A formatted field — the descriptions — edited in the rich-text editor. */
+  richText?: "full" | "minimal" | undefined;
   /** Omit for a single-line input. */
   rows?: number | undefined;
   /** Only where the ceiling is a real editorial constraint, such as SEO. */
@@ -711,7 +716,16 @@ function AiField({
         label={meta.label}
         onGenerated={onChange}
       />
-      {rows ? (
+      {richText ? (
+        <ProductDescriptionEditor
+          label={meta.label}
+          name={name}
+          onChange={onChange}
+          placeholder={placeholder}
+          toolbar={richText}
+          value={value}
+        />
+      ) : rows ? (
         <textarea
           aria-label={meta.label}
           name={name}

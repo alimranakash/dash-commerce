@@ -1,7 +1,23 @@
 import { z } from "zod";
 import { normalizeSlug } from "../../lib/slug";
+import { productDescriptionText } from "./product-description";
 
 export const productStatusSchema = z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]);
+
+/**
+ * A description's limit counts what a shopper reads, not the editor's markup,
+ * so bolding a phrase cannot push a description over it. The raw ceiling only
+ * bounds the markup a request may carry.
+ */
+function descriptionSchema(limit: number, label: string) {
+  return z
+    .string()
+    .trim()
+    .max(limit * 4)
+    .refine((value) => productDescriptionText(value).length <= limit, {
+      message: `Keep the ${label} under ${limit} characters.`
+    });
+}
 
 const moneySchema = z
   .union([z.string(), z.number()])
@@ -35,10 +51,10 @@ const productBaseSchema = z.object({
     .optional()
     .transform((value) => (value ? normalizeSlug(value) : undefined)),
   description: z
-    .union([z.string().trim().max(10000), z.null(), z.undefined()])
+    .union([descriptionSchema(10000, "description"), z.null(), z.undefined()])
     .transform((value) => value || null),
   shortDescription: z
-    .union([z.string().trim().max(320), z.null(), z.undefined()])
+    .union([descriptionSchema(320, "short description"), z.null(), z.undefined()])
     .transform((value) => value || null),
   sku: z
     .union([z.string().trim().max(80), z.null(), z.undefined()])

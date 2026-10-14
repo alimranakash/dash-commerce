@@ -9845,6 +9845,19 @@ textarea {
   padding: 0 0 18px;
 }
 
+/* A formatted description brings its own paragraphs and lists. The panel's
+   bottom padding belongs to the panel, not to every paragraph inside it, so the
+   storefront spaces the copy the way the dashboard editor showed it. */
+.general-product-accordion-copy {
+  font-size: 0.78rem;
+  line-height: 1.65;
+  padding: 0 0 18px;
+}
+
+.general-product-accordion .general-product-accordion-copy p {
+  padding: 0;
+}
+
 .general-product-description-block {
   display: grid;
   gap: 22px;
@@ -12009,12 +12022,47 @@ textarea {
   min-width: 0;
 }
 
+/* Two lines before it clamps. One line cut most real product names in half at
+   checkout, where the shopper is checking they are buying the right thing; the
+   full name is the element's tooltip. */
 .sf-checkout-summary-meta strong {
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   color: #111827;
+  display: -webkit-box;
   font-size: 0.86rem;
+  line-clamp: 2;
+  line-height: 1.35;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+}
+
+/* The name and the thumbnail link to the product. The link takes the name's own
+   colour, so it only announces itself on hover and focus. */
+.sf-checkout-summary-meta strong a {
+  text-underline-offset: 2px;
+}
+
+.sf-checkout-summary-meta strong a:hover {
+  text-decoration: underline;
+}
+
+.sf-checkout-summary-image a {
+  border-radius: 9px;
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.sf-checkout-summary-image a:hover img {
+  opacity: 0.85;
+}
+
+.sf-checkout-summary-meta strong a:focus-visible,
+.sf-checkout-summary-image a:focus-visible {
+  border-radius: 3px;
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
 .sf-checkout-summary-meta small {
