@@ -163,27 +163,32 @@ export function MiniCartDrawer({
           <EmptyMiniCart continueHref={shopHref} />
         ) : (
           <>
-            <div className="mini-cart-items">
-              {cart.items.map((item) => (
-                <MiniCartItem
-                  currency={currency}
-                  item={item}
-                  key={item.lineId}
-                  settings={settings}
-                  storeId={store.id}
-                  storeName={store.name}
-                  storeSlug={store.slug}
-                />
-              ))}
+            {/* The lines and the suggestions scroll as one region. On its own the
+              suggestion rail kept its height while the lines gave theirs up, so
+              a short screen showed the rail and an empty, collapsed cart. */}
+            <div className="mini-cart-scroll">
+              <div className="mini-cart-items">
+                {cart.items.map((item) => (
+                  <MiniCartItem
+                    currency={currency}
+                    item={item}
+                    key={item.lineId}
+                    settings={settings}
+                    storeId={store.id}
+                    storeName={store.name}
+                    storeSlug={store.slug}
+                  />
+                ))}
+              </div>
+              <CartCrossSell
+                currency={currency}
+                layout="drawer"
+                products={crossSell}
+                storeId={store.id}
+                storeSlug={store.slug}
+                title="Add before you check out"
+              />
             </div>
-            <CartCrossSell
-              currency={currency}
-              layout="drawer"
-              products={crossSell}
-              storeId={store.id}
-              storeSlug={store.slug}
-              title="Add before you check out"
-            />
             <MiniCartSummary
               cart={cart}
               checkoutHref={checkoutHref}

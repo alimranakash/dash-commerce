@@ -11186,15 +11186,40 @@ textarea {
   margin-top: 10px;
 }
 
-.mini-cart-items {
-  background: #ffffff;
+/* The cart lines and the suggestion rail under them, scrolling together between
+   the header and the pinned footer. Sideways never: nothing here is wider than
+   the drawer, and a stray pixel would otherwise add a horizontal scrollbar. */
+.mini-cart-scroll {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 30px;
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
+}
+
+.mini-cart-items {
+  background: #ffffff;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 30px;
   padding: 8px 2px 28px 0;
+}
+
+/* A screen too short for the header, a usable list and the footer at once — a
+   laptop with its browser bars and taskbar is about 600px — scrolls the whole
+   drawer as one column instead, so the lines, the rail and the checkout button
+   are all reachable rather than the lines being squeezed to nothing. */
+@media (max-height: 760px) {
+  .mini-cart-drawer {
+    overflow-y: auto;
+  }
+
+  .mini-cart-scroll {
+    flex: none;
+    overflow: visible;
+  }
 }
 
 /* The cross-sell rail, in the cart drawer and on the cart page. Same cards,
@@ -11407,7 +11432,7 @@ textarea {
 
 .mini-cart-item-head .mini-cart-remove {
   flex: none;
-  margin: -4px -6px 0 0;
+  margin-top: -4px;
 }
 
 .mini-cart-item-actions {
@@ -11484,13 +11509,27 @@ textarea {
   list-style: none;
 }
 
+/* A chevron drawn from two borders rather than a "v" or "⌄" glyph, which sat at
+   whatever height the font put it. It takes the text colour, so it follows the
+   theme, and turns to point up while the notes are open. */
 .mini-cart-notes summary::after {
-  content: "⌄";
-  font-size: 1rem;
+  border-bottom: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  content: "";
+  flex: none;
+  height: 8px;
+  margin-right: 4px;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 180ms ease;
+  width: 8px;
 }
 
 .mini-cart-notes[open] summary::after {
-  transform: rotate(180deg);
+  transform: translateY(2px) rotate(-135deg);
+}
+
+.mini-cart-notes summary::-webkit-details-marker {
+  display: none;
 }
 
 .mini-cart-notes textarea {
@@ -11565,10 +11604,6 @@ textarea {
   justify-self: center;
   min-height: 28px;
   width: auto;
-}
-
-.mini-cart-notes summary::after {
-  content: "v";
 }
 
 .mini-cart-empty {
