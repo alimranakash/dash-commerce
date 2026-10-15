@@ -1387,6 +1387,103 @@ textarea {
   padding: 11px 12px;
 }
 
+/* An on/off setting as a card: its name, what it does underneath, and a switch
+   on the right. The whole card is the label, so a press anywhere on it flips the
+   switch, and the card takes the accent colour while the setting is on, so the
+   state reads from across the form rather than from a small box. Drawn only
+   from the dashboard's colour tokens, which the dark theme redefines, so it
+   follows the theme with no mapped colours of its own. */
+.dash-dashboard .product-editor-card .field-check {
+  align-content: start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  column-gap: 16px;
+  cursor: pointer;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 14px 16px;
+  row-gap: 5px;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.dash-dashboard .product-editor-card .field-check:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+.dash-dashboard .product-editor-card .field-check:has(input:checked) {
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  border-color: var(--accent);
+}
+
+.dash-dashboard .product-editor-card .field-check:has(input:focus-visible) {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+.dash-dashboard .product-editor-card .field-check-title {
+  font-size: 0.86rem;
+  font-weight: 650;
+  grid-column: 1;
+  grid-row: 1;
+  line-height: 1.35;
+}
+
+.dash-dashboard .product-editor-card .field-check small {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 500;
+  grid-column: 1;
+  grid-row: 2;
+  line-height: 1.5;
+}
+
+/* The switch is the checkbox itself, so the form still posts "on" exactly as
+   before. Its knob is a radial gradient rather than a ::before, which some
+   browsers will not draw on an input; it slides by moving the gradient. */
+.dash-dashboard .product-editor-card .field-check input[type="checkbox"] {
+  appearance: none;
+  background-color: color-mix(in srgb, var(--muted) 40%, var(--surface));
+  background-image: radial-gradient(
+    circle closest-side,
+    var(--accent-foreground) 0 calc(100% - 3px),
+    transparent calc(100% - 2px)
+  );
+  background-position: left center;
+  background-repeat: no-repeat;
+  background-size: 22px 22px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  grid-column: 2;
+  grid-row: 1;
+  height: 22px;
+  margin: 0;
+  min-height: 0;
+  padding: 0;
+  transition:
+    background-color 160ms ease,
+    background-position 160ms ease;
+  width: 40px;
+}
+
+.dash-dashboard .product-editor-card .field-check input[type="checkbox"]:checked {
+  background-color: var(--accent);
+  background-position: right center;
+}
+
+.dash-dashboard .product-editor-card .field-check input[type="checkbox"]:focus-visible {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-dashboard .product-editor-card .field-check,
+  .dash-dashboard .product-editor-card .field-check input[type="checkbox"] {
+    transition: none;
+  }
+}
+
 .dash-dashboard .product-editor-card select[multiple] {
   min-height: 96px;
 }

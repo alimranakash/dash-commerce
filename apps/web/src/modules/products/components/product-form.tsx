@@ -474,9 +474,10 @@ export function ProductForm({
                   <input
                     defaultChecked={Boolean(product?.allowPreorder)}
                     name="allowPreorder"
+                    role="switch"
                     type="checkbox"
                   />
-                  Take pre-orders when this runs out
+                  <span className="field-check-title">Take pre-orders when this runs out</span>
                   <small>
                     Customers can keep buying past zero and the stock goes negative, which is what
                     you still owe them. Say when it ships below.
@@ -488,9 +489,10 @@ export function ProductForm({
                   <input
                     defaultChecked={Boolean(product?.freeShipping)}
                     name="freeShipping"
+                    role="switch"
                     type="checkbox"
                   />
-                  Buying this earns free delivery
+                  <span className="field-check-title">Buying this earns free delivery</span>
                   <small>
                     Any cart containing this product ships free, whatever it comes to. It is the
                     whole order that stops being charged, because delivery is one flat rate per

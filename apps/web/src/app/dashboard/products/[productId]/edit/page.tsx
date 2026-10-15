@@ -123,6 +123,12 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
             costPrice: product.costPrice?.toString(),
             stockQuantity: product.stockQuantity,
             lowStockThreshold: product.lowStockThreshold,
+            // Without these the form opened with both boxes clear and the date
+            // empty, so saving the product for any other reason switched
+            // pre-orders and free delivery off and dropped the ship date.
+            allowPreorder: product.allowPreorder,
+            freeShipping: product.freeShipping,
+            preorderReleaseAt: product.preorderReleaseAt,
             categoryId: product.categoryId ?? undefined,
             categoryIds: selectedCategoryIds.length
               ? selectedCategoryIds
