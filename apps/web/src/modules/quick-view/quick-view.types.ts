@@ -29,6 +29,8 @@ export type QuickViewVariant = {
   id: string;
   imageUrl: string | null;
   optionSignature: string;
+  /** Attribute name to value, e.g. { Color: "Black", Size: "M" }: the title, split. */
+  options: Record<string, string>;
   price: string;
   sku: string | null;
   stockQuantity: number;

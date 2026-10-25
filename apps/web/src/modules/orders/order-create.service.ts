@@ -2,6 +2,8 @@ import { prisma } from "@dash/db";
 import { assertStoreUnlocked } from "../billing/free-trial";
 import { canCreateOrder } from "../billing/subscription-limits";
 import { assessOrderSafely } from "../fake-orders/fake-order.assessment";
+import { reconcileOrderLoyalty } from "../loyalty/loyalty.orders";
+import { prepareOrderLoyalty } from "../loyalty/loyalty.service";
 import { getPaymentMethods } from "../payments/payment.service";
 import { decrementProductVariantStock } from "../products/product-variants.service";
 import { getEnabledShippingRates } from "../shipping/shipping.service";
@@ -85,6 +87,10 @@ export async function createManualOrder(store: ManualOrderStore, input: CreateMa
     data.shippingAmount ?? (shippingRate ? Number(shippingRate.amount).toFixed(2) : "0.00");
   const discountAmount = data.discountAmount ?? "0.00";
   const items = mergeOrderLines(data.items);
+  // Only an order created already COMPLETED can earn, and a new order has no
+  // rows to reverse — so every other manual order skips the programme entirely.
+  // Prepared out here: it is the read and the DDL that must not run inside.
+  const loyalty = data.status === "COMPLETED" ? await prepareOrderLoyalty(store.id) : null;
 
   const order = await prisma.$transaction(async (tx) => {
     const products = await tx.product.findMany({
@@ -217,7 +223,7 @@ export async function createManualOrder(store: ManualOrderStore, input: CreateMa
 
     const orderNumber = await generateOrderNumber(tx, store.id);
 
-    return tx.order.create({
+    const created = await tx.order.create({
       data: {
         billingAddressId: address.id,
         currency: store.currency,
@@ -251,6 +257,12 @@ export async function createManualOrder(store: ManualOrderStore, input: CreateMa
         totalAmount
       }
     });
+
+    if (loyalty) {
+      await reconcileOrderLoyalty(tx, store.id, created.id, loyalty);
+    }
+
+    return created;
   });
 
   // Outside the transaction and non-throwing, exactly as checkout does it: the

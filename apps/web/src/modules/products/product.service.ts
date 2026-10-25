@@ -1,4 +1,5 @@
 import { createUniqueSlug } from "../../lib/slug";
+import { assertProductBarcodeAvailable } from "../barcodes/barcode.service";
 import { hasPlanFeature } from "../billing/subscription-limits";
 import { getCategoryByIdForStore } from "../categories/category.repository";
 import {
@@ -33,6 +34,10 @@ export async function createProduct(storeId: string, input: CreateProductInput) 
 
   if (data.sku && !(await isProductSkuAvailable(storeId, data.sku))) {
     throw new Error("A product with this SKU already exists.");
+  }
+
+  if (data.barcode) {
+    await assertProductBarcodeAvailable(storeId, data.barcode);
   }
 
   if (data.categoryId) {
@@ -100,6 +105,12 @@ export async function updateProduct(
 
   if (data.sku && !(await isProductSkuAvailable(storeId, data.sku, productId))) {
     throw new Error("A product with this SKU already exists.");
+  }
+
+  // Awaited here, before `updateProductRecord` opens its transaction on
+  // `Product` — the barcode DDL must never run inside one.
+  if (data.barcode) {
+    await assertProductBarcodeAvailable(storeId, data.barcode, productId);
   }
 
   if (data.categoryId) {

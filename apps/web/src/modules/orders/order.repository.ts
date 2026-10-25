@@ -130,9 +130,10 @@ export async function getOrderRiskKeyForStore(storeId: string, orderId: string) 
 export async function updateOrderStatusForStore(
   storeId: string,
   orderId: string,
-  status: OrderStatus
+  status: OrderStatus,
+  client: Pick<Prisma.TransactionClient, "order"> = prisma
 ) {
-  return prisma.order.updateMany({
+  return client.order.updateMany({
     where: {
       id: orderId,
       storeId
@@ -204,12 +205,14 @@ export async function getOrderEditableDetailsForStore(storeId: string, orderId: 
     },
     select: {
       billingAddressId: true,
+      bundleDiscountAmount: true,
       currency: true,
       customerEmail: true,
       customerName: true,
       customerPhone: true,
       discountAmount: true,
       id: true,
+      loyaltyDiscountAmount: true,
       notes: true,
       orderNumber: true,
       paymentMethodType: true,
@@ -261,6 +264,27 @@ export async function getOrderSubtotalForStore(
     },
     select: {
       subtotalAmount: true
+    }
+  });
+}
+
+/**
+ * The two discounts an edit may not change: the bundle saving the order was
+ * priced with, and the points discount its REDEEM ledger row paid for.
+ */
+export async function getOrderFixedDiscountsForStore(
+  tx: Prisma.TransactionClient,
+  storeId: string,
+  orderId: string
+) {
+  return tx.order.findFirst({
+    where: {
+      id: orderId,
+      storeId
+    },
+    select: {
+      bundleDiscountAmount: true,
+      loyaltyDiscountAmount: true
     }
   });
 }

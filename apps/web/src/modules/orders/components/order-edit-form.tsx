@@ -48,6 +48,12 @@ type OrderEditFormProps = {
   bookedWarning?: string | undefined;
   currency: string;
   /**
+   * The bundle saving and the points discount the order was placed with. Not
+   * editable here — the server keeps both exactly as placed — but they are in
+   * the total, so the figure shown is the one that will be saved.
+   */
+  fixedDiscounts: { bundle: number; points: number };
+  /**
    * Why the products are read-only, when they are. The carrier is holding a
    * label with an amount on it, or a return has been filed against these exact
    * lines — either way the basket is no longer only ours to change.
@@ -67,6 +73,7 @@ export function OrderEditForm({
   bookedWarning,
   cancelHref,
   currency,
+  fixedDiscounts,
   itemsLockedReason,
   order,
   paymentMethods,
@@ -141,7 +148,13 @@ export function OrderEditForm({
   function removeLine(index: number) {
     setLines((current) => current.filter((_, position) => position !== index));
   }
-  const total = subtotal + (Number(shippingAmount) || 0) - (Number(discountAmount) || 0);
+  // The same sum the server saves, fixed discounts included.
+  const total =
+    subtotal +
+    (Number(shippingAmount) || 0) -
+    (Number(discountAmount) || 0) -
+    fixedDiscounts.bundle -
+    fixedDiscounts.points;
   // Same rule as the create form: the reference only means something on a
   // method that has one to quote.
   const needsPaymentReference = paymentMethod !== "COD";
@@ -472,6 +485,18 @@ export function OrderEditForm({
           label="Discount"
           value={`- ${formatMoney(Number(discountAmount) || 0, currency)}`}
         />
+        {fixedDiscounts.bundle > 0 ? (
+          <SummaryRow
+            label="Bundle saving (kept as placed)"
+            value={`- ${formatMoney(fixedDiscounts.bundle, currency)}`}
+          />
+        ) : null}
+        {fixedDiscounts.points > 0 ? (
+          <SummaryRow
+            label="Points discount (kept as placed)"
+            value={`- ${formatMoney(fixedDiscounts.points, currency)}`}
+          />
+        ) : null}
         <div className="mt-2 flex items-center justify-between border-t border-[#ececf5] pt-2 text-base font-semibold text-[#292a34]">
           <dt>Total</dt>
           <dd className="m-0">{formatMoney(total, currency)}</dd>

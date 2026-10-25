@@ -1,4 +1,4 @@
-import { prisma } from "@dash/db";
+import { prisma, type Prisma } from "@dash/db";
 import { ensureFakeOrderRiskSchema, getDatabaseSchemaName } from "./fake-order-risk-schema";
 import { PENDING_REVIEW_STATUSES } from "./fake-order.types";
 import type {
@@ -425,16 +425,23 @@ export async function saveRiskAssessments(storeId: string, writes: RiskAssessmen
   );
 }
 
+/**
+ * A caller passing its own transaction must have awaited
+ * `ensureFakeOrderRiskSchema()` before opening it: that DDL alters `Order`, and
+ * the call below would otherwise be the first time it runs. Memoised, so here
+ * it is then a resolved promise and no statement at all.
+ */
 export async function updateOrderVerificationStatus(
   storeId: string,
   orderId: string,
-  status: VerificationStatus
+  status: VerificationStatus,
+  client: Pick<Prisma.TransactionClient, "order"> = prisma
 ) {
   await ensureFakeOrderRiskSchema();
 
   const decidedAt = new Date();
 
-  return prisma.order.updateMany({
+  return client.order.updateMany({
     where: {
       id: orderId,
       storeId

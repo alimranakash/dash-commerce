@@ -42,6 +42,7 @@ const STARTER_FEATURES: PlanFeatureKey[] = [
   "google_analytics",
   "incomplete_orders",
   "inventory",
+  "loyalty",
   "marketing_analytics",
   "marketing_templates",
   "meta_pixel",

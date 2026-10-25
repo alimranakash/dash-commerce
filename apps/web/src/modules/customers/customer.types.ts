@@ -4,6 +4,8 @@ export type CustomerRow = {
   email: string | null;
   id: string;
   lastOrderAt: Date | null;
+  /** The customer's loyalty membership in this store, or null when they never joined. */
+  loyalty: { points: number; suspended: boolean } | null;
   name: string;
   orderCount: number;
   phone: string;

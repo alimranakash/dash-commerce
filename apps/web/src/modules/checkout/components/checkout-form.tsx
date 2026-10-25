@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import type { CartScope } from "../../cart/cart.types";
 import type { OrderBumpOffer } from "../../merchandising/order-bump.schema";
+import type { RedemptionLimits, RedemptionPolicy } from "../../loyalty/loyalty.rules";
 import type { PaymentMethodTypeValue } from "../../payments/payment.schema";
 import { defaultCheckoutSettings } from "../checkout-settings";
+import { CheckoutPointsRedemption, type VerifiedPoints } from "./checkout-points-redemption";
 
 const CONTACT_ENDPOINT = "/api/checkout/contact";
 const CONTACT_DEBOUNCE_MS = 900;
@@ -45,6 +47,29 @@ type CheckoutShippingRate = {
   };
 };
 
+export type CheckoutLoyaltyOffer = {
+  amountPerPoint: string;
+  programName: string;
+  /** The store's redemption rules, or null when members cannot spend points here. */
+  redemption: RedemptionPolicy | null;
+};
+
+/** The points panel's state, owned by `CheckoutExperience` because the summary prices it. */
+export type CheckoutRedemptionState = {
+  appliedPoints: number;
+  /** What the member holds, as the latest server quote read it. */
+  balance: number | null;
+  /** The server's limits for this basket, or null until it has answered. */
+  limits: RedemptionLimits | null;
+  onChoose: (points: number) => void;
+  onRemove: () => void;
+  onVerified: (verified: VerifiedPoints) => void;
+  /** Why the server could not quote, when it could not. */
+  quoteMessage: string | null;
+  quoting: boolean;
+  verified: VerifiedPoints | null;
+};
+
 type CheckoutFormProps = {
   checkoutError: string | undefined;
   /** Which basket the POST settles: the cart, or a Direct Checkout of one item. */
@@ -52,6 +77,9 @@ type CheckoutFormProps = {
   /** Owned by `CheckoutExperience`; carried here only so the POST includes it. */
   couponCode: string;
   currency: string;
+  /** The store's loyalty programme, or null when it is not running. */
+  loyaltyOffer: CheckoutLoyaltyOffer | null;
+  redemption: CheckoutRedemptionState;
   notes: string;
   /** The store's standing offer, or null when there is none for this cart. */
   orderBump: OrderBumpOffer | null;
@@ -72,6 +100,8 @@ export function CheckoutForm({
   checkoutScope,
   couponCode,
   currency,
+  loyaltyOffer,
+  redemption,
   notes,
   orderBump,
   orderBumpAccepted,
@@ -232,6 +262,17 @@ export function CheckoutForm({
       ) : (
         <input name="verificationCode" type="hidden" value="" />
       )}
+      {loyaltyOffer ? <CheckoutLoyaltyOptIn currency={currency} offer={loyaltyOffer} /> : null}
+      {loyaltyOffer?.redemption ? (
+        <CheckoutPointsRedemption
+          {...redemption}
+          currency={currency}
+          formRef={formRef}
+          policy={loyaltyOffer.redemption}
+          programName={loyaltyOffer.programName}
+          storeSlug={storeSlug}
+        />
+      ) : null}
       {/* Only the id is posted. The discount and the price behind it are read
           again on the server when the order is placed. */}
       <input
@@ -294,6 +335,33 @@ function CheckoutOrderBump({
             </span>
           </span>
         </span>
+      </span>
+    </label>
+  );
+}
+
+/**
+ * The loyalty opt-in. Unticked until the shopper ticks it: joining is their
+ * decision, and an unticked box posts nothing at all, which the server reads
+ * as no. Below the payment details and above the add-on offer, which keeps its
+ * place directly over Place Order.
+ */
+function CheckoutLoyaltyOptIn({
+  currency,
+  offer
+}: {
+  currency: string;
+  offer: CheckoutLoyaltyOffer;
+}) {
+  return (
+    <label className="sf-checkout-loyalty">
+      <input name="loyaltyOptIn" type="checkbox" value="on" />
+      <span>
+        <strong>Join {offer.programName} for free</strong>
+        <small>
+          Earn 1 point for every {formatCheckoutMoney(offer.amountPerPoint, currency)} you spend on
+          products, added once your order is completed.
+        </small>
       </span>
     </label>
   );

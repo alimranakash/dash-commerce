@@ -16,6 +16,7 @@ type ProductWriteData = {
   description?: string | null;
   shortDescription?: string | null;
   sku?: string | null;
+  barcode?: string | null;
   compareAtPrice?: string | null;
   costPrice?: string | null;
   categoryId?: string | null;
@@ -407,6 +408,10 @@ function buildProductCreateData(
     productData.sku = data.sku;
   }
 
+  if (data.barcode) {
+    productData.barcode = data.barcode;
+  }
+
   if (data.compareAtPrice) {
     productData.compareAtPrice = data.compareAtPrice;
   }
@@ -433,6 +438,7 @@ function buildProductUpdateData(
   if (data.description !== undefined) productData.description = data.description;
   if (data.shortDescription !== undefined) productData.shortDescription = data.shortDescription;
   if (data.sku !== undefined) productData.sku = data.sku;
+  if (data.barcode !== undefined) productData.barcode = data.barcode;
   if (data.price !== undefined) productData.price = data.price;
   if (data.compareAtPrice !== undefined) productData.compareAtPrice = data.compareAtPrice;
   if (data.costPrice !== undefined) productData.costPrice = data.costPrice;

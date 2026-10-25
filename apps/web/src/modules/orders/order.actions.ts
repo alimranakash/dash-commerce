@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import { markIncompleteOrderConverted } from "../abandoned-carts/abandoned-cart.service";
+import { LoyaltyError } from "../loyalty/loyalty.rules";
 import type { PaymentMethodTypeValue } from "../payments/payment.schema";
 import { requireStore } from "../stores/queries";
 import type { CreateManualOrderInput } from "./order-create.schema";
@@ -24,7 +25,18 @@ type PaymentStatusUpdate = "PAID";
 export async function updateOrderStatusFormAction(orderId: string, status: OrderStatusUpdate) {
   const store = await requireStore();
 
-  await updateOrderStatus(store.id, orderId, status);
+  try {
+    await updateOrderStatus(store.id, orderId, status);
+  } catch (error) {
+    // Moving a cancelled order back spends its points again. When the member
+    // no longer holds them the ledger refuses, the whole change rolls back,
+    // and the seller is told why rather than shown an error page.
+    if (error instanceof LoyaltyError) {
+      redirect(`/dashboard/orders/${orderId}?pointsError=1`);
+    }
+
+    throw error;
+  }
 
   revalidateOrderPaths(orderId);
   redirect(`/dashboard/orders/${orderId}?updated=1`);

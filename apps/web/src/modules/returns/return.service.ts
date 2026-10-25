@@ -1,4 +1,6 @@
 import { prisma, type Prisma } from "@dash/db";
+import { reconcileOrderLoyalty } from "../loyalty/loyalty.orders";
+import { prepareOrderLoyalty } from "../loyalty/loyalty.service";
 import { generateReturnNumber } from "./return-number";
 import { ensureOrderReturnSchema } from "./return-schema";
 import {
@@ -217,6 +219,11 @@ export async function advanceOrderReturnStatus(
 ) {
   await ensureOrderReturnSchema();
 
+  // Settling is the only step that changes what the order earns: completed
+  // returns, exchanges and refunds come off its goods value. Prepared before
+  // the transaction, which is where the programme's reads must happen.
+  const loyalty = next === "COMPLETED" ? await prepareOrderLoyalty(store.id) : null;
+
   return prisma.$transaction(async (tx) => {
     const request = await tx.orderReturn.findFirst({
       where: {
@@ -286,6 +293,10 @@ export async function advanceOrderReturnStatus(
 
     if (next === "COMPLETED") {
       await projectSettlementOntoOrder(tx, store.id, request.orderId);
+    }
+
+    if (loyalty) {
+      await reconcileOrderLoyalty(tx, store.id, request.orderId, loyalty);
     }
 
     return request.orderId;

@@ -1,7 +1,14 @@
 import { getSmsAllowance } from "../billing/subscription-limits";
 import { sendSmtpEmail } from "./email-transport";
-import { isNotificationError, toNotificationError } from "./notifications-errors";
+import { isNotificationError, toRedactedNotificationError } from "./notifications-errors";
 import { resolveMessagingConfig, type MessagingConfig } from "./notifications.config";
+import {
+  errorForLog,
+  maskRecipient,
+  previewForLog,
+  redactDeliveryRow,
+  redactLogText
+} from "./notifications.redact";
 import { recordMessageDelivery } from "./notifications.repository";
 import type {
   MessageChannel,
@@ -14,9 +21,12 @@ import { getSmsProvider } from "./sms/registry";
  * The one way anything in this app sends a message.
  *
  * Three rules hold for both channels. An unconfigured install does not fail —
- * the message goes to the server log and is recorded as `SKIPPED`, which is what
- * lets sign-up be developed and tested before a mail host or an SMS balance
- * exists. Every attempt is written to `MessageDelivery` either way, because the
+ * the message is recorded as `SKIPPED` and a redacted line goes to the server
+ * log, never a code or a full recipient (see `notifications.redact`). Sign-up
+ * can still be developed before a mail host or an SMS balance exists, because a
+ * development build echoes the code to the browser instead (`otp-delivery`); a
+ * production build with nothing configured has no way to hand anyone a code.
+ * Every attempt is written to `MessageDelivery` either way, because the
  * failure that costs the most time is the silent one. And every message says
  * which store it was sent for, or that it was sent for none.
  *
@@ -42,6 +52,7 @@ export async function sendEmail(input: {
     preview: `${input.subject} — ${input.text.replace(/\s+/g, " ").slice(0, 200)}`,
     provider: "smtp",
     recipient: input.to,
+    secrets: settings ? [settings.password] : [],
     send: settings
       ? () =>
           sendSmtpEmail(
@@ -96,6 +107,7 @@ export async function sendSms(input: {
     preview: input.message,
     provider: config.sms?.provider ?? "none",
     recipient: input.to,
+    secrets: config.sms ? [config.sms.credentials.apiKey] : [],
     send: sendWith(config, input),
     storeId,
     template: input.template
@@ -123,10 +135,12 @@ async function overAllowance(storeId: string) {
 
 async function deliver(input: {
   channel: MessageChannel;
-  /** Logged verbatim only when nothing is configured to send it. */
+  /** Logged, through `previewForLog`, only when nothing is configured to send it. */
   preview: string;
   provider: string;
   recipient: string;
+  /** The credentials this send uses, struck from anything the gateway says back. */
+  secrets: readonly string[];
   send: (() => Promise<{ providerMessageId: string | null }>) | null;
   storeId: string | null;
   template: MessageTemplateKey;
@@ -140,7 +154,9 @@ async function deliver(input: {
   };
 
   if (!input.send) {
-    console.info(`[${input.channel.toLowerCase()}] to ${input.recipient}: ${input.preview}`);
+    console.info(
+      `[${input.channel.toLowerCase()}] ${input.template} to ${maskRecipient(input.recipient)}: ${previewForLog(input.template, input.preview)}`
+    );
     console.info(`[${input.channel.toLowerCase()}] nothing configured to send this — logged only.`);
 
     await log({ ...entry, errorCode: null, errorMessage: null, providerMessageId: null, status: "SKIPPED" });
@@ -161,22 +177,33 @@ async function deliver(input: {
 
     return { provider: input.provider, providerMessageId: receipt.providerMessageId, status: "SENT" };
   } catch (error) {
-    const failure = toNotificationError(error);
+    // Redacted once, here, before the failure is logged, persisted or handed
+    // back — and handed back without the original as its cause. A gateway or a
+    // proxy in front of it can echo the request, key and code included, and
+    // callers show this message to admins and to sellers, who are not the ones
+    // holding the platform's key.
+    const failure = toRedactedNotificationError(error, input.secrets);
 
     // An outage stops every visitor at once, so it gets the loud line. A refused
     // recipient is one person's problem and stays at warning.
     if (failure.isOutage) {
       console.error(
-        `[${input.channel.toLowerCase()}] SENDING IS DOWN (${failure.kind}): ${failure.message}`
+        `[${input.channel.toLowerCase()}] SENDING IS DOWN (${failure.kind}): ${redactLogText(failure.message)}`
       );
     } else {
-      console.warn(`[${input.channel.toLowerCase()}] to ${input.recipient} failed: ${failure.message}`);
+      // Masked: some messages only go to a number for a reason — a loyalty code
+      // only to a member's — so a full recipient in the server log would say
+      // more than that a send failed. The gateway's own words are redacted too,
+      // since a reply can echo the number or the message back.
+      console.warn(
+        `[${input.channel.toLowerCase()}] to ${maskRecipient(input.recipient)} failed: ${redactLogText(failure.message)}`
+      );
     }
 
     await log({
       ...entry,
       errorCode: failure.providerCode ?? failure.kind,
-      errorMessage: failure.message.slice(0, 500),
+      errorMessage: failure.message,
       providerMessageId: null,
       status: "FAILED"
     });
@@ -188,6 +215,12 @@ async function deliver(input: {
 /**
  * Never the reason a message fails. A delivery that went out but could not be
  * written down is worth a log line, not an error handed back to the caller.
+ *
+ * Every row is written through `redactDeliveryRow`, whichever path produced
+ * it: the recipient masked to its last three characters, the error code and
+ * message redacted (again, for the paths that did not redact them already).
+ * Nothing reads a row back by recipient — the store's allowance counts by
+ * store and status — so the full number has no reason to be kept.
  */
 async function log(entry: {
   channel: MessageChannel;
@@ -201,9 +234,9 @@ async function log(entry: {
   template: MessageTemplateKey;
 }) {
   try {
-    await recordMessageDelivery(entry);
+    await recordMessageDelivery(redactDeliveryRow(entry));
   } catch (error) {
-    console.error("Could not record a message delivery", error);
+    console.error(`Could not record a message delivery: ${errorForLog(error)}`);
   }
 }
 

@@ -187,6 +187,7 @@ async function main() {
     ["marketing_templates", "Starter"],
     ["order_bump", "Starter"],
     ["bundles", "Starter"],
+    ["loyalty", "Starter"],
     // Reaching out.
     ["campaigns", "Growth"],
     ["abandoned_cart", "Growth"]

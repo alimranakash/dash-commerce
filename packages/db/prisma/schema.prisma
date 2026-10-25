@@ -356,6 +356,7 @@ model User {
   supportTicketReplies    SupportTicketReply[]
   systemLogs              SystemLog[]
   marketingSettingUpdates MarketingSetting[]
+  notes                   StoreNote[]
   createdAt               DateTime             @default(now())
   updatedAt               DateTime             @default(now()) @updatedAt
 }
@@ -408,6 +409,10 @@ enum OtpPurpose {
   LOGIN
   PASSWORD_RESET
   REGISTRATION
+  /// Proves a shopper owns the number their loyalty points are kept under,
+  /// before the balance is shown or spent. Its own purpose so a loyalty code
+  /// can never stand in for a cash-on-delivery confirmation, or the reverse.
+  LOYALTY
 }
 
 /// One verification code in flight.
@@ -616,6 +621,10 @@ model Store {
   campaignTemplates          CampaignTemplate[]
   blockedIps                 BlockedIp[]
   wishlistItems              WishlistItem[]
+  notes                      StoreNote[]
+  loyaltySetting             StoreLoyaltySetting?
+  loyaltyMembers             LoyaltyMember[]
+  loyaltyConflicts           LoyaltyEnrollmentConflict[]
   createdAt                  DateTime                    @default(now())
   updatedAt                  DateTime                    @default(now()) @updatedAt
 
@@ -998,6 +1007,18 @@ model Product {
   description         String?
   shortDescription    String?
   sku                 String?
+  /// What a scanner reads off this product's label, and what the sale form
+  /// looks it up by — see apps/web/src/modules/barcodes/. Either the
+  /// manufacturer's code already on the packaging, or an in-store EAN-13
+  /// (prefix 20) assigned the first time a label is printed. Stored normalised
+  /// — no whitespace, upper case — so a scanner's spelling and the stored one
+  /// compare equal.
+  ///
+  /// Unique per store, by a partial index `ensureProductBarcodeSchema` creates
+  /// rather than an `@@unique` here, for the reason `checkoutSubmissionId`
+  /// gives: `db push` will not add a unique constraint unattended, and
+  /// `deploy/bin/release.sh` runs it unattended. Keep the two in sync.
+  barcode             String?
   price               Decimal                     @db.Decimal(12, 2)
   compareAtPrice      Decimal?                    @db.Decimal(12, 2)
   costPrice           Decimal?                    @db.Decimal(12, 2)
@@ -1570,6 +1591,42 @@ model ExpenseCategory {
   @@map("expense_categories")
 }
 
+/// One person's private note in one store — an idea, a checklist, a cost to
+/// remember. Both `storeId` and `userId` are in every statement's `where`, so a
+/// teammate in the same store cannot read it any more than another store can.
+///
+/// Read and written by raw SQL in `modules/notes/note.repository.ts`, which
+/// also creates this table on first use: the model is here so `db:push` keeps
+/// it, and the DDL there is so the page works on a database nobody has pushed.
+model StoreNote {
+  id         String    @id @default(cuid())
+  storeId    String
+  userId     String
+  title      String    @default("")
+  /// The rich-text editor's HTML. Only ever rendered through `ProductRichText`,
+  /// which rebuilds an allow-list of tags as React elements, never as markup.
+  body       String    @default("")
+  /// The body and checklist as plain text, rewritten on every save so a search
+  /// matches what was typed rather than the editor's tags.
+  searchText String    @default("")
+  /// `[{ id, text, done }]`, validated by `noteChecklistSchema`.
+  checklist  Json      @default("[]")
+  /// One of `NOTE_COLORS`. Text so adding a colour is not a migration.
+  color      String    @default("default")
+  labels     String[]  @default([])
+  pinned     Boolean   @default(false)
+  archivedAt DateTime?
+  /// Bumped by every content save. A save naming an older version is refused
+  /// rather than applied, which is how autosave never overwrites newer content.
+  version    Int       @default(1)
+  store      Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now()) @updatedAt
+
+  @@index([storeId, userId])
+}
+
 model Expense {
   id             String               @id @default(cuid())
   organizationId String               @map("organization_id")
@@ -1623,6 +1680,7 @@ model Sale {
   store          Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
   customer       Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
   items          SaleItem[]
+  loyaltyOptIn   SaleLoyaltyOptIn?
   createdAt      DateTime          @default(now()) @map("created_at")
   updatedAt      DateTime          @default(now()) @updatedAt @map("updated_at")
 
@@ -1636,10 +1694,34 @@ model Sale {
   @@map("sales")
 }
 
+/// A customer's opt-in, given at the counter, to earn loyalty points on one
+/// offline sale. Its own table rather than a column on `sales`: the consent is
+/// the customer's, so it names them, and a sale whose customer is changed
+/// afterwards does not inherit it. Withdrawn by deleting the row.
+model SaleLoyaltyOptIn {
+  saleId           String   @id @map("sale_id")
+  storeId          String   @map("store_id")
+  /// The customer who gave it. The sale earns only while this is still its customer.
+  customerId       String   @map("customer_id")
+  recordedByUserId String?  @map("recorded_by_user_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  sale             Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+  @@map("sale_loyalty_opt_ins")
+}
+
 model SaleItem {
   id          String  @id @default(cuid())
   saleId      String  @map("sale_id")
   productId   String  @map("product_id")
+  /// Which option of the product was sold, for a product sold by size, colour
+  /// and the like — the line's stock lives on that `ProductVariant` row, as an
+  /// order line's does (see `OrderItem.variantId`). Null for a product without
+  /// options, and for every line written before this column existed, whose
+  /// stock came off the product itself and goes back there.
+  variantId   String? @map("variant_id")
+  /// The product's title, then " - " and the variant's, at the time of sale.
   productName String  @map("product_name")
   sku         String?
   quantity    Int
@@ -1930,6 +2012,8 @@ model Customer {
   abandonedCarts AbandonedCart[]
   returns        OrderReturn[]
   campaignRecipients CampaignRecipient[]
+  loyaltyMember  LoyaltyMember?
+  loyaltyConflicts LoyaltyEnrollmentConflict[]
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @default(now()) @updatedAt
 
@@ -2021,6 +2105,11 @@ model Order {
   /// its own discount after the coupon row is gone.
   couponId              String?
   couponCode            String?
+  /// What redeemed loyalty points took off the goods, applied after the coupon.
+  /// Kept apart from both discounts above for the reason they are kept apart
+  /// from each other; the points themselves are the order's REDEEM ledger row.
+  /// Fixed once placed: editing the order recomputes the total around it.
+  loyaltyDiscountAmount Decimal                 @default(0) @db.Decimal(12, 2)
   taxAmount             Decimal                 @default(0) @db.Decimal(12, 2)
   totalAmount           Decimal                 @db.Decimal(12, 2)
   customerName          String
@@ -2544,6 +2633,160 @@ model CouponRedemption {
   @@unique([couponId, orderId])
   @@index([couponId, customerPhone])
   @@index([storeId, createdAt])
+}
+
+/// What a loyalty ledger row did. The sign of `points` is fixed by the type —
+/// `modules/loyalty/loyalty.rules.ts` refuses an EARN that subtracts — so a
+/// row explains itself without reading the rows around it.
+enum LoyaltyTransactionType {
+  EARN
+  EARN_REVERSAL
+  REDEEM
+  REDEEM_REVERSAL
+  ADJUSTMENT
+}
+
+/// What a loyalty ledger row is answering to. SALE is an offline sale from
+/// the dashboard, which earns (never spends) once it is completed, fully paid
+/// and opted in — see `planSaleLoyalty`.
+enum LoyaltySourceType {
+  ORDER
+  MANUAL
+  SALE
+}
+
+/// One store's loyalty programme. Off until the seller switches it on, and
+/// switching it on is the `loyalty` plan feature — see `loyalty.actions.ts`.
+model StoreLoyaltySetting {
+  storeId        String   @id
+  enabled        Boolean  @default(false)
+  programName    String   @default("Rewards")
+  /// Net goods spend that earns one point. Points are rounded down, so at 100
+  /// an order of 199 earns 1.
+  amountPerPoint Decimal  @default(100) @db.Decimal(12, 2)
+  /// Whether members may spend points at checkout. Separate from `enabled` so a
+  /// shop can earn without redeeming, and off until the seller chooses.
+  redemptionEnabled Boolean @default(false)
+  /// What one point takes off an order when redeemed.
+  pointValue        Decimal @default(1) @db.Decimal(12, 2)
+  /// The fewest points one redemption may use.
+  minRedeemPoints   Int     @default(100)
+  /// The most of an order's goods, after bundle and coupon discounts, that
+  /// points may cover, as a whole percentage. Shipping is never payable.
+  maxRedeemPercent  Int     @default(50)
+  store          Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+}
+
+/// A customer's membership of one store's loyalty programme.
+///
+/// One per customer, and one per normalised phone within a store. Checkout
+/// keys `Customer` on the phone exactly as typed, so `01712…` and `+8801712…`
+/// can be two customers; `phoneKey` is what stops them holding two balances.
+/// The two uniques together mean a second customer on a known number is a
+/// conflict to resolve by hand, never a silent merge of two people's points.
+///
+/// `pointsBalance` is denormalised from the ledger on purpose, as
+/// `Coupon.usedCount` is: spending has to be refused with one conditional
+/// update inside the order transaction, and summing rows first would be a
+/// check-then-write race.
+model LoyaltyMember {
+  id            String               @id @default(cuid())
+  storeId       String
+  customerId    String               @unique
+  phoneKey      String
+  /// May go below zero: a reversal after the points were spent is recorded in
+  /// full, and a negative balance simply cannot redeem.
+  pointsBalance     Int                         @default(0)
+  /// Bumped with every ledger row, in the same statement as the balance and
+  /// under the same row lock; the row takes the new value as its `sequence`.
+  /// That is what puts a member's history in true commit order.
+  ledgerSequence    Int                         @default(0)
+  enrolledAt        DateTime                    @default(now())
+  /// Set while the membership is suspended: no points are added, reversals
+  /// still land, and the balance and history are untouched.
+  suspendedAt       DateTime?
+  suspendedByUserId String?
+  store             Store                       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  /// NoAction rather than Cascade: deleting a customer must not take their
+  /// ledger with it. Deleting the store still clears both in one statement.
+  customer          Customer                    @relation(fields: [customerId], references: [id], onDelete: NoAction)
+  transactions      LoyaltyTransaction[]
+  conflicts         LoyaltyEnrollmentConflict[]
+  createdAt         DateTime                    @default(now())
+  updatedAt         DateTime                    @default(now()) @updatedAt
+
+  @@unique([storeId, phoneKey])
+  @@index([storeId, createdAt])
+}
+
+/// One movement of points. Append-only: written by `appendLoyaltyLedgerEntry`
+/// in the same transaction as the balance change it explains, and never
+/// updated or deleted by any code path.
+///
+/// `idempotencyKey` is what lets the same event arrive twice — a double click,
+/// a retried request — and move the balance once.
+model LoyaltyTransaction {
+  id             String                 @id @default(cuid())
+  storeId        String
+  memberId       String
+  type           LoyaltyTransactionType
+  /// Signed. Never zero.
+  points         Int
+  /// The member's balance once this row was applied.
+  balanceAfter   Int
+  /// The member's `ledgerSequence` this row was written at: 1, 2, 3… per
+  /// member, gapless, in commit order. History is ordered by this, never by
+  /// `createdAt`, which is the transaction's start and can commit out of order.
+  sequence       Int
+  /// The spend per point an order's earn rows were worked out at. Later
+  /// corrections to the same order reuse it, so a seller changing the rate
+  /// re-prices future orders, never ones that have already earned.
+  amountPerPoint Decimal?               @db.Decimal(12, 2)
+  sourceType     LoyaltySourceType
+  /// The order id for ORDER rows. Deliberately not a relation, like
+  /// `Order.couponId`: the ledger must outlive what it points at.
+  sourceId       String?
+  idempotencyKey String
+  /// Who caused the row, for manual entries. Null for system writes.
+  actorUserId    String?
+  note           String?
+  member         LoyaltyMember          @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  createdAt      DateTime               @default(now())
+
+  @@unique([storeId, idempotencyKey])
+  @@unique([memberId, sequence])
+  @@index([storeId, sourceType, sourceId])
+}
+
+/// A shopper ticked the loyalty box with a number that already belongs to a
+/// different customer record's membership, so they were not enrolled.
+///
+/// One row per customer-and-member pair. Nothing is merged and neither balance
+/// moves; the row is how an owner finds out and records that they dealt with
+/// it. Another opt-in on the same pair reopens it, because a new order went
+/// unrewarded.
+model LoyaltyEnrollmentConflict {
+  id               String        @id @default(cuid())
+  storeId          String
+  /// The customer record that opted in and was not enrolled.
+  customerId       String
+  /// The membership that already holds the number.
+  memberId         String
+  /// The most recent order that carried the opt-in.
+  orderId          String
+  occurrences      Int           @default(1)
+  resolvedAt       DateTime?
+  resolvedByUserId String?
+  store            Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  customer         Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  member           LoyaltyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @default(now()) @updatedAt
+
+  @@unique([storeId, customerId, memberId])
+  @@index([storeId, resolvedAt])
 }
 
 enum CampaignChannel {

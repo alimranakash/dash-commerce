@@ -37,6 +37,7 @@ export type GuestOrderRow = {
   fulfillmentStatus: string;
   id: string;
   items: GuestOrderItemRow[];
+  loyaltyDiscountAmount: Money;
   orderNumber: string;
   paymentMethodName: string;
   paymentStatus: string;
@@ -63,6 +64,8 @@ export type GuestOrderLineView = {
 
 export type GuestOrderView = {
   discount: string | null;
+  /** What spent loyalty points took off, on its own line: a payment, not a saving. */
+  pointsDiscount: string | null;
   expiryLabel: string;
   fulfillmentLabel: string;
   id: string;
@@ -158,6 +161,7 @@ export function buildGuestOrderView(
   // reporting wants both halves. Absent rather than a formatted zero.
   const discount = amount(order.discountAmount) + amount(order.bundleDiscountAmount);
   const tax = amount(order.taxAmount);
+  const points = amount(order.loyaltyDiscountAmount);
 
   return {
     discount: discount > 0 ? formatStorefrontMoney(discount, currency) : null,
@@ -176,6 +180,7 @@ export function buildGuestOrderView(
     paymentLabel: order.paymentMethodName,
     paymentStatusLabel: guestPaymentStatusLabel(order.paymentStatus),
     placedAtLabel: formatOrderDate(order.createdAt),
+    pointsDiscount: points > 0 ? formatStorefrontMoney(points, currency) : null,
     shipping: formatStorefrontMoney(order.shippingAmount, currency),
     shippingLabel: order.shippingRateName ?? "Manual delivery",
     statusLabel: guestOrderStatusLabel(order.status),

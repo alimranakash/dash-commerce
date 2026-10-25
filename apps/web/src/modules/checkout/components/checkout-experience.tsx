@@ -5,7 +5,12 @@ import type { Cart, CartScope } from "../../cart/cart.types";
 import type { AppliedBundle } from "../../merchandising/bundle-pricing";
 import type { OrderBumpOffer } from "../../merchandising/order-bump.schema";
 import type { PaymentMethodTypeValue } from "../../payments/payment.schema";
-import { CheckoutForm } from "./checkout-form";
+import type { RedemptionLimits } from "../../loyalty/loyalty.rules";
+import { CheckoutForm, type CheckoutLoyaltyOffer } from "./checkout-form";
+import type { VerifiedPoints } from "./checkout-points-redemption";
+
+/** The server's answer for this basket: the limits, and the balance they were read from. */
+type PointsQuote = RedemptionLimits & { balance: number };
 import { CheckoutOrderSummary, type AppliedCoupon } from "./checkout-order-summary";
 
 type CheckoutPaymentMethod = {
@@ -37,6 +42,8 @@ type CheckoutExperienceProps = {
   /** Which basket this page is settling; posted with the form and the quote. */
   checkoutScope: CartScope;
   currency: string;
+  /** The loyalty programme a shopper may opt into, or null when none is running. */
+  loyaltyOffer: CheckoutLoyaltyOffer | null;
   /** Priced by the server, or null when the store has no offer standing. */
   orderBump: OrderBumpOffer | null;
   paymentMethods: CheckoutPaymentMethod[];
@@ -55,6 +62,7 @@ export function CheckoutExperience({
   checkoutError,
   checkoutScope,
   currency,
+  loyaltyOffer,
   orderBump,
   paymentMethods,
   phoneOtpRequired,
@@ -76,6 +84,37 @@ export function CheckoutExperience({
   // alongside everything else, and the summary has to price it. Neither owns it.
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const activeShippingId = selectedShippingRate?.id ?? "";
+  // Points, lifted for the same reason. `pointsChoice` null means "as many as
+  // this order allows", so a coupon or a bump changing the cap moves the
+  // pre-filled figure with it until the shopper picks their own.
+  const [verifiedPoints, setVerifiedPoints] = useState<VerifiedPoints | null>(null);
+  const [pointsChoice, setPointsChoice] = useState<number | null>(null);
+  // The limits come from the server, never from arithmetic here: the page used
+  // to work the cap out itself on a coupon quoted before bundle savings, and
+  // so offered a maximum the order measured differently. Now the server prices
+  // the page's own basket the way the order will and says what it allows.
+  const [pointsQuote, setPointsQuote] = useState<PointsQuote | null>(null);
+  const [pointsQuoteMessage, setPointsQuoteMessage] = useState<string | null>(null);
+  const [quotingPoints, setQuotingPoints] = useState(false);
+  const appliedPoints = pointsQuote
+    ? Math.min(Math.max(pointsChoice ?? pointsQuote.maxPoints, 0), pointsQuote.maxPoints)
+    : 0;
+  const loyaltyRedemption =
+    pointsQuote && pointsQuote.available && appliedPoints >= pointsQuote.minPoints
+      ? { discount: (appliedPoints * pointsQuote.pointValueCents) / 100, points: appliedPoints }
+      : null;
+  const onPointsVerified = useCallback((verified: VerifiedPoints) => {
+    setVerifiedPoints(verified);
+    setPointsChoice(null);
+  }, []);
+  const onPointsRemoved = useCallback(() => {
+    setVerifiedPoints(null);
+    setPointsChoice(null);
+    setPointsQuote(null);
+    setPointsQuoteMessage(null);
+  }, []);
+  const quotedCouponCode = appliedCoupon?.code ?? "";
+  const quotedBumpId = acceptedBump?.productId ?? "";
 
   /** Asks the server what the code is worth. Returns an error message, or null. */
   const quoteCoupon = useCallback(
@@ -157,6 +196,72 @@ export function CheckoutExperience({
     };
   }, [freeShippingCode, quoteCoupon]);
 
+  // Re-quoted whenever something that moves the cap moves: the coupon, the
+  // add-on, the delivery option (a free-shipping coupon follows it), or a
+  // fresh verification. The order will price the same basket the same way.
+  useEffect(() => {
+    if (!verifiedPoints) {
+      return;
+    }
+
+    let cancelled = false;
+
+    setQuotingPoints(true);
+
+    void fetch("/api/checkout/loyalty-quote", {
+      body: JSON.stringify({
+        checkoutScope,
+        couponCode: quotedCouponCode,
+        orderBumpProductId: quotedBumpId,
+        phone: verifiedPoints.phone,
+        shippingRateId: activeShippingId,
+        storeSlug,
+        submissionId,
+        token: verifiedPoints.token
+      }),
+      headers: { "content-type": "application/json" },
+      method: "POST"
+    })
+      .then(async (response) => {
+        const body = (await response.json().catch(() => null)) as
+          | (Partial<PointsQuote> & { error?: string })
+          | null;
+
+        if (cancelled) {
+          return;
+        }
+
+        if (response.ok && body && typeof body.maxPoints === "number") {
+          setPointsQuote({
+            available: Boolean(body.available),
+            balance: Number(body.balance ?? 0),
+            maxPoints: body.maxPoints,
+            minPoints: Number(body.minPoints ?? 0),
+            pointValueCents: Number(body.pointValueCents ?? 0)
+          });
+          setPointsQuoteMessage(null);
+        } else {
+          setPointsQuote(null);
+          setPointsQuoteMessage(body?.error ?? "We couldn't check your points just now.");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setPointsQuote(null);
+          setPointsQuoteMessage("We couldn't check your points just now.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setQuotingPoints(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeShippingId, checkoutScope, quotedBumpId, quotedCouponCode, storeSlug, submissionId, verifiedPoints]);
+
   return (
     <section className="sf-checkout-layout" aria-label="Checkout form">
       <CheckoutForm
@@ -164,7 +269,19 @@ export function CheckoutExperience({
         checkoutScope={checkoutScope}
         couponCode={appliedCoupon?.code ?? ""}
         currency={currency}
+        loyaltyOffer={loyaltyOffer}
         notes={cart.note}
+        redemption={{
+          appliedPoints,
+          balance: pointsQuote?.balance ?? verifiedPoints?.balance ?? null,
+          limits: pointsQuote,
+          onChoose: setPointsChoice,
+          onRemove: onPointsRemoved,
+          onVerified: onPointsVerified,
+          quoteMessage: pointsQuoteMessage,
+          quoting: quotingPoints,
+          verified: verifiedPoints
+        }}
         orderBump={orderBump}
         orderBumpAccepted={orderBumpAccepted}
         paymentMethods={paymentMethods}
@@ -181,6 +298,7 @@ export function CheckoutExperience({
         bundles={bundles}
         cart={cart}
         currency={currency}
+        loyaltyRedemption={loyaltyRedemption}
         onApplyCoupon={applyCoupon}
         onRemoveCoupon={() => setAppliedCoupon(null)}
         orderBump={acceptedBump}

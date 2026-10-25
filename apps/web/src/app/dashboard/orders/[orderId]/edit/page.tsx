@@ -88,6 +88,10 @@ export default async function EditOrderPage({ params }: EditOrderPageProps) {
             action={updateOrderDetailsFormAction.bind(null, order.id)}
             cancelHref={`/dashboard/orders/${order.id}`}
             currency={order.currency}
+            fixedDiscounts={{
+              bundle: Number(order.bundleDiscountAmount),
+              points: Number(order.loyaltyDiscountAmount)
+            }}
             order={{
               addressLine1: address?.addressLine1 ?? null,
               addressLine2: address?.addressLine2 ?? null,

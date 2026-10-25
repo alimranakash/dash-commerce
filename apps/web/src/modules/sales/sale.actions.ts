@@ -5,7 +5,13 @@ import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import { PlanFeatureError, hasPlanFeature, requirePlanFeature } from "../billing/subscription-limits";
 import type { GatedResult, PlanFeatureKey } from "../billing/plan-features";
+import { getCurrentUser } from "../../lib/auth";
+import { createCounterCustomer, getCustomerPickRecords } from "../customers/customer.service";
+import { LoyaltyError } from "../loyalty/loyalty.rules";
+import { enrollCustomerAtCounter } from "../loyalty/loyalty.service";
+import { errorForLog } from "../notifications/notifications.redact";
 import { requireStore } from "../stores/queries";
+import { toSaleCustomerOption, type SaleCustomerOption } from "./sale-customer";
 import { createSale, updateSale, voidSale } from "./sale.service";
 import type { CreateSaleInput } from "./sale.schema";
 
@@ -24,7 +30,7 @@ export async function createSaleFormAction(
 
   try {
     await requirePlanFeature(store.id, "sales");
-    await createSale(contextFromStore(store), saleInputFromFormData(formData));
+    await createSale(await contextFromStore(store), saleInputFromFormData(formData));
   } catch (error) {
     return saleErrorState(error);
   }
@@ -43,7 +49,11 @@ export async function updateSaleFormAction(
 
   try {
     await requirePlanFeature(store.id, "sales");
-    const sale = await updateSale(contextFromStore(store), saleId, saleInputFromFormData(formData));
+    const sale = await updateSale(
+      await contextFromStore(store),
+      saleId,
+      saleInputFromFormData(formData)
+    );
 
     if (!sale) {
       return { message: "Sale not found.", status: "error" };
@@ -65,7 +75,7 @@ export async function voidSaleAction(saleId: string): Promise<GatedResult> {
     return { lockedFeature: "sales" };
   }
 
-  await voidSale(contextFromStore(store), saleId);
+  await voidSale(await contextFromStore(store), saleId);
 
   revalidatePath("/dashboard/sales");
   revalidatePath(`/dashboard/sales/${saleId}`);
@@ -73,11 +83,170 @@ export async function voidSaleAction(saleId: string): Promise<GatedResult> {
   redirect("/dashboard/sales?voided=1");
 }
 
+/*
+ * The counter: saving a customer and taking out a membership without leaving
+ * the sale form. The picker calls these directly rather than posting them —
+ * the sale form is the only form on the page, and a nested one is not allowed —
+ * and neither touches the sale. Nothing here revalidates the page either: a
+ * refresh would re-read every product and customer while staff are mid-sale,
+ * and the picker lays the answer over its own list instead.
+ *
+ * Both are ordinary work for any team member, like the sale itself. The store
+ * and the acting person are the session's; the browser sends a name and a
+ * number, or a customer id the service re-checks against this store.
+ */
+
+export type SaleCustomerResult =
+  | { customer: SaleCustomerOption; status: "created" }
+  | { matches: SaleCustomerOption[]; message: string; status: "duplicate" }
+  | {
+      fieldErrors?: Record<string, string>;
+      lockedFeature?: PlanFeatureKey;
+      message: string;
+      status: "error";
+    };
+
+export async function createSaleCustomerAction(input: {
+  name: string;
+  phone: string;
+}): Promise<SaleCustomerResult> {
+  const store = await requireStore();
+
+  try {
+    await requirePlanFeature(store.id, "sales");
+    const result = await createCounterCustomer(store.id, input);
+
+    if (result.status === "created") {
+      return { customer: toSaleCustomerOption(store.id, result.customer), status: "created" };
+    }
+
+    return {
+      matches: result.matches.map((customer) => toSaleCustomerOption(store.id, customer)),
+      message:
+        "This number is already a customer here. Use that record instead — nothing was saved.",
+      status: "duplicate"
+    };
+  } catch (error) {
+    return counterErrorState(
+      error,
+      "The customer could not be saved. The sale can still go ahead."
+    );
+  }
+}
+
+export type SaleMembershipResult =
+  | { customer: SaleCustomerOption; message: string; status: "enrolled" | "existing" }
+  | { holder: SaleCustomerOption | null; message: string; status: "conflict" }
+  | { lockedFeature?: PlanFeatureKey; message: string; status: "error" };
+
+/**
+ * Enrols the chosen customer, on their own yes. Records no opt-in for any sale:
+ * earning on this one is still the sale's box, ticked or not.
+ */
+export async function enrollSaleCustomerAction(customerId: string): Promise<SaleMembershipResult> {
+  const store = await requireStore();
+  // From the session, never the browser: it is who recorded the customer's yes.
+  const userId = (await getCurrentUser())?.id;
+
+  if (!userId) {
+    return { message: "Sign in again to add a member.", status: "error" };
+  }
+
+  try {
+    const enrollment = await enrollCustomerAtCounter(store.id, {
+      customerId: String(customerId ?? ""),
+      userId
+    });
+
+    if (enrollment.action === "ineligible") {
+      return {
+        message:
+          "This customer's phone number can't hold a membership — it needs a valid mobile number. The sale can still be saved.",
+        status: "error"
+      };
+    }
+
+    if (enrollment.action === "conflict") {
+      const [holder] = enrollment.holderCustomerId
+        ? await saleCustomerOptions(store.id, [enrollment.holderCustomerId])
+        : [];
+
+      return {
+        holder: holder ?? null,
+        message:
+          "This number already belongs to a member on a different customer record, so nobody was enrolled and nothing was merged.",
+        status: "conflict"
+      };
+    }
+
+    const [customer] = await saleCustomerOptions(store.id, [String(customerId)]);
+
+    if (!customer) {
+      return { message: "That customer does not belong to this store.", status: "error" };
+    }
+
+    return {
+      customer,
+      message:
+        enrollment.action === "enrolled"
+          ? "Membership active."
+          : customer.membership?.status === "suspended"
+            ? "Already a member, but the membership is suspended. Nothing was changed."
+            : "Already a member. Nothing was changed.",
+      status: enrollment.action
+    };
+  } catch (error) {
+    return counterErrorState(
+      error,
+      "The membership could not be added. The sale can still go ahead."
+    );
+  }
+}
+
+async function saleCustomerOptions(storeId: string, customerIds: string[]) {
+  return (await getCustomerPickRecords(storeId, customerIds)).map((customer) =>
+    toSaleCustomerOption(storeId, customer)
+  );
+}
+
+/**
+ * A refusal the employee can act on, said as it is; anything else as the
+ * fallback, so a database error never reaches the counter screen verbatim.
+ */
+function counterErrorState(
+  error: unknown,
+  fallback: string
+): Extract<SaleCustomerResult, { status: "error" }> {
+  if (error instanceof ZodError) {
+    return {
+      fieldErrors: Object.fromEntries(
+        error.issues.map((issue) => [String(issue.path[0] ?? "form"), issue.message])
+      ),
+      message: "Check the customer's name and phone number.",
+      status: "error"
+    };
+  }
+
+  if (error instanceof PlanFeatureError) {
+    return { lockedFeature: error.featureKey, message: error.message, status: "error" };
+  }
+
+  if (error instanceof LoyaltyError) {
+    return { message: error.message, status: "error" };
+  }
+
+  console.error(`[sales] counter customer step failed: ${errorForLog(error)}`);
+
+  return { message: fallback, status: "error" };
+}
+
 function saleInputFromFormData(formData: FormData): CreateSaleInput {
   const productIds = formData.getAll("productId").map(stringValue);
   const quantities = formData.getAll("quantity").map(stringValue);
   const unitPrices = formData.getAll("unitPrice").map(stringValue);
   const discounts = formData.getAll("itemDiscount").map(stringValue);
+  // Every row posts one, blank for a product without options, so the lists line up.
+  const variantIds = formData.getAll("variantId").map(stringValue);
   const rowCount = Math.max(productIds.length, quantities.length, unitPrices.length);
 
   return {
@@ -87,8 +256,10 @@ function saleInputFromFormData(formData: FormData): CreateSaleInput {
       discount: discounts[index] || "0",
       productId: productIds[index] ?? "",
       quantity: Number(quantities[index] || 1),
-      unitPrice: unitPrices[index] || "0"
+      unitPrice: unitPrices[index] || "0",
+      variantId: variantIds[index] || undefined
     })).filter((item) => item.productId),
+    loyaltyOptIn: loyaltyOptInFromFormData(formData),
     notes: optionalValue(formData.get("notes")),
     paidAmount: stringValue(formData.get("paidAmount")) || "0",
     paymentMethod: stringValue(formData.get("paymentMethod")) as CreateSaleInput["paymentMethod"],
@@ -100,11 +271,26 @@ function saleInputFromFormData(formData: FormData): CreateSaleInput {
   };
 }
 
-function contextFromStore(store: { id: string; organizationId: string }) {
+async function contextFromStore(store: { id: string; organizationId: string }) {
   return {
     organizationId: store.organizationId,
-    storeId: store.id
+    storeId: store.id,
+    // From the session, never the form: it is who recorded a loyalty opt-in.
+    userId: (await getCurrentUser())?.id ?? null
   };
+}
+
+/**
+ * The loyalty box as the form posted it. The marker says the box was shown, so
+ * an unticked box is a withdrawal; without it the form had no box to tick and
+ * the sale's opt-in is left as it was.
+ */
+function loyaltyOptInFromFormData(formData: FormData): CreateSaleInput["loyaltyOptIn"] {
+  if (formData.get("loyaltyOptInShown") !== "1") {
+    return "keep";
+  }
+
+  return formData.get("loyaltyOptIn") === "on" ? "in" : "out";
 }
 
 function stringValue(value: FormDataEntryValue | null | undefined) {

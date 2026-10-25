@@ -1,4 +1,4 @@
-import { BellRing, Megaphone, Percent, ShoppingCart, Users } from "lucide-react";
+import { BellRing, Gift, Megaphone, Percent, ShoppingCart, Users } from "lucide-react";
 import Link from "next/link";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { getCampaignCountsForStore } from "../../../modules/campaigns/campaign.service";
@@ -44,6 +44,12 @@ export default async function MarketingOverviewPage() {
             href="/dashboard/coupons"
             icon={Percent}
             title="Coupons"
+          />
+          <ActionCard
+            description="A free membership that earns your customers points on completed orders."
+            href="/dashboard/marketing/loyalty"
+            icon={Gift}
+            title="Loyalty"
           />
           <ActionCard
             description="Carts left behind, and the customers who left them."

@@ -1484,6 +1484,60 @@ textarea {
   }
 }
 
+/* The sale form's customer card. The form sizes every input to 44px and lays
+   every label out as a bold grid, which turns a checkbox row into a stacked
+   block; these selectors are scoped tighter than those rules so they win. The
+   switch is the product editor's, so the opt-in still posts "on". */
+.dash-dashboard .sale-counter .sale-counter-option {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  font-size: inherit;
+  font-weight: 500;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.dash-dashboard .sale-counter input[type="checkbox"].sale-counter-switch {
+  appearance: none;
+  background-color: color-mix(in srgb, var(--muted) 40%, var(--surface));
+  background-image: radial-gradient(
+    circle closest-side,
+    var(--accent-foreground) 0 calc(100% - 3px),
+    transparent calc(100% - 2px)
+  );
+  background-position: left center;
+  background-repeat: no-repeat;
+  background-size: 22px 22px;
+  border: 0;
+  border-radius: 999px;
+  flex: none;
+  height: 22px;
+  margin: 0;
+  min-height: 0;
+  padding: 0;
+  transition:
+    background-color 160ms ease,
+    background-position 160ms ease;
+  width: 40px;
+}
+
+.dash-dashboard .sale-counter input[type="checkbox"].sale-counter-switch:checked {
+  background-color: var(--accent);
+  background-position: right center;
+}
+
+.dash-dashboard .sale-counter input[type="checkbox"].sale-counter-switch:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-dashboard .sale-counter input[type="checkbox"].sale-counter-switch {
+    transition: none;
+  }
+}
+
 .dash-dashboard .product-editor-card select[multiple] {
   min-height: 96px;
 }
@@ -1494,8 +1548,151 @@ textarea {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.dash-dashboard .product-editor-money-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+/* Pricing and inventory: three titled groups inside one card. */
+.dash-dashboard .product-editor-subsection {
+  display: grid;
+  gap: 14px;
+}
+
+.dash-dashboard .product-editor-subsection + .product-editor-subsection {
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+}
+
+.dash-dashboard .product-editor-subsection > h3 {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+/* `align-items: start` is the fix for the old misaligned row: a grid stretches
+   every cell to its tallest neighbour (the barcode, with its preview), and a
+   stretched label grid hands that extra height to its input. The `max()` caps
+   the columns at two (three) and drops to one when the card is too narrow,
+   whatever the viewport, since the sidebar decides how wide this card is. */
+.dash-dashboard .product-editor-field-grid {
+  align-items: start;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(max(220px, (100% - 16px) / 2), 1fr));
+}
+
+.dash-dashboard .product-editor-field-grid-3 {
+  grid-template-columns: repeat(auto-fill, minmax(max(160px, (100% - 32px) / 3), 1fr));
+}
+
+.dash-dashboard .product-editor-subsection small {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+/* An input with a currency sign or a unit drawn inside its border. The border
+   moves to the wrapper so the sign sits in the same box as the number. */
+.dash-dashboard .product-editor-input-affix {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e4e3ee;
+  border-radius: 9px;
+  display: flex;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.dash-dashboard .product-editor-input-affix:focus-within {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgb(124 58 237 / 14%);
+}
+
+.dash-dashboard .product-editor-input-affix > span {
+  color: var(--muted);
+  flex: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding-inline: 12px;
+}
+
+/* Larger than the unit suffix because "৳" falls back to a font that draws it
+   at about half the height of the digits beside it. */
+.dash-dashboard .product-editor-input-affix[data-affix="start"] > span {
+  font-size: 1.05rem;
+  padding-right: 0;
+}
+
+.dash-dashboard .product-editor-input-affix:not([data-affix="start"]) > span {
+  padding-left: 0;
+}
+
+/* `[type]` is only there for weight: the generated dark rule for every
+   `.product-editor-card input` would otherwise paint a second border inside. */
+.dash-dashboard .product-editor-card .product-editor-input-affix > input[type] {
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  flex: 1;
+  min-height: 40px;
+  min-width: 0;
+  outline: none;
+  width: 100%;
+}
+
+.dash-dashboard .product-pricing-summary {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 32px;
+  margin: 0;
+  padding: 12px 16px;
+}
+
+.dash-dashboard .product-pricing-summary > div {
+  display: grid;
+  gap: 2px;
+}
+
+.dash-dashboard .product-pricing-summary dt {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.dash-dashboard .product-pricing-summary dd {
+  color: var(--foreground);
+  font-size: 0.9rem;
+  font-weight: 720;
+  margin: 0;
+}
+
+.dash-dashboard .product-pricing-summary [data-tone="good"] dd {
+  color: #15803d;
+}
+
+.dash-dashboard .product-pricing-summary [data-tone="bad"] dd {
+  color: #dc2626;
+}
+
+/* The pre-order date belongs to the pre-order switch, so it hangs under it,
+   indented on an accent rule, and only while the switch is on. */
+.dash-dashboard .product-option-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.dash-dashboard .product-option-detail {
+  border-left: 2px solid var(--accent);
+  margin-left: 16px;
+  padding-left: 14px;
+}
+
+.dash-dashboard .product-option-detail[hidden] {
+  display: none;
 }
 
 .dash-dashboard .product-editor-hint,
@@ -12032,6 +12229,39 @@ textarea {
 
 /* The one-tick offer above Place Order. Dashed and off-white on purpose: it
    has to read as an interruption of the form rather than another field of it. */
+/* The loyalty opt-in. Scoped under the form so it outranks the form's own
+   label and input rules, which would otherwise stretch the box to a field. */
+.sf-checkout-form .sf-checkout-loyalty {
+  align-items: flex-start;
+  border: 1px solid #d9dee5;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.sf-checkout-form .sf-checkout-loyalty input[type="checkbox"] {
+  accent-color: var(--sf-primary);
+  flex: none;
+  height: 18px;
+  margin-top: 2px;
+  min-height: 0;
+  padding: 0;
+  width: 18px;
+}
+
+.sf-checkout-form .sf-checkout-loyalty > span {
+  color: #374151;
+  display: grid;
+  gap: 4px;
+}
+
+.sf-checkout-form .sf-checkout-loyalty small {
+  color: #87817a;
+  font-weight: 600;
+}
+
 .sf-checkout-bump {
   align-items: flex-start;
   background: #fffdf5;
@@ -13999,7 +14229,6 @@ textarea {
 
   .form-grid,
   .dash-dashboard .product-editor-layout,
-  .dash-dashboard .product-editor-money-grid,
   .overview-grid,
   .analytics-metric-grid,
   .analytics-content-grid,
@@ -15782,7 +16011,7 @@ textarea {
 .dash-dashboard .variant-table {
   table-layout: fixed;
   border-collapse: collapse;
-  min-width: 980px;
+  min-width: 1120px;
   width: 100%;
 }
 
@@ -15796,57 +16025,70 @@ textarea {
   vertical-align: middle;
 }
 
+/* Column 2, the variant name, has no width: it takes whatever the fixed
+   columns leave, so a wide card spends its room on the name, not on padding. */
 .variant-table th:nth-child(1),
 .variant-table td:nth-child(1),
 .dash-dashboard .variant-table th:nth-child(1),
 .dash-dashboard .variant-table td:nth-child(1) {
-  width: 150px;
-}
-
-.variant-table th:nth-child(2),
-.variant-table td:nth-child(2),
-.dash-dashboard .variant-table th:nth-child(2),
-.dash-dashboard .variant-table td:nth-child(2) {
-  width: 110px;
+  width: 80px;
 }
 
 .variant-table th:nth-child(3),
 .variant-table td:nth-child(3),
 .dash-dashboard .variant-table th:nth-child(3),
 .dash-dashboard .variant-table td:nth-child(3) {
-  width: 210px;
+  width: 170px;
 }
 
+/* Column 4 is the barcode, wide enough for an EAN-13 without clipping. */
 .variant-table th:nth-child(4),
 .variant-table td:nth-child(4),
-.variant-table th:nth-child(5),
-.variant-table td:nth-child(5),
 .dash-dashboard .variant-table th:nth-child(4),
-.dash-dashboard .variant-table td:nth-child(4),
-.dash-dashboard .variant-table th:nth-child(5),
-.dash-dashboard .variant-table td:nth-child(5) {
-  width: 150px;
+.dash-dashboard .variant-table td:nth-child(4) {
+  width: 160px;
 }
 
+.variant-table th:nth-child(5),
+.variant-table td:nth-child(5),
 .variant-table th:nth-child(6),
 .variant-table td:nth-child(6),
+.dash-dashboard .variant-table th:nth-child(5),
+.dash-dashboard .variant-table td:nth-child(5),
 .dash-dashboard .variant-table th:nth-child(6),
 .dash-dashboard .variant-table td:nth-child(6) {
-  width: 150px;
+  width: 130px;
 }
 
 .variant-table th:nth-child(7),
 .variant-table td:nth-child(7),
 .dash-dashboard .variant-table th:nth-child(7),
 .dash-dashboard .variant-table td:nth-child(7) {
-  width: 130px;
+  width: 150px;
 }
 
 .variant-table th:nth-child(8),
 .variant-table td:nth-child(8),
 .dash-dashboard .variant-table th:nth-child(8),
 .dash-dashboard .variant-table td:nth-child(8) {
-  width: 90px;
+  text-align: center;
+  width: 76px;
+}
+
+/* The row actions stay in view when a narrow screen scrolls the table, so
+   deleting a variant never means scrolling sideways to find the button. */
+.variant-table th:nth-child(9),
+.variant-table td:nth-child(9),
+.dash-dashboard .variant-table th:nth-child(9),
+.dash-dashboard .variant-table td:nth-child(9) {
+  position: sticky;
+  right: 0;
+  width: 96px;
+}
+
+.variant-table td:nth-child(9),
+.dash-dashboard .variant-table td:nth-child(9) {
+  background: #fff;
 }
 
 .variant-table th,
@@ -15865,31 +16107,42 @@ textarea {
 
 .variant-image-uploader,
 .dash-dashboard .variant-image-uploader {
-  align-items: center;
-  display: grid;
-  gap: 8px;
-  grid-template-columns: 64px minmax(0, 1fr);
-  max-width: 126px;
+  height: 52px;
+  position: relative;
+  width: 52px;
 }
 
 .variant-image-drop,
 .dash-dashboard .variant-image-drop {
+  align-content: center;
   align-items: center;
   background: #f8f7ff;
   border: 1px dashed #d9d2f4;
-  border-radius: 12px;
+  border-radius: 10px;
   color: #6941ff;
   cursor: pointer;
   display: grid;
   font-size: 10px;
   font-weight: 750;
   gap: 2px;
-  height: 64px;
+  height: 52px;
   justify-items: center;
   overflow: hidden;
+  padding: 0;
   position: relative;
   text-align: center;
-  width: 64px;
+  transition: border-color 160ms ease;
+  width: 52px;
+}
+
+.variant-image-drop:hover,
+.dash-dashboard .variant-image-drop:hover {
+  border-color: #6941ff;
+}
+
+.variant-image-drop:has(img),
+.dash-dashboard .variant-image-drop:has(img) {
+  border-style: solid;
 }
 
 .variant-image-drop img,
@@ -15916,21 +16169,187 @@ textarea {
   width: 100%;
 }
 
-.variant-mini-check,
-.dash-dashboard .variant-mini-check {
+.dash-dashboard .variant-stock-cell {
+  display: grid;
+  gap: 7px;
+}
+
+/* Scoped three classes deep on purpose. The card's own `label` and `input`
+   rules lay every label out as a bold grid and give every input 42px of height
+   and padding, which is what turned this checkbox into a large empty box
+   stacked above its own text. */
+.dash-dashboard .variant-table .variant-mini-check {
   align-items: center;
-  color: #77778a;
+  color: var(--muted);
+  cursor: pointer;
   display: flex;
   font-size: 11px;
+  font-weight: 600;
   gap: 6px;
-  margin-top: 6px;
   white-space: nowrap;
+}
+
+.dash-dashboard .variant-table .variant-mini-check input[type="checkbox"] {
+  accent-color: var(--accent);
+  appearance: auto;
+  cursor: pointer;
+  flex: none;
+  height: 15px;
+  margin: 0;
+  min-height: 0;
+  padding: 0;
+  width: 15px;
+}
+
+/* Price inputs with the currency sign inside the border, as on the product's
+   own price fields above the table. */
+.dash-dashboard .variant-money-input {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #dedeee;
+  border-radius: 9px;
+  display: flex;
+  min-height: 38px;
+}
+
+.dash-dashboard .variant-money-input:focus-within {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgb(124 58 237 / 14%);
+}
+
+.dash-dashboard .variant-money-input > span {
+  color: var(--muted);
+  flex: none;
+  font-size: 15px;
+  font-weight: 600;
+  padding-left: 10px;
+}
+
+.dash-dashboard .variant-table .variant-money-input > input[type] {
+  background: transparent;
+  border: 0;
+  min-height: 36px;
+  min-width: 0;
+  outline: none;
+  padding: 0 10px 0 6px;
+}
+
+/* Active / inactive as a switch: the same drawing as the product editor's
+   setting cards, sized for a table row. */
+.dash-dashboard .variant-table input[type="checkbox"].variant-status-switch {
+  appearance: none;
+  background-color: color-mix(in srgb, var(--muted) 40%, var(--surface));
+  background-image: radial-gradient(
+    circle closest-side,
+    var(--accent-foreground) 0 calc(100% - 3px),
+    transparent calc(100% - 2px)
+  );
+  background-position: left center;
+  background-repeat: no-repeat;
+  background-size: 20px 20px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  height: 20px;
+  margin: 0;
+  min-height: 0;
+  padding: 0;
+  transition:
+    background-color 160ms ease,
+    background-position 160ms ease;
+  vertical-align: middle;
+  width: 36px;
+}
+
+.dash-dashboard .variant-table input[type="checkbox"].variant-status-switch:checked {
+  background-color: var(--accent);
+  background-position: right center;
+}
+
+.dash-dashboard .variant-table input[type="checkbox"].variant-status-switch:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-dashboard .variant-table input[type="checkbox"].variant-status-switch {
+    transition: none;
+  }
+}
+
+/* An inactive variant cannot be bought, so its picture and name fade while
+   its inputs stay full strength and editable. */
+.dash-dashboard .variant-table tr[data-inactive="true"] td:nth-child(-n + 2) {
+  opacity: 0.55;
+}
+
+.dash-dashboard .variant-row-badge {
+  background: #f1f0f7;
+  border-radius: 999px;
+  color: #5f6070;
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: 5px;
+  padding: 2px 8px;
+}
+
+.dash-dashboard .variant-row-badge[data-tone="bad"] {
+  background: #fff1f2;
+  color: #e11d48;
 }
 
 .variant-row-actions,
 .dash-dashboard .variant-row-actions {
   display: flex;
   gap: 6px;
+  justify-content: flex-end;
+}
+
+.dash-dashboard .variant-row-actions button {
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+  width: 32px;
+}
+
+.dash-dashboard .variant-row-actions button:hover {
+  border-color: #c9bdf7;
+  color: #6941ff;
+}
+
+.dash-dashboard .variant-row-actions button[data-tone="danger"]:hover {
+  background: #fff4f4;
+  border-color: #ffd8d8;
+  color: #dc2626;
+}
+
+/* Bulk edit as one labelled toolbar rather than three loose controls. */
+.dash-dashboard .variant-section-card .variant-bulk-editor {
+  background: #faf9ff;
+  border: 1px solid #ece9f7;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.dash-dashboard .variant-bulk-label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.dash-dashboard .variant-bulk-editor input {
+  width: 150px;
+}
+
+.dash-dashboard .variant-bulk-editor button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .variant-modal-backdrop,
@@ -15990,47 +16409,135 @@ textarea {
 
 .general-product-variant-matrix {
   display: grid;
+}
+
+/* The option picker the product page and Quick View share: one row per
+   attribute, with the picked value named beside the attribute ("Color: Black").
+   These are the product page's square black buttons; Quick View restyles the
+   same markup further down. */
+.sf-variant-picker {
+  display: grid;
+  gap: 16px;
+}
+
+.sf-variant-group {
+  display: grid;
   gap: 10px;
 }
 
-.general-product-variant-matrix > span {
+.sf-variant-label {
+  align-items: baseline;
+  color: #6b6b6b;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  font-weight: 600;
+  gap: 6px;
+  margin: 0;
+}
+
+.sf-variant-label strong {
   color: #1f1f1f;
-  font-size: 0.78rem;
   font-weight: 700;
 }
 
-.general-product-variant-matrix > div {
+.sf-variant-values {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.general-product-variant-matrix button {
-  background: #fff;
+.sf-variant-value {
+  align-items: center;
+  background: #ffffff;
   border: 1px solid #d9d9d9;
   border-radius: 0;
   color: #1e1e1e;
   cursor: pointer;
-  font-size: 0.76rem;
-  min-height: 38px;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  gap: 8px;
+  justify-content: center;
+  min-height: 40px;
+  min-width: 48px;
   padding: 0 14px;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
 }
 
-.general-product-variant-matrix button[aria-pressed="true"] {
-  background: #050505;
+.sf-variant-value:hover {
+  border-color: #1e1e1e;
+}
+
+.sf-variant-value:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.sf-variant-value[aria-pressed="true"] {
+  background-color: #050505;
   border-color: #050505;
-  color: #fff;
+  color: #ffffff;
 }
 
-.general-product-variant-select {
-  background: #fff;
+/* Sold out: struck through but still pickable, so a shopper can see their size
+   exists and is gone rather than wondering whether it was ever made. */
+.sf-variant-value[data-state="sold-out"] {
+  background-image: linear-gradient(
+    to top right,
+    transparent calc(50% - 0.75px),
+    currentColor calc(50% - 0.75px) calc(50% + 0.75px),
+    transparent calc(50% + 0.75px)
+  );
+  color: #9a9a9a;
+}
+
+.sf-variant-value[data-state="sold-out"][aria-pressed="true"] {
+  color: #ffffff;
+}
+
+/* Not made in this combination: picking it moves the other choices to one
+   that is, so it is dashed rather than struck through. */
+.sf-variant-value[data-state="unavailable"] {
+  border-style: dashed;
+  color: #9a9a9a;
+}
+
+/* The colour itself, ringed in the button's own text colour so a black dot
+   still shows on a picked (black) button and a white one on an unpicked one. */
+.sf-variant-swatch {
+  background: var(--sf-swatch);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 30%, transparent);
+  flex: none;
+  height: 16px;
+  width: 16px;
+}
+
+.sf-variant-value[aria-pressed="true"] .sf-variant-swatch {
+  box-shadow: 0 0 0 1.5px currentColor;
+}
+
+.sf-variant-select {
+  background: #ffffff;
   border: 1px solid #d9d9d9;
   border-radius: 0;
   color: #1e1e1e;
-  font-size: 0.82rem;
+  font: inherit;
+  font-size: 0.85rem;
   min-height: 44px;
   padding: 0 12px;
   width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-variant-value {
+    transition: none;
+  }
 }
 
 @media (max-width: 760px) {
@@ -17581,8 +18088,7 @@ textarea {
   }
 
   .sf-theme-scope[data-storefront-template="general-default"]
-    .general-product-variant-select
-    select {
+    :is(.general-product-variant-select select, .sf-variant-select) {
     min-height: 44px;
   }
 
@@ -18071,18 +18577,24 @@ textarea {
   opacity: 0.55;
 }
 
+/* A small × on the thumbnail's corner, so a picked image costs no extra width. */
 .variant-image-clear,
 .dash-dashboard .variant-image-clear {
+  align-items: center;
   background: #fff4f4;
   border: 1px solid #ffd8d8;
-  border-radius: 9px;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgb(36 28 66 / 12%);
   color: #dc2626;
   cursor: pointer;
-  font-size: 11px;
-  font-weight: 750;
-  min-height: 34px;
-  padding-inline: 8px;
-  width: 100%;
+  display: grid;
+  height: 20px;
+  justify-items: center;
+  padding: 0;
+  position: absolute;
+  right: -6px;
+  top: -6px;
+  width: 20px;
 }
 
 /* --- Media list field + promo card rows ------------------------------------- */
@@ -22620,55 +23132,59 @@ body:has(.nb-dock[data-display="overlay"][data-position="bottom"])
 
 .sf-quick-view-variants {
   display: grid;
+}
+
+/* The shared option picker, in Quick View's pills and the shop's own colour. */
+.sf-quick-view-variants .sf-variant-picker {
+  gap: 12px;
+}
+
+.sf-quick-view-variants .sf-variant-group {
   gap: 8px;
 }
 
-.sf-quick-view-variants-label {
+.sf-quick-view-variants .sf-variant-label {
   color: #626870;
-  font-size: 0.76rem;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
-.sf-quick-view-variant-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.sf-quick-view-variants .sf-variant-label strong {
+  color: #171717;
 }
 
-.sf-quick-view-variant {
-  background: #ffffff;
-  border: 1px solid rgba(23, 23, 23, 0.16);
+.sf-quick-view-variants .sf-variant-value {
+  border-color: rgba(23, 23, 23, 0.16);
   border-radius: 999px;
   color: #171717;
-  cursor: pointer;
-  font: inherit;
   font-size: 0.85rem;
   font-weight: 700;
-  padding: 9px 16px;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease;
+  min-height: 38px;
+  padding: 0 16px;
 }
 
-.sf-quick-view-variant[aria-pressed="true"] {
-  background: var(--store-primary, #135d66);
+.sf-quick-view-variants .sf-variant-value:hover {
+  border-color: var(--store-primary, #135d66);
+}
+
+.sf-quick-view-variants .sf-variant-value[aria-pressed="true"],
+.sf-quick-view-variants .sf-variant-value[data-state="sold-out"][aria-pressed="true"] {
+  background-color: var(--store-primary, #135d66);
   border-color: var(--store-primary, #135d66);
   color: #ffffff;
 }
 
-.sf-quick-view-variant-select {
-  background: #ffffff;
-  border: 1px solid rgba(23, 23, 23, 0.16);
+/* `:not` rather than relying on order: the dark half adds a selector to this
+   rule, which would otherwise outrank the picked pill's white text. */
+.sf-quick-view-variants .sf-variant-value[data-state]:not([aria-pressed="true"]) {
+  color: #9a9a9a;
+}
+
+.sf-quick-view-variants .sf-variant-select {
+  border-color: rgba(23, 23, 23, 0.16);
   border-radius: 12px;
   color: #171717;
-  font: inherit;
   font-weight: 700;
   min-height: 46px;
   padding: 0 14px;
-  width: 100%;
 }
 
 /* The product page's own buy box, sitting in a dialog: the panel keeps its

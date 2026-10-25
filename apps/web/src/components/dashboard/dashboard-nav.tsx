@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Award,
   BarChart3,
   ChevronDown,
   CircleDollarSign,
@@ -17,6 +18,7 @@ import {
   ShoppingBag,
   Settings,
   Sparkles,
+  StickyNote,
   Store,
   Truck,
   WalletCards,
@@ -71,6 +73,8 @@ const NAV_FEATURE_BY_HREF: Record<string, PlanFeatureKey> = {
   "/dashboard/marketing/bundles": "bundles",
   "/dashboard/marketing/campaigns": "campaigns",
   "/dashboard/marketing/campaigns/new": "campaigns",
+  "/dashboard/marketing/loyalty": "loyalty",
+  "/dashboard/marketing/loyalty/members": "loyalty",
   "/dashboard/marketing/notification-bar": "notification_bar",
   "/dashboard/marketing/order-bump": "order_bump",
   "/dashboard/marketing/sales-notifications": "sales_notifications",
@@ -138,6 +142,7 @@ const productLinks = [
   { href: "/dashboard/tags", label: "Tags" },
   { href: "/dashboard/brands", label: "Brands" },
   { href: "/dashboard/products/reviews", label: "Reviews" },
+  { href: "/dashboard/products/barcodes", label: "Barcode Labels" },
   // Filed under Products rather than Orders: the question it answers is what to
   // buy, and the seller is looking at the catalog when they ask it.
   { href: "/dashboard/products/preorders", label: "Pre-orders" }
@@ -240,10 +245,17 @@ const mainLinks: NavItem[] = [
   { href: "/dashboard/sales", icon: ShoppingBag, label: "Sales" },
   { href: "/dashboard/transactions", icon: CircleDollarSign, label: "Transactions" },
   { href: "/dashboard/customers", icon: Users, label: "Customers" },
+  // Beside Customers, because that is where a seller looks for their members.
+  // It used to be reachable only from inside the Marketing group, which is
+  // collapsed on every page outside /dashboard/marketing — so the programme
+  // existed and nobody could find it. Same route, same `loyalty` badge, same
+  // permissions: the pages behind it decide what a member may do.
+  { href: "/dashboard/marketing/loyalty", icon: Award, label: "Loyalty" },
   { href: "/dashboard/suppliers", icon: Truck, label: "Suppliers" },
   { href: "/dashboard/purchases", icon: ClipboardList, label: "Purchases" },
   { href: "/dashboard/inventory", icon: Boxes, label: "Inventory" },
   { href: "/dashboard/expenses", icon: Receipt, label: "Expenses" },
+  { href: "/dashboard/notes", icon: StickyNote, label: "Notes" },
   { href: "/dashboard/billing", icon: WalletCards, label: "Billing" }
 ];
 
@@ -263,6 +275,8 @@ const marketingLinks: Array<{ href: string; label: string }> = [
   { href: "/dashboard/marketing/audiences", label: "Audiences" },
   { href: "/dashboard/marketing/templates", label: "Templates" },
   { href: "/dashboard/coupons", label: "Coupons" },
+  { href: "/dashboard/marketing/loyalty", label: "Loyalty" },
+  { href: "/dashboard/marketing/loyalty/members", label: "Loyalty Members" },
   { href: "/dashboard/marketing/order-bump", label: "Order Bump" },
   { href: "/dashboard/marketing/bundles", label: "Bundles" },
   { href: "/dashboard/marketing/sales-notifications", label: "Sales Notifications" },
@@ -342,8 +356,10 @@ const iconColors: Record<string, string> = {
   Customers: "text-sky-500",
   Expenses: "text-rose-500",
   Inventory: "text-lime-600",
+  Loyalty: "text-fuchsia-500",
   Marketing: "text-fuchsia-500",
   Media: "text-teal-500",
+  Notes: "text-orange-500",
   Orders: "text-blue-600",
   Purchases: "text-indigo-500",
   Reports: "text-pink-500",
@@ -368,8 +384,11 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
   const reportRouteActive = pathname.startsWith("/dashboard/reports");
   // Coupons and the abandoned-cart page live under this group now, so standing
   // on either has to light it up even though their paths sit elsewhere.
+  // Loyalty has its own top-level entry, so its pages light that up rather
+  // than the whole Marketing group as well.
   const marketingRouteActive =
-    pathname.startsWith("/dashboard/marketing") ||
+    (pathname.startsWith("/dashboard/marketing") &&
+      !pathname.startsWith("/dashboard/marketing/loyalty")) ||
     pathname.startsWith("/dashboard/coupons") ||
     pathname.startsWith("/dashboard/abandoned-cart");
   const analyticsRouteActive = pathname.startsWith("/dashboard/analytics");

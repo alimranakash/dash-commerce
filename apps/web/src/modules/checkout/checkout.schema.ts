@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { parseCartScope } from "../cart/cart.types";
+import { LOYALTY_POINTS_MAX } from "../loyalty/loyalty.rules";
 import { paymentMethodTypes } from "../payments/payment.schema";
 
 export const checkoutSchema = z.object({
@@ -111,7 +112,19 @@ export const checkoutSchema = z.object({
     .trim()
     .max(10)
     .optional()
-    .transform((value) => (value ? parseCartScope(value) : undefined))
+    .transform((value) => (value ? parseCartScope(value) : undefined)),
+  // The shopper ticked the loyalty box. Only an explicit `true` enrols:
+  // absent — the AI Shopping Agent, a form rendered before the box existed —
+  // is no, and so is a programme that is not running, which the server checks
+  // for itself rather than trusting the page that drew the box.
+  loyaltyOptIn: z.boolean().optional(),
+  // How many points the shopper chose to spend, and the token from verifying
+  // their number. Never a discount: the discount is the points times the
+  // store's own value, worked out again inside the order's transaction against
+  // the balance it holds there. A count that is not a positive whole number is
+  // refused rather than rounded.
+  loyaltyPoints: z.number().int().positive().max(LOYALTY_POINTS_MAX).optional(),
+  loyaltyToken: z.string().trim().max(1000).optional()
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;

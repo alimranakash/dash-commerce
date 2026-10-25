@@ -87,7 +87,14 @@ export async function assertCheckoutPhoneVerified(
   }
 
   try {
-    await verifyOtpChallenge({ code: input.code, identifier: { channel: "SMS", phone }, purpose: "CHECKOUT" });
+    // This store's code only: one requested at another shop is not found here,
+    // and trying it costs that shop's challenge nothing.
+    await verifyOtpChallenge({
+      code: input.code,
+      identifier: { channel: "SMS", phone },
+      purpose: "CHECKOUT",
+      storeId
+    });
   } catch (error) {
     // Checkout surfaces failures as a sentence on the page, so the OTP layer's
     // own wording is passed through rather than replaced with something vaguer.

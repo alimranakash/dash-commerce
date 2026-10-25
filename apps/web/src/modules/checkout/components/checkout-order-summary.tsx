@@ -16,6 +16,12 @@ type CheckoutOrderSummaryProps = {
   bundles: AppliedBundle[];
   cart: Cart;
   currency: string;
+  /**
+   * The points the shopper is spending and what they take off, worked out by
+   * `redemptionLimits` from the store's own rules. A preview: the order prices
+   * the same points again inside its transaction.
+   */
+  loyaltyRedemption: { discount: number; points: number } | null;
   onApplyCoupon: (code: string) => Promise<string | null>;
   onRemoveCoupon: () => void;
   /** Only ever the accepted offer; an unticked one is not part of the order. */
@@ -31,6 +37,7 @@ export function CheckoutOrderSummary({
   bundles,
   cart,
   currency,
+  loyaltyRedemption,
   onApplyCoupon,
   onRemoveCoupon,
   orderBump,
@@ -47,8 +54,10 @@ export function CheckoutOrderSummary({
   // the cart alone, so the bump never moves this figure in either place.
   const discount = Number(appliedCoupon?.discountAmount ?? 0);
   const bundleSavings = bundles.reduce((total, bundle) => total + Number(bundle.discountAmount), 0);
+  // Applied after the coupon, off the goods only, exactly as the order is.
+  const pointsDiscount = loyaltyRedemption?.discount ?? 0;
   // Never below zero on screen, even if a stale quote briefly outruns the cart.
-  const total = Math.max(0, subtotal + shipping - discount - bundleSavings);
+  const total = Math.max(0, subtotal + shipping - discount - bundleSavings - pointsDiscount);
   const itemCount = cart.totals.itemCount + (orderBump ? 1 : 0);
 
   async function applyCoupon() {
@@ -167,6 +176,12 @@ export function CheckoutOrderSummary({
             label={appliedCoupon ? `Discount (${appliedCoupon.code})` : "Discount"}
             value={discount > 0 ? `−${formatMoney(discount, currency)}` : formatMoney(0, currency)}
           />
+          {loyaltyRedemption && pointsDiscount > 0 ? (
+            <SummaryRow
+              label={`Points (${loyaltyRedemption.points.toLocaleString("en")})`}
+              value={`−${formatMoney(pointsDiscount, currency)}`}
+            />
+          ) : null}
           <div className="sf-checkout-summary-row sf-checkout-summary-total">
             <span>Total</span>
             <strong>{formatMoney(total, currency)}</strong>

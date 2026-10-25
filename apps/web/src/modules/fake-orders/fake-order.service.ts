@@ -16,9 +16,16 @@ import {
   updateOrderVerificationStatus,
   type RiskListOrder
 } from "./fake-order.repository";
+import { runWithOrderLoyalty } from "../loyalty/loyalty.service";
+import { ensureFakeOrderRiskSchema } from "./fake-order-risk-schema";
 import { normalizePhoneKey, parseRiskFactors } from "./fake-order.rules";
 import { isCourierVerificationRequired } from "./fake-order.verification";
-import type { FakeOrderFilter, RiskAssessment, RiskLevel } from "./fake-order.types";
+import type {
+  FakeOrderFilter,
+  RiskAssessment,
+  RiskLevel,
+  VerificationStatus
+} from "./fake-order.types";
 
 export { getRiskOrderByIdForStore };
 
@@ -112,8 +119,24 @@ export async function getFakeOrderDetails(storeId: string, orderId: string) {
  * customer flag are counted across that whole history.
  */
 
+/**
+ * Records the decision and reconciles the order's loyalty points in one
+ * transaction: an order the seller rejects never keeps what it earned, and one
+ * they restore earns again.
+ *
+ * The risk columns' DDL alters `Order`, so it runs here, before the
+ * transaction that locks the order row, never inside it.
+ */
+async function decideVerification(storeId: string, orderId: string, status: VerificationStatus) {
+  await ensureFakeOrderRiskSchema();
+
+  return runWithOrderLoyalty(storeId, orderId, (tx) =>
+    updateOrderVerificationStatus(storeId, orderId, status, tx)
+  );
+}
+
 export async function markOrderVerified(storeId: string, orderId: string) {
-  const result = await updateOrderVerificationStatus(storeId, orderId, "VERIFIED");
+  const result = await decideVerification(storeId, orderId, "VERIFIED");
 
   return result.count > 0;
 }
@@ -123,7 +146,7 @@ export async function markOrderFake(storeId: string, orderId: string) {
 
   if (!order) return false;
 
-  await updateOrderVerificationStatus(storeId, orderId, "FAKE");
+  await decideVerification(storeId, orderId, "FAKE");
 
   if (order.customerId) {
     await updateCustomerFlagStatus(storeId, order.customerId, "WATCHLIST");
@@ -139,7 +162,7 @@ export async function blockOrderCustomer(storeId: string, orderId: string) {
 
   if (!order) return false;
 
-  await updateOrderVerificationStatus(storeId, orderId, "BLOCKED");
+  await decideVerification(storeId, orderId, "BLOCKED");
 
   if (order.customerId) {
     await updateCustomerFlagStatus(storeId, order.customerId, "BLOCKED");
@@ -155,7 +178,7 @@ export async function returnOrderToNormalQueue(storeId: string, orderId: string)
 
   if (!order) return false;
 
-  await updateOrderVerificationStatus(storeId, orderId, "NORMAL");
+  await decideVerification(storeId, orderId, "NORMAL");
 
   if (order.customerId && order.customer?.flagStatus !== "BLOCKED") {
     await updateCustomerFlagStatus(storeId, order.customerId, "NORMAL");

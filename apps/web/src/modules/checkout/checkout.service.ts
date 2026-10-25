@@ -22,6 +22,17 @@ import { canCreateOrder } from "../billing/subscription-limits";
 import { assessOrderSafely } from "../fake-orders/fake-order.assessment";
 import { rememberGuestOrder } from "../guest-orders/guest-orders.service";
 import {
+  debitCheckoutRedemption,
+  enrollLoyaltyMember,
+  priceCheckoutRedemption
+} from "../loyalty/loyalty.orders";
+import { LoyaltyError, shouldEnrollAtCheckout } from "../loyalty/loyalty.rules";
+import {
+  getLoyaltyCapability,
+  readCheckoutRedemption,
+  reportLoyaltyEnrollmentConflict
+} from "../loyalty/loyalty.service";
+import {
   getEnabledPaymentMethodForCheckout,
   isManualPaymentType
 } from "../payments/payment.service";
@@ -31,6 +42,11 @@ import { isUniqueConstraintError } from "../../lib/prisma-errors";
 import { resolveShippingCharge } from "../free-shipping/free-shipping.render";
 import { cartEarnsFreeShipping, getFreeShippingRule } from "../free-shipping/free-shipping.service";
 import { getEnabledShippingRateForCheckout } from "../shipping/shipping.service";
+import {
+  checkoutCouponBase,
+  checkoutGoodsSubtotal,
+  checkoutRedemptionBaseCents
+} from "./checkout-pricing";
 import { checkoutSchema, type CheckoutInput } from "./checkout.schema";
 import { ensureCheckoutSubmissionSchema } from "./checkout-submission-schema";
 import { assertCheckoutPhoneVerified } from "./checkout-verification.service";
@@ -408,7 +424,31 @@ async function placeCheckoutOrder(
     zoneId: shippingRate.zoneId
   });
 
-  const order = await prisma.$transaction(async (tx) => {
+  // Enrolment needs the shopper's explicit yes *and* a programme that is
+  // running — the seller's switch and the plan, read here rather than trusted
+  // from the page that drew the box. Outside the transaction, like the reads
+  // above it, and only for a shopper who ticked the box at all.
+  const enrollInLoyalty =
+    data.loyaltyOptIn === true &&
+    shouldEnrollAtCheckout(data.loyaltyOptIn, await getLoyaltyCapability(store.id));
+
+  // A redemption is decided twice. Here, before anything is locked: redemption
+  // is live for this store and plan, and the token is genuine, unexpired, this
+  // store's, and was issued for the number on this order. Inside the
+  // transaction: the member, the balance they hold there and the limits. A
+  // shopper who asked for no points is never touched by any of it.
+  const redemptionRequest = data.loyaltyPoints
+    ? await asCheckoutLoyaltyError(
+        readCheckoutRedemption(store.id, {
+          phone: data.phone,
+          points: data.loyaltyPoints,
+          submissionId: data.submissionId,
+          token: data.loyaltyToken
+        })
+      )
+    : null;
+
+  const { enrollment, order } = await prisma.$transaction(async (tx) => {
     const productIds = lines.map((item) => item.productId);
     const products = await tx.product.findMany({
       where: {
@@ -538,9 +578,7 @@ async function placeCheckoutOrder(
     }
 
     const orderNumber = await generateOrderNumber(tx, store.id);
-    const subtotalAmount = bump
-      ? (Number(cart.totals.subtotal) + Number(bump.offerPrice)).toFixed(2)
-      : cart.totals.subtotal;
+    const subtotalAmount = checkoutGoodsSubtotal(cart.totals.subtotal, bump ? bump.offerPrice : null);
     // Re-evaluated and claimed here, against the subtotal this transaction just
     // computed. Whatever the browser was shown is a quote; this is the price.
     //
@@ -550,10 +588,7 @@ async function placeCheckoutOrder(
     // left is what the shopper still owes on their own cart, which is the only
     // honest base for "10% off".
     const bundleDiscountAmount = bundles.discountAmount;
-    const couponBase = Math.max(
-      0,
-      Number(cart.totals.subtotal) - Number(bundleDiscountAmount)
-    ).toFixed(2);
+    const couponBase = checkoutCouponBase(cart.totals.subtotal, bundleDiscountAmount);
     const discount = await claimCheckoutCoupon(tx, {
       code: data.couponCode,
       customerPhone: data.phone,
@@ -561,11 +596,35 @@ async function placeCheckoutOrder(
       storeId: store.id,
       subtotal: couponBase
     });
+    // Points come off after the coupon, and only off the goods: the base is the
+    // order's goods less the bundle saving and less the coupon unless the
+    // coupon was a delivery discount. The shopper named a number of points;
+    // what they are worth, and whether this order can take them, is decided
+    // here against the balance this transaction reads.
+    const redemption = redemptionRequest
+      ? await asCheckoutLoyaltyError(
+          priceCheckoutRedemption(tx, {
+            customerId: customer.id,
+            // The same base `/api/checkout/loyalty-quote` showed the shopper.
+            eligibleGoodsCents: checkoutRedemptionBaseCents({
+              bundleDiscountAmount,
+              coupon: discount,
+              goodsSubtotal: subtotalAmount
+            }),
+            memberId: redemptionRequest.memberId,
+            points: redemptionRequest.points,
+            policy: redemptionRequest.policy,
+            storeId: store.id
+          })
+        )
+      : null;
+    const loyaltyDiscountAmount = redemption ? (redemption.discountCents / 100).toFixed(2) : "0.00";
     const totalAmount = (
       Number(subtotalAmount) +
       Number(shippingAmount) -
       Number(discount.discountAmount) -
-      Number(bundleDiscountAmount)
+      Number(bundleDiscountAmount) -
+      Number(loyaltyDiscountAmount)
     ).toFixed(2);
 
     const created = await tx.order.create({
@@ -592,6 +651,7 @@ async function placeCheckoutOrder(
         bundleDiscountAmount,
         couponId: discount.couponId,
         couponCode: discount.couponCode,
+        loyaltyDiscountAmount,
         taxAmount: "0.00",
         totalAmount,
         customerName: data.name,
@@ -648,7 +708,43 @@ async function placeCheckoutOrder(
       });
     }
 
-    return created;
+    // The points are spent once the order exists, so the ledger row can name
+    // it, and in this transaction, so neither can stand without the other. If
+    // another checkout spent the same points a moment ago, the ledger refuses
+    // under the member's row lock and this whole order rolls back.
+    if (redemption) {
+      try {
+        await debitCheckoutRedemption(tx, store.id, {
+          memberId: redemption.memberId,
+          orderId: created.id,
+          points: redemption.points
+        });
+      } catch (error) {
+        if (error instanceof LoyaltyError) {
+          throw new CheckoutError(
+            "LOYALTY_POINTS",
+            "Your points balance changed while you were checking out. Check your points again, or remove them."
+          );
+        }
+
+        throw error;
+      }
+    }
+
+    // Same transaction as the customer it enrols, dated by this order, so this
+    // order is the first that counts and none placed before it does. A number
+    // already on another customer's membership comes back as a conflict:
+    // nothing is merged and the order goes ahead regardless.
+    const enrolled = enrollInLoyalty
+      ? await enrollLoyaltyMember(tx, {
+          customerId: customer.id,
+          enrolledAt: created.createdAt,
+          phone: data.phone,
+          storeId: store.id
+        })
+      : null;
+
+    return { enrollment: enrolled, order: created };
   });
 
   // Settled before the cookie goes: `clearCart` can no longer find the token,
@@ -660,6 +756,14 @@ async function placeCheckoutOrder(
   // so it must never be able to fail a checkout the shopper already completed.
   // An unassessed order is picked up by the dashboard backfill.
   await assessOrderSafely(store.id, order.id);
+
+  if (enrollment && order.customerId) {
+    await reportLoyaltyEnrollmentConflict(store.id, {
+      customerId: order.customerId,
+      enrollment,
+      orderId: order.id
+    });
+  }
 
   return order;
 }
@@ -690,6 +794,8 @@ type ClaimedCoupon = {
   couponCode: string | null;
   couponId: string | null;
   discountAmount: string;
+  /** The discount stands in for delivery, so it does not come off the goods. */
+  freeShipping: boolean;
 };
 
 /**
@@ -712,7 +818,7 @@ async function claimCheckoutCoupon(
   }
 ): Promise<ClaimedCoupon> {
   if (!input.code) {
-    return { couponCode: null, couponId: null, discountAmount: "0.00" };
+    return { couponCode: null, couponId: null, discountAmount: "0.00", freeShipping: false };
   }
 
   const evaluation = await evaluateCoupon(
@@ -740,6 +846,26 @@ async function claimCheckoutCoupon(
   return {
     couponCode: evaluation.couponCode,
     couponId: evaluation.couponId,
-    discountAmount: evaluation.discountAmount
+    discountAmount: evaluation.discountAmount,
+    freeShipping: evaluation.freeShipping
   };
+}
+
+/**
+ * A loyalty refusal said to the shopper as a checkout error: the order is not
+ * placed, nothing is charged, the form keeps everything they typed, and the
+ * incomplete-orders list files it under its own reason. Placing the same
+ * order without points is one tap away; a silent full-price charge would not
+ * be, which is the rule a refused coupon follows too.
+ */
+async function asCheckoutLoyaltyError<T>(work: Promise<T>): Promise<T> {
+  try {
+    return await work;
+  } catch (error) {
+    if (error instanceof LoyaltyError) {
+      throw new CheckoutError("LOYALTY_POINTS", error.message);
+    }
+
+    throw error;
+  }
 }

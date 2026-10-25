@@ -7,7 +7,13 @@ import { createPortal } from "react-dom";
 import { useStorefrontBasePath } from "../../storefront/base-path-provider";
 import { ProductPurchasePanel } from "../../storefront/components/product-purchase-panel";
 import { StorefrontImage } from "../../storefront/components/storefront-image";
+import { VariantOptionPicker } from "../../storefront/components/variant-option-picker";
 import { formatStorefrontMoney, preorderLabel } from "../../storefront/format";
+import {
+  initialPickerVariant,
+  pickerVariantImage,
+  variantOptionGroups
+} from "../../storefront/variant-options";
 import { quickViewMaxQuantity, quickViewSavings } from "../quick-view.render";
 import type { QuickViewProduct, QuickViewVariant, QuickViewView } from "../quick-view.types";
 
@@ -190,11 +196,14 @@ function QuickViewBody({
   titleId: string;
   view: QuickViewView;
 }) {
-  const [signature, setSignature] = useState(product.variants[0]?.optionSignature ?? "");
+  const [signature, setSignature] = useState(
+    () => initialPickerVariant(product.variants)?.optionSignature ?? ""
+  );
   const selected = useMemo(
     () => product.variants.find((variant) => variant.optionSignature === signature) ?? null,
     [product.variants, signature]
   );
+  const optionGroups = useMemo(() => variantOptionGroups(product.variants), [product.variants]);
   const [activeImage, setActiveImage] = useState(0);
 
   const price = selected?.price ?? product.price;
@@ -244,14 +253,17 @@ function QuickViewBody({
   function selectVariant(next: QuickViewVariant) {
     setSignature(next.optionSignature);
 
-    if (!next.imageUrl) {
+    // Its own picture, or one of the same colour's.
+    const imageUrl = pickerVariantImage(product.variants, optionGroups, next);
+
+    if (!imageUrl) {
       // An option with no picture of its own leaves the shopper looking at what
       // they were already looking at, rather than snapping back to the first
       // image on every tap.
       return;
     }
 
-    const index = images.findIndex((image) => image.url === next.imageUrl);
+    const index = images.findIndex((image) => image.url === imageUrl);
 
     if (index >= 0) {
       setActiveImage(index);
@@ -319,43 +331,13 @@ function QuickViewBody({
 
         {view.variantEnabled && product.variants.length > 0 ? (
           <div className="sf-quick-view-variants">
-            <span className="sf-quick-view-variants-label">Options</span>
-            {view.variantStyle === "dropdown" ? (
-              <select
-                aria-label="Product options"
-                className="sf-quick-view-variant-select"
-                onChange={(event) => {
-                  const next = product.variants.find(
-                    (variant) => variant.optionSignature === event.target.value
-                  );
-
-                  if (next) {
-                    selectVariant(next);
-                  }
-                }}
-                value={signature}
-              >
-                {product.variants.map((variant) => (
-                  <option key={variant.optionSignature} value={variant.optionSignature}>
-                    {variant.title}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <div className="sf-quick-view-variant-buttons">
-                {product.variants.map((variant) => (
-                  <button
-                    aria-pressed={variant.optionSignature === signature}
-                    className="sf-quick-view-variant"
-                    key={variant.optionSignature}
-                    onClick={() => selectVariant(variant)}
-                    type="button"
-                  >
-                    {variant.title}
-                  </button>
-                ))}
-              </div>
-            )}
+            <VariantOptionPicker
+              groups={optionGroups}
+              onSelect={selectVariant}
+              selected={selected ?? undefined}
+              variantStyle={view.variantStyle}
+              variants={product.variants}
+            />
           </div>
         ) : null}
 

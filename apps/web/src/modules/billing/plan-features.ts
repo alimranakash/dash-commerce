@@ -47,6 +47,7 @@ export const PLAN_FEATURE_KEYS = [
   "gtm_tracking",
   "incomplete_orders",
   "inventory",
+  "loyalty",
   "marketing_analytics",
   "marketing_automation",
   "marketing_templates",
@@ -279,6 +280,16 @@ export const PLAN_FEATURE_REGISTRY: Record<PlanFeatureKey, PlanFeatureDefinition
   inventory: {
     description: "Stock adjustments and inventory movement history.",
     label: "Inventory",
+    status: "available"
+  },
+  /**
+   * A free membership for the store's customers, joined by opting in at
+   * checkout and earning points on completed orders. Redemption is not part
+   * of it yet, so nothing here may promise that points can be spent.
+   */
+  loyalty: {
+    description: "A free customer membership that earns points on every completed order.",
+    label: "Loyalty",
     status: "available"
   },
   marketing_analytics: {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, ImagePlus, Plus, Sparkles, Trash2 } from "lucide-react";
+import { Copy, ImagePlus, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { MediaPicker } from "../../media/components/media-picker";
 import type { ProductAttributeInput, ProductVariantRecord } from "../product-variants.service";
@@ -9,6 +9,8 @@ type ProductVariantsEditorProps = {
   attributes?: ProductAttributeInput[];
   basePrice?: string | undefined;
   baseSku?: string | undefined;
+  /** Drawn inside the price inputs, e.g. "৳". */
+  currencySymbol?: string | undefined;
   variants?: ProductVariantRecord[];
 };
 
@@ -29,6 +31,7 @@ export function ProductVariantsEditor({
   attributes = [],
   basePrice,
   baseSku,
+  currencySymbol = "",
   variants = []
 }: ProductVariantsEditorProps) {
   const [attributeDrafts, setAttributeDrafts] = useState<AttributeDraft[]>(() => (
@@ -47,6 +50,9 @@ export function ProductVariantsEditor({
     ...variant,
     draftId: variant.id || crypto.randomUUID()
   })));
+  // Each saved option's barcode as this form loaded it, keyed by its draft id,
+  // so the save can tell an edited box from one posted back untouched.
+  const [loadedBarcodes] = useState(() => new Map(variants.map((variant) => [variant.id, variant.barcode ?? ""])));
   const [confirmGenerate, setConfirmGenerate] = useState(false);
   const [bulkField, setBulkField] = useState("price");
   const [bulkValue, setBulkValue] = useState("");
@@ -69,8 +75,14 @@ export function ProductVariantsEditor({
     [attributeDrafts]
   );
   const serializedAttributes = JSON.stringify(cleanAttributes);
+  const activeVariantCount = variantDrafts.filter((variant) => variant.status !== "INACTIVE").length;
+  const totalVariantStock = variantDrafts.reduce(
+    (total, variant) => total + Math.max(0, Number(variant.stockQuantity) || 0),
+    0
+  );
   const serializedVariants = JSON.stringify(variantDrafts.map((variant, position) => ({
     barcode: variant.barcode ?? null,
+    ...(loadedBarcodes.has(variant.draftId) ? { loadedBarcode: loadedBarcodes.get(variant.draftId) ?? "" } : {}),
     compareAtPrice: optionalMoney(variant.compareAtPrice),
     continueSelling: Boolean(variant.continueSelling),
     costPrice: optionalMoney(variant.costPrice),
@@ -196,6 +208,8 @@ export function ProductVariantsEditor({
 
     setVariantDrafts((current) => [...current, {
       ...variant,
+      // A barcode names one option; the copy is a different one.
+      barcode: null,
       draftId: crypto.randomUUID(),
       id: crypto.randomUUID(),
       optionSignature: `${variant.optionSignature}__copy_${Date.now()}`,
@@ -285,31 +299,60 @@ export function ProductVariantsEditor({
         <div className="variant-section-heading">
           <div>
             <h3>Variants Table</h3>
-            <p>Edit SKU, pricing, stock, status, and variant image for each combination.</p>
+            <p>
+              {variantDrafts.length
+                ? `${variantDrafts.length} ${variantDrafts.length === 1 ? "variant" : "variants"} · ${activeVariantCount} active · ${totalVariantStock} units in stock`
+                : "Edit SKU, pricing, stock, status, and variant image for each combination."}
+            </p>
           </div>
           <button className="variant-secondary-button" disabled={variantDrafts.length === 0} onClick={autoGenerateSkus} type="button">
-            Auto Generate SKU
+            <Sparkles className="h-4 w-4" /> Auto Generate SKU
           </button>
         </div>
 
-        <div className="variant-bulk-editor">
-          <select onChange={(event) => setBulkField(event.target.value)} value={bulkField}>
-            <option value="price">Price</option>
-            <option value="compareAtPrice">Compare Price</option>
-            <option value="stockQuantity">Stock</option>
-            <option value="status">Status</option>
-          </select>
-          {bulkField === "status" ? (
-            <select onChange={(event) => setBulkValue(event.target.value)} value={bulkValue}>
-              <option value="">Choose status</option>
-              <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
+        {variantDrafts.length ? (
+          <div aria-label="Edit all variants at once" className="variant-bulk-editor" role="group">
+            <span className="variant-bulk-label">Set for all variants</span>
+            <select
+              aria-label="Field to change"
+              onChange={(event) => {
+                setBulkField(event.target.value);
+                setBulkValue("");
+              }}
+              value={bulkField}
+            >
+              <option value="price">Price</option>
+              <option value="compareAtPrice">Compare-at price</option>
+              <option value="stockQuantity">Stock</option>
+              <option value="status">Status</option>
             </select>
-          ) : (
-            <input onChange={(event) => setBulkValue(event.target.value)} placeholder="Bulk value" value={bulkValue} />
-          )}
-          <button onClick={applyBulkUpdate} type="button">Apply</button>
-        </div>
+            {bulkField === "status" ? (
+              <select aria-label="New status" onChange={(event) => setBulkValue(event.target.value)} value={bulkValue}>
+                <option value="">Choose status</option>
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
+              </select>
+            ) : (
+              <input
+                aria-label="New value"
+                min={0}
+                onChange={(event) => setBulkValue(event.target.value)}
+                onKeyDown={(event) => {
+                  // Enter would otherwise submit the whole product form.
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    applyBulkUpdate();
+                  }
+                }}
+                placeholder={bulkField === "stockQuantity" ? "e.g. 10" : "e.g. 700"}
+                step={bulkField === "stockQuantity" ? 1 : 0.01}
+                type="number"
+                value={bulkValue}
+              />
+            )}
+            <button disabled={!bulkValue.trim()} onClick={applyBulkUpdate} type="button">Apply to all</button>
+          </div>
+        ) : null}
 
         <div className="variant-table-wrap">
           <table className="variant-table">
@@ -318,16 +361,19 @@ export function ProductVariantsEditor({
                 <th>Image</th>
                 <th>Variant</th>
                 <th>SKU</th>
+                <th>Barcode</th>
                 <th>Price</th>
-                <th>Compare Price</th>
+                <th>Compare-at</th>
                 <th>Stock</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th>Active</th>
+                <th><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody>
               {variantDrafts.length ? variantDrafts.map((variant, index) => (
                 <VariantRow
+                  basePrice={basePrice}
+                  currencySymbol={currencySymbol}
                   index={index}
                   key={variant.draftId}
                   onDuplicate={duplicateVariant}
@@ -336,7 +382,11 @@ export function ProductVariantsEditor({
                   variant={variant}
                 />
               )) : (
-                <tr><td className="variant-empty-row" colSpan={8}>No variants generated yet.</td></tr>
+                <tr>
+                  <td className="variant-empty-row" colSpan={9}>
+                    No variants yet. Add attributes above, then press Generate Variants.
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -410,48 +460,128 @@ function AttributeCard({
 }
 
 function VariantRow({
+  basePrice,
+  currencySymbol,
   index,
   onDuplicate,
   onRemove,
   onUpdate,
   variant
 }: {
+  basePrice?: string | undefined;
+  currencySymbol: string;
   index: number;
   onDuplicate: (draftId: string) => void;
   onRemove: (draftId: string) => void;
   onUpdate: (draftId: string, patch: Partial<VariantDraft>) => void;
   variant: VariantDraft;
 }) {
+  const active = variant.status !== "INACTIVE";
+  const soldOut = Number(variant.stockQuantity) <= 0 && !variant.continueSelling;
+
   return (
-    <tr>
+    <tr data-inactive={active ? undefined : "true"}>
       <td>
         <VariantImageUploader
           index={index}
+          label={variant.title}
           onChange={(imageUrl) => onUpdate(variant.draftId, { imageUrl })}
           value={variant.imageUrl ?? null}
         />
       </td>
-      <td><strong>{variant.title}</strong></td>
-      <td><input onChange={(event) => onUpdate(variant.draftId, { sku: event.target.value })} value={variant.sku ?? ""} /></td>
-      <td><input min={0} onChange={(event) => onUpdate(variant.draftId, { price: event.target.value })} step="0.01" type="number" value={variant.price} /></td>
-      <td><input min={0} onChange={(event) => onUpdate(variant.draftId, { compareAtPrice: event.target.value })} step="0.01" type="number" value={variant.compareAtPrice ?? ""} /></td>
       <td>
-        <input min={0} onChange={(event) => onUpdate(variant.draftId, { stockQuantity: Number(event.target.value) || 0 })} type="number" value={variant.stockQuantity} />
-        <label className="variant-mini-check">
-          <input checked={Boolean(variant.continueSelling)} onChange={(event) => onUpdate(variant.draftId, { continueSelling: event.target.checked })} type="checkbox" />
-          Continue selling
-        </label>
+        <strong title={variant.title}>{variant.title}</strong>
+        {!active ? (
+          <span className="variant-row-badge">Not for sale</span>
+        ) : soldOut ? (
+          <span className="variant-row-badge" data-tone="bad">Out of stock</span>
+        ) : null}
       </td>
       <td>
-        <select onChange={(event) => onUpdate(variant.draftId, { status: event.target.value === "INACTIVE" ? "INACTIVE" : "ACTIVE" })} value={variant.status}>
-          <option value="ACTIVE">Active</option>
-          <option value="INACTIVE">Inactive</option>
-        </select>
+        <input
+          aria-label={`${variant.title} SKU`}
+          onChange={(event) => onUpdate(variant.draftId, { sku: event.target.value })}
+          placeholder="Optional"
+          value={variant.sku ?? ""}
+        />
+      </td>
+      <td>
+        <input
+          aria-label={`${variant.title} barcode`}
+          autoComplete="off"
+          onChange={(event) => onUpdate(variant.draftId, { barcode: event.target.value })}
+          // A scanner ends the code with Enter, which would submit the whole product form.
+          onKeyDown={(event) => {
+            if (event.key === "Enter") event.preventDefault();
+          }}
+          placeholder="Scan, or auto"
+          spellCheck={false}
+          title="Scan the barcode on this size or colour's packaging. Left blank, one is assigned the first time you print its label."
+          value={variant.barcode ?? ""}
+        />
+      </td>
+      <td>
+        <span className="variant-money-input">
+          {currencySymbol ? <span aria-hidden="true">{currencySymbol}</span> : null}
+          <input
+            aria-label={`${variant.title} price`}
+            min={0}
+            onChange={(event) => onUpdate(variant.draftId, { price: event.target.value })}
+            placeholder={basePrice || "0.00"}
+            step="0.01"
+            type="number"
+            value={variant.price}
+          />
+        </span>
+      </td>
+      <td>
+        <span className="variant-money-input">
+          {currencySymbol ? <span aria-hidden="true">{currencySymbol}</span> : null}
+          <input
+            aria-label={`${variant.title} compare-at price`}
+            min={0}
+            onChange={(event) => onUpdate(variant.draftId, { compareAtPrice: event.target.value })}
+            placeholder="—"
+            step="0.01"
+            type="number"
+            value={variant.compareAtPrice ?? ""}
+          />
+        </span>
+      </td>
+      <td>
+        <div className="variant-stock-cell">
+          <input
+            aria-label={`${variant.title} stock`}
+            min={0}
+            onChange={(event) => onUpdate(variant.draftId, { stockQuantity: Number(event.target.value) || 0 })}
+            type="number"
+            value={variant.stockQuantity}
+          />
+          <label className="variant-mini-check" title="Keep taking orders after stock reaches 0">
+            <input
+              checked={Boolean(variant.continueSelling)}
+              onChange={(event) => onUpdate(variant.draftId, { continueSelling: event.target.checked })}
+              type="checkbox"
+            />
+            Continue selling
+          </label>
+        </div>
+      </td>
+      <td>
+        <input
+          aria-label={`${variant.title} active`}
+          checked={active}
+          className="variant-status-switch"
+          onChange={(event) => onUpdate(variant.draftId, { status: event.target.checked ? "ACTIVE" : "INACTIVE" })}
+          role="switch"
+          title={active ? "Active — shoppers can buy it" : "Inactive — shoppers cannot buy it"}
+          type="checkbox"
+        />
       </td>
       <td>
         <div className="variant-row-actions">
-          <button aria-label={`Duplicate ${variant.title}`} onClick={() => onDuplicate(variant.draftId)} type="button"><Copy className="h-4 w-4" /></button>
-          <button aria-label={`Delete ${variant.title}`} onClick={() => onRemove(variant.draftId)} type="button"><Trash2 className="h-4 w-4" /></button>
+          <button aria-label={`Duplicate ${variant.title}`} onClick={() => onDuplicate(variant.draftId)} title="Duplicate" type="button"><Copy className="h-4 w-4" /></button>
+          <button aria-label={`Delete ${variant.title}`} data-tone="danger" onClick={() => onRemove(variant.draftId)} title="Delete" type="button"><Trash2 className="h-4 w-4" /></button>
         </div>
       </td>
     </tr>
@@ -460,10 +590,12 @@ function VariantRow({
 
 function VariantImageUploader({
   index,
+  label,
   onChange,
   value
 }: {
   index: number;
+  label: string;
   onChange: (imageUrl: string) => void;
   value?: string | null;
 }) {
@@ -472,13 +604,24 @@ function VariantImageUploader({
   return (
     <div className="variant-image-uploader">
       <input name={`variantImageUrl${index}`} type="hidden" value={value ?? ""} />
-      <button className="variant-image-drop" onClick={() => setOpen(true)} type="button">
+      <button
+        aria-label={value ? `Change image for ${label}` : `Add image for ${label}`}
+        className="variant-image-drop"
+        onClick={() => setOpen(true)}
+        type="button"
+      >
         {value ? <img alt="" src={value} /> : <ImagePlus className="h-5 w-5" />}
         {value ? null : <span>Add</span>}
       </button>
       {value ? (
-        <button className="variant-image-clear" onClick={() => onChange("")} type="button">
-          Remove
+        <button
+          aria-label={`Remove image for ${label}`}
+          className="variant-image-clear"
+          onClick={() => onChange("")}
+          title="Remove image"
+          type="button"
+        >
+          <X className="h-3 w-3" />
         </button>
       ) : null}
       <MediaPicker

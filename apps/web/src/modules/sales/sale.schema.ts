@@ -4,6 +4,11 @@ export const saleTypeSchema = z.enum(["ONLINE", "OFFLINE"]);
 export const saleStatusSchema = z.enum(["DRAFT", "COMPLETED", "CANCELLED", "RETURNED"]);
 export const salePaymentStatusSchema = z.enum(["PAID", "PARTIAL", "UNPAID"]);
 export const salePaymentMethodSchema = z.enum(["CASH", "CARD", "BKASH", "NAGAD", "BANK", "COD", "OTHER"]);
+/**
+ * The loyalty box on the form: ticked (`in`), shown and left empty (`out`), or
+ * not shown at all (`keep`) — see `resolveSaleOptIn`.
+ */
+export const saleLoyaltyOptInSchema = z.enum(["in", "keep", "out"]);
 
 const moneySchema = z
   .union([z.string(), z.number()])
@@ -16,7 +21,13 @@ const saleItemSchema = z.object({
   discount: moneySchema.default("0"),
   productId: z.string().trim().min(1, "Select a product."),
   quantity: z.coerce.number().int().min(1, "Quantity must be at least 1."),
-  unitPrice: moneySchema
+  unitPrice: moneySchema,
+  /** The option sold, for a product sold by size, colour and the like; the service decides whether one is needed. */
+  variantId: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value || undefined)
 });
 
 export const saleBaseSchema = z.object({
@@ -27,6 +38,7 @@ export const saleBaseSchema = z.object({
     .transform((value) => value || undefined),
   discount: moneySchema.default("0"),
   items: z.array(saleItemSchema).min(1, "Add at least one product."),
+  loyaltyOptIn: saleLoyaltyOptInSchema.default("keep"),
   notes: z.string().trim().max(2000).optional(),
   paidAmount: moneySchema.default("0"),
   paymentMethod: salePaymentMethodSchema.default("CASH"),

@@ -61,6 +61,52 @@ export async function getCustomerPageForStore(query: CustomerPageQuery) {
   });
 }
 
+/**
+ * A customer as a picker shows them: who they are and this store's membership,
+ * the same fields `getCustomerRecordsForStore` joins, without the order history.
+ */
+const customerPickSelect = {
+  email: true,
+  id: true,
+  loyaltyMember: {
+    select: {
+      pointsBalance: true,
+      storeId: true,
+      suspendedAt: true
+    }
+  },
+  name: true,
+  phone: true
+} as const;
+
+export function findCustomerPickRecords(storeId: string, customerIds: string[]) {
+  return prisma.customer.findMany({
+    where: { id: { in: customerIds }, storeId },
+    orderBy: { createdAt: "desc" },
+    select: customerPickSelect
+  });
+}
+
+/**
+ * Every number the store holds, and nothing else. Numbers are stored as each
+ * checkout typed them, so another spelling of one cannot be found with a
+ * `where` on the column; the caller compares normalised keys instead. Two short
+ * strings a row — far less than the sale page already reads for its picker.
+ */
+export function listCustomerPhonesForStore(storeId: string) {
+  return prisma.customer.findMany({
+    where: { storeId },
+    select: { id: true, phone: true }
+  });
+}
+
+export function createCustomerRecord(data: { name: string; phone: string; storeId: string }) {
+  return prisma.customer.create({
+    data,
+    select: customerPickSelect
+  });
+}
+
 export async function getCustomerRecordsForStore(storeId: string) {
   return prisma.customer.findMany({
     where: { storeId },
@@ -69,6 +115,16 @@ export async function getCustomerRecordsForStore(storeId: string) {
       createdAt: true,
       email: true,
       id: true,
+      // Joined in this same query — one membership per customer at most — so
+      // the loyalty column costs no query per row. `storeId` is read so the
+      // service can refuse to show a membership that is not this store's.
+      loyaltyMember: {
+        select: {
+          pointsBalance: true,
+          storeId: true,
+          suspendedAt: true
+        }
+      },
       name: true,
       phone: true,
       orders: {

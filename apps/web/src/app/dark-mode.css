@@ -239,3 +239,19 @@
 [data-theme="dark"] .sf-filter-sidebar .sf-filter-group input[type="radio"] {
   accent-color: var(--store-primary, #ebecef);
 }
+
+/* --- Product page options: the picked value is an inversion too ---------------
+   The same judgement as the filter chips above, for the same black-on-white
+   button: mapped as a surface, the picked size sat one shade off the unpicked
+   ones. Quick View's pills are left alone — they fill with the shop's own
+   colour, which is the seller's and not the theme's. */
+
+[data-theme="dark"] .general-product-variant-matrix .sf-variant-value[aria-pressed="true"] {
+  background-color: #ebecef;
+  border-color: #ebecef;
+  color: #17181c;
+}
+
+[data-theme="dark"] .general-product-variant-matrix .sf-variant-value:hover {
+  border-color: #ebecef;
+}

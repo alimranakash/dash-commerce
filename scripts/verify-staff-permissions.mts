@@ -30,6 +30,8 @@ const MODULES_DIR = join(process.cwd(), "apps", "web", "src", "modules");
  */
 const EXPECTED_GUARDS: Record<string, GuardExpectation> = {
   "abandoned-carts/abandoned-cart.actions.ts": "member",
+  // Printing labels assigns barcodes to products — catalogue work, like editing one.
+  "barcodes/barcode.actions.ts": "member",
   "billing/billing-features.actions.ts": "member",
   "billing/billing.actions.ts": "manager",
   "categories/category.actions.ts": "member",
@@ -39,8 +41,13 @@ const EXPECTED_GUARDS: Record<string, GuardExpectation> = {
   "expenses/expense.actions.ts": "member",
   "fake-orders/fake-order.actions.ts": "member",
   "inventory/inventory.actions.ts": "member",
+  // What a sale is worth in points is a promise to every customer.
+  "loyalty/loyalty.actions.ts": "manager",
   "marketing/marketing.actions.ts": "manager",
   "media/media.actions.ts": "member",
+  // Every member keeps their own notes; the owner is the session's user, so
+  // no role can reach anyone else's.
+  "notes/note.actions.ts": "member",
   "orders/order.actions.ts": "member",
   "payments/payment.actions.ts": "manager",
   "product-content/product-content.actions.ts": "member",

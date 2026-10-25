@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
+import { normalizeBarcodeValue } from "../barcodes/barcode.schema";
 import { canCreateProduct } from "../billing/subscription-limits";
 import { createCategory } from "../categories/category.service";
 import { setProductRelations } from "../merchandising/merchandising.service";
@@ -95,7 +96,13 @@ export async function updateProductFormAction(
 
   try {
     const payload = productPayloadFromFormData(formData);
-    const product = await updateProduct(store.id, productId, payload.input);
+    const input: UpdateProductInput = { ...payload.input };
+
+    if (barcodeUntouched(formData)) {
+      delete input.barcode;
+    }
+
+    const product = await updateProduct(store.id, productId, input);
 
     if (!product) {
       return {
@@ -199,6 +206,7 @@ function productPayloadFromFormData(formData: FormData): ProductFormPayload {
       shortDescription: nullableValue(formData, "shortDescription"),
       description: nullableValue(formData, "description"),
       sku: nullableValue(formData, "sku"),
+      barcode: nullableValue(formData, "barcode"),
       price: getValue(formData, "price"),
       compareAtPrice: nullableValue(formData, "compareAtPrice"),
       costPrice: nullableValue(formData, "costPrice"),
@@ -269,6 +277,7 @@ function productVariantsFromFormData(formData: FormData): ProductVariantInput[] 
 
     variants.push({
       barcode: stringValue(item.barcode),
+      ...(item.loadedBarcode === undefined ? {} : { loadedBarcode: stringValue(item.loadedBarcode) }),
       compareAtPrice: stringValue(item.compareAtPrice),
       continueSelling: Boolean(item.continueSelling),
       costPrice: stringValue(item.costPrice),
@@ -336,6 +345,19 @@ function stringValue(value: unknown) {
   const text = String(value ?? "").trim();
 
   return text || null;
+}
+
+/**
+ * Whether the barcode box came back exactly as it loaded. Then the stored code
+ * is left alone rather than overwritten: it may have been assigned since — by
+ * printing a label in another tab, which the box's own link opens — and that
+ * code is on a sticker now. The variants editor makes the same check per
+ * option, in `setProductVariantConfiguration`.
+ */
+function barcodeUntouched(formData: FormData) {
+  const loaded = formData.get("barcodeLoaded");
+
+  return loaded !== null && normalizeBarcodeValue(String(loaded)) === normalizeBarcodeValue(getValue(formData, "barcode"));
 }
 
 function numberValue(value: unknown) {

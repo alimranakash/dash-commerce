@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { readClientIp } from "../../../../../lib/request-ip";
+import { responseDevCode } from "../../../../../modules/auth/otp/otp-delivery";
 import { requestPasswordResetCode } from "../../../../../modules/auth/password-reset.service";
 import { otpErrorResponse, readJsonBody } from "../../_otp-response";
 
@@ -13,11 +14,12 @@ export async function POST(request: NextRequest) {
     const ticket = await requestPasswordResetCode(await readJsonBody(request), {
       ipAddress: readClientIp(request.headers)
     });
+    const devCode = responseDevCode(ticket.devCode);
 
     return NextResponse.json(
       {
         channel: ticket.channel,
-        ...(ticket.devCode === undefined ? {} : { devCode: ticket.devCode }),
+        ...(devCode === undefined ? {} : { devCode }),
         expiresAt: ticket.expiresAt.toISOString(),
         identifier: ticket.identifier,
         resendAvailableAt: ticket.resendAvailableAt.toISOString()

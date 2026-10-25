@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getCart } from "../../../../modules/cart/cart.service";
 import { parseCartScope } from "../../../../modules/cart/cart.types";
-import { evaluateCoupon } from "../../../../modules/coupons/coupon-validation.service";
+import { quoteCheckoutDiscounts } from "../../../../modules/checkout/checkout-quote";
 import { getEnabledShippingRateForCheckout } from "../../../../modules/shipping/shipping.service";
 import { getStorefrontBySlug } from "../../../../modules/storefront/resolver";
 
@@ -45,13 +45,16 @@ export async function POST(request: NextRequest) {
   // rather than failing: the shopper may not have chosen one yet.
   const shippingAmount = await resolveShippingAmount(store.id, shippingRateId);
 
-  const evaluation = await evaluateCoupon({
-    code: String(code ?? ""),
+  // Priced on the cart less its bundle saving, exactly as the order claims it.
+  // Quoting on the whole subtotal showed a bundle cart a bigger percentage
+  // discount than it would be charged, and measured the points cap on it.
+  const { coupon } = await quoteCheckoutDiscounts(store.id, {
+    cart,
+    couponCode: String(code ?? ""),
     ...(typeof phone === "string" && phone.trim() ? { customerPhone: phone.trim() } : {}),
-    shippingAmount,
-    storeId: store.id,
-    subtotal: cart.totals.subtotal
+    shippingAmount
   });
+  const evaluation = coupon ?? { message: "Enter a coupon code to apply.", ok: false as const };
 
   if (!evaluation.ok) {
     return NextResponse.json({ message: evaluation.message, ok: false });

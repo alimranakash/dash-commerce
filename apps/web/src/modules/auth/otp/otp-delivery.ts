@@ -1,5 +1,7 @@
 import { isNotificationError } from "../../notifications/notifications-errors";
+import { redactLogText } from "../../notifications/notifications.redact";
 import { sendEmail, sendSms } from "../../notifications/notifications.service";
+import type { MessageDeliveryStatus } from "../../notifications/notifications.types";
 import { otpCodeEmail, otpCodeSms } from "../../notifications/templates";
 import { OtpError } from "./otp-errors";
 import type { OtpChannel } from "./otp.schema";
@@ -23,6 +25,53 @@ export type OtpDeliveryResult = {
   devCode?: string;
   delivered: boolean;
 };
+
+/**
+ * Whether this process may hand a code back to the browser: the one gate every
+ * echo goes through, whichever flow or provider produced it.
+ *
+ * A development build only. `process.env.NODE_ENV` is written out literally on
+ * purpose — Next replaces that exact expression with `"production"` when it
+ * builds, so in the code `next start` runs this is false whatever the
+ * environment says (`next.config` must not set `allowDevelopmentBuild`, which
+ * would undo that). And never on a server configured as a deployment: a real
+ * `PLATFORM_ROOT_DOMAIN`, which every deployed server must set, means a
+ * development server was started somewhere shoppers can reach it.
+ */
+export function canEchoOtpCode() {
+  return (
+    process.env.NODE_ENV === "development" && isLocalRootDomain(process.env.PLATFORM_ROOT_DOMAIN)
+  );
+}
+
+function isLocalRootDomain(value: string | undefined) {
+  const host = value?.trim().toLowerCase().replace(/:\d+$/, "");
+
+  return (
+    !host ||
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host.endsWith(".localhost") ||
+    host.endsWith(".test")
+  );
+}
+
+/**
+ * The code a response may carry — checked again at the boundary, so a ticket
+ * that somehow holds one still cannot put it on the wire where echoing is not
+ * allowed. Every route and action that answers a code request goes through it.
+ */
+export function responseDevCode(devCode: string | undefined) {
+  return devCode !== undefined && canEchoOtpCode() ? devCode : undefined;
+}
+
+/** What a finished send tells the caller: echoed only when nothing was configured to send it. */
+export function otpDeliveryResult(status: MessageDeliveryStatus, code: string): OtpDeliveryResult {
+  return {
+    delivered: status === "SENT",
+    ...(status === "SKIPPED" && canEchoOtpCode() ? { devCode: code } : {})
+  };
+}
 
 export async function deliverOtpCode(input: {
   channel: OtpChannel;
@@ -48,12 +97,7 @@ export async function deliverOtpCode(input: {
             to: input.identifier
           });
 
-    const echo = outcome.status === "SKIPPED" && process.env.NODE_ENV === "development";
-
-    return {
-      delivered: outcome.status === "SENT",
-      ...(echo ? { devCode: input.code } : {})
-    };
+    return otpDeliveryResult(outcome.status, input.code);
   } catch (error) {
     // A gateway that refuses everything — an unwhitelisted IP, an unapproved
     // sender ID, an empty balance — is fixed in that gateway's own panel and not
@@ -61,11 +105,11 @@ export async function deliverOtpCode(input: {
     // through until somebody else fixes an account. Development therefore falls
     // back to the same echo an unconfigured install gets. Production still
     // fails, and either way the refusal is already loud in the log.
-    if (process.env.NODE_ENV === "development") {
+    if (canEchoOtpCode()) {
       console.warn(
-        `[otp] the gateway would not take this code, so it is being shown in the browser instead — development build only: ${
+        `[otp] the gateway would not take this code, so it is being shown in the browser instead — development build only: ${redactLogText(
           error instanceof Error ? error.message : String(error)
-        }`
+        )}`
       );
 
       return { delivered: false, devCode: input.code };

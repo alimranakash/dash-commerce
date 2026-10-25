@@ -5,7 +5,9 @@ import { headers } from "next/headers";
 import { ZodError } from "zod";
 import { requireUser } from "../../lib/auth";
 import { readClientIp } from "../../lib/request-ip";
+import { errorForLog } from "../notifications/notifications.redact";
 import { confirmContactChange, requestContactChangeCode } from "./contact-change.service";
+import { responseDevCode } from "./otp/otp-delivery";
 import { isOtpError } from "./otp/otp-errors";
 
 export type ContactChallenge = {
@@ -45,7 +47,7 @@ export async function changeContactAction(
       return {
         challenge: {
           channel: ticket.channel,
-          devCode: ticket.devCode ?? null,
+          devCode: responseDevCode(ticket.devCode) ?? null,
           identifier: ticket.identifier
         },
         message: `We sent a code to ${ticket.identifier}. Enter it to confirm the change.`,
@@ -87,7 +89,7 @@ function contactErrorMessage(error: unknown) {
     return error.issues[0]?.message ?? "Check the details you entered.";
   }
 
-  console.error("Contact change failed", error);
+  console.error(`Contact change failed: ${errorForLog(error)}`);
 
   return "That change could not be made. Try again.";
 }

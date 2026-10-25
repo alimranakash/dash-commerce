@@ -2,8 +2,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DashboardShell } from "../../../../../components/dashboard/dashboard-shell";
 import { getCustomerRecordsForStore } from "../../../../../modules/customers/customer.repository";
+import {
+  getLoyaltyCapability,
+  isSaleOptedIn
+} from "../../../../../modules/loyalty/loyalty.service";
+import { getStoreVariantOptions } from "../../../../../modules/products/product-variants.service";
 import { getProductsForStore } from "../../../../../modules/products/product.service";
 import { SaleForm } from "../../../../../modules/sales/components/sale-form";
+import { toSaleCustomerOption } from "../../../../../modules/sales/sale-customer";
+import { toSaleProductOptions } from "../../../../../modules/sales/sale-products";
 import { updateSaleFormAction } from "../../../../../modules/sales/sale.actions";
 import { getSaleByIdForStore } from "../../../../../modules/sales/sale.service";
 import { requireStore } from "../../../../../modules/stores/queries";
@@ -15,13 +22,17 @@ type EditSalePageProps = {
 export default async function EditSalePage({ params }: EditSalePageProps) {
   const store = await requireStore();
   const { saleId } = await params;
-  const [sale, products, customers] = await Promise.all([
+  const [sale, products, variantsByProduct, customers, loyalty] = await Promise.all([
     getSaleByIdForStore(store.organizationId, store.id, saleId),
     getProductsForStore(store.id),
-    getCustomerRecordsForStore(store.id)
+    getStoreVariantOptions(store.id),
+    getCustomerRecordsForStore(store.id),
+    getLoyaltyCapability(store.id)
   ]);
 
   if (!sale) notFound();
+
+  const loyaltyOptedIn = await isSaleOptedIn(store.id, sale);
 
   return (
     <DashboardShell storeSlug={store.slug}>
@@ -39,19 +50,9 @@ export default async function EditSalePage({ params }: EditSalePageProps) {
             action={updateSaleFormAction.bind(null, sale.id)}
             cancelHref={`/dashboard/sales/${sale.id}`}
             currency={store.currency}
-            customers={customers.map((customer) => ({
-              email: customer.email,
-              id: customer.id,
-              name: customer.name,
-              phone: customer.phone
-            }))}
-            products={products.map((product) => ({
-              id: product.id,
-              price: product.price.toString(),
-              sku: product.sku,
-              stockQuantity: product.stockQuantity,
-              title: product.title
-            }))}
+            customers={customers.map((customer) => toSaleCustomerOption(store.id, customer))}
+            loyaltyLive={loyalty.live}
+            products={toSaleProductOptions(products, variantsByProduct)}
             sale={{
               customerId: sale.customerId,
               discount: sale.discount.toString(),
@@ -60,8 +61,12 @@ export default async function EditSalePage({ params }: EditSalePageProps) {
                 id: item.id,
                 productId: item.productId,
                 quantity: item.quantity,
-                unitPrice: item.unitPrice.toString()
+                unitPrice: item.unitPrice.toString(),
+                // Blank on lines written before options were tracked on sales:
+                // the form then asks which option, if the product has any.
+                variantId: item.variantId ?? ""
               })),
+              loyaltyOptedIn,
               notes: sale.notes,
               paidAmount: sale.paidAmount.toString(),
               paymentMethod: sale.paymentMethod,

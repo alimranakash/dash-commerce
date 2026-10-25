@@ -6,6 +6,7 @@ import type { PlanFeatureKey } from "../billing/plan-features";
 import { PlanFeatureError, requirePlanFeature } from "../billing/subscription-limits";
 import { requireStore } from "../stores/queries";
 import { isNotificationError } from "./notifications-errors";
+import { errorForLog } from "./notifications.redact";
 import { sendSms } from "./notifications.service";
 import { saveStoreMessagingSettings } from "./store-messaging.service";
 import { CUSTOM_ORDER_SMS_MAX_LENGTH } from "./templates";
@@ -143,7 +144,7 @@ function readMessage(error: unknown, fallback: string) {
     return error.message;
   }
 
-  console.error("Store messaging action failed", error);
+  console.error(`Store messaging action failed: ${errorForLog(error)}`);
 
   return fallback;
 }

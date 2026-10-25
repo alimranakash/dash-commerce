@@ -12,6 +12,7 @@ export const incompleteOrderFailureLabels: Record<IncompleteOrderFailureCode, st
   BLOCKED_IP: "Blocked address",
   COUPON: "Coupon problem",
   EMPTY_CART: "Cart was empty",
+  LOYALTY_POINTS: "Points could not be used",
   ORDER_LIMIT: "Order limit reached",
   OUT_OF_STOCK: "Out of stock",
   PAYMENT_REFERENCE: "No transaction ID",

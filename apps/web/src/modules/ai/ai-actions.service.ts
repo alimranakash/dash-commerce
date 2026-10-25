@@ -1,5 +1,6 @@
 import { createSystemLog } from "../../lib/system-log";
 import { createCoupon } from "../coupons/coupon.service";
+import { LoyaltyError } from "../loyalty/loyalty.rules";
 import { getOrderByIdForStore, updateOrderStatus } from "../orders/order.service";
 import { saveProductContentFields } from "../product-content/product-content.service";
 import { getProductByIdForStore } from "../products/product.repository";
@@ -242,7 +243,23 @@ export async function setAiOrderStatus(params: {
   // `updateOrderStatus` re-scores the customer's other orders when an order
   // crosses the CANCELLED boundary, which is why this goes through the service
   // rather than the repository.
-  await updateOrderStatus(storeId, orderId, body.status);
+  try {
+    await updateOrderStatus(storeId, orderId, body.status);
+  } catch (error) {
+    // Moving a cancelled order back spends the loyalty points it had used
+    // again; when the member no longer holds them the ledger refuses and the
+    // whole change rolls back. That is the caller's to act on, so it is a
+    // specific code — never the balance, the member or the ledger's own words.
+    if (error instanceof LoyaltyError && error.code === "INSUFFICIENT_POINTS") {
+      throw new AiApiRouteError(
+        409,
+        "loyalty_points_insufficient",
+        "The order was not changed: it spent loyalty points that were returned when it was cancelled, and the customer no longer holds enough to spend them again."
+      );
+    }
+
+    throw error;
+  }
 
   await logAiAction({
     actor,

@@ -1,3 +1,5 @@
+import { redactLogText } from "./notifications.redact";
+
 /**
  * Why a message could not be handed to a gateway.
  *
@@ -54,5 +56,22 @@ export function toNotificationError(error: unknown) {
     "UNKNOWN",
     error instanceof Error ? error.message : "The message could not be sent.",
     { cause: error }
+  );
+}
+
+/**
+ * The failure as anything past the gateway adapter may see it: the same kind,
+ * so outages stay outages, with its message and the gateway's code redacted —
+ * `secrets` being the credentials the send used — and deliberately no cause,
+ * since the original carries the gateway's raw words. This is what gets
+ * logged, stored, and shown to the admin or seller who asked for the send.
+ */
+export function toRedactedNotificationError(error: unknown, secrets: readonly string[]) {
+  const raw = toNotificationError(error);
+
+  return new NotificationError(
+    raw.kind,
+    redactLogText(raw.message, secrets),
+    raw.providerCode === undefined ? {} : { providerCode: redactLogText(raw.providerCode, secrets) }
   );
 }

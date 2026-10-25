@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Plus, ScanBarcode } from "lucide-react";
 import Link from "next/link";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { ProductFilters } from "../../../modules/products/components/product-filters";
@@ -33,7 +33,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       if (activeStatus === "draft" && product.status !== "DRAFT") return false;
       if (activeStatus === "trash" && product.status !== "ARCHIVED") return false;
       if (category && product.categoryId !== category) return false;
-      if (search && !`${product.title} ${product.sku ?? ""}`.toLowerCase().includes(search.toLowerCase())) return false;
+      if (search && !`${product.title} ${product.sku ?? ""} ${product.barcode ?? ""}`.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     }),
     sort
@@ -55,7 +55,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     <DashboardShell storeSlug={store.slug}>
       <section className="mx-auto grid max-w-[1480px] gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3"><h1 className="text-2xl font-semibold text-[#20212a]">Products</h1><Link className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-[#7c3aed] px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-[#6d28d9]" href="/dashboard/products/new"><Plus className="h-3.5 w-3.5" />New Product</Link></div>
+          {/* Beside New Product rather than at the far right: below ~1200px the table's minimum width pushes the right-hand side of this row off screen. On phones each card's own Labels link takes its place. */}
+          <div className="flex items-center gap-3"><h1 className="text-2xl font-semibold text-[#20212a]">Products</h1><Link className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-[#7c3aed] px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-[#6d28d9]" href="/dashboard/products/new"><Plus className="h-3.5 w-3.5" />New Product</Link><Link className="hidden h-10 items-center gap-1.5 rounded-lg border border-[#ddd6fe] bg-white px-4 text-xs font-semibold text-[#6d3cf5] transition hover:bg-[#f7f5ff] sm:inline-flex" href="/dashboard/products/barcodes"><ScanBarcode className="h-3.5 w-3.5" />Print Barcode Labels</Link></div>
           <button aria-disabled="true" className="text-xs font-semibold text-[#6d3cf5] underline underline-offset-4" title="Product import is not available yet" type="button">Import Products</button>
         </div>
 

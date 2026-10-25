@@ -3,6 +3,7 @@ import {
   listRecentMessageFailures
 } from "../notifications/notifications.repository";
 import { resolveMessagingConfig } from "../notifications/notifications.config";
+import { redactDeliveryRow, redactLogText } from "../notifications/notifications.redact";
 import { getSmsProvider } from "../notifications/sms/registry";
 
 /**
@@ -63,14 +64,19 @@ export async function getMessagingHealth(): Promise<MessagingHealth> {
       configured: config.email !== null,
       host: config.email?.host ?? null
     },
-    recentFailures: failures.map((failure) => ({
-      channel: failure.channel,
-      errorCode: failure.errorCode,
-      errorMessage: failure.errorMessage,
-      id: failure.id,
-      recipient: failure.recipient,
-      sentAt: failure.createdAt
-    })),
+    // Rows are redacted when they are written, and again here so a row written
+    // before that rule existed is shown under it too — with today's keys struck
+    // out in case the gateway echoed one back.
+    recentFailures: failures
+      .map((failure) => redactDeliveryRow(failure, secretsOf(config)))
+      .map((failure) => ({
+        channel: failure.channel,
+        errorCode: failure.errorCode,
+        errorMessage: failure.errorMessage,
+        id: failure.id,
+        recipient: failure.recipient,
+        sentAt: failure.createdAt
+      })),
     sms,
     totals
   };
@@ -118,7 +124,15 @@ async function describeSmsHealth(
     // API key stopped working, which is the same outage by another route.
     return {
       ...base,
-      statusError: error instanceof Error ? error.message : "Could not read the account."
+      statusError:
+        error instanceof Error
+          ? redactLogText(error.message, [sms.credentials.apiKey])
+          : "Could not read the account."
     };
   }
+}
+
+/** The credentials currently configured, struck from anything a gateway said back. */
+function secretsOf(config: Awaited<ReturnType<typeof resolveMessagingConfig>>) {
+  return [config.sms?.credentials.apiKey, config.email?.password];
 }

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { normalizeBangladeshPhone } from "../courier/courier-phone";
 import { clearMessagingSecret, saveMessagingSettings } from "../notifications/messaging-settings.service";
 import { isNotificationError } from "../notifications/notifications-errors";
+import { errorForLog } from "../notifications/notifications.redact";
 import { sendEmail, sendSms } from "../notifications/notifications.service";
 import { requirePlatformAdmin } from "./admin.auth";
 
@@ -147,7 +148,9 @@ function readMessage(error: unknown, fallback: string) {
     return error.message;
   }
 
-  console.error("Messaging settings action failed", error);
+  // Redacted: this action carries the API key and the SMTP password, and a
+  // database error can quote the values it refused.
+  console.error(`Messaging settings action failed: ${errorForLog(error)}`);
 
   return fallback;
 }

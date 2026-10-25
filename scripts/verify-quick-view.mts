@@ -294,6 +294,7 @@ const payload = buildQuickViewProduct({
       id: "var_1",
       imageUrl: null,
       optionSignature: "size:m",
+      options: { " Size ": " M ", Blank: " " },
       price: "1800.00",
       sku: "JKT-01-M",
       status: "ACTIVE",
@@ -350,7 +351,19 @@ check(
   Object.keys(payload.variants[0] ?? {})
     .sort()
     .join(",") ===
-    "compareAtPrice,continueSelling,id,imageUrl,optionSignature,price,sku,stockQuantity,title"
+    "compareAtPrice,continueSelling,id,imageUrl,optionSignature,options,price,sku,stockQuantity,title"
+);
+check(
+  "a variant's options arrive as trimmed names and values, blanks dropped, for the picker's rows",
+  JSON.stringify(payload.variants[0]?.options) === JSON.stringify({ Size: "M" })
+);
+check(
+  "a variant with no options arrives with an empty object rather than null",
+  JSON.stringify(
+    activeQuickViewVariants([
+      { id: "a", optionSignature: "a", price: "1", status: "ACTIVE", stockQuantity: 1, title: "A" }
+    ])[0]?.options
+  ) === "{}"
 );
 check(
   "the seller's short description wins over the long one",
@@ -505,6 +518,11 @@ check(
 check(
   "the card carries a button and nothing else",
   code(source.card).includes("<QuickViewTrigger") && !code(source.card).includes("QuickViewModal")
+);
+check(
+  "the options are the product page's own picker, not a second copy of it",
+  code(source.modal).includes("<VariantOptionPicker") &&
+    !code(source.modal).includes("product.variants.map(")
 );
 
 console.log("");

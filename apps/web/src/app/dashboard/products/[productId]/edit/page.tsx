@@ -118,6 +118,9 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
             shortDescription: product.shortDescription ?? undefined,
             description: product.description ?? undefined,
             sku: product.sku ?? undefined,
+            // Posted back on every save; leaving it out would clear the code
+            // printed on every label already stuck to this product.
+            barcode: product.barcode ?? undefined,
             price: product.price.toString(),
             compareAtPrice: product.compareAtPrice?.toString(),
             costPrice: product.costPrice?.toString(),

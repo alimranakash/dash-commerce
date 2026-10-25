@@ -11,6 +11,7 @@ import { getCart } from "../../../../modules/cart/cart.service";
 import { parseCartScope } from "../../../../modules/cart/cart.types";
 import { isCheckoutPhoneOtpRequired } from "../../../../modules/checkout/checkout-verification.service";
 import { CheckoutExperience } from "../../../../modules/checkout/components/checkout-experience";
+import { getCheckoutLoyaltyOffer } from "../../../../modules/loyalty/loyalty.service";
 import { priceCartBundles } from "../../../../modules/merchandising/bundle.service";
 import { resolveOrderBumpOffer } from "../../../../modules/merchandising/order-bump.service";
 import { getEnabledPaymentMethods } from "../../../../modules/payments/payment.service";
@@ -48,6 +49,9 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
   const paymentMethods = await getEnabledPaymentMethods(store.id);
   const shippingRates = await getEnabledShippingRates(store.id);
   const phoneOtpRequired = await isCheckoutPhoneOtpRequired(store.id);
+  // Null unless the programme is switched on and the plan grants it; the order
+  // is checked again when it is placed.
+  const loyaltyOffer = await getCheckoutLoyaltyOffer(store.id);
   // Priced here and priced again when the order is placed, both times from the
   // product's live price. Only the id ever travels with the form.
   // Priced from the cart alone, exactly as the order will price it, so the
@@ -132,6 +136,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
           checkoutError={checkoutError}
           checkoutScope={scope}
           currency={store.currency}
+          loyaltyOffer={loyaltyOffer}
           orderBump={orderBump}
           paymentMethods={paymentMethods}
           phoneOtpRequired={phoneOtpRequired}

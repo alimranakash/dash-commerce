@@ -4,6 +4,7 @@ import {
   BLOCKED_IP_MESSAGE,
   isIpBlocked
 } from "../../../../modules/blocked-ips/blocked-ip.enforcement";
+import { responseDevCode } from "../../../../modules/auth/otp/otp-delivery";
 import { requestCheckoutPhoneCode } from "../../../../modules/checkout/checkout-verification.service";
 import { getStorefrontBySlug } from "../../../../modules/storefront/resolver";
 import { otpErrorResponse, readJsonBody } from "../../auth/_otp-response";
@@ -39,10 +40,11 @@ export async function POST(request: NextRequest) {
       { phone: String(body.phone ?? "") },
       { ipAddress }
     );
+    const devCode = responseDevCode(ticket.devCode);
 
     return NextResponse.json(
       {
-        ...(ticket.devCode === undefined ? {} : { devCode: ticket.devCode }),
+        ...(devCode === undefined ? {} : { devCode }),
         identifier: ticket.identifier,
         resendAvailableAt: ticket.resendAvailableAt.toISOString()
       },

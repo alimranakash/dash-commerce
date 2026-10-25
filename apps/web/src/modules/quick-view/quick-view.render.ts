@@ -1,4 +1,5 @@
 import type { StorefrontAdvancedSettings } from "../storefront/customization";
+import { cleanVariantOptions } from "../storefront/variant-options";
 import type { QuickViewProduct, QuickViewVariant, QuickViewView } from "./quick-view.types";
 
 /**
@@ -147,18 +148,7 @@ export function buildQuickViewProduct(input: {
     title: string;
   };
   storeId: string;
-  variants: Array<{
-    compareAtPrice?: string | null;
-    continueSelling?: boolean;
-    id: string;
-    imageUrl?: string | null;
-    optionSignature: string;
-    price: string;
-    sku?: string | null;
-    status: "ACTIVE" | "INACTIVE";
-    stockQuantity: number;
-    title: string;
-  }>;
+  variants: Parameters<typeof activeQuickViewVariants>[0];
 }): QuickViewProduct {
   const { currency, descriptionLength, product, storeId, variants } = input;
   const price = product.price.toString();
@@ -204,6 +194,7 @@ export function activeQuickViewVariants(
     id: string;
     imageUrl?: string | null;
     optionSignature: string;
+    options?: Record<string, string> | null;
     price: string;
     sku?: string | null;
     status: "ACTIVE" | "INACTIVE";
@@ -219,6 +210,9 @@ export function activeQuickViewVariants(
       id: variant.id,
       imageUrl: variant.imageUrl ?? null,
       optionSignature: variant.optionSignature,
+      // Only names and values, which the title already shows; it is what lets
+      // the picker offer a row per attribute rather than a button per variant.
+      options: cleanVariantOptions(variant.options),
       price: variant.price,
       sku: variant.sku ?? null,
       stockQuantity: variant.stockQuantity,

@@ -15,10 +15,13 @@ import { ReturnStatusBadge, ReturnTypeBadge } from "./return-status-badge";
 export async function OrderReturnsPanel({
   currency,
   orderId,
+  pointsPaid,
   storeId
 }: {
   currency: string;
   orderId: string;
+  /** What loyalty points paid on this order, when they paid anything. */
+  pointsPaid?: string | null | undefined;
   storeId: string;
 }) {
   const requests = await getOrderReturnsForOrder(storeId, orderId);
@@ -44,7 +47,14 @@ export async function OrderReturnsPanel({
           ))}
         </span>
       </header>
-      <div className="p-5">
+      <div className="grid gap-3 p-5">
+        {pointsPaid ? (
+          <p className="m-0 rounded-lg bg-[#f6f3ff] px-4 py-3 text-xs leading-5 text-[#3d2279]">
+            {pointsPaid} of this order was paid with loyalty points. Refunds here are paid in cash at
+            line price, including that share, and the points are not given back; only cancelling the
+            order returns them.
+          </p>
+        ) : null}
         {requests.length === 0 ? (
           <p className="m-0 text-xs text-[#777985]">
             Nothing has come back on this order. Open a request above when a customer wants goods

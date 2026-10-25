@@ -129,6 +129,12 @@ function GuestOrderCard({ basePath, order }: { basePath: string; order: GuestOrd
             <dd>-{order.discount}</dd>
           </div>
         ) : null}
+        {order.pointsDiscount ? (
+          <div>
+            <dt>Paid with points</dt>
+            <dd>-{order.pointsDiscount}</dd>
+          </div>
+        ) : null}
         <div>
           <dt>{order.shippingLabel}</dt>
           <dd>{order.shipping}</dd>

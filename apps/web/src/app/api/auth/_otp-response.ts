@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { isOtpError, otpErrorStatus } from "../../../modules/auth/otp/otp-errors";
+import { errorForLog } from "../../../modules/notifications/notifications.redact";
 
 /**
  * A body that will not parse is the caller's mistake, not a server fault, so it
@@ -50,8 +51,8 @@ export function otpErrorResponse(error: unknown) {
   }
 
   // Anything unrecognised is ours, not the visitor's — say so without leaking
-  // what broke, and leave the detail in the server log.
-  console.error("OTP request failed", error);
+  // what broke, and leave the detail, redacted, in the server log.
+  console.error(`OTP request failed: ${errorForLog(error)}`);
 
   return NextResponse.json(
     {

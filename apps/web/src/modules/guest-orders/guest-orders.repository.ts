@@ -33,6 +33,7 @@ export function findGuestOrdersByIds(storeId: string, ids: readonly string[]) {
       discountAmount: true,
       fulfillmentStatus: true,
       id: true,
+      loyaltyDiscountAmount: true,
       orderNumber: true,
       paymentMethodName: true,
       paymentStatus: true,

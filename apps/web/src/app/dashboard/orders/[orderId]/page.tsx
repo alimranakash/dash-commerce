@@ -15,6 +15,7 @@ import {
 import { getCourierProvider } from "../../../../modules/courier/providers/registry";
 import { getOrderByIdForStore } from "../../../../modules/orders/order.service";
 import { OrderReturnsPanel } from "../../../../modules/returns/components/order-returns-panel";
+import { getOrderPointsNote } from "../../../../modules/loyalty/loyalty.service";
 import { hasPlanFeature } from "../../../../modules/billing/subscription-limits";
 import { requireStore } from "../../../../modules/stores/queries";
 
@@ -30,8 +31,13 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
   const flags = await searchParams;
   const updated = Boolean(flags.updated);
   const created = Boolean(flags.created);
+  const pointsError = Boolean(flags.pointsError);
 
   if (!order) notFound();
+
+  // Only an order that spent points has anything to say about them.
+  const pointsPaid = Number(order.loyaltyDiscountAmount) > 0;
+  const pointsNote = pointsPaid ? await getOrderPointsNote(store.id, order.id) : null;
 
   const orderNumber = order.orderNumber.startsWith("#") ? order.orderNumber : `#${order.orderNumber}`;
   const paymentDate = order.paymentStatus === "PENDING" ? "Awaiting payment" : formatDate(order.updatedAt);
@@ -65,6 +71,12 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
 
         {created ? <p className="success-message">Order created.</p> : null}
         {updated ? <p className="success-message">Order updated.</p> : null}
+        {pointsError ? (
+          <p className="m-0 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            The status was not changed. This order spent loyalty points, which were given back when
+            it was cancelled, and the member no longer holds enough to spend them again.
+          </p>
+        ) : null}
 
         <OrderStatusCards fulfillmentStatus={order.fulfillmentStatus} orderStatus={order.status} paymentStatus={order.paymentStatus} />
 
@@ -78,7 +90,14 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
           />
           <div className="grid items-start gap-4">
             <OrderSummaryCard
+              bundleDiscount={
+                Number(order.bundleDiscountAmount) > 0
+                  ? formatMoney(order.bundleDiscountAmount, order.currency)
+                  : null
+              }
               discount={formatMoney(order.discountAmount, order.currency)}
+              pointsDiscount={pointsPaid ? formatMoney(order.loyaltyDiscountAmount, order.currency) : null}
+              pointsNote={pointsNote}
               shipping={formatMoney(order.shippingAmount, order.currency)}
               subtotal={formatMoney(order.subtotalAmount, order.currency)}
               tax={formatMoney(order.taxAmount, order.currency)}
@@ -139,7 +158,12 @@ export default async function OrderDetailsPage({ params, searchParams }: OrderDe
           }))}
         />
 
-        <OrderReturnsPanel currency={order.currency} orderId={order.id} storeId={store.id} />
+        <OrderReturnsPanel
+          currency={order.currency}
+          orderId={order.id}
+          pointsPaid={pointsPaid ? formatMoney(order.loyaltyDiscountAmount, order.currency) : null}
+          storeId={store.id}
+        />
 
         <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,0.7fr)]">
           <OrderTimeline createdAt={order.createdAt} fulfillmentStatus={order.fulfillmentStatus} orderStatus={order.status} paymentStatus={order.paymentStatus} updatedAt={order.updatedAt} />

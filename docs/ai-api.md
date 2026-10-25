@@ -637,6 +637,7 @@ Every non-2xx body is `{ "code": string, "message": string }`.
 | 403    | `store_unavailable`   | the store is suspended or archived                      |
 | 404    | `store_not_found`     | the key authenticated but its store is gone             |
 | 404    | `unknown_report`      | no such report key; the message lists the real ones     |
+| 409    | `loyalty_points_insufficient` | un-cancelling an order whose redeemed loyalty points the customer no longer holds; nothing changed |
 | 429    | `rate_limited`        | bucket exhausted; see `Retry-After`                     |
 | 500    | `internal_error`      | deliberately opaque — details go to the server log      |
 

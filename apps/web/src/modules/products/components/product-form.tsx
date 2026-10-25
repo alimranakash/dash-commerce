@@ -3,6 +3,7 @@
 import { Button } from "@dash/ui";
 import { useActionState, useCallback, useMemo, useState, type ReactNode } from "react";
 import { normalizeSlug } from "../../../lib/slug";
+import { ProductBarcodeField } from "../../barcodes/components/product-barcode-field";
 import { mediaUploadHintForUsage } from "../../media/media.schema";
 import { GenerateWithAiButton } from "../../product-content/components/generate-with-ai-button";
 import {
@@ -55,6 +56,7 @@ export type ProductFormValue = {
   shortDescription?: string | undefined;
   description?: string | undefined;
   sku?: string | undefined;
+  barcode?: string | undefined;
   price?: string | undefined;
   compareAtPrice?: string | undefined;
   costPrice?: string | undefined;
@@ -122,7 +124,11 @@ export function ProductForm({
   const [keywords, setKeywords] = useState(product?.content?.keywords ?? "");
   const [socialCaption, setSocialCaption] = useState(product?.content?.socialCaption ?? "");
   const [productPrice, setProductPrice] = useState(product?.price ?? "");
+  const [compareAtPrice, setCompareAtPrice] = useState(product?.compareAtPrice ?? "");
+  const [costPrice, setCostPrice] = useState(product?.costPrice ?? "");
+  const [allowPreorder, setAllowPreorder] = useState(Boolean(product?.allowPreorder));
   const [productSku, setProductSku] = useState(product?.sku ?? "");
+  const currencySymbol = useMemo(() => currencySymbolFor(currency), [currency]);
   const [slugTouched, setSlugTouched] = useState(Boolean(product?.slug));
   const [categoryOptions, setCategoryOptions] = useState(categories);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
@@ -424,116 +430,157 @@ export function ProductForm({
             description="Pricing, cost, and inventory tracking values."
             title="Pricing and inventory"
           >
-            <div className="form-grid product-editor-money-grid">
-              <MoneyField
-                defaultValue={product?.price}
-                errors={state.fieldErrors}
-                label="Price"
-                name="price"
-                onChange={setProductPrice}
-                required
+            <EditorSubsection title="Pricing">
+              <div className="product-editor-field-grid product-editor-field-grid-3">
+                <MoneyField
+                  defaultValue={product?.price}
+                  errors={state.fieldErrors}
+                  label="Price"
+                  name="price"
+                  onChange={setProductPrice}
+                  required
+                  symbol={currencySymbol}
+                />
+                <MoneyField
+                  defaultValue={product?.compareAtPrice}
+                  errors={state.fieldErrors}
+                  hint="The was-price, shown struck through."
+                  label="Compare-at price"
+                  name="compareAtPrice"
+                  onChange={setCompareAtPrice}
+                  symbol={currencySymbol}
+                />
+                <MoneyField
+                  defaultValue={product?.costPrice}
+                  errors={state.fieldErrors}
+                  hint="What you pay. Customers never see it."
+                  label="Cost price"
+                  name="costPrice"
+                  onChange={setCostPrice}
+                  symbol={currencySymbol}
+                />
+              </div>
+              <PricingSummary
+                compareAtPrice={compareAtPrice}
+                costPrice={costPrice}
+                currency={currency}
+                price={productPrice}
               />
-              <MoneyField
-                defaultValue={product?.compareAtPrice}
-                errors={state.fieldErrors}
-                label="Compare-at price"
-                name="compareAtPrice"
-              />
-              <MoneyField
-                defaultValue={product?.costPrice}
-                errors={state.fieldErrors}
-                label="Cost price"
-                name="costPrice"
-              />
-              <FieldError errors={state.fieldErrors} name="sku">
-                <label>
-                  SKU
-                  <input
-                    name="sku"
-                    onChange={(event) => setProductSku(event.target.value)}
-                    placeholder="SKU-001"
-                    type="text"
-                    value={productSku}
-                  />
-                </label>
-              </FieldError>
-              <FieldError errors={state.fieldErrors} name="stockQuantity">
-                <label>
-                  Stock
-                  <input
-                    defaultValue={product?.stockQuantity ?? 0}
-                    min={0}
-                    name="stockQuantity"
-                    required
-                    type="number"
-                  />
-                </label>
-              </FieldError>
-              <FieldError errors={state.fieldErrors} name="allowPreorder">
-                <label className="field-check">
-                  <input
-                    defaultChecked={Boolean(product?.allowPreorder)}
-                    name="allowPreorder"
-                    role="switch"
-                    type="checkbox"
-                  />
-                  <span className="field-check-title">Take pre-orders when this runs out</span>
-                  <small>
-                    Customers can keep buying past zero and the stock goes negative, which is what
-                    you still owe them. Say when it ships below.
-                  </small>
-                </label>
-              </FieldError>
-              <FieldError errors={state.fieldErrors} name="freeShipping">
-                <label className="field-check">
-                  <input
-                    defaultChecked={Boolean(product?.freeShipping)}
-                    name="freeShipping"
-                    role="switch"
-                    type="checkbox"
-                  />
-                  <span className="field-check-title">Buying this earns free delivery</span>
-                  <small>
-                    Any cart containing this product ships free, whatever it comes to. It is the
-                    whole order that stops being charged, because delivery is one flat rate per
-                    order — so it is worth reserving for products that can carry it. The zones you
-                    picked under Shipping still apply.
-                  </small>
-                </label>
-              </FieldError>
-              <FieldError errors={state.fieldErrors} name="preorderReleaseAt">
-                <label>
-                  Pre-order ships on
-                  <input
-                    defaultValue={toDateInput(product?.preorderReleaseAt)}
-                    name="preorderReleaseAt"
-                    type="date"
-                  />
-                  <small>
-                    Only used when pre-orders are on. Shown to the customer beside the button, so
-                    they know what they are waiting for.
-                  </small>
-                </label>
-              </FieldError>
-              <FieldError errors={state.fieldErrors} name="lowStockThreshold">
-                <label>
-                  Low stock threshold
-                  <input
-                    defaultValue={product?.lowStockThreshold ?? 0}
-                    min={0}
-                    name="lowStockThreshold"
-                    required
-                    type="number"
-                  />
-                </label>
-              </FieldError>
-            </div>
+            </EditorSubsection>
+
+            <EditorSubsection title="Inventory">
+              <div className="product-editor-field-grid">
+                <FieldError errors={state.fieldErrors} name="sku">
+                  <label>
+                    SKU
+                    <input
+                      name="sku"
+                      onChange={(event) => setProductSku(event.target.value)}
+                      placeholder="SKU-001"
+                      type="text"
+                      value={productSku}
+                    />
+                    <small>Your own stock code. Auto-generated variant SKUs start with it.</small>
+                  </label>
+                </FieldError>
+                <FieldError errors={state.fieldErrors} name="barcode">
+                  <ProductBarcodeField defaultValue={product?.barcode} productId={product?.id} />
+                </FieldError>
+                <FieldError errors={state.fieldErrors} name="stockQuantity">
+                  <label>
+                    Stock
+                    <span className="product-editor-input-affix">
+                      <input
+                        defaultValue={product?.stockQuantity ?? 0}
+                        min={0}
+                        name="stockQuantity"
+                        required
+                        type="number"
+                      />
+                      <span aria-hidden="true">units</span>
+                    </span>
+                  </label>
+                </FieldError>
+                <FieldError errors={state.fieldErrors} name="lowStockThreshold">
+                  <label>
+                    Low stock alert
+                    <span className="product-editor-input-affix">
+                      <input
+                        defaultValue={product?.lowStockThreshold ?? 0}
+                        min={0}
+                        name="lowStockThreshold"
+                        required
+                        type="number"
+                      />
+                      <span aria-hidden="true">units</span>
+                    </span>
+                    <small>Flagged as low stock once it reaches this number.</small>
+                  </label>
+                </FieldError>
+              </div>
+            </EditorSubsection>
+
+            <EditorSubsection title="Selling options">
+              <div className="product-editor-field-grid">
+                <div className="product-option-stack">
+                  <FieldError errors={state.fieldErrors} name="allowPreorder">
+                    <label className="field-check">
+                      <input
+                        checked={allowPreorder}
+                        name="allowPreorder"
+                        onChange={(event) => setAllowPreorder(event.target.checked)}
+                        role="switch"
+                        type="checkbox"
+                      />
+                      <span className="field-check-title">Take pre-orders when this runs out</span>
+                      <small>
+                        Customers can keep buying at zero. Stock goes negative to show how many you
+                        still owe.
+                      </small>
+                    </label>
+                  </FieldError>
+                  {/* Hidden rather than unmounted, so a date already saved still posts
+                      and switching pre-orders back on finds it where it was. */}
+                  <div className="product-option-detail" hidden={!allowPreorder}>
+                    <FieldError errors={state.fieldErrors} name="preorderReleaseAt">
+                      <label>
+                        Ships on
+                        <input
+                          defaultValue={toDateInput(product?.preorderReleaseAt)}
+                          name="preorderReleaseAt"
+                          type="date"
+                        />
+                        <small>
+                          Shown beside the button, so customers know what they are waiting for.
+                        </small>
+                      </label>
+                    </FieldError>
+                  </div>
+                </div>
+                <FieldError errors={state.fieldErrors} name="freeShipping">
+                  <label className="field-check">
+                    <input
+                      defaultChecked={Boolean(product?.freeShipping)}
+                      name="freeShipping"
+                      role="switch"
+                      type="checkbox"
+                    />
+                    <span className="field-check-title">Buying this earns free delivery</span>
+                    <small>
+                      Any order containing this product ships free — the whole order, since delivery
+                      is one flat rate. The zones picked under Shipping still apply.
+                    </small>
+                  </label>
+                </FieldError>
+              </div>
+            </EditorSubsection>
           </ProductEditorCard>
 
           <ProductVariantsEditor
             attributes={product?.variantConfiguration?.attributes ?? []}
             basePrice={productPrice}
             baseSku={productSku}
+            currencySymbol={currencySymbol}
             variants={product?.variantConfiguration?.variants ?? []}
           />
 
@@ -778,37 +825,173 @@ function ProductEditorCard({
   );
 }
 
+/** A titled group inside a card, so one long card reads as three short ones. */
+function EditorSubsection({ children, title }: { children: ReactNode; title: string }) {
+  return (
+    <div className="product-editor-subsection">
+      <h3>{title}</h3>
+      {children}
+    </div>
+  );
+}
+
 function MoneyField({
   defaultValue,
   errors,
+  hint,
   label,
   name,
   onChange,
-  required
+  required,
+  symbol
 }: {
   defaultValue?: string | undefined;
   errors?: Record<string, string> | undefined;
+  hint?: string | undefined;
   label: string;
   name: string;
   onChange?: (value: string) => void;
   required?: boolean | undefined;
+  symbol: string;
 }) {
   return (
     <FieldError errors={errors} name={name}>
       <label>
         {label}
-        <input
-          defaultValue={defaultValue}
-          min={0}
-          name={name}
-          onChange={(event) => onChange?.(event.target.value)}
-          required={required}
-          step="0.01"
-          type="number"
-        />
+        <span className="product-editor-input-affix" data-affix="start">
+          <span aria-hidden="true">{symbol}</span>
+          <input
+            defaultValue={defaultValue}
+            min={0}
+            name={name}
+            onChange={(event) => onChange?.(event.target.value)}
+            placeholder="0.00"
+            required={required}
+            step="0.01"
+            type="number"
+          />
+        </span>
+        {hint ? <small>{hint}</small> : null}
       </label>
     </FieldError>
   );
+}
+
+/**
+ * What the three prices add up to, said back to the seller while they type.
+ *
+ * Only arithmetic over the fields above it; nothing here is posted. The
+ * compare-at warning mirrors the storefront, which shows a was-price only when
+ * it is higher than the price, so a lower one is a sale nobody will see.
+ */
+function PricingSummary({
+  compareAtPrice,
+  costPrice,
+  currency,
+  price
+}: {
+  compareAtPrice: string;
+  costPrice: string;
+  currency: string;
+  price: string;
+}) {
+  const priceValue = parseMoney(price);
+  const compareValue = parseMoney(compareAtPrice);
+  const costValue = parseMoney(costPrice);
+  const items: Array<{ label: string; tone?: "bad" | "good" | undefined; value: string }> = [];
+
+  if (priceValue !== null && compareValue !== null && compareValue > 0) {
+    if (compareValue > priceValue) {
+      items.push({
+        label: "Discount shown",
+        tone: "good",
+        value: `${formatPercent(((compareValue - priceValue) / compareValue) * 100)} off`
+      });
+    } else {
+      items.push({
+        label: "Discount shown",
+        tone: "bad",
+        value: "None — compare-at must be higher than the price"
+      });
+    }
+  }
+
+  if (priceValue !== null && costValue !== null) {
+    const profit = priceValue - costValue;
+
+    items.push({
+      label: profit < 0 ? "Loss per sale" : "Profit per sale",
+      tone: profit < 0 ? "bad" : "good",
+      value: formatMoneyValue(Math.abs(profit), currency)
+    });
+
+    if (priceValue > 0) {
+      items.push({
+        label: "Margin",
+        tone: profit < 0 ? "bad" : undefined,
+        value: formatPercent((profit / priceValue) * 100)
+      });
+    }
+  }
+
+  if (items.length === 0) {
+    return (
+      <p className="product-editor-hint">
+        Enter a price and a cost price to see your profit and margin on each sale.
+      </p>
+    );
+  }
+
+  return (
+    <dl aria-live="polite" className="product-pricing-summary">
+      {items.map((item) => (
+        <div data-tone={item.tone} key={item.label}>
+          <dt>{item.label}</dt>
+          <dd>{item.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function parseMoney(value: string) {
+  if (!value.trim()) {
+    return null;
+  }
+
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+function formatPercent(value: number) {
+  return `${Number(value.toFixed(1))}%`;
+}
+
+function formatMoneyValue(value: number, currency: string) {
+  try {
+    return new Intl.NumberFormat("en", {
+      currency,
+      currencyDisplay: "narrowSymbol",
+      maximumFractionDigits: 2,
+      style: "currency"
+    }).format(value);
+  } catch {
+    return `${currency} ${value.toFixed(2)}`;
+  }
+}
+
+/** "৳" for BDT; the code itself for anything the browser has no symbol for. */
+function currencySymbolFor(currency: string) {
+  try {
+    return (
+      new Intl.NumberFormat("en", { currency, currencyDisplay: "narrowSymbol", style: "currency" })
+        .formatToParts(0)
+        .find((part) => part.type === "currency")?.value ?? currency
+    );
+  } catch {
+    return currency;
+  }
 }
 
 /** A Date, a string, or nothing, as the browsers  date input wants it. */

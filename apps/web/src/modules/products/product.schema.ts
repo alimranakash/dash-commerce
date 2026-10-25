@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { normalizeSlug } from "../../lib/slug";
+import { optionalBarcodeSchema } from "../barcodes/barcode.schema";
 import { productDescriptionText } from "./product-description";
 
 export const productStatusSchema = z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]);
@@ -59,6 +60,8 @@ const productBaseSchema = z.object({
   sku: z
     .union([z.string().trim().max(80), z.null(), z.undefined()])
     .transform((value) => value || null),
+  /** What the till's scanner reads — see modules/barcodes/. Blank clears it. */
+  barcode: optionalBarcodeSchema,
   price: moneySchema,
   compareAtPrice: optionalMoneySchema,
   costPrice: optionalMoneySchema,

@@ -41,7 +41,17 @@ export async function POST(request: NextRequest) {
       // Which basket to settle: the form says so because the checkout page was
       // opened for one of them. Narrowed to a known scope before it reaches a
       // cookie name, and every price is still read from the catalogue.
-      checkoutScope: parseCartScope(getValue(formData, "checkoutScope"))
+      checkoutScope: parseCartScope(getValue(formData, "checkoutScope")),
+      // An unticked box posts nothing, so only the box's own value is a yes.
+      loyaltyOptIn: getValue(formData, "loyaltyOptIn") === "on",
+      // A count and a token, never an amount. Anything posted that is not a
+      // count reaches the schema as NaN and is refused there, not dropped.
+      ...(getValue(formData, "loyaltyPoints")
+        ? {
+            loyaltyPoints: Number(getValue(formData, "loyaltyPoints")),
+            loyaltyToken: getValue(formData, "loyaltyToken")
+          }
+        : {})
     }, {
       ipAddress: readClientIp(request.headers)
     });

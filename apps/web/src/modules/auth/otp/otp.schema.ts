@@ -6,7 +6,13 @@ import { z } from "zod";
  * module in this repo names its own union for the same reason.
  */
 export type OtpChannel = "EMAIL" | "SMS";
-export type OtpPurpose = "CHECKOUT" | "CONTACT_CHANGE" | "LOGIN" | "PASSWORD_RESET" | "REGISTRATION";
+export type OtpPurpose =
+  | "CHECKOUT"
+  | "CONTACT_CHANGE"
+  | "LOGIN"
+  | "LOYALTY"
+  | "PASSWORD_RESET"
+  | "REGISTRATION";
 
 export const otpCodeSchema = z
   .string()

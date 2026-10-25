@@ -7,6 +7,7 @@ export const incompleteOrderFailureCodes = [
   "BLOCKED_IP",
   "COUPON",
   "EMPTY_CART",
+  "LOYALTY_POINTS",
   "ORDER_LIMIT",
   "OUT_OF_STOCK",
   "PAYMENT_REFERENCE",

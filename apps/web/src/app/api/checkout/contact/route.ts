@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { readClientIp } from "../../../../lib/request-ip";
 import { recordCheckoutDraft } from "../../../../modules/cart/cart.service";
 import { parseCartScope } from "../../../../modules/cart/cart.types";
+import { errorForLog } from "../../../../modules/notifications/notifications.redact";
 import { getStorefrontBySlug } from "../../../../modules/storefront/resolver";
 
 /**
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error("Failed to record checkout draft", error);
+    console.error(`Failed to record checkout draft: ${errorForLog(error)}`);
   }
 
   return new NextResponse(null, { status: 204 });

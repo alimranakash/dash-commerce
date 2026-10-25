@@ -1,4 +1,13 @@
 import { prisma } from "@dash/db";
+import { applySaleLoyaltyOptIn, reconcileSaleLoyalty } from "../loyalty/loyalty.sales";
+import { prepareSaleLoyalty } from "../loyalty/loyalty.service";
+import {
+  adjustProductVariantStock,
+  ensureProductVariantSchema,
+  getProductVariantForSale,
+  getProductVariantStock,
+  productHasActiveVariants
+} from "../products/product-variants.service";
 import {
   countSalesForStore,
   getSaleByIdForStore,
@@ -22,6 +31,8 @@ export type { SaleFilters };
 type SaleContext = {
   organizationId: string;
   storeId: string;
+  /** Who is saving, for the record of a customer's loyalty opt-in. */
+  userId?: string | null | undefined;
 };
 
 type PreparedSaleItem = {
@@ -32,10 +43,16 @@ type PreparedSaleItem = {
   sku?: string;
   total: string;
   unitPrice: string;
+  /** Set for a product sold by option: the line's stock is that variant's. */
+  variantId?: string;
 };
 
 export async function createSale(context: SaleContext, input: CreateSaleInput) {
   const data = createSaleSchema.parse(input);
+  // Read before the transaction, as an order's are: the store's settings and
+  // plan, never from inside it — and the variant tables' DDL with them.
+  const loyalty = await prepareSaleLoyalty(context.storeId);
+  await ensureProductVariantSchema();
 
   return prisma.$transaction(async (tx) => {
     if (data.customerId) {
@@ -81,12 +98,19 @@ export async function createSale(context: SaleContext, input: CreateSaleInput) {
       await decreaseProductStock(tx, context.organizationId, context.storeId, sale.id, items);
     }
 
+    // The opt-in, then the points, in the sale's own transaction: a sale and
+    // what it earned commit together or not at all.
+    await applySaleLoyaltyOptIn(tx, context.storeId, saleOptIn(context, sale.id, data), loyalty);
+    await reconcileSaleLoyalty(tx, context.storeId, sale.id, loyalty);
+
     return sale;
   });
 }
 
 export async function updateSale(context: SaleContext, saleId: string, input: UpdateSaleInput) {
   const data = updateSaleSchema.parse(input);
+  const loyalty = await prepareSaleLoyalty(context.storeId);
+  await ensureProductVariantSchema();
 
   return prisma.$transaction(async (tx) => {
     const existing = await tx.sale.findFirst({
@@ -157,11 +181,19 @@ export async function updateSale(context: SaleContext, saleId: string, input: Up
       await decreaseProductStock(tx, context.organizationId, context.storeId, sale.id, items);
     }
 
+    // Every edit reconciles — status, payment, items, discount, customer and
+    // the opt-in all move what the sale should have earned.
+    await applySaleLoyaltyOptIn(tx, context.storeId, saleOptIn(context, sale.id, data), loyalty);
+    await reconcileSaleLoyalty(tx, context.storeId, sale.id, loyalty);
+
     return sale;
   });
 }
 
 export async function voidSale(context: SaleContext, saleId: string) {
+  const loyalty = await prepareSaleLoyalty(context.storeId);
+  await ensureProductVariantSchema();
+
   return prisma.$transaction(async (tx) => {
     const existing = await tx.sale.findFirst({
       where: {
@@ -192,8 +224,25 @@ export async function voidSale(context: SaleContext, saleId: string) {
       }
     });
 
+    // A cancelled sale gives back what it earned — even with the programme
+    // or the plan switched off since, as a cancelled order does.
+    await reconcileSaleLoyalty(tx, context.storeId, saleId, loyalty);
+
     return true;
   });
+}
+
+function saleOptIn(
+  context: SaleContext,
+  saleId: string,
+  data: { customerId?: string | undefined; loyaltyOptIn: "in" | "keep" | "out" }
+) {
+  return {
+    choice: data.loyaltyOptIn,
+    customerId: data.customerId ?? null,
+    saleId,
+    userId: context.userId ?? null
+  };
 }
 
 async function createSaleNumber(storeId: string) {
@@ -249,15 +298,33 @@ async function prepareItems(tx: TransactionClient, storeId: string, items: SaleI
     const unitPriceCents = moneyToCents(item.unitPrice);
     const discountCents = Math.min(moneyToCents(item.discount), unitPriceCents * item.quantity);
     const totalCents = Math.max(unitPriceCents * item.quantity - discountCents, 0);
-
-    prepared.push({
+    const line = {
       discount: centsToMoney(discountCents),
       productId: product.id,
-      productName: product.title,
       quantity: item.quantity,
-      ...(product.sku ? { sku: product.sku } : {}),
       total: centsToMoney(totalCents),
       unitPrice: centsToMoney(unitPriceCents)
+    };
+
+    // A product sold by option is only ever sold as one of them — its stock
+    // lives on the variants, as checkout and order entry already keep it.
+    if (!(await productHasActiveVariants(tx, storeId, product.id))) {
+      prepared.push({ ...line, productName: product.title, ...(product.sku ? { sku: product.sku } : {}) });
+      continue;
+    }
+
+    if (!item.variantId) {
+      throw new Error(`Choose which option of ${product.title} was sold.`);
+    }
+
+    const variant = await getProductVariantForSale(tx, storeId, product.id, item.variantId);
+    const sku = variant.sku ?? product.sku;
+
+    prepared.push({
+      ...line,
+      productName: `${product.title} - ${variant.title}`,
+      ...(sku ? { sku } : {}),
+      variantId: variant.id
     });
   }
 
@@ -299,6 +366,37 @@ async function decreaseProductStock(
   items: PreparedSaleItem[]
 ) {
   for (const item of items) {
+    if (item.variantId) {
+      // The rule checkout's decrement uses: an option set to keep selling past
+      // zero may go under, any other may not.
+      const variant = await getProductVariantForSale(tx, storeId, item.productId, item.variantId);
+
+      if (!variant.continueSelling && variant.stockQuantity < item.quantity) {
+        throw new Error(`${item.productName} does not have enough stock.`);
+      }
+
+      if ((await adjustProductVariantStock(tx, storeId, item.productId, item.variantId, -item.quantity)) !== 1) {
+        throw new Error(`${item.productName} does not have enough stock.`);
+      }
+      await tx.stockMovement.create({
+        data: {
+          createdBy: null,
+          newQuantity: variant.stockQuantity - item.quantity,
+          notes: `Option ${variant.title} — the quantities are the option's own stock.`,
+          organizationId,
+          previousQuantity: variant.stockQuantity,
+          productId: item.productId,
+          quantityChange: -item.quantity,
+          reason: "Sale completed",
+          sourceId: saleId,
+          sourceType: "SALE",
+          storeId,
+          type: "STOCK_OUT"
+        }
+      });
+      continue;
+    }
+
     const product = await tx.product.findFirst({
       where: {
         id: item.productId,
@@ -351,9 +449,41 @@ async function restoreProductStock(
   organizationId: string,
   storeId: string,
   saleId: string,
-  items: Array<{ productId: string; quantity: number }>
+  items: Array<{ productId: string; quantity: number; variantId?: string | null | undefined }>
 ) {
   for (const item of items) {
+    // A line that took stock from an option gives it back there; a line written
+    // before options were tracked on sales took it from the product, and gives
+    // it back to the product below.
+    if (item.variantId) {
+      const variant = await getProductVariantStock(tx, storeId, item.productId, item.variantId);
+
+      // The option was deleted since. There is no shelf to put it back on, and
+      // refusing the edit over it would strand the sale — as order editing does.
+      if (!variant) {
+        continue;
+      }
+
+      await adjustProductVariantStock(tx, storeId, item.productId, item.variantId, item.quantity);
+      await tx.stockMovement.create({
+        data: {
+          createdBy: null,
+          newQuantity: variant.stockQuantity + item.quantity,
+          notes: `Option ${variant.title} — the quantities are the option's own stock.`,
+          organizationId,
+          previousQuantity: variant.stockQuantity,
+          productId: item.productId,
+          quantityChange: item.quantity,
+          reason: "Sale stock restored",
+          sourceId: saleId,
+          sourceType: "SALE",
+          storeId,
+          type: "STOCK_IN"
+        }
+      });
+      continue;
+    }
+
     const product = await tx.product.findFirst({
       where: {
         id: item.productId,

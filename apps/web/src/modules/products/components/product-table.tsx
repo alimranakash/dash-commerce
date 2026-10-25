@@ -66,6 +66,7 @@ export function ProductTable({ currency, products, storeSlug }: ProductTableProp
           <span className="mr-auto text-xs font-medium text-[#5b31db]">{selectedIds.size} selected</span>
           <select aria-label="Bulk status action" className="h-9 rounded-lg border border-[#d9d3ef] bg-white px-3 text-xs outline-none" disabled={isPending} onChange={(event) => setBulkStatus(event.target.value as ProductListItem["status"])} value={bulkStatus}><option value="ACTIVE">Move to Live</option><option value="DRAFT">Move to Draft</option><option value="ARCHIVED">Move to Trash</option></select>
           <button className="h-9 rounded-lg bg-[#7c3aed] px-4 text-xs font-semibold text-white disabled:opacity-60" disabled={isPending} onClick={applyBulkStatus} type="button">{isPending ? "Updating..." : "Apply"}</button>
+          <Link className="inline-flex h-9 items-center rounded-lg border border-[#d9d3ef] bg-white px-4 text-xs font-semibold text-[#5b31db]" href={`/dashboard/products/barcodes?ids=${[...selectedIds].join(",")}`}>Print labels</Link>
         </div>
       ) : null}
       {error ? <p className="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p> : null}

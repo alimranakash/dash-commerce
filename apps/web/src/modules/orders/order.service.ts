@@ -1,11 +1,14 @@
 import { assessOrdersForCustomerSafely } from "../fake-orders/fake-order.assessment";
 import { normalizePhoneKey } from "../fake-orders/fake-order.rules";
 import { prisma } from "@dash/db";
+import { reconcileOrderLoyalty } from "../loyalty/loyalty.orders";
+import { prepareOrderLoyalty, runWithOrderLoyalty } from "../loyalty/loyalty.service";
 import { getPaymentMethods } from "../payments/payment.service";
 import { assertOrderItemsEditable, replaceOrderItems } from "./order-edit.service";
 import {
   getOrderByIdForStore,
   getOrderEditableDetailsForStore,
+  getOrderFixedDiscountsForStore,
   getOrderPageForStore,
   getOrderRiskKeyForStore,
   getOrderSubtotalForStore,
@@ -40,10 +43,17 @@ type PaymentStatusUpdate = "PAID";
  * buttons change. Delivery progress lives on the shipment and is projected onto
  * fulfillmentStatus by the courier layer, so marking an order completed no
  * longer claims it was delivered.
+ *
+ * The status and the order's loyalty points move in one transaction: COMPLETED
+ * is the only status that earns, and the status write is what locks the order
+ * row the reconciliation then reads. No transition is assumed valid — the
+ * points are brought into line with wherever the order ends up.
  */
 export async function updateOrderStatus(storeId: string, orderId: string, status: OrderStatusUpdate) {
   const before = await getOrderRiskKeyForStore(storeId, orderId);
-  const result = await updateOrderStatusForStore(storeId, orderId, status);
+  const result = await runWithOrderLoyalty(storeId, orderId, (tx) =>
+    updateOrderStatusForStore(storeId, orderId, status, tx)
+  );
 
   // "Multiple cancelled orders" is counted across the customer's whole history,
   // so crossing the CANCELLED boundary in either direction re-scores its siblings.
@@ -91,7 +101,8 @@ export async function updateOrderPaymentStatus(storeId: string, orderId: string,
 async function resolveEditedMoney(
   storeId: string,
   data: UpdateOrderDetailsInput,
-  subtotalAmount: string
+  subtotalAmount: string,
+  fixed: { bundleDiscountAmount: string; loyaltyDiscountAmount: string }
 ) {
   const paymentMethod = (await getPaymentMethods(storeId)).find(
     (method) => method.type === data.paymentMethod
@@ -103,14 +114,23 @@ async function resolveEditedMoney(
 
   const shippingAmount = data.shippingAmount ?? "0.00";
   const discountAmount = data.discountAmount ?? "0.00";
+  // The bundle saving and the points discount are not the seller's to edit
+  // here: the points behind one are a ledger debit, and both were the price
+  // the customer agreed to. They stay exactly as placed and the total is
+  // worked out around them — which also ends the edit that silently dropped
+  // the bundle saving and charged the customer more.
   const totalAmount = (
     Number(subtotalAmount) +
     Number(shippingAmount) -
-    Number(discountAmount)
+    Number(discountAmount) -
+    Number(fixed.bundleDiscountAmount) -
+    Number(fixed.loyaltyDiscountAmount)
   ).toFixed(2);
 
   if (Number(totalAmount) < 0) {
-    throw new Error("The discount is larger than the order total.");
+    throw new Error(
+      "The discounts are larger than the order total. Lower the discount or keep more items on the order."
+    );
   }
 
   return {
@@ -146,6 +166,9 @@ export async function updateOrderDetails(
     await assertOrderItemsEditable(storeId, orderId);
   }
 
+  // A corrected basket or discount on a completed order changes what it earns,
+  // so the points are reconciled in the same transaction as the correction.
+  const loyalty = await prepareOrderLoyalty(storeId);
   const order = await prisma.$transaction(async (tx) => {
     const subtotalAmount = items
       ? (await replaceOrderItems(tx, storeId, orderId, items)).subtotalAmount
@@ -155,9 +178,21 @@ export async function updateOrderDetails(
       return null;
     }
 
-    const money = await resolveEditedMoney(storeId, data, String(subtotalAmount));
+    const fixed = await getOrderFixedDiscountsForStore(tx, storeId, orderId);
 
-    return updateOrderDetailsForStore(tx, storeId, orderId, data, money);
+    if (!fixed) {
+      return null;
+    }
+
+    const money = await resolveEditedMoney(storeId, data, String(subtotalAmount), {
+      bundleDiscountAmount: fixed.bundleDiscountAmount.toString(),
+      loyaltyDiscountAmount: fixed.loyaltyDiscountAmount.toString()
+    });
+    const updated = await updateOrderDetailsForStore(tx, storeId, orderId, data, money);
+
+    await reconcileOrderLoyalty(tx, storeId, orderId, loyalty);
+
+    return updated;
   });
 
   if (!order) {
