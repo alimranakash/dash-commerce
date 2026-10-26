@@ -1,4 +1,4 @@
-import { CalendarClock, Edit3, PackageCheck, Trash2, UserRound, WalletCards } from "lucide-react";
+import { CalendarClock, Edit3, PackageCheck, Printer, Trash2, UserRound, WalletCards } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ComponentType } from "react";
@@ -6,6 +6,7 @@ import { DeleteConfirmationButton } from "../../../../components/dashboard/delet
 import { DashboardShell } from "../../../../components/dashboard/dashboard-shell";
 import { SalePaymentStatusBadge, SaleStatusBadge, saleTypeLabel } from "../../../../modules/sales/components/sale-badges";
 import { paymentMethodLabel } from "../../../../modules/sales/components/sale-list";
+import { receiptHref } from "../../../../modules/sales/sale-receipt";
 import { voidSaleAction } from "../../../../modules/sales/sale.actions";
 import { getSaleByIdForStore } from "../../../../modules/sales/sale.service";
 import { requireStore } from "../../../../modules/stores/queries";
@@ -34,6 +35,9 @@ export default async function SaleDetailsPage({ params, searchParams }: SaleDeta
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Link className="secondary link-button min-h-10" href="/dashboard/sales">Back to Sales</Link>
+            <Link className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#ddd6fe] bg-white px-4 text-xs font-semibold text-[#6d3cf5]" href={receiptHref(sale.id)}>
+              <Printer className="h-3.5 w-3.5" /> {sale.status === "COMPLETED" ? "Print receipt" : "View receipt"}
+            </Link>
             <Link className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#ddd6fe] bg-white px-4 text-xs font-semibold text-[#6d3cf5]" href={`/dashboard/sales/${sale.id}/edit`}>
               <Edit3 className="h-3.5 w-3.5" /> Edit
             </Link>

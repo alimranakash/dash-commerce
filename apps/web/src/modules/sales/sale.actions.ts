@@ -12,6 +12,7 @@ import { enrollCustomerAtCounter } from "../loyalty/loyalty.service";
 import { errorForLog } from "../notifications/notifications.redact";
 import { requireStore } from "../stores/queries";
 import { toSaleCustomerOption, type SaleCustomerOption } from "./sale-customer";
+import { receiptHref } from "./sale-receipt";
 import { createSale, updateSale, voidSale } from "./sale.service";
 import type { CreateSaleInput } from "./sale.schema";
 
@@ -22,21 +23,36 @@ export type SaleActionState = {
   fieldErrors?: Record<string, string>;
 };
 
+/**
+ * A completed sale goes on to its receipt — the counter's next screen, with
+ * Print and New sale on it — rather than back to the list; a draft or any
+ * other status goes to the list as before. Both happen only after `createSale`
+ * has committed, so nothing can be printed for a sale that was not saved, and
+ * the receipt page only reads it, so printing can never save it twice.
+ * "Complete & print receipt" posts `intent=print`, which also opens the
+ * dialog once on arrival.
+ */
 export async function createSaleFormAction(
   _state: SaleActionState,
   formData: FormData
 ): Promise<SaleActionState> {
   const store = await requireStore();
+  let sale: { id: string; status: string };
 
   try {
     await requirePlanFeature(store.id, "sales");
-    await createSale(await contextFromStore(store), saleInputFromFormData(formData));
+    sale = await createSale(await contextFromStore(store), saleInputFromFormData(formData));
   } catch (error) {
     return saleErrorState(error);
   }
 
   revalidatePath("/dashboard/sales");
   revalidatePath("/dashboard/products");
+
+  if (sale.status === "COMPLETED") {
+    redirect(receiptHref(sale.id, { completed: true, print: wantsPrint(formData) }));
+  }
+
   redirect("/dashboard/sales?created=1");
 }
 
@@ -46,6 +62,7 @@ export async function updateSaleFormAction(
   formData: FormData
 ): Promise<SaleActionState> {
   const store = await requireStore();
+  let status: string;
 
   try {
     await requirePlanFeature(store.id, "sales");
@@ -58,6 +75,8 @@ export async function updateSaleFormAction(
     if (!sale) {
       return { message: "Sale not found.", status: "error" };
     }
+
+    status = sale.status;
   } catch (error) {
     return saleErrorState(error);
   }
@@ -65,6 +84,11 @@ export async function updateSaleFormAction(
   revalidatePath("/dashboard/sales");
   revalidatePath(`/dashboard/sales/${saleId}`);
   revalidatePath("/dashboard/products");
+
+  if (status === "COMPLETED" && wantsPrint(formData)) {
+    redirect(receiptHref(saleId, { print: true }));
+  }
+
   redirect(`/dashboard/sales/${saleId}?updated=1`);
 }
 
@@ -269,6 +293,11 @@ function saleInputFromFormData(formData: FormData): CreateSaleInput {
     status: stringValue(formData.get("status")) as CreateSaleInput["status"],
     tax: stringValue(formData.get("tax")) || "0"
   };
+}
+
+/** The "Complete & print receipt" button: a submitter value, never a field the sale stores. */
+function wantsPrint(formData: FormData) {
+  return formData.get("intent") === "print";
 }
 
 async function contextFromStore(store: { id: string; organizationId: string }) {

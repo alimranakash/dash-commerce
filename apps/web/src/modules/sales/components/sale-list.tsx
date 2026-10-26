@@ -1,11 +1,12 @@
-import { Edit3, Eye, Plus, RotateCcw, Search, Trash2 } from "lucide-react";
+import { Edit3, Eye, Plus, Printer, RotateCcw, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { DeleteConfirmationButton } from "../../../components/dashboard/delete-confirmation-button";
 import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
+import { receiptHref, SALE_PAYMENT_METHOD_LABELS } from "../sale-receipt";
 import { voidSaleAction } from "../sale.actions";
 import type { SalePaymentMethod, SalePaymentStatus, SaleStatus, SaleType } from "../sale.schema";
-import { SalePaymentStatusBadge, SaleStatusBadge, saleTypeLabel, title } from "./sale-badges";
+import { SalePaymentStatusBadge, SaleStatusBadge, saleTypeLabel } from "./sale-badges";
 
 type SaleListItem = {
   customer: { name: string; phone: string } | null;
@@ -121,6 +122,7 @@ export function SaleList({ currency, dateFrom, dateTo, filters, message, metrics
                       <td className="px-4 py-5">
                         <div className="catalog-row-actions">
                           <Link aria-label={`View ${sale.saleNumber}`} href={`/dashboard/sales/${sale.id}`} title="View sale"><Eye aria-hidden="true" /></Link>
+                          <Link aria-label={`Receipt for ${sale.saleNumber}`} href={receiptHref(sale.id)} title="Print receipt"><Printer aria-hidden="true" /></Link>
                           <Link aria-label={`Edit ${sale.saleNumber}`} href={`/dashboard/sales/${sale.id}/edit`} title="Edit sale"><Edit3 aria-hidden="true" /></Link>
                           <DeleteConfirmationButton action={voidSaleAction.bind(null, sale.id)} ariaLabel={`Void ${sale.saleNumber}`} title="Void sale"><Trash2 aria-hidden="true" /></DeleteConfirmationButton>
                         </div>
@@ -150,7 +152,7 @@ function MetricCard({ label, value }: { label: string; value: string }) {
 }
 
 export function paymentMethodLabel(value: SalePaymentMethod) {
-  return title(value);
+  return SALE_PAYMENT_METHOD_LABELS[value];
 }
 
 function formatDate(value: Date) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@dash/ui";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Minus, Plus, Printer, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
@@ -392,6 +392,13 @@ export function SaleForm({ action, cancelHref, currency, customers, loyaltyLive,
               <Button className="primary action-button w-full" disabled={isPending} type="submit">
                 {isPending ? "Saving..." : SAVE_LABELS[status]}
               </Button>
+              {/* The same save, then straight to the receipt with the print dialog open. */}
+              {status === "COMPLETED" ? (
+                <Button className="secondary action-button inline-flex w-full items-center justify-center gap-2" disabled={isPending} name="intent" type="submit" value="print">
+                  <Printer aria-hidden="true" className="h-4 w-4" />
+                  {sale ? "Save & print receipt" : "Complete & print receipt"}
+                </Button>
+              ) : null}
               <Link className="justify-self-center text-xs font-semibold" href={cancelHref}>
                 Cancel
               </Link>
