@@ -1,10 +1,12 @@
 import type { StoreVariantOption } from "../products/product-variants.service";
+import type { SaleProductOption } from "./sale-scan";
 
 type SaleCatalogProduct = {
   barcode: string | null;
   id: string;
   price: { toString(): string };
   sku: string | null;
+  status: string;
   stockQuantity: number;
   title: string;
 };
@@ -14,14 +16,17 @@ type SaleCatalogProduct = {
  * share it so the two cannot disagree about what can be sold. Each product
  * carries its active options: a product with any is sold as one of them, at
  * that option's price and from its stock, and each option's barcode is what
- * the scanner matches. Nothing here is a cost price or anything else the
- * counter has no use for.
+ * the scanner matches. Drafts are sold like any other product, as the label
+ * page prints them, because a shop that sells only at the counter keeps its
+ * catalogue off the storefront; the trash is flagged so a scan refuses it.
+ * Nothing here is a cost price or anything else the counter has no use for.
  */
 export function toSaleProductOptions(
   products: SaleCatalogProduct[],
   variantsByProduct: Map<string, StoreVariantOption[]>
-) {
+): SaleProductOption[] {
   return products.map((product) => ({
+    archived: product.status === "ARCHIVED",
     barcode: product.barcode,
     id: product.id,
     price: product.price.toString(),

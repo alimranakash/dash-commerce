@@ -3,13 +3,22 @@
 import { ScanLine } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import { EMPTY_WEDGE, feedWedgeKey } from "../../barcodes/barcode.scan";
+import type { SaleScanFeedback } from "../sale-scan";
 
-export type SaleScanFeedback = { message: string; tone: "error" | "ok" | "warn" };
+/** Where a scan arrived: typed into the scan box, or picked out of keys aimed elsewhere on the page. */
+export type SaleScanOrigin = "box" | "page";
 
 type SaleScanBoxProps = {
   /** The sale form: a scan typed into one of its fields is taken back out of it. */
   formRef: RefObject<HTMLFormElement | null>;
-  onScan: (code: string) => SaleScanFeedback;
+  /**
+   * A burst of keys aimed somewhere other than the scan box has begun. If it
+   * turns out to be a scan, whatever it did on the way through — a quantity
+   * typed over, a product list's type-ahead — is undone, so the form keeps
+   * what it had at this moment.
+   */
+  onBurstStart?: (() => void) | undefined;
+  onScan: (code: string, origin: SaleScanOrigin) => SaleScanFeedback;
 };
 
 /**
@@ -17,8 +26,8 @@ type SaleScanBoxProps = {
  *
  * Focused when the page opens and again after every scan, so the cashier's
  * whole job is pointing the scanner: each code lands here, ends in the
- * scanner's own Enter, and becomes a line on the sale. A code typed by hand
- * and Enter does the same.
+ * scanner's own Enter (or Tab, the other suffix scanners are set up with), and
+ * becomes a line on the sale. A code typed by hand and Enter does the same.
  *
  * Focus does wander — a click on a button, a quantity corrected by hand — so
  * the page also listens for the scanner itself (see `feedWedgeKey`). A scan
@@ -27,24 +36,31 @@ type SaleScanBoxProps = {
  * was before the burst began, so a quantity box does not keep a thirteen-digit
  * quantity and a product dropdown does not keep whatever its type-ahead jumped
  * to. Its Enter never reaches the field either, so it cannot submit the sale
- * or pick a customer.
+ * or pick a customer. Typing at a person's speed is never touched.
+ *
+ * The notes box, fields outside the form and open dialogs are left alone
+ * entirely — the hint beside the box says "paused" there, as it does when the
+ * browser itself is not focused and no key reaches the page at all.
  */
-export function SaleScanBox({ formRef, onScan }: SaleScanBoxProps) {
+export function SaleScanBox({ formRef, onBurstStart, onScan }: SaleScanBoxProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const onScanRef = useRef(onScan);
+  const onBurstStartRef = useRef(onBurstStart);
   const [value, setValue] = useState("");
   const [feedback, setFeedback] = useState<SaleScanFeedback | null>(null);
+  const [ready, setReady] = useState(true);
 
   useLayoutEffect(() => {
     onScanRef.current = onScan;
+    onBurstStartRef.current = onBurstStart;
   });
 
-  const scan = useCallback((code: string) => {
+  const scan = useCallback((code: string, origin: SaleScanOrigin) => {
     if (!code.trim()) {
       return;
     }
 
-    const result = onScanRef.current(code);
+    const result = onScanRef.current(code, origin);
 
     setFeedback(result);
 
@@ -61,25 +77,25 @@ export function SaleScanBox({ formRef, onScan }: SaleScanBoxProps) {
     function onKeyDown(event: globalThis.KeyboardEvent) {
       const target = event.target;
 
-      if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing || target === inputRef.current) {
+      if (
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        event.isComposing ||
+        target === inputRef.current ||
+        !takesScans(target, formRef.current)
+      ) {
         state = EMPTY_WEDGE;
         return;
       }
 
       const field = restorableField(target);
-
-      // Typing in a field elsewhere on the page — a notes box, a dialog — is
-      // not this form's business, and nor is any multi-line text.
-      if ((field && !formRef.current?.contains(field)) || isFreeText(target)) {
-        state = EMPTY_WEDGE;
-        return;
-      }
-
       const fed = feedWedgeKey(state, event.key, event.timeStamp);
 
       if (event.key.length === 1 && fed.state.buffer.length === 1) {
         burstField = field;
         burstOriginal = field?.value ?? "";
+        onBurstStartRef.current?.();
       }
 
       state = fed.state;
@@ -93,12 +109,14 @@ export function SaleScanBox({ formRef, onScan }: SaleScanBoxProps) {
       event.preventDefault();
       event.stopPropagation();
 
-      if (burstField && burstField === field) {
+      // Only a field the burst actually changed: a change event on an
+      // untouched product list would re-pick its product and clear the option.
+      if (burstField && burstField === field && field.value !== burstOriginal) {
         restoreValue(burstField, burstOriginal);
       }
 
       burstField = null;
-      scan(fed.scanned);
+      scan(fed.scanned, "page");
       inputRef.current?.focus();
     }
 
@@ -107,14 +125,37 @@ export function SaleScanBox({ formRef, onScan }: SaleScanBoxProps) {
     return () => document.removeEventListener("keydown", onKeyDown, true);
   }, [formRef, scan]);
 
-  function submitOnEnter(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key !== "Enter") {
+  useEffect(() => {
+    function update() {
+      setReady(document.hasFocus() && takesScans(document.activeElement, formRef.current));
+    }
+
+    update();
+    document.addEventListener("focusin", update);
+    document.addEventListener("focusout", update);
+    window.addEventListener("focus", update);
+    window.addEventListener("blur", update);
+
+    return () => {
+      document.removeEventListener("focusin", update);
+      document.removeEventListener("focusout", update);
+      window.removeEventListener("focus", update);
+      window.removeEventListener("blur", update);
+    };
+  }, [formRef]);
+
+  function takeScan(event: KeyboardEvent<HTMLInputElement>) {
+    const code = event.currentTarget.value;
+
+    // Enter here is a product, never the whole sale; a Tab after a code is a
+    // scanner's suffix, not a move to the next field. Tab in an empty box
+    // still moves on, for a cashier who is using the keyboard.
+    if (event.key !== "Enter" && !(event.key === "Tab" && !event.shiftKey && code.trim())) {
       return;
     }
 
-    // Enter here is a product, never the whole sale.
     event.preventDefault();
-    scan(value);
+    scan(code, "box");
     setValue("");
   }
 
@@ -126,15 +167,22 @@ export function SaleScanBox({ formRef, onScan }: SaleScanBoxProps) {
         <input
           autoComplete="off"
           autoFocus
-          className="h-11 w-full border-0 bg-transparent font-mono text-sm outline-none"
+          className="h-11 w-full min-w-0 border-0 bg-transparent font-mono text-sm outline-none"
           onChange={(event) => setValue(event.target.value)}
-          onKeyDown={submitOnEnter}
+          onKeyDown={takeScan}
           placeholder="Scan a barcode — or type a barcode or SKU and press Enter"
           ref={inputRef}
           spellCheck={false}
           type="text"
           value={value}
         />
+        {/* Inside the label, so clicking a paused hint focuses the box. */}
+        <span
+          className={`shrink-0 whitespace-nowrap text-[11px] font-semibold ${ready ? "text-emerald-700" : "text-amber-700"}`}
+        >
+          <span aria-hidden="true">● </span>
+          {ready ? "Scanner ready" : "Paused — click to scan"}
+        </span>
       </label>
       <p
         aria-live="polite"
@@ -150,6 +198,27 @@ export function SaleScanBox({ formRef, onScan }: SaleScanBoxProps) {
 type RestorableField = HTMLInputElement | HTMLSelectElement;
 
 const NON_TEXT_INPUTS = new Set(["button", "checkbox", "color", "file", "hidden", "image", "radio", "range", "reset", "submit"]);
+
+const DIALOG_SELECTOR = 'dialog, [role="dialog"], [role="alertdialog"], [aria-modal="true"]';
+
+/**
+ * Whether keys aimed at `target` may be a scan for this sale: anywhere in the
+ * form, on a button or on nothing at all — but never in free text, a field
+ * that belongs to something else on the page, or a dialog open over the sale.
+ */
+function takesScans(target: EventTarget | null, form: HTMLFormElement | null) {
+  if (target instanceof Element && target.closest(DIALOG_SELECTOR)) {
+    return false;
+  }
+
+  if (isFreeText(target)) {
+    return false;
+  }
+
+  const field = restorableField(target);
+
+  return !field || Boolean(form?.contains(field));
+}
 
 /** A field a scanner's keystrokes can change, and so one worth putting back. */
 function restorableField(target: EventTarget | null): RestorableField | null {
