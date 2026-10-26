@@ -1,9 +1,9 @@
 "use client";
 
 import { Button } from "@dash/ui";
-import { Plus, Trash2 } from "lucide-react";
+import { Minus, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useActionState, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import type { SaleActionState } from "../sale.actions";
 import type { SaleCustomerOption } from "../sale-customer";
@@ -11,9 +11,11 @@ import {
   buildSaleScanCatalogue,
   emptySaleLine,
   formatSaleMoney,
+  lineStock,
   ringUpScan,
   stockHeldBySale,
   type SaleLine,
+  type SaleLineStock,
   type SaleProductOption
 } from "../sale-scan";
 import type { SalePaymentMethod, SaleStatus, SaleType } from "../sale.schema";
@@ -51,10 +53,33 @@ const initialState: SaleActionState = {
   status: "idle"
 };
 
+/**
+ * Save says what it will do, because the status decides whether stock moves —
+ * a cashier who leaves the default and presses "Save Sale" would otherwise
+ * record a draft and wonder why nothing left the shelf.
+ */
+const SAVE_LABELS: Record<SaleStatus, string> = {
+  CANCELLED: "Save as cancelled",
+  COMPLETED: "Complete sale",
+  DRAFT: "Save as draft",
+  RETURNED: "Save as returned"
+};
+
+const STATUS_NOTES: Partial<Record<SaleStatus, string>> = {
+  COMPLETED: "Completing takes the items out of stock.",
+  DRAFT: "A draft takes nothing out of stock until it is completed."
+};
+
 function emptyItem() {
   return emptySaleLine(crypto.randomUUID());
 }
 
+/**
+ * The sale counter, for a new sale and an edited one. The cart and its scan
+ * box lead; customer, payment and the total sit beside it, the total's card
+ * following the cashier down a long cart (see `.sale-pos-layout`). Every field
+ * posts under the same name it always has, so the action is untouched.
+ */
 export function SaleForm({ action, cancelHref, currency, customers, loyaltyLive, products, sale }: SaleFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState);
   const { openUpgrade } = useUpgradePrompt();
@@ -68,6 +93,8 @@ export function SaleForm({ action, cancelHref, currency, customers, loyaltyLive,
   const [tax, setTax] = useState(sale?.tax ?? "0.00");
   const [shipping, setShipping] = useState(sale?.shipping ?? "0.00");
   const [paidAmount, setPaidAmount] = useState(sale?.paidAmount ?? "0.00");
+  const [status, setStatus] = useState<SaleStatus>(sale?.status ?? "DRAFT");
+  const paidId = useId();
   const scanCatalogue = useMemo(
     () => buildSaleScanCatalogue(products, currency, stockHeldBySale(sale)),
     [currency, products, sale]
@@ -75,6 +102,7 @@ export function SaleForm({ action, cancelHref, currency, customers, loyaltyLive,
   const productMap = scanCatalogue.products;
   const formRef = useRef<HTMLFormElement>(null);
   const totals = useMemo(() => calculateTotals(items, discount, tax, shipping, paidAmount), [discount, items, paidAmount, shipping, tax]);
+  const itemCount = items.reduce((count, item) => count + (item.productId ? item.quantity : 0), 0);
   // The lines as of the last scan, so one scan straight after another always
   // counts the first — never a render behind it.
   const linesRef = useRef(items);
@@ -143,176 +171,271 @@ export function SaleForm({ action, cancelHref, currency, customers, loyaltyLive,
   }
 
   return (
-    <form action={formAction} className="resource-form compact-form catalog-create-form" onKeyDown={keepEnterFromSaving} ref={formRef}>
-      {state.status === "error" && !state.lockedFeature ? <p className="form-error">{state.message}</p> : null}
-      <div className="form-grid">
-        <FieldError errors={state.fieldErrors} name="customerId">
-          <SaleCustomerPicker
-            customers={customers}
-            defaultCustomerId={sale?.customerId ?? null}
-            defaultOptedIn={sale?.loyaltyOptedIn === true}
-            programmeLive={loyaltyLive}
+    <form action={formAction} className="product-editor-form sale-pos" onKeyDown={keepEnterFromSaving} ref={formRef}>
+      <div className="sale-pos-layout">
+        <section className="product-editor-card sale-pos-cart">
+          <header className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2>Cart</h2>
+              <p>
+                {itemCount
+                  ? `${itemCount} ${itemCount === 1 ? "item" : "items"} · ${formatSaleMoney(totals.subtotal, currency)}`
+                  : "Scan a barcode, or pick a product below."}
+              </p>
+            </div>
+            <button className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#ddd6fe] px-3 text-xs font-semibold text-[#6d3cf5]" onClick={() => setItems((current) => [...current, emptyItem()])} type="button">
+              <Plus className="h-3.5 w-3.5" /> Add product
+            </button>
+          </header>
+          <SaleScanBox
+            formRef={formRef}
+            onBurstStart={() => {
+              burstLines.current = linesRef.current;
+            }}
+            onScan={scanProduct}
           />
-        </FieldError>
-        <FieldError errors={state.fieldErrors} name="saleType">
-          <label>
-            Sale Type
-            <select defaultValue={sale?.saleType ?? "OFFLINE"} name="saleType">
-              <option value="OFFLINE">Offline</option>
-              <option value="ONLINE">Online</option>
-            </select>
-          </label>
-        </FieldError>
-        <FieldError errors={state.fieldErrors} name="paymentMethod">
-          <label>
-            Payment Method
-            <select defaultValue={sale?.paymentMethod ?? "CASH"} name="paymentMethod">
-              <option value="CASH">Cash</option>
-              <option value="CARD">Card</option>
-              <option value="BKASH">bKash</option>
-              <option value="NAGAD">Nagad</option>
-              <option value="BANK">Bank</option>
-              <option value="COD">COD</option>
-              <option value="OTHER">Other</option>
-            </select>
-          </label>
-        </FieldError>
-        <FieldError errors={state.fieldErrors} name="saleDate">
-          <label>
-            Sale Date
-            <input defaultValue={sale?.saleDate ?? today()} name="saleDate" required type="date" />
-          </label>
-        </FieldError>
-        <FieldError errors={state.fieldErrors} name="status">
-          <label>
-            Status
-            <select defaultValue={sale?.status ?? "DRAFT"} name="status">
-              <option value="DRAFT">Draft</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="CANCELLED">Cancelled</option>
-              <option value="RETURNED">Returned</option>
-            </select>
-          </label>
-        </FieldError>
-      </div>
+          <div className="overflow-x-auto px-5 pb-5 pt-4">
+            <table className="sale-lines w-full min-w-[640px] border-collapse text-left text-xs">
+              <thead className="bg-[#f7f7fa] text-[#565762]">
+                <tr>
+                  <th className="rounded-l-lg p-3">Product</th>
+                  <th className="w-[124px] p-3">Qty</th>
+                  <th className="w-[108px] p-3">Unit price</th>
+                  <th className="w-[96px] p-3">Discount</th>
+                  <th className="w-[108px] p-3 text-right">Line total</th>
+                  <th className="w-12 rounded-r-lg p-3">
+                    <span className="sr-only">Remove</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item) => {
+                  const product = productMap.get(item.productId);
+                  const variants = product?.variants ?? [];
 
-      <section className="rounded-xl border border-[#ececf5] bg-white">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#ececf5] px-4 py-3">
-          <h2 className="m-0 text-sm font-semibold">Products</h2>
-          <button className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#ddd6fe] px-3 text-xs font-semibold text-[#6d3cf5]" onClick={() => setItems((current) => [...current, emptyItem()])} type="button">
-            <Plus className="h-3.5 w-3.5" /> Add Product
-          </button>
-        </header>
-        <SaleScanBox
-          formRef={formRef}
-          onBurstStart={() => {
-            burstLines.current = linesRef.current;
-          }}
-          onScan={scanProduct}
-        />
-        <div className="overflow-x-auto p-4">
-          <table className="w-full min-w-[860px] border-collapse text-left text-xs">
-            <thead className="bg-[#f7f7fa] text-[#565762]">
-              <tr>
-                <th className="rounded-l-lg p-3">Product</th>
-                <th className="p-3">Stock</th>
-                <th className="p-3">Qty</th>
-                <th className="p-3">Unit Price</th>
-                <th className="p-3">Discount</th>
-                <th className="p-3">Line Total</th>
-                <th className="rounded-r-lg p-3">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => {
-                const product = productMap.get(item.productId);
-                const variants = product?.variants ?? [];
-                const variant = variants.find((entry) => entry.id === item.variantId);
-
-                return (
-                  <tr className={`border-b border-[#efeff5] ${flash?.lineId === item.id ? "bg-[#f3efff]" : ""}`} key={item.id}>
-                    <td className="p-3">
-                      <div className="grid gap-2">
-                        <select name="productId" onChange={(event) => selectProduct(item.id, event.target.value)} required value={item.productId}>
-                          <option value="">Select product</option>
-                          {products.map((entry) => (
-                            <option key={entry.id} value={entry.id}>
-                              {entry.title}
-                            </option>
-                          ))}
-                        </select>
-                        {/* One per row, blank when there is nothing to choose, so the posted lists line up. */}
-                        {variants.length ? (
-                          <select
-                            aria-label={`Option of ${product?.title ?? "the product"}`}
-                            name="variantId"
-                            onChange={(event) => selectVariant(item.id, product, event.target.value)}
-                            required
-                            value={item.variantId}
-                          >
-                            <option value="">Choose option (size, colour…)</option>
-                            {variants.map((entry) => (
+                  return (
+                    <tr className={`border-b border-[#efeff5] ${flash?.lineId === item.id ? "bg-[#f3efff]" : ""}`} key={item.id}>
+                      <td className="p-3 align-top">
+                        <div className="grid gap-2">
+                          <select aria-label="Product" name="productId" onChange={(event) => selectProduct(item.id, event.target.value)} required value={item.productId}>
+                            <option value="">Select product</option>
+                            {products.map((entry) => (
                               <option key={entry.id} value={entry.id}>
-                                {entry.title} — {entry.stockQuantity} in stock
+                                {entry.title}
+                                {entry.archived ? " (in trash)" : ""}
                               </option>
                             ))}
                           </select>
-                        ) : (
-                          <input name="variantId" type="hidden" value="" />
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-3 text-[#686a76]">
-                      {variant ? variant.stockQuantity : variants.length ? "—" : (product?.stockQuantity ?? "-")}
-                    </td>
-                    <td className="p-3"><input min={1} name="quantity" onChange={(event) => updateItem(item.id, { quantity: Number(event.target.value) || 1 })} type="number" value={item.quantity} /></td>
-                    <td className="p-3"><input min={0} name="unitPrice" onChange={(event) => updateItem(item.id, { unitPrice: event.target.value })} step="0.01" type="number" value={item.unitPrice} /></td>
-                    <td className="p-3"><input min={0} name="itemDiscount" onChange={(event) => updateItem(item.id, { discount: event.target.value })} step="0.01" type="number" value={item.discount} /></td>
-                    <td className="p-3 font-semibold">{formatSaleMoney(lineTotal(item), currency)}</td>
-                    <td className="p-3"><button className="inline-grid h-8 w-8 place-items-center rounded-lg text-rose-600 hover:bg-rose-50 disabled:opacity-40" disabled={items.length === 1} onClick={() => setItems((current) => current.filter((entry) => entry.id !== item.id))} type="button"><Trash2 className="h-4 w-4" /></button></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <FieldError errors={state.fieldErrors} name="notes">
-          <label>
-            Notes
-            <textarea defaultValue={sale?.notes ?? ""} name="notes" placeholder="Internal notes" rows={6} />
-          </label>
-        </FieldError>
-        <section className="rounded-xl border border-[#ececf5] bg-[#faf9ff] p-4">
-          <h2 className="m-0 text-sm font-semibold">Sale Summary</h2>
-          <div className="mt-4 grid gap-3">
-            <AmountInput label="Order Discount" name="discount" onChange={setDiscount} value={discount} />
-            <AmountInput label="Tax" name="tax" onChange={setTax} value={tax} />
-            <AmountInput label="Shipping" name="shipping" onChange={setShipping} value={shipping} />
-            <AmountInput label="Paid Amount" name="paidAmount" onChange={setPaidAmount} value={paidAmount} />
-            <SummaryRow label="Subtotal" value={formatSaleMoney(totals.subtotal, currency)} />
-            <SummaryRow label="Total" strong value={formatSaleMoney(totals.total, currency)} />
-            <SummaryRow label="Due" strong value={formatSaleMoney(totals.due, currency)} />
+                          {/* One per row, blank when there is nothing to choose, so the posted lists line up. */}
+                          {variants.length ? (
+                            <select
+                              aria-label={`Option of ${product?.title ?? "the product"}`}
+                              name="variantId"
+                              onChange={(event) => selectVariant(item.id, product, event.target.value)}
+                              required
+                              value={item.variantId}
+                            >
+                              <option value="">Choose option (size, colour…)</option>
+                              {variants.map((entry) => (
+                                <option key={entry.id} value={entry.id}>
+                                  {entry.title} — {entry.stockQuantity} in stock
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input name="variantId" type="hidden" value="" />
+                          )}
+                          {product ? (
+                            <StockHint
+                              stock={lineStock(items, scanCatalogue, item.productId, item.variantId)}
+                              waitingForOption={variants.length > 0 && !item.variantId}
+                            />
+                          ) : null}
+                        </div>
+                      </td>
+                      <td className="p-3 align-top">
+                        <div className="sale-qty">
+                          <button aria-label="One fewer" disabled={item.quantity <= 1} onClick={() => updateItem(item.id, { quantity: Math.max(item.quantity - 1, 1) })} type="button">
+                            <Minus className="h-3.5 w-3.5" />
+                          </button>
+                          <input aria-label="Quantity" min={1} name="quantity" onChange={(event) => updateItem(item.id, { quantity: Number(event.target.value) || 1 })} type="number" value={item.quantity} />
+                          <button aria-label="One more" onClick={() => updateItem(item.id, { quantity: item.quantity + 1 })} type="button">
+                            <Plus className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                      <td className="p-3 align-top"><input aria-label="Unit price" min={0} name="unitPrice" onChange={(event) => updateItem(item.id, { unitPrice: event.target.value })} step="0.01" type="number" value={item.unitPrice} /></td>
+                      <td className="p-3 align-top"><input aria-label="Line discount" min={0} name="itemDiscount" onChange={(event) => updateItem(item.id, { discount: event.target.value })} step="0.01" type="number" value={item.discount} /></td>
+                      <td className="p-3 text-right align-top font-semibold leading-[38px] tabular-nums">{formatSaleMoney(lineTotal(item), currency)}</td>
+                      <td className="p-3 text-right align-top"><button aria-label="Remove line" className="inline-grid h-[38px] w-8 place-items-center rounded-lg text-rose-600 hover:bg-rose-50 disabled:opacity-40" disabled={items.length === 1} onClick={() => setItems((current) => current.filter((entry) => entry.id !== item.id))} type="button"><Trash2 className="h-4 w-4" /></button></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </section>
-      </div>
 
-      <div className="form-actions">
-        <Link className="catalog-cancel-button" href={cancelHref}>Cancel</Link>
-        <Button className="catalog-submit-button" disabled={isPending} type="submit">{isPending ? "Saving..." : "Save Sale"}</Button>
+        <section className="product-editor-card sale-pos-details">
+          <header>
+            <h2>Sale details</h2>
+            <p>Where and when it was sold, and notes only your team sees.</p>
+          </header>
+          <div className="product-editor-card-body">
+            <div className="form-grid">
+              <FieldError errors={state.fieldErrors} name="saleType">
+                <label>
+                  Sale type
+                  <select defaultValue={sale?.saleType ?? "OFFLINE"} name="saleType">
+                    <option value="OFFLINE">Offline</option>
+                    <option value="ONLINE">Online</option>
+                  </select>
+                </label>
+              </FieldError>
+              <FieldError errors={state.fieldErrors} name="saleDate">
+                <label>
+                  Sale date
+                  <input defaultValue={sale?.saleDate ?? today()} name="saleDate" required type="date" />
+                </label>
+              </FieldError>
+            </div>
+            <FieldError errors={state.fieldErrors} name="notes">
+              <label>
+                Notes
+                <textarea defaultValue={sale?.notes ?? ""} name="notes" placeholder="Internal notes" rows={3} />
+              </label>
+            </FieldError>
+          </div>
+        </section>
+
+        <aside className="sale-pos-side">
+          <section className="product-editor-card">
+            <div className="product-editor-card-body">
+              <FieldError errors={state.fieldErrors} name="customerId">
+                <SaleCustomerPicker
+                  customers={customers}
+                  defaultCustomerId={sale?.customerId ?? null}
+                  defaultOptedIn={sale?.loyaltyOptedIn === true}
+                  programmeLive={loyaltyLive}
+                />
+              </FieldError>
+            </div>
+          </section>
+
+          <section className="product-editor-card">
+            <header>
+              <h2>Payment</h2>
+            </header>
+            <div className="product-editor-card-body">
+              <FieldError errors={state.fieldErrors} name="paymentMethod">
+                <label>
+                  Payment method
+                  <select defaultValue={sale?.paymentMethod ?? "CASH"} name="paymentMethod">
+                    <option value="CASH">Cash</option>
+                    <option value="CARD">Card</option>
+                    <option value="BKASH">bKash</option>
+                    <option value="NAGAD">Nagad</option>
+                    <option value="BANK">Bank</option>
+                    <option value="COD">COD</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </label>
+              </FieldError>
+              <div className="grid grid-cols-3 gap-2">
+                <AmountInput label="Discount" name="discount" onChange={setDiscount} value={discount} />
+                <AmountInput label="Tax" name="tax" onChange={setTax} value={tax} />
+                <AmountInput label="Shipping" name="shipping" onChange={setShipping} value={shipping} />
+              </div>
+            </div>
+          </section>
+
+          <section className="product-editor-card sale-pos-checkout">
+            <div className="product-editor-card-body">
+              <div className="grid gap-2">
+                <SummaryRow label="Subtotal" value={formatSaleMoney(totals.subtotal, currency)} />
+                {Number(discount) > 0 ? <SummaryRow label="Discount" value={`− ${formatSaleMoney(Number(discount), currency)}`} /> : null}
+                {Number(tax) > 0 ? <SummaryRow label="Tax" value={`+ ${formatSaleMoney(Number(tax), currency)}`} /> : null}
+                {Number(shipping) > 0 ? <SummaryRow label="Shipping" value={`+ ${formatSaleMoney(Number(shipping), currency)}`} /> : null}
+                <div className="flex items-baseline justify-between gap-3 border-t border-[#ececf5] pt-3 text-[#20212a]">
+                  <span className="text-sm font-semibold">Total</span>
+                  <span className="text-2xl font-bold tabular-nums">{formatSaleMoney(totals.total, currency)}</span>
+                </div>
+              </div>
+              <div className="field-shell">
+                <div className="flex items-center justify-between gap-2">
+                  <label htmlFor={paidId}>Paid amount</label>
+                  <button className="text-xs font-semibold text-[#6d3cf5]" onClick={() => setPaidAmount(totals.total.toFixed(2))} type="button">
+                    Paid in full
+                  </button>
+                </div>
+                <input id={paidId} min={0} name="paidAmount" onChange={(event) => setPaidAmount(event.target.value)} step="0.01" type="number" value={paidAmount} />
+              </div>
+              {/* Cash handed over beyond the total is change, not credit: the server records the total as paid. */}
+              {totals.change > 0 ? (
+                <SummaryRow label="Change to give" strong tone="change" value={formatSaleMoney(totals.change, currency)} />
+              ) : (
+                <SummaryRow label="Due" strong value={formatSaleMoney(totals.due, currency)} />
+              )}
+              <FieldError errors={state.fieldErrors} name="status">
+                <label>
+                  Status
+                  <select name="status" onChange={(event) => setStatus(event.target.value as SaleStatus)} value={status}>
+                    <option value="DRAFT">Draft</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="CANCELLED">Cancelled</option>
+                    <option value="RETURNED">Returned</option>
+                  </select>
+                </label>
+              </FieldError>
+              {STATUS_NOTES[status] ? <p className="m-0 -mt-2 text-[11px] leading-5 text-[#686a76]">{STATUS_NOTES[status]}</p> : null}
+              {state.status === "error" && !state.lockedFeature ? <p className="form-error">{state.message}</p> : null}
+              <Button className="primary action-button w-full" disabled={isPending} type="submit">
+                {isPending ? "Saving..." : SAVE_LABELS[status]}
+              </Button>
+              <Link className="justify-self-center text-xs font-semibold" href={cancelHref}>
+                Cancel
+              </Link>
+            </div>
+          </section>
+        </aside>
       </div>
     </form>
   );
 }
 
-function AmountInput({ label, name, onChange, value }: { label: string; name: string; onChange: (value: string) => void; value: string }) {
-  return <label className="grid gap-1.5 text-xs font-semibold text-[#565762]">{label}<input min={0} name={name} onChange={(event) => onChange(event.target.value)} step="0.01" type="number" value={value} /></label>;
+/** Under a line's product: what this sale may take, and a warning once it asks for more. */
+function StockHint({ stock, waitingForOption }: { stock: SaleLineStock | null; waitingForOption: boolean }) {
+  if (waitingForOption) {
+    return <span className="text-[11px] font-medium text-amber-700">Choose which option was sold.</span>;
+  }
+
+  if (!stock) {
+    return null;
+  }
+
+  if (!stock.tracked) {
+    return <span className="text-[11px] text-[#686a76]">{stock.available} available · keeps selling</span>;
+  }
+
+  if (stock.onSale > stock.available) {
+    return (
+      <span className="text-[11px] font-medium text-rose-600">
+        {stock.available > 0 ? `Only ${stock.available} available` : "Out of stock"} — completing needs the stock.
+      </span>
+    );
+  }
+
+  return <span className="text-[11px] text-[#686a76]">{stock.available} available</span>;
 }
 
-function SummaryRow({ label, strong, value }: { label: string; strong?: boolean; value: string }) {
-  return <div className={`flex items-center justify-between border-t border-[#ececf5] pt-3 ${strong ? "text-base font-bold text-[#20212a]" : "text-sm text-[#686a76]"}`}><span>{label}</span><span>{value}</span></div>;
+function AmountInput({ label, name, onChange, value }: { label: string; name: string; onChange: (value: string) => void; value: string }) {
+  return <label>{label}<input min={0} name={name} onChange={(event) => onChange(event.target.value)} step="0.01" type="number" value={value} /></label>;
+}
+
+function SummaryRow({ label, strong, tone, value }: { label: string; strong?: boolean; tone?: "change"; value: string }) {
+  const colour = tone === "change" ? "text-emerald-700" : strong ? "text-[#20212a]" : "text-[#686a76]";
+
+  return <div className={`flex items-center justify-between gap-3 ${strong ? "text-base font-bold" : "text-sm"} ${colour}`}><span>{label}</span><span className="tabular-nums">{value}</span></div>;
 }
 
 function FieldError({ children, errors, name }: { children: ReactNode; errors?: Record<string, string> | undefined; name: string }) {
@@ -348,5 +471,10 @@ function calculateTotals(items: SaleLine[], discount: string, tax: string, shipp
   const subtotal = items.reduce((total, item) => total + lineTotal(item), 0);
   const total = Math.max(subtotal - (Number(discount) || 0) + (Number(tax) || 0) + (Number(shipping) || 0), 0);
   const paidAmount = Math.min(Number(paid) || 0, total);
-  return { due: Math.max(total - paidAmount, 0), subtotal, total };
+  return {
+    change: Math.max((Number(paid) || 0) - total, 0),
+    due: Math.max(total - paidAmount, 0),
+    subtotal,
+    total
+  };
 }

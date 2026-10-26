@@ -1538,6 +1538,155 @@ textarea {
   }
 }
 
+/* The sale counter (new and edit sale). The cart and its scan box take the
+   width; customer, payment and the total sit in a column beside it, and the
+   total's card follows the cashier down a long cart so Save never scrolls
+   away. Rows are `auto 1fr` so the side column's extra height lands under the
+   details card instead of opening a gap below the cart. One column, cart
+   first and Save last, below the width where the 260px nav and this 360px
+   column leave the cart too narrow for its table. Drawn from the dashboard's
+   tokens only, so the dark theme needs no mapped colours here. */
+.dash-dashboard .sale-pos-layout {
+  align-items: start;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  grid-template-rows: auto 1fr;
+}
+
+.dash-dashboard .sale-pos-cart {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.dash-dashboard .sale-pos-details {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.dash-dashboard .sale-pos-side {
+  align-content: start;
+  align-self: stretch;
+  display: grid;
+  gap: 18px;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+.dash-dashboard .sale-pos-checkout {
+  position: sticky;
+  top: 86px;
+}
+
+@media (max-width: 1340px) {
+  .dash-dashboard .sale-pos-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+
+  .dash-dashboard .sale-pos-cart,
+  .dash-dashboard .sale-pos-details,
+  .dash-dashboard .sale-pos-side {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .dash-dashboard .sale-pos-checkout {
+    position: static;
+  }
+}
+
+/* The scan box reads as one field — icon, code, scanner state — so the card's
+   bold-grid label and bordered 42px input are undone inside it. */
+.dash-dashboard .sale-scan .sale-scan-field {
+  align-items: center;
+  background: var(--surface);
+  border: 1.5px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: 12px;
+  cursor: text;
+  display: flex;
+  font-weight: 500;
+  gap: 10px;
+  padding: 0 14px;
+}
+
+.dash-dashboard .sale-scan .sale-scan-field:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.dash-dashboard .sale-scan .sale-scan-input,
+.dash-dashboard .sale-scan .sale-scan-input:focus {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  flex: 1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.95rem;
+  min-height: 52px;
+  min-width: 0;
+  outline: none;
+  padding: 0;
+}
+
+/* The customer search draws its magnifier inside the field. */
+.dash-dashboard .sale-pos input[type="search"] {
+  padding-left: 32px;
+}
+
+/* Cart rows: every control one height, a little shorter than the card's. */
+.dash-dashboard .sale-pos .sale-lines input,
+.dash-dashboard .sale-pos .sale-lines select {
+  min-height: 38px;
+  padding: 7px 10px;
+  width: 100%;
+}
+
+.dash-dashboard .sale-pos .sale-qty {
+  align-items: stretch;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  display: flex;
+  overflow: hidden;
+}
+
+.dash-dashboard .sale-pos .sale-qty button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  display: flex;
+  flex: none;
+  justify-content: center;
+  width: 34px;
+}
+
+.dash-dashboard .sale-pos .sale-qty button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--accent);
+}
+
+.dash-dashboard .sale-pos .sale-qty button:disabled {
+  opacity: 0.35;
+}
+
+.dash-dashboard .sale-pos .sale-qty input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+  border: 0;
+  border-radius: 0;
+  min-height: 36px;
+  min-width: 0;
+  padding: 0;
+  text-align: center;
+}
+
+.dash-dashboard .sale-pos .sale-qty input::-webkit-inner-spin-button,
+.dash-dashboard .sale-pos .sale-qty input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .dash-dashboard .product-editor-card select[multiple] {
   min-height: 96px;
 }

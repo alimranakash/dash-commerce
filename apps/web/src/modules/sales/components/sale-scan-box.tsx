@@ -160,17 +160,17 @@ export function SaleScanBox({ formRef, onBurstStart, onScan }: SaleScanBoxProps)
   }
 
   return (
-    <div className="grid gap-1.5 border-b border-[#ececf5] px-4 py-3">
-      <label className="flex items-center gap-2 rounded-lg border border-[#d9d3ef] bg-[#faf9ff] px-3 focus-within:border-[#7c3aed]">
-        <ScanLine aria-hidden="true" className="h-4 w-4 shrink-0 text-[#7c3aed]" />
+    <div className="sale-scan grid gap-2 border-b border-[#ececf5] bg-[#faf9ff] px-5 py-4">
+      <label className="sale-scan-field">
+        <ScanLine aria-hidden="true" className="h-5 w-5 shrink-0 text-[#7c3aed]" />
         <span className="sr-only">Scan a barcode</span>
         <input
           autoComplete="off"
           autoFocus
-          className="h-11 w-full min-w-0 border-0 bg-transparent font-mono text-sm outline-none"
+          className="sale-scan-input"
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={takeScan}
-          placeholder="Scan a barcode — or type a barcode or SKU and press Enter"
+          placeholder="Scan a barcode, or type a barcode or SKU and press Enter"
           ref={inputRef}
           spellCheck={false}
           type="text"
@@ -186,7 +186,7 @@ export function SaleScanBox({ formRef, onBurstStart, onScan }: SaleScanBoxProps)
       </label>
       <p
         aria-live="polite"
-        className={`m-0 min-h-4 text-xs ${feedback?.tone === "error" ? "text-rose-600" : feedback?.tone === "warn" ? "text-amber-700" : "text-emerald-700"}`}
+        className={`m-0 min-h-4 text-xs font-medium ${feedback?.tone === "error" ? "text-rose-600" : feedback?.tone === "warn" ? "text-amber-700" : "text-emerald-700"}`}
         role="status"
       >
         {feedback?.message ?? ""}

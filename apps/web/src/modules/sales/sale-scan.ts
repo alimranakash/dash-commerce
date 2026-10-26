@@ -120,6 +120,44 @@ export function stockHeldBySale(sale?: { items?: readonly SaleLine[] | undefined
   return held;
 }
 
+export type SaleLineStock = {
+  /** What this sale may take: the shelf, plus what an edited completed sale already took. */
+  available: number;
+  /** What every line of the item asks for together. */
+  onSale: number;
+  /** False for an option that keeps selling past zero: there is no limit to show or enforce. */
+  tracked: boolean;
+};
+
+/**
+ * The stock one item on the sale is measured against — a product's own count,
+ * or the chosen option's — over every line of it, since completing the sale
+ * takes them one after another from the same shelf. Null for a product sold
+ * by option whose option is not chosen yet: it has no stock of its own.
+ */
+export function lineStock(
+  lines: readonly SaleLine[],
+  catalogue: SaleScanCatalogue,
+  productId: string,
+  variantId: string
+): SaleLineStock | null {
+  const product = catalogue.products.get(productId);
+  const variant = variantId ? product?.variants?.find((entry) => entry.id === variantId) : undefined;
+
+  if (!product || (variantId ? !variant : product.variants?.length)) {
+    return null;
+  }
+
+  return {
+    available:
+      (variant ? variant.stockQuantity : product.stockQuantity) + (catalogue.held.get(lineKey(productId, variantId)) ?? 0),
+    onSale: lines
+      .filter((line) => line.productId === productId && line.variantId === variantId)
+      .reduce((total, line) => total + line.quantity, 0),
+    tracked: !variant?.continueSelling
+  };
+}
+
 /**
  * A scanned code becomes a line, the way a till rings it up: the same item
  * again adds one to its line rather than a second line, and a fresh one fills
@@ -175,18 +213,14 @@ export function ringUpScan(
   const name = variant ? `${product.title} - ${variant.title}` : product.title;
   const sameItem = (line: SaleLine) => line.productId === product.id && line.variantId === variantId;
 
-  if (!target.needsVariant && !variant?.continueSelling) {
-    const onSale = lines.filter(sameItem).reduce((total, line) => total + line.quantity, 0);
-    const available =
-      (variant ? variant.stockQuantity : product.stockQuantity) + (catalogue.held.get(lineKey(product.id, variantId)) ?? 0);
+  const stock = target.needsVariant ? null : lineStock(lines, catalogue, product.id, variantId);
 
-    if (onSale + 1 > available) {
-      return refuse(
-        available > 0
-          ? `Only ${available} of ${name} in stock, and ${onSale} already on this sale.`
-          : `${name} is out of stock.`
-      );
-    }
+  if (stock?.tracked && stock.onSale + 1 > stock.available) {
+    return refuse(
+      stock.available > 0
+        ? `Only ${stock.available} of ${name} in stock, and ${stock.onSale} already on this sale.`
+        : `${name} is out of stock.`
+    );
   }
 
   const existing = lines.find(sameItem);

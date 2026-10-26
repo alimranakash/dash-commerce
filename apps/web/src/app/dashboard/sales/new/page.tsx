@@ -27,7 +27,7 @@ export default async function NewSalePage() {
             <p className="eyebrow">Sales</p>
             <h1>New sale</h1>
             <p className="auth-copy">
-              Create an online or offline sale record. Scan a product&apos;s barcode label to add it.
+              Scan each item&apos;s barcode into the cart, choose the customer, then take payment.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -35,16 +35,14 @@ export default async function NewSalePage() {
             <Link className="secondary link-button" href="/dashboard/sales">Back</Link>
           </div>
         </div>
-        <div className="panel-card">
-          <SaleForm
-            action={createSaleFormAction}
-            cancelHref="/dashboard/sales"
-            currency={store.currency}
-            customers={customers.map((customer) => toSaleCustomerOption(store.id, customer))}
-            loyaltyLive={loyalty.live}
-            products={toSaleProductOptions(products, variantsByProduct)}
-          />
-        </div>
+        <SaleForm
+          action={createSaleFormAction}
+          cancelHref="/dashboard/sales"
+          currency={store.currency}
+          customers={customers.map((customer) => toSaleCustomerOption(store.id, customer))}
+          loyaltyLive={loyalty.live}
+          products={toSaleProductOptions(products, variantsByProduct)}
+        />
       </section>
     </DashboardShell>
   );

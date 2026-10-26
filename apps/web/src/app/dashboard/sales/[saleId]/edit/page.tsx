@@ -45,39 +45,37 @@ export default async function EditSalePage({ params }: EditSalePageProps) {
           </div>
           <Link className="secondary link-button" href={`/dashboard/sales/${sale.id}`}>Back</Link>
         </div>
-        <div className="panel-card">
-          <SaleForm
-            action={updateSaleFormAction.bind(null, sale.id)}
-            cancelHref={`/dashboard/sales/${sale.id}`}
-            currency={store.currency}
-            customers={customers.map((customer) => toSaleCustomerOption(store.id, customer))}
-            loyaltyLive={loyalty.live}
-            products={toSaleProductOptions(products, variantsByProduct)}
-            sale={{
-              customerId: sale.customerId,
-              discount: sale.discount.toString(),
-              items: sale.items.map((item) => ({
-                discount: item.discount.toString(),
-                id: item.id,
-                productId: item.productId,
-                quantity: item.quantity,
-                unitPrice: item.unitPrice.toString(),
-                // Blank on lines written before options were tracked on sales:
-                // the form then asks which option, if the product has any.
-                variantId: item.variantId ?? ""
-              })),
-              loyaltyOptedIn,
-              notes: sale.notes,
-              paidAmount: sale.paidAmount.toString(),
-              paymentMethod: sale.paymentMethod,
-              saleDate: toDateInputValue(sale.saleDate),
-              saleType: sale.saleType,
-              shipping: sale.shipping.toString(),
-              status: sale.status,
-              tax: sale.tax.toString()
-            }}
-          />
-        </div>
+        <SaleForm
+          action={updateSaleFormAction.bind(null, sale.id)}
+          cancelHref={`/dashboard/sales/${sale.id}`}
+          currency={store.currency}
+          customers={customers.map((customer) => toSaleCustomerOption(store.id, customer))}
+          loyaltyLive={loyalty.live}
+          products={toSaleProductOptions(products, variantsByProduct)}
+          sale={{
+            customerId: sale.customerId,
+            discount: sale.discount.toString(),
+            items: sale.items.map((item) => ({
+              discount: item.discount.toString(),
+              id: item.id,
+              productId: item.productId,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice.toString(),
+              // Blank on lines written before options were tracked on sales:
+              // the form then asks which option, if the product has any.
+              variantId: item.variantId ?? ""
+            })),
+            loyaltyOptedIn,
+            notes: sale.notes,
+            paidAmount: sale.paidAmount.toString(),
+            paymentMethod: sale.paymentMethod,
+            saleDate: toDateInputValue(sale.saleDate),
+            saleType: sale.saleType,
+            shipping: sale.shipping.toString(),
+            status: sale.status,
+            tax: sale.tax.toString()
+          }}
+        />
       </section>
     </DashboardShell>
   );
