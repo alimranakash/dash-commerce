@@ -2490,7 +2490,8 @@ check(
   source.nav.includes('href: "/dashboard/marketing/loyalty/members"') &&
     source.nav.includes('"/dashboard/marketing/loyalty/members": "loyalty"') &&
     managerOnlyHrefs() !== undefined &&
-    !managerOnlyHrefs()?.includes("/dashboard/marketing/loyalty")
+    !managerOnlyHrefs()?.includes('"/dashboard/marketing/loyalty"') &&
+    !managerOnlyHrefs()?.includes('"/dashboard/marketing/loyalty/members"')
 );
 check(
   "every loyalty write is still manager-only",
@@ -3638,6 +3639,13 @@ console.log("\n=== Dashboard: finding the programme ===");
 
 const mainLinksBlock = /const mainLinks: NavItem\[\] = \[([\s\S]*?)\];/.exec(source.nav)?.[1] ?? "";
 const mainHrefs = [...mainLinksBlock.matchAll(/href: "([^"]+)"/g)].map((match) => match[1]);
+const loyaltyLinksBlock = /const loyaltyLinks[^=]*= \[([\s\S]*?)\];/.exec(source.nav)?.[1] ?? "";
+const loyaltyHrefs = [...loyaltyLinksBlock.matchAll(/href: "([^"]+)"/g)].map((match) => match[1]);
+const marketingLinksBlock =
+  /const marketingLinks[^=]*= \[([\s\S]*?)\];/.exec(source.nav)?.[1] ?? "";
+// The rendered sidebar, in order: the main links, then the Loyalty group's
+// heading, then the rows that follow it.
+const navMarkup = /<nav[\s\S]*?<\/nav>/.exec(source.nav)?.[0] ?? "";
 // The nav's own visibility rule, read from the file: a link is hidden from a
 // member only if it is in MANAGER_ONLY_HREFS or under a manager-only prefix.
 const managerOnlyPrefixes = [
@@ -3649,21 +3657,43 @@ const hiddenFromMembers = (href: string) =>
   (managerOnlyHrefs() ?? "").includes(`"${href}"`) ||
   managerOnlyPrefixes.some((prefix) => href.startsWith(prefix));
 check(
-  "Loyalty is a top-level sidebar entry right after Customers, not only inside the collapsed Marketing group",
-  mainHrefs.indexOf("/dashboard/marketing/loyalty") ===
-    mainHrefs.indexOf("/dashboard/customers") + 1 &&
-    mainHrefs.indexOf("/dashboard/customers") > -1 &&
-    /\{ href: "\/dashboard\/marketing\/loyalty", icon: Award, label: "Loyalty" \}/.test(
-      mainLinksBlock
+  "Loyalty is a top-level sidebar group drawn right after Customers",
+  mainHrefs.at(-1) === "/dashboard/customers" &&
+    /visibleMainLinks\.map[\s\S]*?<\/div>\s*<div\s[^>]*loyaltyRouteActive[\s\S]*?href="\/dashboard\/marketing\/loyalty"[\s\S]*?<Award [\s\S]*?<SafeNavText text="Loyalty" \/>/.test(
+      navMarkup
     ),
   mainHrefs.join(", ")
+);
+check(
+  "every loyalty page is a row of that group: Settings, Members and Conflicts",
+  loyaltyHrefs.join(", ") ===
+    "/dashboard/marketing/loyalty, /dashboard/marketing/loyalty/members, /dashboard/marketing/loyalty/conflicts" &&
+    navMarkup.includes("visibleLoyaltyLinks.map"),
+  loyaltyHrefs.join(", ")
+);
+check(
+  "the group opens itself on any loyalty page, and Settings lights up only on its own path",
+  /const loyaltyRouteActive = pathname\.startsWith\("\/dashboard\/marketing\/loyalty"\);/.test(
+    source.nav
+  ) &&
+    /if \(loyaltyRouteActive\) setLoyaltyOpen\(true\);/.test(source.nav) &&
+    /function isLoyaltyLinkActive[\s\S]*?href === "\/dashboard\/marketing\/loyalty" \? pathname === href : matchesRoute\(pathname, href\)/.test(
+      source.nav
+    )
 );
 check(
   "it is drawn for owners and members alike, and badged Paid by the loyalty key for a plan without it",
   !hiddenFromMembers("/dashboard/marketing/loyalty") &&
     !hiddenFromMembers("/dashboard/marketing/loyalty/members") &&
     managerOnlyPrefixes.length >= 2 &&
-    source.nav.includes('"/dashboard/marketing/loyalty": "loyalty"')
+    source.nav.includes('"/dashboard/marketing/loyalty": "loyalty"') &&
+    /<SafeNavText text="Loyalty" \/>[\s\S]{0,400}<NavFeatureBadge href="\/dashboard\/marketing\/loyalty" \/>/.test(
+      navMarkup
+    )
+);
+check(
+  "Conflicts is offered to managers only, as the page itself is",
+  hiddenFromMembers("/dashboard/marketing/loyalty/conflicts")
 );
 check(
   "Starter, Growth and Pro open it; Free sees the upgrade badge",
@@ -3678,13 +3708,14 @@ check(
   )
 );
 check(
-  "the Marketing entries and the overview card are still there, so nothing reachable moved",
-  /const marketingLinks[\s\S]*?href: "\/dashboard\/marketing\/loyalty", label: "Loyalty" \}[\s\S]*?href: "\/dashboard\/marketing\/loyalty\/members"/.test(
-    source.nav
-  ) &&
-    read(join(WEB, "app", "dashboard", "marketing", "page.tsx")).includes(
-      'href="/dashboard/marketing/loyalty"'
-    )
+  "the Marketing group no longer lists loyalty, so the sidebar names each page once",
+  marketingLinksBlock.length > 0 && !marketingLinksBlock.includes("/dashboard/marketing/loyalty")
+);
+check(
+  "the Marketing overview still has a card for it",
+  read(join(WEB, "app", "dashboard", "marketing", "page.tsx")).includes(
+    'href="/dashboard/marketing/loyalty"'
+  )
 );
 check(
   "settings, members and a member's page stay open to every member; conflicts stays the manager's",

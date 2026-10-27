@@ -74,6 +74,7 @@ const NAV_FEATURE_BY_HREF: Record<string, PlanFeatureKey> = {
   "/dashboard/marketing/campaigns": "campaigns",
   "/dashboard/marketing/campaigns/new": "campaigns",
   "/dashboard/marketing/loyalty": "loyalty",
+  "/dashboard/marketing/loyalty/conflicts": "loyalty",
   "/dashboard/marketing/loyalty/members": "loyalty",
   "/dashboard/marketing/notification-bar": "notification_bar",
   "/dashboard/marketing/order-bump": "order_bump",
@@ -244,13 +245,29 @@ const storefrontLinks = [
 const mainLinks: NavItem[] = [
   { href: "/dashboard/sales", icon: ShoppingBag, label: "Sales" },
   { href: "/dashboard/transactions", icon: CircleDollarSign, label: "Transactions" },
-  { href: "/dashboard/customers", icon: Users, label: "Customers" },
-  // Beside Customers, because that is where a seller looks for their members.
-  // It used to be reachable only from inside the Marketing group, which is
-  // collapsed on every page outside /dashboard/marketing — so the programme
-  // existed and nobody could find it. Same route, same `loyalty` badge, same
-  // permissions: the pages behind it decide what a member may do.
-  { href: "/dashboard/marketing/loyalty", icon: Award, label: "Loyalty" },
+  { href: "/dashboard/customers", icon: Users, label: "Customers" }
+];
+
+/**
+ * The loyalty programme, as a group of its own drawn right after Customers,
+ * because that is where a seller looks for their members.
+ *
+ * It used to be reachable only from inside the Marketing group, which is
+ * collapsed on every page outside /dashboard/marketing — so the programme
+ * existed and nobody could find it — and then from both places at once. Now it
+ * lives here alone. The routes keep their /dashboard/marketing/loyalty paths
+ * for the reason Integrations keeps its own: moving them would break every
+ * link and bookmark already pointing at them for no gain a seller can see.
+ *
+ * Settings is the parent's own route, the way All Products is under Products.
+ */
+const loyaltyLinks: Array<{ href: string; label: string }> = [
+  { href: "/dashboard/marketing/loyalty", label: "Settings" },
+  { href: "/dashboard/marketing/loyalty/members", label: "Members" },
+  { href: "/dashboard/marketing/loyalty/conflicts", label: "Conflicts" }
+];
+
+const operationsLinks: NavItem[] = [
   { href: "/dashboard/suppliers", icon: Truck, label: "Suppliers" },
   { href: "/dashboard/purchases", icon: ClipboardList, label: "Purchases" },
   { href: "/dashboard/inventory", icon: Boxes, label: "Inventory" },
@@ -275,8 +292,6 @@ const marketingLinks: Array<{ href: string; label: string }> = [
   { href: "/dashboard/marketing/audiences", label: "Audiences" },
   { href: "/dashboard/marketing/templates", label: "Templates" },
   { href: "/dashboard/coupons", label: "Coupons" },
-  { href: "/dashboard/marketing/loyalty", label: "Loyalty" },
-  { href: "/dashboard/marketing/loyalty/members", label: "Loyalty Members" },
   { href: "/dashboard/marketing/order-bump", label: "Order Bump" },
   { href: "/dashboard/marketing/bundles", label: "Bundles" },
   { href: "/dashboard/marketing/sales-notifications", label: "Sales Notifications" },
@@ -329,6 +344,9 @@ const MANAGER_ONLY_HREFS: ReadonlySet<string> = new Set([
   "/dashboard/marketing/campaigns/new",
   "/dashboard/marketing/audiences",
   "/dashboard/marketing/templates",
+  // The page itself refuses a member with a notice, so the sidebar does not
+  // offer it to one. Settings and Members stay open: both are readable by all.
+  "/dashboard/marketing/loyalty/conflicts",
   // The whole Analytics & Tracking section changes what loads on the storefront
   // for every visitor, so it is manager-only in the same way Storefront is.
   "/dashboard/analytics",
@@ -382,10 +400,11 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
   const orderRouteActive =
     pathname.startsWith("/dashboard/orders") || pathname.startsWith("/dashboard/fraud-check");
   const reportRouteActive = pathname.startsWith("/dashboard/reports");
+  const loyaltyRouteActive = pathname.startsWith("/dashboard/marketing/loyalty");
   // Coupons and the abandoned-cart page live under this group now, so standing
   // on either has to light it up even though their paths sit elsewhere.
-  // Loyalty has its own top-level entry, so its pages light that up rather
-  // than the whole Marketing group as well.
+  // Loyalty is its own group, so its pages light that up rather than the whole
+  // Marketing group as well, even though their paths sit under it.
   const marketingRouteActive =
     (pathname.startsWith("/dashboard/marketing") &&
       !pathname.startsWith("/dashboard/marketing/loyalty")) ||
@@ -405,6 +424,7 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
   const [productsOpen, setProductsOpen] = useState(productRouteActive);
   const [ordersOpen, setOrdersOpen] = useState(orderRouteActive);
   const [reportsOpen, setReportsOpen] = useState(reportRouteActive);
+  const [loyaltyOpen, setLoyaltyOpen] = useState(loyaltyRouteActive);
   const [marketingOpen, setMarketingOpen] = useState(marketingRouteActive);
   const [analyticsOpen, setAnalyticsOpen] = useState(analyticsRouteActive);
   const [storefrontOpen, setStorefrontOpen] = useState(storefrontRouteActive);
@@ -415,6 +435,12 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
   // The server refuses members regardless of what is drawn here.
   const [canManage, setCanManage] = useState(true);
   const visibleMainLinks = mainLinks.filter((link) => canManage || !isManagerOnlyHref(link.href));
+  const visibleLoyaltyLinks = loyaltyLinks.filter(
+    (link) => canManage || !isManagerOnlyHref(link.href)
+  );
+  const visibleOperationsLinks = operationsLinks.filter(
+    (link) => canManage || !isManagerOnlyHref(link.href)
+  );
   const visibleMarketingLinks = marketingLinks.filter(
     (link) => canManage || !isManagerOnlyHref(link.href)
   );
@@ -458,6 +484,10 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
   useEffect(() => {
     if (reportRouteActive) setReportsOpen(true);
   }, [reportRouteActive]);
+
+  useEffect(() => {
+    if (loyaltyRouteActive) setLoyaltyOpen(true);
+  }, [loyaltyRouteActive]);
 
   useEffect(() => {
     if (storefrontRouteActive) setStorefrontOpen(true);
@@ -589,6 +619,65 @@ export function DashboardNav({ onClose, open }: DashboardNavProps) {
 
           <div className="mt-1 space-y-1">
             {visibleMainLinks.map((link) => (
+              <NavLink
+                href={link.href}
+                icon={link.icon}
+                {...(iconColors[normalizeLabel(link.label)]
+                  ? { iconClassName: iconColors[normalizeLabel(link.label)] }
+                  : {})}
+                key={link.href}
+                label={link.label}
+                onClick={onClose}
+                pathname={pathname}
+              />
+            ))}
+          </div>
+
+          <div
+            className={`mt-1 flex items-center rounded-lg pr-1 font-medium transition ${loyaltyRouteActive ? "bg-[#f3f0ff] text-[#5b31db]" : "text-[#30313d] hover:bg-[#f7f7fb]"}`}
+          >
+            <Link
+              className="flex flex-1 items-center gap-3 px-3 py-2.5"
+              href="/dashboard/marketing/loyalty"
+              onClick={onClose}
+            >
+              <Award className="h-4 w-4 text-fuchsia-500" />
+              <SafeNavText text="Loyalty" />
+              {/* Badged on the heading as well as the rows: the group is collapsed
+                  on every page outside it, and a plan without the programme
+                  should be told so without having to open it. */}
+              <NavFeatureBadge href="/dashboard/marketing/loyalty" />
+            </Link>
+            <button
+              aria-label="Toggle loyalty menu"
+              className="p-2"
+              onClick={() => setLoyaltyOpen((current) => !current)}
+              type="button"
+            >
+              <ChevronDown
+                className={`h-3.5 w-3.5 transition-transform ${loyaltyOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+          </div>
+          {loyaltyOpen ? (
+            <div className="ml-5 border-l border-[#ebe9f6] py-1 pl-3">
+              {visibleLoyaltyLinks.map((link) => (
+                <Link
+                  aria-current={isLoyaltyLinkActive(pathname, link.href) ? "page" : undefined}
+                  className={`block rounded-md px-3 py-2 text-[12px] transition ${isLoyaltyLinkActive(pathname, link.href) ? "bg-[#f3f0ff] font-medium text-[#6d3cf5]" : "text-[#4d4f5c] hover:bg-[#f8f7ff]"}`}
+                  href={link.href}
+                  key={link.href}
+                  onClick={onClose}
+                >
+                  <SafeNavText text={link.label} />
+                  <NavFeatureBadge href={link.href} />
+                </Link>
+              ))}
+            </div>
+          ) : null}
+
+          <div className="mt-1 space-y-1">
+            {visibleOperationsLinks.map((link) => (
               <NavLink
                 href={link.href}
                 icon={link.icon}
@@ -912,6 +1001,12 @@ function isMarketingLinkActive(pathname: string, href: string) {
   }
 
   return matchesRoute(pathname, href);
+}
+
+function isLoyaltyLinkActive(pathname: string, href: string) {
+  // Settings is the group's own route and every other page sits beneath it,
+  // so it owns only its exact path — otherwise Members would light it up too.
+  return href === "/dashboard/marketing/loyalty" ? pathname === href : matchesRoute(pathname, href);
 }
 
 function isReportLinkActive(pathname: string, href: string) {

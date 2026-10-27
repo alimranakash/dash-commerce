@@ -5,7 +5,7 @@ import { getUnresolvedLoyaltyConflicts } from "../../../../../modules/loyalty/lo
 import { getStoreAccess } from "../../../../../modules/stores/queries";
 
 /**
- * Dashboard → Marketing → Loyalty → Conflicts.
+ * Dashboard → Loyalty → Conflicts.
  *
  * A customer record that opted in with a number another member already holds
  * was not enrolled. This lists those, unresolved, for owners and admins: the

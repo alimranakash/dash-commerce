@@ -17,7 +17,7 @@ type LoyaltyMembersPageProps = {
 };
 
 /**
- * Dashboard → Marketing → Loyalty → Members.
+ * Dashboard → Loyalty → Members.
  *
  * Open to every team member, like the customers page: it shows the store's own
  * customers and their balances. The controls are an owner's, and the
