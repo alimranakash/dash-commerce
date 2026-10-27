@@ -276,6 +276,8 @@ function saleInputFromFormData(formData: FormData): CreateSaleInput {
   return {
     customerId: optionalValue(formData.get("customerId")),
     discount: stringValue(formData.get("discount")) || "0",
+    // Left out by a form older than the switch, which can only have meant an amount.
+    discountType: optionalValue(formData.get("discountType")) as CreateSaleInput["discountType"],
     items: Array.from({ length: rowCount }, (_, index) => ({
       discount: discounts[index] || "0",
       productId: productIds[index] ?? "",

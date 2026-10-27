@@ -39,6 +39,7 @@
     "verify:barcodes": "tsx scripts/verify-barcodes.mts",
     "verify:sale-scanner": "tsx scripts/verify-sale-scanner.mts",
     "verify:sale-receipt": "tsx scripts/verify-sale-receipt.mts",
+    "verify:sale-discount": "tsx scripts/verify-sale-discount.mts",
     "verify:daily-sales-report": "tsx scripts/verify-daily-sales-report.mts",
     "verify:variant-picker": "tsx scripts/verify-variant-picker.mts",
     "db:backfill-plans": "tsx scripts/backfill-plans.mts",

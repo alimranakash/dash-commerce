@@ -7,6 +7,7 @@ import { useActionState, useEffect, useId, useLayoutEffect, useMemo, useRef, use
 import { useUpgradePrompt } from "../../billing/components/plan-upgrade-provider";
 import type { SaleActionState } from "../sale.actions";
 import type { SaleCustomerOption } from "../sale-customer";
+import { SALE_DISCOUNT_MAX_PERCENT, saleDiscountCents, type SaleDiscountType } from "../sale-discount";
 import {
   buildSaleScanCatalogue,
   emptySaleLine,
@@ -90,18 +91,27 @@ export function SaleForm({ action, cancelHref, currency, customers, loyaltyLive,
   }, [openUpgrade, state]);
   const [items, setItems] = useState<SaleLine[]>(sale?.items?.length ? sale.items : [emptyItem()]);
   const [discount, setDiscount] = useState(sale?.discount ?? "0.00");
+  // A saved sale stores only the amount its discount came to, so it reopens as one.
+  const [discountType, setDiscountType] = useState<SaleDiscountType>("AMOUNT");
   const [tax, setTax] = useState(sale?.tax ?? "0.00");
   const [shipping, setShipping] = useState(sale?.shipping ?? "0.00");
   const [paidAmount, setPaidAmount] = useState(sale?.paidAmount ?? "0.00");
   const [status, setStatus] = useState<SaleStatus>(sale?.status ?? "DRAFT");
   const paidId = useId();
+  const discountId = useId();
+  const discountRef = useRef<HTMLInputElement>(null);
+  const currencySymbol = useMemo(() => currencySymbolFor(currency), [currency]);
   const scanCatalogue = useMemo(
     () => buildSaleScanCatalogue(products, currency, stockHeldBySale(sale)),
     [currency, products, sale]
   );
   const productMap = scanCatalogue.products;
   const formRef = useRef<HTMLFormElement>(null);
-  const totals = useMemo(() => calculateTotals(items, discount, tax, shipping, paidAmount), [discount, items, paidAmount, shipping, tax]);
+  const totals = useMemo(
+    () => calculateTotals(items, discount, discountType, tax, shipping, paidAmount),
+    [discount, discountType, items, paidAmount, shipping, tax]
+  );
+  const discountOverLimit = discountType === "PERCENT" && Number(discount) > SALE_DISCOUNT_MAX_PERCENT;
   const itemCount = items.reduce((count, item) => count + (item.productId ? item.quantity : 0), 0);
   // The lines as of the last scan, so one scan straight after another always
   // counts the first — never a render behind it.
@@ -159,6 +169,17 @@ export function SaleForm({ action, cancelHref, currency, customers, loyaltyLive,
       unitPrice: product?.price ?? "0.00",
       variantId: ""
     });
+  }
+
+  /** A new kind of discount starts empty: 50 taka read as 50% is not a conversion anyone asked for. */
+  function changeDiscountType(type: SaleDiscountType) {
+    if (type === discountType) {
+      return;
+    }
+
+    setDiscountType(type);
+    setDiscount("");
+    discountRef.current?.focus();
   }
 
   function selectVariant(id: string, product: SaleProductOption | undefined, variantId: string) {
@@ -341,10 +362,52 @@ export function SaleForm({ action, cancelHref, currency, customers, loyaltyLive,
                   </select>
                 </label>
               </FieldError>
-              <div className="grid grid-cols-3 gap-2">
-                <AmountInput label="Discount" name="discount" onChange={setDiscount} value={discount} />
-                <AmountInput label="Tax" name="tax" onChange={setTax} value={tax} />
-                <AmountInput label="Shipping" name="shipping" onChange={setShipping} value={shipping} />
+              <FieldError errors={state.fieldErrors} name="discount">
+                <div className="flex items-center justify-between gap-2">
+                  <label htmlFor={discountId}>Discount</label>
+                  <div aria-label="Discount type" className="inline-flex rounded-lg border border-[#e4e3ee] p-0.5" role="group">
+                    {(["AMOUNT", "PERCENT"] as const).map((type) => (
+                      <button
+                        aria-label={type === "PERCENT" ? "Percentage" : "Amount"}
+                        aria-pressed={discountType === type}
+                        className={`h-7 min-w-9 rounded-md px-2 text-xs font-semibold ${discountType === type ? "bg-[#6d3cf5] text-white" : "text-[#686a76] hover:text-[#6d3cf5]"}`}
+                        key={type}
+                        onClick={() => changeDiscountType(type)}
+                        type="button"
+                      >
+                        {type === "PERCENT" ? "%" : currencySymbol}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <input name="discountType" type="hidden" value={discountType} />
+                <span className="product-editor-input-affix" {...(discountType === "AMOUNT" ? { "data-affix": "start" } : {})}>
+                  {discountType === "AMOUNT" ? <span aria-hidden="true">{currencySymbol}</span> : null}
+                  <input
+                    id={discountId}
+                    max={discountType === "PERCENT" ? SALE_DISCOUNT_MAX_PERCENT : undefined}
+                    min={0}
+                    name="discount"
+                    onChange={(event) => setDiscount(event.target.value)}
+                    placeholder="0"
+                    ref={discountRef}
+                    step="0.01"
+                    type="number"
+                    value={discount}
+                  />
+                  {discountType === "PERCENT" ? <span aria-hidden="true">%</span> : null}
+                </span>
+                {discountOverLimit ? (
+                  <span className="text-[11px] font-medium text-rose-600">A discount can be at most {SALE_DISCOUNT_MAX_PERCENT}%.</span>
+                ) : discountType === "PERCENT" && totals.discount > 0 ? (
+                  <span className="text-[11px] text-[#686a76]">
+                    {formatSaleMoney(totals.discount, currency)} off {formatSaleMoney(totals.subtotal, currency)}
+                  </span>
+                ) : null}
+              </FieldError>
+              <div className="grid grid-cols-2 gap-3">
+                <AmountInput errors={state.fieldErrors} label="Tax" name="tax" onChange={setTax} symbol={currencySymbol} value={tax} />
+                <AmountInput errors={state.fieldErrors} label="Shipping" name="shipping" onChange={setShipping} symbol={currencySymbol} value={shipping} />
               </div>
             </div>
           </section>
@@ -353,7 +416,12 @@ export function SaleForm({ action, cancelHref, currency, customers, loyaltyLive,
             <div className="product-editor-card-body">
               <div className="grid gap-2">
                 <SummaryRow label="Subtotal" value={formatSaleMoney(totals.subtotal, currency)} />
-                {Number(discount) > 0 ? <SummaryRow label="Discount" value={`− ${formatSaleMoney(Number(discount), currency)}`} /> : null}
+                {totals.discount > 0 ? (
+                  <SummaryRow
+                    label={discountType === "PERCENT" ? `Discount (${Number(discount)}%)` : "Discount"}
+                    value={`− ${formatSaleMoney(totals.discount, currency)}`}
+                  />
+                ) : null}
                 {Number(tax) > 0 ? <SummaryRow label="Tax" value={`+ ${formatSaleMoney(Number(tax), currency)}`} /> : null}
                 {Number(shipping) > 0 ? <SummaryRow label="Shipping" value={`+ ${formatSaleMoney(Number(shipping), currency)}`} /> : null}
                 <div className="flex items-baseline justify-between gap-3 border-t border-[#ececf5] pt-3 text-[#20212a]">
@@ -435,8 +503,33 @@ function StockHint({ stock, waitingForOption }: { stock: SaleLineStock | null; w
   return <span className="text-[11px] text-[#686a76]">{stock.available} available</span>;
 }
 
-function AmountInput({ label, name, onChange, value }: { label: string; name: string; onChange: (value: string) => void; value: string }) {
-  return <label>{label}<input min={0} name={name} onChange={(event) => onChange(event.target.value)} step="0.01" type="number" value={value} /></label>;
+/** The sign sits inside the border, and the input can shrink to its column — a bare one would not. */
+function AmountInput({
+  errors,
+  label,
+  name,
+  onChange,
+  symbol,
+  value
+}: {
+  errors?: Record<string, string> | undefined;
+  label: string;
+  name: string;
+  onChange: (value: string) => void;
+  symbol: string;
+  value: string;
+}) {
+  return (
+    <FieldError errors={errors} name={name}>
+      <label>
+        {label}
+        <span className="product-editor-input-affix" data-affix="start">
+          <span aria-hidden="true">{symbol}</span>
+          <input min={0} name={name} onChange={(event) => onChange(event.target.value)} placeholder="0" step="0.01" type="number" value={value} />
+        </span>
+      </label>
+    </FieldError>
+  );
 }
 
 function SummaryRow({ label, strong, tone, value }: { label: string; strong?: boolean; tone?: "change"; value: string }) {
@@ -451,6 +544,19 @@ function FieldError({ children, errors, name }: { children: ReactNode; errors?: 
 
 function today() {
   return new Date().toISOString().slice(0, 10);
+}
+
+/** "৳" for BDT; the code itself for anything the browser has no symbol for. */
+function currencySymbolFor(currency: string) {
+  try {
+    return (
+      new Intl.NumberFormat("en", { currency, currencyDisplay: "narrowSymbol", style: "currency" })
+        .formatToParts(0)
+        .find((part) => part.type === "currency")?.value ?? currency
+    );
+  } catch {
+    return currency;
+  }
 }
 
 /**
@@ -474,12 +580,15 @@ function lineTotal(item: SaleLine) {
   return Math.max((Number(item.unitPrice) || 0) * item.quantity - (Number(item.discount) || 0), 0);
 }
 
-function calculateTotals(items: SaleLine[], discount: string, tax: string, shipping: string, paid: string) {
+function calculateTotals(items: SaleLine[], discount: string, discountType: SaleDiscountType, tax: string, shipping: string, paid: string) {
   const subtotal = items.reduce((total, item) => total + lineTotal(item), 0);
-  const total = Math.max(subtotal - (Number(discount) || 0) + (Number(tax) || 0) + (Number(shipping) || 0), 0);
+  // The rule the server saves with, so the total on screen is the total recorded.
+  const discountAmount = saleDiscountCents(Math.round(subtotal * 100), discount, discountType) / 100;
+  const total = Math.max(subtotal - discountAmount + (Number(tax) || 0) + (Number(shipping) || 0), 0);
   const paidAmount = Math.min(Number(paid) || 0, total);
   return {
     change: Math.max((Number(paid) || 0) - total, 0),
+    discount: discountAmount,
     due: Math.max(total - paidAmount, 0),
     subtotal,
     total

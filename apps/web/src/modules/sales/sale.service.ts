@@ -16,6 +16,7 @@ import {
   getSalesForStore,
   type SaleFilters
 } from "./sale.repository";
+import { saleDiscountCents, type SaleDiscountType } from "./sale-discount";
 import {
   createSaleSchema,
   updateSaleSchema,
@@ -60,7 +61,7 @@ export async function createSale(context: SaleContext, input: CreateSaleInput) {
     }
 
     const items = await prepareItems(tx, context.storeId, data.items);
-    const totals = calculateTotals(items, data.discount, data.tax, data.shipping, data.paidAmount);
+    const totals = calculateTotals(items, data.discount, data.discountType, data.tax, data.shipping, data.paidAmount);
     const saleNumber = await createSaleNumber(context.storeId);
     const shouldComplete = data.status === "COMPLETED";
 
@@ -137,7 +138,7 @@ export async function updateSale(context: SaleContext, saleId: string, input: Up
     }
 
     const items = await prepareItems(tx, context.storeId, data.items);
-    const totals = calculateTotals(items, data.discount, data.tax, data.shipping, data.paidAmount);
+    const totals = calculateTotals(items, data.discount, data.discountType, data.tax, data.shipping, data.paidAmount);
     const stockWasDeducted = existing.status === "COMPLETED";
     const shouldDeductStock = data.status === "COMPLETED";
 
@@ -370,12 +371,14 @@ async function prepareItems(tx: TransactionClient, storeId: string, items: SaleI
 function calculateTotals(
   items: PreparedSaleItem[],
   discount: string,
+  discountType: SaleDiscountType,
   tax: string,
   shipping: string,
   paidAmount: string
 ) {
   const subtotalCents = items.reduce((total, item) => total + moneyToCents(item.total), 0);
-  const discountCents = Math.min(moneyToCents(discount), subtotalCents);
+  // A percentage is applied to this subtotal, the server's own, and stored as the amount it came to.
+  const discountCents = saleDiscountCents(subtotalCents, discount, discountType);
   const taxCents = moneyToCents(tax);
   const shippingCents = moneyToCents(shipping);
   const totalCents = Math.max(subtotalCents - discountCents + taxCents + shippingCents, 0);

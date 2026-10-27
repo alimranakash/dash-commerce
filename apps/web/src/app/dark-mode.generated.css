@@ -12,7 +12,7 @@
 
 /* ---- Tailwind utilities ----------------------------------------------
    487 overrides derived from 500 colour utilities
-   found across 1082 source files. */
+   found across 1083 source files. */
 
 [data-theme="dark"] .divide-\[\#ececf5\] > :where(:not(:last-child)),
 [data-theme="dark"] .border-\[\#e6e6ee\],

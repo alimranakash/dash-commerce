@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SALE_DISCOUNT_MAX_PERCENT, SALE_DISCOUNT_TYPES } from "./sale-discount";
 
 export const saleTypeSchema = z.enum(["ONLINE", "OFFLINE"]);
 export const saleStatusSchema = z.enum(["DRAFT", "COMPLETED", "CANCELLED", "RETURNED"]);
@@ -9,6 +10,8 @@ export const salePaymentMethodSchema = z.enum(["CASH", "CARD", "BKASH", "NAGAD",
  * not shown at all (`keep`) — see `resolveSaleOptIn`.
  */
 export const saleLoyaltyOptInSchema = z.enum(["in", "keep", "out"]);
+/** What `discount` was typed as — see `saleDiscountCents`. Only the amount is stored. */
+export const saleDiscountTypeSchema = z.enum(SALE_DISCOUNT_TYPES);
 
 const moneySchema = z
   .union([z.string(), z.number()])
@@ -37,6 +40,7 @@ export const saleBaseSchema = z.object({
     .optional()
     .transform((value) => value || undefined),
   discount: moneySchema.default("0"),
+  discountType: saleDiscountTypeSchema.default("AMOUNT"),
   items: z.array(saleItemSchema).min(1, "Add at least one product."),
   loyaltyOptIn: saleLoyaltyOptInSchema.default("keep"),
   notes: z.string().trim().max(2000).optional(),
@@ -47,6 +51,9 @@ export const saleBaseSchema = z.object({
   shipping: moneySchema.default("0"),
   status: saleStatusSchema.default("DRAFT"),
   tax: moneySchema.default("0")
+}).refine((sale) => sale.discountType !== "PERCENT" || Number(sale.discount) <= SALE_DISCOUNT_MAX_PERCENT, {
+  message: `A discount can be at most ${SALE_DISCOUNT_MAX_PERCENT}%.`,
+  path: ["discount"]
 });
 
 export const createSaleSchema = saleBaseSchema;
