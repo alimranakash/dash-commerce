@@ -1,4 +1,10 @@
 import { prisma } from "@dash/db";
+import {
+  dailyReportWhere,
+  type DailyReportScope,
+  type DailySalesFacts,
+  type DailyTransactionRecord
+} from "./sale-daily-report";
 import type { SaleStatus, SaleType } from "./sale.schema";
 
 export type SaleFilters = {
@@ -79,6 +85,108 @@ export async function getSaleMetricsForStore(organizationId: string, storeId: st
     today: today._sum.total?.toString() ?? "0",
     total: total._sum.total?.toString() ?? "0"
   };
+}
+
+/**
+ * One business day's sums, added up by the database: by status, by payment
+ * method, the line discounts, and what is still owed up to that day. No sale
+ * row leaves the database for these — only the transaction table reads rows.
+ */
+export async function getDailySalesFacts(
+  scope: DailyReportScope,
+  day: string
+): Promise<DailySalesFacts> {
+  const where = dailyReportWhere(scope, day);
+  const [byStatus, byMethod, lines, withDue, outstanding] = await Promise.all([
+    prisma.sale.groupBy({
+      _count: { _all: true },
+      _sum: {
+        discount: true,
+        dueAmount: true,
+        paidAmount: true,
+        shipping: true,
+        subtotal: true,
+        tax: true,
+        total: true
+      },
+      by: ["status"],
+      where: where.onDay
+    }),
+    prisma.sale.groupBy({
+      _count: { _all: true },
+      _sum: {
+        dueAmount: true,
+        paidAmount: true,
+        total: true
+      },
+      by: ["paymentMethod"],
+      where: where.completed
+    }),
+    prisma.saleItem.aggregate({
+      _sum: {
+        discount: true
+      },
+      where: {
+        sale: where.completed
+      }
+    }),
+    prisma.sale.count({
+      where: where.completedWithDue
+    }),
+    prisma.sale.aggregate({
+      _count: { _all: true },
+      _sum: {
+        dueAmount: true
+      },
+      where: where.outstanding
+    })
+  ]);
+
+  return {
+    byMethod: byMethod.map((row) => ({
+      count: row._count._all,
+      method: row.paymentMethod,
+      sums: row._sum
+    })),
+    byStatus: byStatus.map((row) => ({
+      count: row._count._all,
+      status: row.status,
+      sums: row._sum
+    })),
+    completedLineDiscount: lines._sum.discount,
+    completedWithDue: withDue,
+    outstanding: { count: outstanding._count._all, dueAmount: outstanding._sum.dueAmount }
+  };
+}
+
+/** One page of the day's sales, oldest first, with the customer's name and nothing else of theirs. */
+export async function getDailySaleTransactions(
+  scope: DailyReportScope,
+  day: string,
+  page: { skip: number; take: number }
+): Promise<DailyTransactionRecord[]> {
+  return prisma.sale.findMany({
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: {
+      completedAt: true,
+      createdAt: true,
+      customer: {
+        select: {
+          name: true
+        }
+      },
+      dueAmount: true,
+      id: true,
+      paidAmount: true,
+      paymentMethod: true,
+      saleNumber: true,
+      status: true,
+      total: true
+    },
+    skip: page.skip,
+    take: page.take,
+    where: dailyReportWhere(scope, day).transactions
+  });
 }
 
 export async function countSalesForStore(storeId: string) {

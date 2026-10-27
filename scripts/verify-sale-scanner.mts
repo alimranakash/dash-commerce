@@ -447,5 +447,44 @@ section("10. One store's catalogue cannot ring up another's barcode");
   check("…and each option within the store", prepare.includes("getProductVariantForSale(tx, storeId, product.id, item.variantId)"));
 }
 
+section("11. Two tills, or a till and an online order, cannot write over each other's stock");
+{
+  const service = read("apps/web/src/modules/sales/sale.service.ts");
+  const body = (name: string) => {
+    const start = service.indexOf(`function ${name}(`);
+    return service.slice(start, service.indexOf("\n}\n", start));
+  };
+  const decrease = body("decreaseProductStock");
+  const restore = body("restoreProductStock");
+
+  check(
+    "completing takes a product's stock in one statement that checks the floor, as checkout does",
+    /tx\.product\.updateMany\(\{\s*where: \{\s*id: item\.productId,\s*stockQuantity: \{\s*gte: item\.quantity\s*\},\s*storeId\s*\},\s*data: \{\s*stockQuantity: \{\s*decrement: item\.quantity\s*\}/.test(decrease)
+  );
+  check(
+    "…and gives it back as an increment",
+    /tx\.product\.updateMany\(\{\s*where: \{\s*id: item\.productId,\s*storeId\s*\},\s*data: \{\s*stockQuantity: \{\s*increment: item\.quantity\s*\}/.test(restore)
+  );
+  check(
+    "no stock figure worked out from an earlier read is written back",
+    ![decrease, restore].some((source) => /stockQuantity: (newQuantity|previousQuantity)\b/.test(source) || source.includes("tx.product.update("))
+  );
+  check(
+    "an option's stock moves in one statement too",
+    decrease.includes("adjustProductVariantStock(tx, storeId, item.productId, item.variantId, -item.quantity)") &&
+      restore.includes("adjustProductVariantStock(tx, storeId, item.productId, item.variantId, item.quantity)")
+  );
+
+  for (const name of ["updateSale", "voidSale"]) {
+    const source = service.slice(service.indexOf(`export async function ${name}(`));
+    check(
+      `${name} locks the sale before reading what it holds, so a second tab cannot restock it twice`,
+      source.indexOf("await lockSale(tx, context, saleId") > -1 &&
+        source.indexOf("await lockSale(tx, context, saleId") < source.indexOf("const existing = await tx.sale.findFirst(")
+    );
+  }
+  check("a sale already cancelled is not matched, so voiding it again writes nothing", service.includes('lockSale(tx, context, saleId, { status: { not: "CANCELLED" } })'));
+}
+
 console.log(`\n${failures === 0 ? "All checks passed." : `${failures} check(s) failed.`}`);
 process.exit(failures === 0 ? 0 : 1);

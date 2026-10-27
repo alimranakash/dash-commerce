@@ -1,8 +1,9 @@
-import { Edit3, Eye, Plus, Printer, RotateCcw, Search, Trash2 } from "lucide-react";
+import { CalendarDays, Edit3, Eye, Plus, Printer, RotateCcw, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { DeleteConfirmationButton } from "../../../components/dashboard/delete-confirmation-button";
 import { DashboardQueryForm } from "../../../components/dashboard/dashboard-query-form";
 import { DashboardShell } from "../../../components/dashboard/dashboard-shell";
+import { DAILY_REPORT_PATH } from "../sale-daily-report";
 import { receiptHref, SALE_PAYMENT_METHOD_LABELS } from "../sale-receipt";
 import { voidSaleAction } from "../sale.actions";
 import type { SalePaymentMethod, SalePaymentStatus, SaleStatus, SaleType } from "../sale.schema";
@@ -52,6 +53,9 @@ export function SaleList({ currency, dateFrom, dateTo, filters, message, metrics
             <p className="mt-2 text-sm text-[#777985]">Manage online and offline sales from one place.</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Link className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-[#ddd6fe] bg-white px-4 text-xs font-semibold text-[#6d3cf5]" href={DAILY_REPORT_PATH}>
+              <CalendarDays className="h-3.5 w-3.5" /> Daily Report
+            </Link>
             <Link className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-[#ddd6fe] bg-white px-4 text-xs font-semibold text-[#6d3cf5]" href="/dashboard/sales/returns">
               <RotateCcw className="h-3.5 w-3.5" /> Sales Returns
             </Link>

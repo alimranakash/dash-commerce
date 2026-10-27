@@ -113,6 +113,10 @@ export async function updateSale(context: SaleContext, saleId: string, input: Up
   await ensureProductVariantSchema();
 
   return prisma.$transaction(async (tx) => {
+    if (!(await lockSale(tx, context, saleId))) {
+      return null;
+    }
+
     const existing = await tx.sale.findFirst({
       where: {
         id: saleId,
@@ -195,6 +199,11 @@ export async function voidSale(context: SaleContext, saleId: string) {
   await ensureProductVariantSchema();
 
   return prisma.$transaction(async (tx) => {
+    // Already cancelled is no match, so a second void writes nothing at all.
+    if (!(await lockSale(tx, context, saleId, { status: { not: "CANCELLED" } }))) {
+      return false;
+    }
+
     const existing = await tx.sale.findFirst({
       where: {
         id: saleId,
@@ -243,6 +252,33 @@ function saleOptIn(
     saleId,
     userId: context.userId ?? null
   };
+}
+
+/**
+ * Takes the sale's row lock before its current state is read, as
+ * `reconcileSaleLoyalty` does: two edits or voids of one sale — a second tab,
+ * a second till — then run one after the other, the second reading what the
+ * first committed, so the same units are never put back on the shelf twice.
+ */
+async function lockSale(
+  tx: TransactionClient,
+  context: SaleContext,
+  saleId: string,
+  where: { status?: { not: "CANCELLED" } } = {}
+) {
+  const locked = await tx.sale.updateMany({
+    data: {
+      updatedAt: new Date()
+    },
+    where: {
+      id: saleId,
+      organizationId: context.organizationId,
+      storeId: context.storeId,
+      ...where
+    }
+  });
+
+  return locked.count === 1;
 }
 
 async function createSaleNumber(storeId: string) {
@@ -397,33 +433,30 @@ async function decreaseProductStock(
       continue;
     }
 
-    const product = await tx.product.findFirst({
+    // One statement, as checkout's and order entry's decrement is: the floor is
+    // checked against the row as it stands, so units another till or an online
+    // order took a moment ago are counted rather than written over.
+    const taken = await tx.product.updateMany({
       where: {
         id: item.productId,
+        stockQuantity: {
+          gte: item.quantity
+        },
         storeId
       },
-      select: {
-        id: true,
-        stockQuantity: true,
-        title: true
+      data: {
+        stockQuantity: {
+          decrement: item.quantity
+        }
       }
     });
 
-    if (!product || product.stockQuantity < item.quantity) {
+    if (taken.count !== 1) {
       throw new Error(`${item.productName} does not have enough stock.`);
     }
 
-    const previousQuantity = product.stockQuantity;
-    const newQuantity = previousQuantity - item.quantity;
-
-    await tx.product.update({
-      where: {
-        id: product.id
-      },
-      data: {
-        stockQuantity: newQuantity
-      }
-    });
+    const newQuantity = await productStockQuantity(tx, storeId, item.productId);
+    const previousQuantity = newQuantity + item.quantity;
 
     await tx.stockMovement.create({
       data: {
@@ -432,7 +465,7 @@ async function decreaseProductStock(
         notes: null,
         organizationId,
         previousQuantity,
-        productId: product.id,
+        productId: item.productId,
         quantityChange: -item.quantity,
         reason: "Sale completed",
         sourceId: saleId,
@@ -484,32 +517,27 @@ async function restoreProductStock(
       continue;
     }
 
-    const product = await tx.product.findFirst({
+    // An increment, not a figure worked out from an earlier read, so an order
+    // placed while this runs keeps the units it took.
+    const returned = await tx.product.updateMany({
       where: {
         id: item.productId,
         storeId
       },
-      select: {
-        id: true,
-        stockQuantity: true
+      data: {
+        stockQuantity: {
+          increment: item.quantity
+        }
       }
     });
 
-    if (!product) {
+    // The product was deleted since: there is no shelf to put it back on.
+    if (returned.count !== 1) {
       continue;
     }
 
-    const previousQuantity = product.stockQuantity;
-    const newQuantity = previousQuantity + item.quantity;
-
-    await tx.product.update({
-      where: {
-        id: product.id
-      },
-      data: {
-        stockQuantity: newQuantity
-      }
-    });
+    const newQuantity = await productStockQuantity(tx, storeId, item.productId);
+    const previousQuantity = newQuantity - item.quantity;
 
     await tx.stockMovement.create({
       data: {
@@ -518,7 +546,7 @@ async function restoreProductStock(
         notes: null,
         organizationId,
         previousQuantity,
-        productId: product.id,
+        productId: item.productId,
         quantityChange: item.quantity,
         reason: "Sale stock restored",
         sourceId: saleId,
@@ -528,6 +556,21 @@ async function restoreProductStock(
       }
     });
   }
+}
+
+/** The product's stock as this transaction now sees it: after its own change, under that change's row lock. */
+async function productStockQuantity(tx: TransactionClient, storeId: string, productId: string) {
+  const product = await tx.product.findFirst({
+    where: {
+      id: productId,
+      storeId
+    },
+    select: {
+      stockQuantity: true
+    }
+  });
+
+  return product?.stockQuantity ?? 0;
 }
 
 function paymentStatusFromCents(totalCents: number, paidCents: number): SalePaymentStatus {
